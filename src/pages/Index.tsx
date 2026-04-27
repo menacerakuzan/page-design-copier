@@ -1,16 +1,16 @@
 import { useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowRight, ChevronLeft, ChevronRight, Facebook, Instagram, Linkedin, Send, Twitter, Youtube } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight, Facebook, Instagram } from "lucide-react";
 import { Link } from "react-router-dom";
 import heroVideo from "@/assets/episode-01.mp4";
 import geminiLogo from "@/assets/gemini-svg-2.svg";
 
-const navLeft = ["Про Регіон", "Історія"];
-const navRight = ["Блог", "Контакти"];
+const navLeft = ["Райони", "Локації"];
+const navRight = ["Гіди", "Контакти"];
 
 const featureCards = [
-  { number: "01", first: "Історична", second: "спадщина" },
-  { number: "02", first: "Культура", second: "та традиції" },
+  { number: "01", first: "Види", second: "туризму" },
+  { number: "02", first: "Інформація", second: "" },
 ];
 
 const destinationCards = [
@@ -175,19 +175,37 @@ const events = [
 const footerColumns = [
   {
     title: "Мандрівнику",
-    links: ["Що подивитись", "Куди поїхати", "Планування", "Події", "Про регіон"],
+    links: ["Що подивитись", "Куди поїхати", "Маршрути", "Події", "Інформація"],
   },
   {
     title: "Партнерам",
     links: ["Чому Одещина", "Маркетингові матеріали", "Статистика та дані", "Контакти"],
+    hidden: true,
   },
   {
     title: "Медіа",
-    links: ["Новини", "Фото та відео", "Прес-кит", "Логотипи"],
+    links: ["Новини", "Фото та відео", "Контакти", "Логотипи"],
   },
   {
     title: "Бізнес-події",
     links: ["MICE в регіоні", "Локації", "Натхнення", "Партнери"],
+    hidden: true,
+  },
+];
+
+const TikTokIcon = ({ className = "h-6 w-6" }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden="true">
+    <path d="M14 3c.3 1.6 1.5 2.9 3 3.3V9a7 7 0 0 1-3-1v6.2a5.2 5.2 0 1 1-5.2-5.2h.2v2.8h-.2a2.4 2.4 0 1 0 2.4 2.4V3h2.8z" />
+  </svg>
+);
+
+const socialLinks = [
+  { label: "Instagram", href: "https://www.instagram.com/odesa_travel/", Icon: Instagram },
+  { label: "TikTok", href: "https://www.tiktok.com/@odesa.travel", Icon: TikTokIcon },
+  {
+    label: "Facebook",
+    href: "https://www.facebook.com/profile.php?id=61573965222850&mibextid=wwXIfr&rdid=bBZVa5vEkPiFA5UM&share_url=https%3A%2F%2Fwww.facebook.com%2Fshare%2F1Eupy1CSJE%2F%3Fmibextid%3DwwXIfr%26utm_source%3Dig%26utm_medium%3Dsocial%26utm_content%3Dlink_in_bio#",
+    Icon: Facebook,
   },
 ];
 
@@ -208,6 +226,7 @@ const star = "✦";
 
 const Index = () => {
   const sectionRefs = useRef<Array<HTMLElement | null>>([]);
+  const destinationsScrollerRef = useRef<HTMLDivElement | null>(null);
   const [activeAttraction, setActiveAttraction] = useState(0);
   const [eventsPage, setEventsPage] = useState(0);
 
@@ -248,6 +267,14 @@ const Index = () => {
 
   const goNextEventsPage = () => {
     setEventsPage((prev) => (prev + 1) % totalEventPages);
+  };
+
+  const scrollDestinations = (direction: 1 | -1) => {
+    const scroller = destinationsScrollerRef.current;
+    if (!scroller) return;
+
+    const step = Math.max(scroller.clientWidth * 0.75, 280);
+    scroller.scrollBy({ left: direction * step, behavior: "smooth" });
   };
 
   return (
@@ -363,15 +390,24 @@ const Index = () => {
             className="mt-10 border border-[#fff2e8] bg-[#fff2e8] px-8 py-2 text-[12px] leading-none text-[#00376c] font-odesa-semi"
             type="button"
           >
-            Онлайн-гід
+            Маршрути
           </motion.button>
 
           <section className="mt-auto w-full pt-4">
             <div className="mx-auto flex max-w-[1060px] flex-col items-center gap-8 md:relative md:min-h-[140px] md:block">
               <div className="inline-flex items-center gap-4 bg-[#fff2e8] px-8 py-4 text-[#00376c] md:absolute md:bottom-0 md:left-1/2 md:-translate-x-1/2">
-                <Twitter className="h-6 w-6" strokeWidth={2.5} />
-                <Instagram className="h-6 w-6" strokeWidth={2.5} />
-                <Facebook className="h-6 w-6" strokeWidth={2.5} />
+                {socialLinks.map(({ label, href, Icon }) => (
+                  <a
+                    key={label}
+                    href={href}
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label={label}
+                    className="transition-opacity hover:opacity-80"
+                  >
+                    <Icon className="h-6 w-6" />
+                  </a>
+                ))}
               </div>
 
               <div className="grid grid-cols-1 items-start gap-6 md:absolute md:bottom-0 md:right-0 md:grid-cols-2 md:gap-8">
@@ -381,7 +417,7 @@ const Index = () => {
                       <span className="text-[40px] leading-none font-odesa-regular">{item.number}</span>
                       <div className="pt-1 text-[22px] leading-[0.95] font-odesa-medium">
                         <div>{item.first}</div>
-                        <div>{item.second}</div>
+                        {item.second ? <div>{item.second}</div> : null}
                       </div>
                     </div>
                     <div className="mt-2 h-[6px] w-full bg-[#fff2e8]" />
@@ -412,6 +448,7 @@ const Index = () => {
             <div className="flex items-center gap-3 text-[#002f5e]">
               <button
                 type="button"
+                onClick={() => scrollDestinations(-1)}
                 className="flex h-12 w-12 items-center justify-center rounded-full border border-[#002f5e]/40"
                 aria-label="Попередній"
               >
@@ -419,6 +456,7 @@ const Index = () => {
               </button>
               <button
                 type="button"
+                onClick={() => scrollDestinations(1)}
                 className="flex h-12 w-12 items-center justify-center rounded-full border border-[#002f5e]/40"
                 aria-label="Наступний"
               >
@@ -432,9 +470,12 @@ const Index = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.15 }}
             transition={{ duration: 0.75, delay: 0.1 }}
-            className="mt-10 -mx-4 overflow-x-auto px-4"
+            className="mt-10 -mx-4 px-4"
           >
-            <div className="flex min-w-max gap-6 pb-2">
+            <div
+              ref={destinationsScrollerRef}
+              className="flex gap-6 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            >
               {destinationCards.map((card) => {
                 const cardBody = (
                   <>
@@ -477,9 +518,7 @@ const Index = () => {
             className="grid grid-cols-1 gap-8 lg:grid-cols-[420px_1fr]"
           >
             <h3 className="text-[52px] leading-[0.92] md:text-[72px] font-odesa-medium">
-              Літні реко-
-              <br />
-              мендації
+              Цікаве
             </h3>
 
             <article className="relative h-[320px] overflow-hidden rounded-[28px] md:h-[430px]">
@@ -657,8 +696,8 @@ const Index = () => {
       </section>
 
       <footer ref={setSectionRef(5)} className="relative z-10 bg-[#fff2e8] px-4 py-20 text-[#002f5e] md:px-10">
-        <div className="mx-auto grid max-w-[1400px] gap-10 border-t border-[#002f5e]/20 pt-14 md:grid-cols-[1.1fr_1.1fr_1fr_1.1fr_0.9fr]">
-          {footerColumns.map((col) => (
+        <div className="mx-auto grid max-w-[1400px] gap-10 border-t border-[#002f5e]/20 pt-14 md:grid-cols-[1.2fr_1fr_0.9fr]">
+          {footerColumns.filter((col) => !col.hidden).map((col) => (
             <div key={col.title}>
               <h4 className="text-[34px] leading-none font-odesa-medium">{col.title}</h4>
               <nav className="mt-6 space-y-4">
@@ -674,15 +713,17 @@ const Index = () => {
           <div>
             <h4 className="text-[34px] leading-none text-[#002f5e]/70 font-odesa-medium">Зв'язок</h4>
             <div className="mt-7 grid grid-cols-3 gap-4">
-              {[Youtube, Instagram, Facebook, Linkedin, Twitter, Send].map((Icon, idx) => (
-                <button
-                  key={idx}
-                  type="button"
+              {socialLinks.map(({ label, href, Icon }) => (
+                <a
+                  key={label}
+                  href={href}
+                  target="_blank"
+                  rel="noreferrer"
                   className="flex h-12 w-12 items-center justify-center rounded-full border border-[#002f5e]/30 text-[#002f5e] transition-colors hover:bg-[#002f5e] hover:text-[#fff2e8]"
-                  aria-label="Соціальна мережа"
+                  aria-label={label}
                 >
                   <Icon className="h-6 w-6" />
-                </button>
+                </a>
               ))}
             </div>
           </div>
