@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -8,8 +10,15 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Brand: deep navy sea + warm cream */
+    --background: 213 100% 18%;
+    --foreground: 28 100% 95%;
+
+    --sea-deep: 213 100% 11%;
+    --sea: 213 100% 18%;
+    --sea-mid: 213 80% 25%;
+    --cream: 28 100% 95%;
+    --cream-foreground: 213 100% 18%;
 
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
