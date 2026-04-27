@@ -1,7 +1,8 @@
-import { useRef } from "react";
-import { motion } from "framer-motion";
-import { ArrowRight, ChevronLeft, ChevronRight, Facebook, Instagram, Twitter } from "lucide-react";
-import seaHero from "@/assets/sea-hero.jpg";
+import { useRef, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { ArrowRight, ChevronLeft, ChevronRight, Facebook, Instagram, Linkedin, Send, Twitter, Youtube } from "lucide-react";
+import { Link } from "react-router-dom";
+import heroVideo from "@/assets/episode-01.mp4";
 import geminiLogo from "@/assets/gemini-svg-2.svg";
 
 const navLeft = ["Про Регіон", "Історія"];
@@ -15,6 +16,7 @@ const featureCards = [
 const destinationCards = [
   {
     title: "Білгород-Дністровський",
+    href: "/napryamky/bilhorod-dnistrovskyi",
     image:
       "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1200&q=80",
   },
@@ -35,6 +37,160 @@ const destinationCards = [
   },
 ];
 
+const summerRecommendations = {
+  featured: {
+    title: "Винний маршрут Одещини",
+    image:
+      "https://images.unsplash.com/photo-1505764706515-aa95265c5abc?auto=format&fit=crop&w=1800&q=80",
+  },
+  items: [
+    {
+      title: "Лимани та заходи сонця",
+      image:
+        "https://images.pexels.com/photos/33180433/pexels-photo-33180433.jpeg?auto=compress&cs=tinysrgb&w=1200&lazy=load",
+    },
+    {
+      title: "Фортеці та історія",
+      image:
+        "https://images.unsplash.com/photo-1467269204594-9661b134dd2b?auto=format&fit=crop&w=1200&q=80",
+    },
+    {
+      title: "Морський відпочинок",
+      image:
+        "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80",
+    },
+  ],
+};
+
+const topAttractions = [
+  {
+    title: "Аккерманська фортеця",
+    subtitle: "Top attractions",
+    description:
+      "Один із наймасштабніших середньовічних комплексів Причорномор'я. Стіни, бастіони та видові майданчики над лиманом створюють потужний історичний маршрут.",
+    image:
+      "https://images.unsplash.com/photo-1472396961693-142e6e269027?auto=format&fit=crop&w=2200&q=80",
+  },
+  {
+    title: "Одеський оперний театр",
+    subtitle: "Top attractions",
+    description:
+      "Архітектурний символ Одеси з розкішними інтер'єрами та вечірньою атмосферою старого міста. Ідеальне місце для культурного вечора та фотомаршруту.",
+    image:
+      "https://images.unsplash.com/photo-1467269204594-9661b134dd2b?auto=format&fit=crop&w=2200&q=80",
+  },
+  {
+    title: "Вилкове та Дунайська дельта",
+    subtitle: "Top attractions",
+    description:
+      "Канали, човни та унікальна природа біосферного заповідника. Тут відчувається справжній ритм півдня, рибальські традиції та тиша водних лабіринтів.",
+    image:
+      "https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&w=2200&q=80",
+  },
+  {
+    title: "Тузлівські лимани",
+    subtitle: "Top attractions",
+    description:
+      "Ланцюг солоних лиманів, диких пляжів і пташиних колоній. Простір для спокійного екотуризму, спостереження за природою та заходів сонця над Чорним морем.",
+    image:
+      "https://images.unsplash.com/photo-1439066615861-d1af74d74000?auto=format&fit=crop&w=2200&q=80",
+  },
+];
+
+const events = [
+  {
+    title: "Фестиваль вина та смаку Бессарабії",
+    locationDate: "Болград, 24.04 - 03.05.2026",
+    badgeTop: "до",
+    badgeDay: "3",
+    badgeMonth: "травень",
+    image:
+      "https://images.unsplash.com/photo-1532635042-a6f6ad4745f9?auto=format&fit=crop&w=1200&q=80",
+  },
+  {
+    title: "Весняний ярмарок на узбережжі",
+    locationDate: "Одеса, 24.04 - 03.05.2026",
+    badgeTop: "до",
+    badgeDay: "3",
+    badgeMonth: "травень",
+    image:
+      "https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1200&q=80",
+  },
+  {
+    title: "Ніч музеїв та галерей",
+    locationDate: "Одеса",
+    badgeTop: "до",
+    badgeDay: "31",
+    badgeMonth: "травень",
+    image:
+      "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?auto=format&fit=crop&w=1200&q=80",
+  },
+  {
+    title: "Етнофест південного колориту",
+    locationDate: "Вилкове, 01.05 - 03.05.2026",
+    badgeTop: "з",
+    badgeDay: "1",
+    badgeMonth: "травень",
+    image:
+      "https://images.pexels.com/photos/34580394/pexels-photo-34580394.jpeg?auto=compress&cs=tinysrgb&w=1200&lazy=load",
+  },
+  {
+    title: "Дні фортеці Аккерман",
+    locationDate: "Білгород-Дністровський, 01.05 - 03.05.2026",
+    badgeTop: "з",
+    badgeDay: "1",
+    badgeMonth: "травень",
+    image:
+      "https://images.pexels.com/photos/37216166/pexels-photo-37216166.jpeg?_gl=1*ytjoem*_ga*MTA4Nzc5MjE1LjE3NzcyODIzMzE.*_ga_8JE65Q40S6*czE3NzcyODIzMzAkbzEkZzEkdDE3NzcyODMzNzMkajUyJGwwJGgw",
+  },
+  {
+    title: "Комікс та анімація біля моря",
+    locationDate: "Одеса",
+    badgeTop: "до",
+    badgeDay: "10",
+    badgeMonth: "травень",
+    image:
+      "https://images.pexels.com/photos/11130920/pexels-photo-11130920.jpeg?_gl=1*1orw1y7*_ga*MTA4Nzc5MjE1LjE3NzcyODIzMzE.*_ga_8JE65Q40S6*czE3NzcyODIzMzAkbzEkZzEkdDE3NzcyODMzODIkajQzJGwwJGgw",
+  },
+  {
+    title: "Відкриті винні підвали",
+    locationDate: "Шабо, 01.05 - 03.05.2026",
+    badgeTop: "з",
+    badgeDay: "1",
+    badgeMonth: "травень",
+    image:
+      "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=1200&q=80",
+  },
+  {
+    title: "Концерт просто неба біля лиману",
+    locationDate: "Тузлівські лимани, 02.05.2026",
+    badgeTop: "",
+    badgeDay: "2",
+    badgeMonth: "травень",
+    image:
+      "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=1200&q=80",
+  },
+];
+
+const footerColumns = [
+  {
+    title: "Мандрівнику",
+    links: ["Що подивитись", "Куди поїхати", "Планування", "Події", "Про регіон"],
+  },
+  {
+    title: "Партнерам",
+    links: ["Чому Одещина", "Маркетингові матеріали", "Статистика та дані", "Контакти"],
+  },
+  {
+    title: "Медіа",
+    links: ["Новини", "Фото та відео", "Прес-кит", "Логотипи"],
+  },
+  {
+    title: "Бізнес-події",
+    links: ["MICE в регіоні", "Локації", "Натхнення", "Партнери"],
+  },
+];
+
 const ArrowGlyph = ({ direction }: { direction: "up" | "down" }) => (
   <svg
     viewBox="340 1084 85 60"
@@ -51,20 +207,81 @@ const ArrowGlyph = ({ direction }: { direction: "up" | "down" }) => (
 const star = "✦";
 
 const Index = () => {
-  const nextSectionRef = useRef<HTMLElement | null>(null);
+  const sectionRefs = useRef<Array<HTMLElement | null>>([]);
+  const [activeAttraction, setActiveAttraction] = useState(0);
+  const [eventsPage, setEventsPage] = useState(0);
 
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
+  const setSectionRef = (index: number) => (el: HTMLElement | null) => {
+    sectionRefs.current[index] = el;
   };
 
-  const scrollToNext = () => {
-    nextSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  const scrollByStep = (direction: 1 | -1) => {
+    const sections = sectionRefs.current.filter(Boolean) as HTMLElement[];
+    if (!sections.length) return;
+
+    const probe = window.scrollY + window.innerHeight * 0.4;
+    let currentIndex = 0;
+
+    sections.forEach((section, idx) => {
+      if (section.offsetTop <= probe) currentIndex = idx;
+    });
+
+    const targetIndex = Math.min(Math.max(currentIndex + direction, 0), sections.length - 1);
+    sections[targetIndex]?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  const goPrevAttraction = () => {
+    setActiveAttraction((prev) => (prev - 1 + topAttractions.length) % topAttractions.length);
+  };
+
+  const goNextAttraction = () => {
+    setActiveAttraction((prev) => (prev + 1) % topAttractions.length);
+  };
+
+  const eventsPerPage = 4;
+  const totalEventPages = Math.ceil(events.length / eventsPerPage);
+  const pagedEvents = events.slice(eventsPage * eventsPerPage, (eventsPage + 1) * eventsPerPage);
+
+  const goPrevEventsPage = () => {
+    setEventsPage((prev) => (prev - 1 + totalEventPages) % totalEventPages);
+  };
+
+  const goNextEventsPage = () => {
+    setEventsPage((prev) => (prev + 1) % totalEventPages);
   };
 
   return (
     <div className="bg-[#fff2e8]">
-      <section className="relative min-h-screen overflow-hidden text-[#fff2e8]">
-        <img src={seaHero} alt="Одещина" className="absolute inset-0 h-full w-full object-cover" />
+      <div className="fixed left-8 top-1/2 z-50 flex -translate-y-1/2 flex-col gap-4">
+        <button
+          type="button"
+          aria-label="Вгору"
+          onClick={() => scrollByStep(-1)}
+          className="flex h-12 w-12 items-center justify-center rounded-full bg-[#fff2e8]"
+        >
+          <ArrowGlyph direction="up" />
+        </button>
+        <button
+          type="button"
+          aria-label="Вниз"
+          onClick={() => scrollByStep(1)}
+          className="flex h-12 w-12 items-center justify-center rounded-full bg-[#fff2e8]"
+        >
+          <ArrowGlyph direction="down" />
+        </button>
+      </div>
+
+      <section ref={setSectionRef(0)} className="relative min-h-screen overflow-hidden text-[#fff2e8]">
+        <video
+          className="absolute inset-0 h-full w-full object-cover"
+          autoPlay
+          loop
+          muted
+          playsInline
+          preload="auto"
+        >
+          <source src={heroVideo} type="video/mp4" />
+        </video>
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,12,33,0.28),rgba(0,12,33,0.82))]" />
 
         <motion.header
@@ -101,25 +318,6 @@ const Index = () => {
             </div>
           </div>
         </motion.header>
-
-        <div className="absolute left-8 top-1/2 z-20 flex -translate-y-1/2 flex-col gap-4">
-          <button
-            type="button"
-            aria-label="Вгору"
-            onClick={scrollToTop}
-            className="flex h-12 w-12 items-center justify-center rounded-full bg-[#fff2e8]"
-          >
-            <ArrowGlyph direction="up" />
-          </button>
-          <button
-            type="button"
-            aria-label="Вниз"
-            onClick={scrollToNext}
-            className="flex h-12 w-12 items-center justify-center rounded-full bg-[#fff2e8]"
-          >
-            <ArrowGlyph direction="down" />
-          </button>
-        </div>
 
         <main className="relative z-10 mx-auto flex min-h-[calc(100vh-96px)] w-full max-w-[1320px] flex-col items-center px-4 pb-0 pt-0 text-center md:px-6 md:pt-0">
           <motion.div
@@ -195,7 +393,7 @@ const Index = () => {
         </main>
       </section>
 
-      <section ref={nextSectionRef} className="relative z-10 bg-[#fff2e8] px-4 py-20 text-[#002f5e] md:px-10">
+      <section ref={setSectionRef(1)} className="relative z-10 bg-[#fff2e8] px-4 py-20 text-[#002f5e] md:px-10">
         <div className="mx-auto max-w-[1400px]">
           <motion.div
             initial={{ opacity: 0, y: 24 }}
@@ -237,20 +435,259 @@ const Index = () => {
             className="mt-10 -mx-4 overflow-x-auto px-4"
           >
             <div className="flex min-w-max gap-6 pb-2">
-              {destinationCards.map((card) => (
-                <article
-                  key={card.title}
-                  className="relative h-[520px] w-[350px] shrink-0 overflow-hidden rounded-[26px] bg-[#002f5e]/10 md:w-[420px]"
-                >
-                  <img src={card.image} alt={card.title} className="h-full w-full object-cover" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#002f5e]/70 via-transparent to-transparent" />
-                  <h4 className="absolute bottom-8 left-7 text-[42px] leading-none text-[#fff2e8] font-odesa-medium">{card.title}</h4>
-                </article>
-              ))}
+              {destinationCards.map((card) => {
+                const cardBody = (
+                  <>
+                    <img src={card.image} alt={card.title} className="h-full w-full object-cover" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#002f5e]/70 via-transparent to-transparent" />
+                    <h4 className="absolute bottom-8 left-7 text-[42px] leading-none text-[#fff2e8] font-odesa-medium">{card.title}</h4>
+                  </>
+                );
+
+                if (card.href) {
+                  return (
+                    <Link
+                      key={card.title}
+                      to={card.href}
+                      className="relative h-[520px] w-[350px] shrink-0 overflow-hidden rounded-[26px] bg-[#002f5e]/10 transition-transform duration-300 hover:-translate-y-1 md:w-[420px]"
+                    >
+                      {cardBody}
+                    </Link>
+                  );
+                }
+
+                return (
+                  <article key={card.title} className="relative h-[520px] w-[350px] shrink-0 overflow-hidden rounded-[26px] bg-[#002f5e]/10 md:w-[420px]">
+                    {cardBody}
+                  </article>
+                );
+              })}
             </div>
           </motion.div>
         </div>
       </section>
+
+      <section ref={setSectionRef(2)} className="relative z-10 flex min-h-screen items-center bg-[#002f5e] px-4 py-10 text-[#fff2e8] md:px-10">
+        <div className="mx-auto w-full max-w-[1400px]">
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ duration: 0.7 }}
+            className="grid grid-cols-1 gap-8 lg:grid-cols-[420px_1fr]"
+          >
+            <h3 className="text-[52px] leading-[0.92] md:text-[72px] font-odesa-medium">
+              Літні реко-
+              <br />
+              мендації
+            </h3>
+
+            <article className="relative h-[320px] overflow-hidden rounded-[28px] md:h-[430px]">
+              <img
+                src={summerRecommendations.featured.image}
+                alt={summerRecommendations.featured.title}
+                className="h-full w-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
+              <h4 className="absolute bottom-7 left-7 max-w-[760px] text-[38px] leading-[0.95] md:text-[52px] font-odesa-medium">
+                {summerRecommendations.featured.title}
+              </h4>
+            </article>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.15 }}
+            transition={{ duration: 0.7, delay: 0.1 }}
+            className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-3"
+          >
+            {summerRecommendations.items.map((item) => (
+              <article key={item.title} className="relative h-[250px] overflow-hidden rounded-[24px] md:h-[300px]">
+                <img src={item.image} alt={item.title} className="h-full w-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
+                <h5 className="absolute bottom-5 left-5 right-5 text-[30px] leading-[0.95] font-odesa-medium">{item.title}</h5>
+              </article>
+            ))}
+          </motion.div>
+        </div>
+      </section>
+
+      <section ref={setSectionRef(3)} className="relative min-h-screen overflow-hidden bg-[#9f1f47] text-[#fff2e8]">
+        <div className="absolute inset-0 p-3 md:p-5">
+          <div className="relative h-full w-full overflow-hidden rounded-[30px] md:rounded-[40px]">
+            <AnimatePresence mode="wait">
+              <motion.img
+                key={topAttractions[activeAttraction].image}
+                src={topAttractions[activeAttraction].image}
+                alt={topAttractions[activeAttraction].title}
+                initial={{ opacity: 0.35, scale: 1.05 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0.2, scale: 1.02 }}
+                transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+            </AnimatePresence>
+            <div className="absolute inset-0 bg-gradient-to-b from-[#002f5e]/20 via-[#002f5e]/20 to-[#14000c]/60" />
+          </div>
+        </div>
+
+        <div className="relative z-10 mx-auto flex min-h-screen max-w-[1680px] items-end justify-between gap-8 px-4 pb-6 md:px-8 md:pb-8">
+          <div className="w-full max-w-[820px]">
+            <AnimatePresence mode="wait">
+              <motion.article
+                key={topAttractions[activeAttraction].title}
+                initial={{ opacity: 0, y: 28 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 18 }}
+                transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+                className="rounded-[30px] bg-[#2a0015]/92 p-6 md:p-10"
+              >
+                <h3 className="mt-3 text-[54px] leading-[0.96] md:text-[84px] font-odesa-medium">
+                  {topAttractions[activeAttraction].title}
+                </h3>
+                <p className="mt-6 max-w-[680px] text-[26px] leading-[1.22] md:text-[36px] font-odesa-regular">
+                  {topAttractions[activeAttraction].description}
+                </p>
+                <button className="mt-8 inline-flex items-center gap-2 text-[36px] text-[#9f1f47] font-odesa-medium" type="button">
+                  Детальніше <ArrowRight className="h-8 w-8" />
+                </button>
+              </motion.article>
+            </AnimatePresence>
+          </div>
+
+          <div className="mb-0 flex shrink-0 items-center overflow-hidden rounded-[28px] bg-[#2a0015]/92">
+            <button
+              type="button"
+              onClick={goPrevAttraction}
+              className="flex h-[120px] w-[120px] items-center justify-center border-r border-white/15 transition-colors hover:bg-[#3a0020]"
+              aria-label="Попередній об'єкт"
+            >
+              <ChevronLeft className="h-12 w-12" />
+            </button>
+            <button
+              type="button"
+              onClick={goNextAttraction}
+              className="flex h-[120px] w-[120px] items-center justify-center transition-colors hover:bg-[#5a3245]"
+              aria-label="Наступний об'єкт"
+            >
+              <ChevronRight className="h-12 w-12" />
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section ref={setSectionRef(4)} className="relative z-10 flex min-h-screen items-center bg-[#fff2e8] px-4 py-12 text-[#002f5e] md:px-10">
+        <div className="mx-auto w-full max-w-[1400px]">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ duration: 0.65 }}
+            className="flex flex-wrap items-end justify-between gap-5"
+          >
+            <div>
+              <h3 className="text-[44px] leading-none md:text-[64px] font-odesa-medium">Події</h3>
+              <button className="mt-5 inline-flex items-center gap-2 text-[18px] text-[#9f1f47] font-odesa-medium" type="button">
+                Показати всі <ArrowRight className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={goPrevEventsPage}
+                className="flex h-11 w-11 items-center justify-center rounded-full border border-[#002f5e]/30"
+                aria-label="Попередня сторінка подій"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+              <button
+                type="button"
+                onClick={goNextEventsPage}
+                className="flex h-11 w-11 items-center justify-center rounded-full border border-[#002f5e]/30"
+                aria-label="Наступна сторінка подій"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
+            </div>
+          </motion.div>
+
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={eventsPage}
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.35 }}
+              className="mt-10 grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-4"
+            >
+              {pagedEvents.map((event) => (
+                <article key={event.title} className="group">
+                  <div className="relative h-[260px] overflow-hidden rounded-[26px] md:h-[360px]">
+                    <img
+                      src={event.image}
+                      alt={event.title}
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                    <div className="absolute left-4 top-4 rounded-[18px] bg-[#002f5e] px-4 py-3 text-[#fff2e8]">
+                      {event.badgeTop ? <div className="text-[16px] leading-none font-odesa-regular">{event.badgeTop}</div> : null}
+                      <div className="mt-1 text-[36px] leading-none font-odesa-medium">{event.badgeDay}</div>
+                      <div className="text-[32px] leading-none font-odesa-medium">{event.badgeMonth}</div>
+                    </div>
+                  </div>
+                  <h4 className="mt-4 text-[28px] leading-[1.03] font-odesa-medium">{event.title}</h4>
+                  <p className="mt-2 text-[20px] leading-none text-[#002f5e]/80 font-odesa-regular">{event.locationDate}</p>
+                </article>
+              ))}
+            </motion.div>
+          </AnimatePresence>
+
+          <div className="mt-7 flex items-center justify-center gap-2">
+            {Array.from({ length: totalEventPages }).map((_, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => setEventsPage(idx)}
+                className={`h-2.5 rounded-full transition-all ${idx === eventsPage ? "w-8 bg-[#002f5e]" : "w-2.5 bg-[#002f5e]/35"}`}
+                aria-label={`Сторінка подій ${idx + 1}`}
+              />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <footer ref={setSectionRef(5)} className="relative z-10 bg-[#fff2e8] px-4 py-20 text-[#002f5e] md:px-10">
+        <div className="mx-auto grid max-w-[1400px] gap-10 border-t border-[#002f5e]/20 pt-14 md:grid-cols-[1.1fr_1.1fr_1fr_1.1fr_0.9fr]">
+          {footerColumns.map((col) => (
+            <div key={col.title}>
+              <h4 className="text-[34px] leading-none font-odesa-medium">{col.title}</h4>
+              <nav className="mt-6 space-y-4">
+                {col.links.map((link) => (
+                  <a key={link} href="#" className="block text-[22px] leading-none text-[#002f5e]/82 transition-colors hover:text-[#002f5e] font-odesa-regular">
+                    {link}
+                  </a>
+                ))}
+              </nav>
+            </div>
+          ))}
+
+          <div>
+            <h4 className="text-[34px] leading-none text-[#002f5e]/70 font-odesa-medium">Зв'язок</h4>
+            <div className="mt-7 grid grid-cols-3 gap-4">
+              {[Youtube, Instagram, Facebook, Linkedin, Twitter, Send].map((Icon, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  className="flex h-12 w-12 items-center justify-center rounded-full border border-[#002f5e]/30 text-[#002f5e] transition-colors hover:bg-[#002f5e] hover:text-[#fff2e8]"
+                  aria-label="Соціальна мережа"
+                >
+                  <Icon className="h-6 w-6" />
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };
