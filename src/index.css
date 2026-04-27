@@ -1,16 +1,49 @@
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
+@font-face {
+  font-family: "Odesa Region Type";
+  src: url("./assets/fonts/OdesaRegionType-Regular.otf") format("opentype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Odesa Region Type";
+  src: url("./assets/fonts/OdesaRegionType-Medium.otf") format("opentype");
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Odesa Region Type";
+  src: url("./assets/fonts/OdesaRegionType-Semi.otf") format("opentype");
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Odesa Region Type";
+  src: url("./assets/fonts/OdesaRegionType-Bold.otf") format("opentype");
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Odesa Region Type";
+  src: url("./assets/fonts/OdesaRegionType-Heavy.otf") format("opentype");
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+}
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
-
 @layer base {
   :root {
-    /* Brand: deep navy sea + warm cream */
     --background: 213 100% 18%;
     --foreground: 28 100% 95%;
 
@@ -48,19 +81,12 @@ All colors MUST be HSL.
     --radius: 0.5rem;
 
     --sidebar-background: 0 0% 98%;
-
     --sidebar-foreground: 240 5.3% 26.1%;
-
     --sidebar-primary: 240 5.9% 10%;
-
     --sidebar-primary-foreground: 0 0% 98%;
-
     --sidebar-accent: 240 4.8% 95.9%;
-
     --sidebar-accent-foreground: 240 5.9% 10%;
-
     --sidebar-border: 220 13% 91%;
-
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
@@ -88,7 +114,6 @@ All colors MUST be HSL.
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
-
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 212.7 26.8% 83.9%;
@@ -101,14 +126,45 @@ All colors MUST be HSL.
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
-}
 
-@layer base {
   * {
     @apply border-border;
   }
 
   body {
     @apply bg-background text-foreground;
+    margin: 0;
+    font-family: "Odesa Region Type", sans-serif;
+  }
+}
+
+@layer utilities {
+  .font-odesa-regular {
+    font-family: "Odesa Region Type", sans-serif;
+    font-weight: 400;
+  }
+
+  .font-odesa-medium {
+    font-family: "Odesa Region Type", sans-serif;
+    font-weight: 500;
+  }
+
+  .font-odesa-semi {
+    font-family: "Odesa Region Type", sans-serif;
+    font-weight: 600;
+  }
+
+  .font-odesa-bold {
+    font-family: "Odesa Region Type", sans-serif;
+    font-weight: 700;
+  }
+
+  .font-odesa-heavy {
+    font-family: "Odesa Region Type", sans-serif;
+    font-weight: 800;
+  }
+
+  .font-odesa-ss02 {
+    font-feature-settings: "ss02" 1;
   }
 }

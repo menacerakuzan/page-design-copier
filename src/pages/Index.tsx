@@ -1,125 +1,159 @@
-import { ArrowUp, ArrowDown, Search, ChevronLeft, ChevronRight, Twitter, Instagram, Facebook, Diamond } from "lucide-react";
-import emblem from "@/assets/odeshchyna-emblem.svg";
+import { motion } from "framer-motion";
+import { Facebook, Instagram, Twitter } from "lucide-react";
 import seaHero from "@/assets/sea-hero.jpg";
+import geminiLogo from "@/assets/gemini-svg-2.svg";
 
 const navLeft = ["Про Регіон", "Історія"];
 const navRight = ["Блог", "Контакти"];
 
-const cards = [
-  { num: "01", title: "Історична", title2: "спадщина" },
-  { num: "02", title: "Культура", title2: "та традиції" },
-  { num: "03", title: "Природні", title2: "багатства" },
-  { num: "04", title: "Морський", title2: "відпочинок" },
+const featureCards = [
+  { number: "01", first: "Історична", second: "спадщина" },
+  { number: "02", first: "Культура", second: "та традиції" },
 ];
+
+const ArrowGlyph = ({ direction }: { direction: "up" | "down" }) => (
+  <svg
+    viewBox="340 1084 85 60"
+    className={`h-5 w-5 ${direction === "up" ? "rotate-90" : "-rotate-90"}`}
+    aria-hidden="true"
+  >
+    <polygon
+      fill="#002f5e"
+      points="415.07 1107.28 383.26 1107.28 393.54 1089.66 356.07 1113.89 393.54 1138.12 383.25 1120.49 415.07 1120.49 415.07 1107.28"
+    />
+  </svg>
+);
+
+const star = "✦";
 
 const Index = () => {
   return (
-    <div className="relative min-h-screen overflow-hidden bg-sea-deep text-cream font-sans">
-      {/* Hero background image */}
-      <img
-        src={seaHero}
-        alt="Чорне море Одещини"
-        className="absolute inset-0 h-full w-full object-cover opacity-90"
-      />
-      <div className="absolute inset-0 bg-gradient-to-b from-sea-deep/40 via-sea/30 to-sea-deep/80" />
+    <div className="relative min-h-screen overflow-hidden bg-[#00142a] text-[#fff2e8]">
+      <img src={seaHero} alt="Одещина" className="absolute inset-0 h-full w-full object-cover" />
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,12,33,0.28),rgba(0,12,33,0.82))]" />
 
-      {/* Browser chrome (faux) */}
-      <div className="relative z-10 flex items-center gap-3 px-6 pt-5 text-cream/70">
-        <div className="flex gap-2">
-          <span className="h-3 w-3 rounded-full bg-[#ff5f57]" />
-          <span className="h-3 w-3 rounded-full bg-[#febc2e]" />
-          <span className="h-3 w-3 rounded-full bg-[#28c840]" />
-        </div>
-        <div className="ml-4 flex items-center gap-2">
-          <button className="flex h-8 w-8 items-center justify-center rounded-full bg-cream/95 text-sea shadow-sm">
-            <ChevronLeft className="h-4 w-4" strokeWidth={2.5} />
-          </button>
-          <button className="flex h-8 w-8 items-center justify-center rounded-full bg-cream/95 text-sea shadow-sm">
-            <ChevronRight className="h-4 w-4" strokeWidth={2.5} />
-          </button>
-        </div>
-        <div className="mx-4 flex h-9 flex-1 items-center justify-center rounded-full bg-cream/95 px-4 text-sm font-medium text-sea">
-          odesa.tourism.ua
-        </div>
-        <Search className="h-4 w-4" />
-        <div className="flex flex-col gap-1">
-          <span className="h-1 w-1 rounded-full bg-cream/70" />
-          <span className="h-1 w-1 rounded-full bg-cream/70" />
-          <span className="h-1 w-1 rounded-full bg-cream/70" />
-        </div>
-      </div>
+      <motion.header
+        initial={{ opacity: 0, y: -24 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
+        className="relative z-20 mx-auto w-full max-w-[1180px] px-4 pt-0 md:px-5"
+      >
+        <div className="rounded-b-[58px] bg-[#fff2e8] px-5 pb-4 pt-4 text-[#00376c] md:px-8">
+          <div className="grid grid-cols-1 items-center gap-5 md:grid-cols-[1fr_auto_1fr]">
+            <nav className="flex items-center justify-center gap-4 text-[14px] leading-none md:justify-start font-odesa-medium">
+              <span className="text-[15px]">{star}</span>
+              {navLeft.map((item, index) => (
+                <a key={item} href="#" className="transition-opacity hover:opacity-75">
+                  {item}
+                  {index === 0 ? <span className="ml-4 text-[15px]">{star}</span> : null}
+                </a>
+              ))}
+            </nav>
 
-      {/* Navigation pill */}
-      <header className="relative z-20 mx-auto mt-6 flex max-w-6xl items-center justify-between rounded-b-[3rem] bg-cream px-12 py-5 text-sea shadow-2xl shadow-sea-deep/40">
-        <nav className="flex items-center gap-8 font-sans text-sm">
-          {navLeft.map((item) => (
-            <a key={item} href="#" className="flex items-center gap-2 transition-opacity hover:opacity-70">
-              <Diamond className="h-2.5 w-2.5 fill-sea" strokeWidth={0} />
-              {item}
-            </a>
-          ))}
-        </nav>
-        <h1 className="font-display text-2xl font-semibold tracking-[0.35em]">ОДЕЩИНА</h1>
-        <nav className="flex items-center gap-8 font-sans text-sm">
-          {navRight.map((item) => (
-            <a key={item} href="#" className="flex items-center gap-2 transition-opacity hover:opacity-70">
-              <Diamond className="h-2.5 w-2.5 fill-sea" strokeWidth={0} />
-              {item}
-            </a>
-          ))}
-        </nav>
-      </header>
+            <h1 className="px-2 text-center text-[42px] leading-[0.95] tracking-[0.04em] font-odesa-regular font-odesa-ss02">ОДЕЩИНА</h1>
 
-      {/* Side scroll buttons */}
-      <div className="absolute left-6 top-1/2 z-20 flex -translate-y-1/2 flex-col gap-3">
-        <button className="flex h-10 w-10 items-center justify-center rounded-full bg-cream text-sea shadow-lg transition-transform hover:-translate-y-0.5">
-          <ArrowUp className="h-4 w-4" strokeWidth={2.5} />
+            <nav className="flex items-center justify-center gap-4 text-[14px] leading-none md:justify-end font-odesa-medium">
+              <span className="text-[15px]">{star}</span>
+              {navRight.map((item, index) => (
+                <a key={item} href="#" className="transition-opacity hover:opacity-75">
+                  {item}
+                  {index === 0 ? <span className="ml-4 text-[15px]">{star}</span> : null}
+                </a>
+              ))}
+            </nav>
+          </div>
+        </div>
+      </motion.header>
+
+      <div className="absolute left-8 top-1/2 z-20 flex -translate-y-1/2 flex-col gap-4">
+        <button
+          type="button"
+          aria-label="Вгору"
+          className="flex h-12 w-12 items-center justify-center rounded-full bg-[#fff2e8]"
+        >
+          <ArrowGlyph direction="up" />
         </button>
-        <button className="flex h-10 w-10 items-center justify-center rounded-full bg-cream text-sea shadow-lg transition-transform hover:translate-y-0.5">
-          <ArrowDown className="h-4 w-4" strokeWidth={2.5} />
+        <button
+          type="button"
+          aria-label="Вниз"
+          className="flex h-12 w-12 items-center justify-center rounded-full bg-[#fff2e8]"
+        >
+          <ArrowGlyph direction="down" />
         </button>
       </div>
 
-      {/* Decorative right-side lines */}
-      <div className="pointer-events-none absolute right-0 top-1/3 z-10 hidden h-px w-1/3 bg-cream/40 md:block" />
-      <div className="pointer-events-none absolute right-0 top-[58%] z-10 hidden h-px w-2/5 bg-cream/40 md:block" />
-      <div className="pointer-events-none absolute right-0 top-[68%] z-10 hidden h-px w-1/4 bg-cream/40 md:block" />
+      <main className="relative z-10 mx-auto flex min-h-[calc(100vh-96px)] w-full max-w-[1320px] flex-col items-center px-4 pb-0 pt-0 text-center md:px-6 md:pt-0">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.92 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1], delay: 0.05 }}
+          className="h-[350px] w-[350px]"
+          style={{
+            backgroundColor: "#fff2e8",
+            WebkitMaskImage: `url(${geminiLogo})`,
+            maskImage: `url(${geminiLogo})`,
+            WebkitMaskPosition: "center",
+            maskPosition: "center",
+            WebkitMaskRepeat: "no-repeat",
+            maskRepeat: "no-repeat",
+            WebkitMaskSize: "contain",
+            maskSize: "contain",
+          }}
+        />
 
-      {/* Hero content */}
-      <main className="relative z-10 flex flex-col items-center px-6 pb-32 pt-16 text-center">
-        <img src={emblem} alt="Емблема Одещини" className="h-44 w-44 md:h-56 md:w-56" />
-
-        <h2 className="mt-12 font-display text-5xl font-medium leading-tight text-cream md:text-7xl">
+        <motion.h2
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.2 }}
+          className="mt-0 text-[46px] leading-[1.02] md:text-[68px] font-odesa-medium"
+        >
           Досліджуй Одещину
-        </h2>
-        <p className="mt-6 font-display text-xl text-cream/90 md:text-2xl">
+        </motion.h2>
+
+        <motion.p
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.3 }}
+          className="mt-3 text-[16px] leading-none md:text-[22px] font-odesa-regular"
+        >
           Серце Південного Колориту
-        </p>
+        </motion.p>
 
-        <button className="mt-16 rounded-md bg-cream px-8 py-3 font-sans text-sm font-medium text-sea transition-transform hover:-translate-y-0.5 hover:shadow-xl">
+        <motion.button
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.75, delay: 0.4 }}
+          className="mt-10 border border-[#fff2e8] bg-[#fff2e8] px-8 py-2 text-[12px] leading-none text-[#00376c] font-odesa-semi"
+          type="button"
+        >
           Онлайн-гід
-        </button>
+        </motion.button>
 
-        {/* Socials */}
-        <div className="mt-14 flex items-center gap-2 rounded-md bg-cream px-4 py-2 text-sea">
-          <Twitter className="h-4 w-4" />
-          <Instagram className="h-4 w-4" />
-          <Facebook className="h-4 w-4" />
-        </div>
-      </main>
+        <section className="mt-auto w-full pt-4">
+          <div className="mx-auto flex max-w-[1060px] flex-col items-center gap-8 md:relative md:min-h-[140px] md:block">
+            <div className="inline-flex items-center gap-4 bg-[#fff2e8] px-8 py-4 text-[#00376c] md:absolute md:bottom-0 md:left-1/2 md:-translate-x-1/2">
+              <Twitter className="h-6 w-6" strokeWidth={2.5} />
+              <Instagram className="h-6 w-6" strokeWidth={2.5} />
+              <Facebook className="h-6 w-6" strokeWidth={2.5} />
+            </div>
 
-      {/* Bottom cards row */}
-      <section className="relative z-10 mx-auto -mt-8 grid max-w-6xl grid-cols-2 gap-8 px-8 pb-12 md:grid-cols-4">
-        {cards.map((c) => (
-          <div key={c.num} className="flex items-start gap-3 border-t border-cream/40 pt-4">
-            <span className="font-display text-3xl font-semibold text-cream">{c.num}</span>
-            <div className="text-xs text-cream/80">
-              <div>{c.title}</div>
-              <div>{c.title2}</div>
+            <div className="grid grid-cols-1 items-start gap-6 md:absolute md:bottom-0 md:right-0 md:grid-cols-2 md:gap-8">
+            {featureCards.map((item) => (
+                <article key={item.number} className="w-full max-w-[170px] text-left">
+                  <div className="flex items-start gap-2">
+                    <span className="text-[40px] leading-none font-odesa-regular">{item.number}</span>
+                    <div className="pt-1 text-[22px] leading-[0.95] font-odesa-medium">
+                    <div>{item.first}</div>
+                    <div>{item.second}</div>
+                    </div>
+                  </div>
+                  <div className="mt-2 h-[6px] w-full bg-[#fff2e8]" />
+                </article>
+            ))}
             </div>
           </div>
-        ))}
-      </section>
+        </section>
+      </main>
     </div>
   );
 };
