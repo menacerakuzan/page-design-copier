@@ -1,13 +1,31 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, MapPin, Phone, Ticket } from "lucide-react";
+import { ArrowRight, MapPin, Phone } from "lucide-react";
 import BackButton from "@/components/BackButton";
 import SiteFooter from "@/components/SiteFooter";
 
+const eventTabs = [
+  { id: "overview", label: "Опис" },
+  { id: "event-info", label: "Інформація" },
+  { id: "dates", label: "Дати" },
+  { id: "map", label: "Карта" },
+  { id: "contacts", label: "Контакти" },
+];
+
 const EventBessarabiaFestival = () => {
+  const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
+
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }, []);
+
+  const setSectionRef = (id: string) => (el: HTMLElement | null) => {
+    sectionRefs.current[id] = el;
+  };
+
+  const goTo = (id: string) => {
+    sectionRefs.current[id]?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   return (
     <div className="min-h-screen bg-[#002f5e] text-[#fff2e8]">
@@ -29,6 +47,18 @@ const EventBessarabiaFestival = () => {
         </motion.div>
       </section>
 
+      <section className="sticky top-0 z-40 bg-[#5f2238]/90 px-4 py-3 backdrop-blur md:px-10">
+        <div className="mx-auto max-w-[1400px] overflow-x-auto">
+          <div className="flex min-w-max items-center gap-8 text-[16px] md:text-[22px] font-odesa-medium">
+            {eventTabs.map((tab) => (
+              <button key={tab.id} type="button" onClick={() => goTo(tab.id)} className="whitespace-nowrap opacity-85 hover:opacity-100 transition-opacity">
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <section className="px-4 pb-24 md:px-10">
         <div className="mx-auto grid max-w-[1400px] gap-8 xl:grid-cols-[1fr_420px]">
           <div className="space-y-10">
@@ -40,7 +70,7 @@ const EventBessarabiaFestival = () => {
               />
             </article>
 
-            <div className="max-w-[980px] space-y-8">
+            <div ref={setSectionRef("overview")} id="overview" className="scroll-mt-24 max-w-[980px] space-y-8">
               <p className="text-[36px] leading-[1.12] md:text-[52px] font-odesa-medium">
                 Головна винна подія півдня України з дегустаціями, фермерськими ярмарками,
                 локальною кухнею та музичною програмою просто неба.
@@ -59,7 +89,7 @@ const EventBessarabiaFestival = () => {
               </div>
             </div>
 
-            <article className="rounded-[26px] bg-[#0e3f74] p-6 md:p-8">
+            <article ref={setSectionRef("event-info")} id="event-info" className="scroll-mt-24 rounded-[26px] bg-[#0e3f74] p-6 md:p-8">
               <h2 className="text-[34px] md:text-[44px] font-odesa-medium">Інформація про подію</h2>
               <div className="mt-5 divide-y divide-[#fff2e8]/20 border-y border-[#fff2e8]/20">
                 <div className="grid gap-3 py-5 md:grid-cols-[220px_1fr]">
@@ -85,7 +115,7 @@ const EventBessarabiaFestival = () => {
               </div>
             </article>
 
-            <article className="rounded-[26px] border border-[#fff2e8]/20 p-6 md:p-8">
+            <article ref={setSectionRef("dates")} id="dates" className="scroll-mt-24 rounded-[26px] border border-[#fff2e8]/20 p-6 md:p-8">
               <h2 className="text-[34px] md:text-[44px] font-odesa-medium">Дати</h2>
               <div className="mt-6 grid gap-4 md:grid-cols-2">
                 <div className="rounded-[18px] bg-[#274f7a] p-5">
@@ -99,7 +129,7 @@ const EventBessarabiaFestival = () => {
               </div>
             </article>
 
-            <article className="overflow-hidden rounded-[26px] border border-[#fff2e8]/20">
+            <article ref={setSectionRef("map")} id="map" className="scroll-mt-24 overflow-hidden rounded-[26px] border border-[#fff2e8]/20">
               <div className="relative">
                 <img
                   src="https://images.unsplash.com/photo-1473445361085-b9a07f55608b?auto=format&fit=crop&w=2200&q=80"
@@ -119,7 +149,7 @@ const EventBessarabiaFestival = () => {
               </div>
             </article>
 
-            <article className="rounded-[26px] border border-[#fff2e8]/20 p-6 md:p-8">
+            <article ref={setSectionRef("contacts")} id="contacts" className="scroll-mt-24 rounded-[26px] border border-[#fff2e8]/20 p-6 md:p-8">
               <h2 className="text-[34px] md:text-[44px] font-odesa-medium">Контакти</h2>
               <div className="mt-6 max-w-[820px] space-y-4 text-[26px] leading-[1.24] text-[#fff2e8]/92 font-odesa-regular">
                 <p className="font-odesa-medium">BERNEXPO AG</p>
@@ -160,12 +190,7 @@ const EventBessarabiaFestival = () => {
               </p>
             </div>
 
-            <button
-              type="button"
-              className="flex w-full items-center justify-center gap-2 rounded-full bg-[#9f1f47] px-6 py-5 text-[30px] leading-none font-odesa-medium transition-colors hover:bg-[#ba2c5a]"
-            >
-              Перевірити наявність <Ticket className="h-6 w-6" />
-            </button>
+            
           </aside>
         </div>
       </section>

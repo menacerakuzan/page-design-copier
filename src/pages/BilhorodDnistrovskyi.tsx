@@ -1,17 +1,19 @@
 import { useEffect, useRef } from "react";
+import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowRight, ArrowUpRight, CloudSun, Hotel, Ticket, Utensils } from "lucide-react";
 import BackButton from "@/components/BackButton";
 import SiteFooter from "@/components/SiteFooter";
 
 const localTabs = [
-  { id: "main", label: "Найголовніше" },
-  { id: "media", label: "Фото та відео" },
-  { id: "events", label: "Події" },
-  { id: "recommended", label: "Рекомендуємо" },
+  { id: "main", label: "Найголовніше", hidden: true },
+  { id: "media", label: "Що відвідати" },
+  { id: "events", label: "Події", hidden: true },
+  { id: "recommended", label: "Рекомендуємо", hidden: true },
   { id: "hotels", label: "Готелі" },
-  { id: "offers", label: "Актуальні пропозиції" },
+  { id: "offers", label: "Актуальні пропозиції", hidden: true },
   { id: "restaurants", label: "Ресторани" },
+  { id: "info", label: "Інформація" },
 ];
 
 const brightMoments = [
@@ -81,6 +83,7 @@ const hotels = [
   {
     title: "Fortetsia View Hotel",
     subtitle: "Білгород-Дністровський",
+    href: "/hoteli/fortetsia-view-hotel",
     rating: "4.8",
     image: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1200&q=80",
   },
@@ -118,17 +121,8 @@ const restaurants = [
   {
     title: "Рибний двір",
     subtitle: "Білгород-Дністровський",
+    href: "/restorany/rybnyy-dvir",
     image: "https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&w=1200&q=80",
-  },
-  {
-    title: "Casa Bessarabia",
-    subtitle: "Одеська область",
-    image: "https://images.unsplash.com/photo-1562059390-a761a084768e?auto=format&fit=crop&w=1200&q=80",
-  },
-  {
-    title: "Лиман Хаус",
-    subtitle: "Білгород-Дністровський",
-    image: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=1200&q=80",
   },
 ];
 
@@ -172,7 +166,7 @@ const BilhorodDnistrovskyi = () => {
           <div className="text-[18px] leading-none md:text-[28px] font-odesa-regular">
             <span className="font-odesa-medium">Куди поїхати</span>
             <span className="mx-2 opacity-80">/</span>
-            <span className="opacity-90">Регіон Одещини</span>
+            <span className="opacity-90">Район</span>
             <span className="mx-2 opacity-80">/</span>
             <span className="opacity-90">Білгород-Дністровський</span>
           </div>
@@ -182,7 +176,7 @@ const BilhorodDnistrovskyi = () => {
       <section className="sticky top-0 z-40 bg-[#5f2238]/90 px-4 py-3 backdrop-blur md:px-10">
         <div className="mx-auto max-w-[1400px] overflow-x-auto">
           <div className="flex min-w-max items-center gap-8 text-[14px] md:text-[20px] text-[#fff2e8] font-odesa-medium">
-            {localTabs.map((tab) => (
+            {localTabs.filter((tab) => !tab.hidden).map((tab) => (
               <button
                 key={tab.id}
                 type="button"
@@ -199,7 +193,6 @@ const BilhorodDnistrovskyi = () => {
       <section ref={setSectionRef("main")} id="main" className="scroll-mt-24 bg-[#9f1f47] px-4 py-14 text-[#fff2e8] md:scroll-mt-28 md:px-10">
         <div className="mx-auto max-w-[1400px] grid grid-cols-1 gap-8 lg:grid-cols-[1.3fr_0.8fr]">
           <div>
-            <h2 className="text-[42px] md:text-[58px] leading-none font-odesa-medium">Найголовніше</h2>
             <p className="mt-5 text-[20px] md:text-[30px] leading-[1.22]">
               У Білгороді-Дністровському ви зможете доторкнутися до історії Аккерманської фортеці, прогулятися старими вулицями
               міста та відчути атмосферу Дністровського лиману.
@@ -223,7 +216,10 @@ const BilhorodDnistrovskyi = () => {
 
       <section ref={setSectionRef("media")} id="media" className="scroll-mt-24 bg-[#002f5e] px-4 py-14 text-[#fff2e8] md:scroll-mt-28 md:px-10">
         <div className="mx-auto max-w-[1400px]">
-          <h2 className="text-[42px] md:text-[58px] leading-none font-odesa-medium">Фото та відео</h2>
+          <div className="flex items-end justify-between gap-5">
+            <h2 className="text-[42px] md:text-[58px] leading-none font-odesa-medium">Що відвідати</h2>
+            <button className="inline-flex items-center gap-2 text-[18px] md:text-[24px] text-[#fff2e8]">Показати всі <ArrowRight className="h-5 w-5" /></button>
+          </div>
           <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2">
             {brightMoments.map((item) => (
               <article key={item.title} className="relative h-[260px] overflow-hidden rounded-[26px] md:h-[360px]">
@@ -237,7 +233,7 @@ const BilhorodDnistrovskyi = () => {
         </div>
       </section>
 
-      <section ref={setSectionRef("events")} id="events" className="scroll-mt-24 bg-[#df9b3b] px-4 py-14 text-[#2a0015] md:scroll-mt-28 md:px-10">
+      <section ref={setSectionRef("events")} id="events" className="hidden scroll-mt-24 bg-[#df9b3b] px-4 py-14 text-[#2a0015] md:scroll-mt-28 md:px-10">
         <div className="mx-auto max-w-[1400px]">
           <div className="flex items-end justify-between gap-5">
             <h2 className="text-[42px] md:text-[58px] leading-none font-odesa-medium">Події</h2>
@@ -257,7 +253,7 @@ const BilhorodDnistrovskyi = () => {
         </div>
       </section>
 
-      <section ref={setSectionRef("recommended")} id="recommended" className="scroll-mt-24 bg-[#9f1f47] px-4 py-14 text-[#fff2e8] md:scroll-mt-28 md:px-10">
+      <section ref={setSectionRef("recommended")} id="recommended" className="hidden scroll-mt-24 bg-[#9f1f47] px-4 py-14 text-[#fff2e8] md:scroll-mt-28 md:px-10">
         <div className="mx-auto max-w-[1400px]">
           <h2 className="text-[42px] md:text-[58px] leading-none font-odesa-medium">Рекомендуємо</h2>
           <div className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
@@ -281,24 +277,26 @@ const BilhorodDnistrovskyi = () => {
           <h2 className="text-[42px] md:text-[58px] leading-none font-odesa-medium">Готелі</h2>
           <div className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-3">
             {hotels.map((hotel) => (
-              <article key={hotel.title} className="overflow-hidden rounded-[20px] bg-[#0e467f]">
-                <div className="h-[210px]">
-                  <img src={hotel.image} alt={hotel.title} className="h-full w-full object-cover" />
-                </div>
-                <div className="p-5 md:p-6">
-                  <h3 className="text-[28px] md:text-[36px] leading-[1.05] font-odesa-medium">{hotel.title}</h3>
-                  <p className="mt-2 text-[16px] md:text-[21px] text-[#fff2e8]/85">{hotel.subtitle}</p>
-                  <p className="mt-3 inline-flex items-center rounded-md bg-[#002f5e] px-3 py-1 text-[15px] md:text-[18px]">
-                    {hotel.rating} Відмінно
-                  </p>
-                </div>
-              </article>
+              <Link key={hotel.title} to={hotel.href ?? "#"} className="group block transition-transform duration-300 hover:-translate-y-1">
+                <article className="overflow-hidden rounded-[20px] bg-[#0e467f]">
+                  <div className="h-[210px]">
+                    <img src={hotel.image} alt={hotel.title} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                  </div>
+                  <div className="p-5 md:p-6">
+                    <h3 className="text-[28px] md:text-[36px] leading-[1.05] font-odesa-medium">{hotel.title}</h3>
+                    <p className="mt-2 text-[16px] md:text-[21px] text-[#fff2e8]/85">{hotel.subtitle}</p>
+                    <p className="mt-3 inline-flex items-center rounded-md bg-[#002f5e] px-3 py-1 text-[15px] md:text-[18px]">
+                      {hotel.rating} Відмінно
+                    </p>
+                  </div>
+                </article>
+              </Link>
             ))}
           </div>
         </div>
       </section>
 
-      <section ref={setSectionRef("offers")} id="offers" className="scroll-mt-24 bg-[#df9b3b] px-4 py-14 text-[#2a0015] md:scroll-mt-28 md:px-10">
+      <section ref={setSectionRef("offers")} id="offers" className="hidden scroll-mt-24 bg-[#df9b3b] px-4 py-14 text-[#2a0015] md:scroll-mt-28 md:px-10">
         <div className="mx-auto max-w-[1400px]">
           <h2 className="text-[42px] md:text-[58px] leading-none font-odesa-medium">Актуальні пропозиції</h2>
           <div className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-3">
@@ -320,18 +318,33 @@ const BilhorodDnistrovskyi = () => {
       <section ref={setSectionRef("restaurants")} id="restaurants" className="scroll-mt-24 bg-[#9f1f47] px-4 py-14 text-[#fff2e8] md:scroll-mt-28 md:px-10">
         <div className="mx-auto max-w-[1400px]">
           <h2 className="text-[42px] md:text-[58px] leading-none font-odesa-medium">Ресторани</h2>
-          <div className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-3">
+          <div className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
             {restaurants.map((r) => (
-              <article key={r.title} className="overflow-hidden rounded-[20px] bg-[#5f2238]/90">
-                <div className="h-[200px]">
-                  <img src={r.image} alt={r.title} className="h-full w-full object-cover" />
-                </div>
-                <div className="p-5 md:p-6">
-                  <h3 className="inline-flex items-center gap-2 text-[26px] md:text-[34px] leading-none font-odesa-medium">
-                    <Utensils className="h-6 w-6" /> {r.title}
-                  </h3>
-                  <p className="mt-2 text-[16px] md:text-[21px] text-[#fff2e8]/85">{r.subtitle}</p>
-                </div>
+              <Link key={r.title} to={r.href} className="group block transition-transform duration-300 hover:-translate-y-1">
+                <article className="overflow-hidden rounded-[20px] bg-[#5f2238]/90">
+                  <div className="h-[230px]">
+                    <img src={r.image} alt={r.title} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                  </div>
+                  <div className="p-5 md:p-6">
+                    <h3 className="inline-flex items-center gap-2 text-[26px] md:text-[34px] leading-none font-odesa-medium">
+                      <Utensils className="h-6 w-6" /> {r.title}
+                    </h3>
+                    <p className="mt-2 text-[16px] md:text-[21px] text-[#fff2e8]/85">{r.subtitle}</p>
+                  </div>
+                </article>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section ref={setSectionRef("info")} id="info" className="scroll-mt-24 bg-[#002f5e] px-4 py-14 text-[#fff2e8] md:scroll-mt-28 md:px-10">
+        <div className="mx-auto max-w-[1400px]">
+          <h2 className="text-[42px] md:text-[58px] leading-none font-odesa-medium">Інформація</h2>
+          <div className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
+            {["Історія та культура", "Гастрономія", "Контакти", "Як дістатись"].map((item) => (
+              <article key={item} className="rounded-[22px] bg-[#0e467f] p-6">
+                <h3 className="text-[30px] md:text-[36px] leading-[1.05] font-odesa-medium">{item}</h3>
               </article>
             ))}
           </div>

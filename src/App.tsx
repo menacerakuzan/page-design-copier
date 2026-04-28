@@ -7,6 +7,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import Index from "./pages/Index.tsx";
 import BilhorodDnistrovskyi from "./pages/BilhorodDnistrovskyi.tsx";
 import EventBessarabiaFestival from "./pages/EventBessarabiaFestival.tsx";
+import RestaurantRybnyiDvir from "./pages/RestaurantRybnyiDvir.tsx";
+import HotelFortetsiaView from "./pages/HotelFortetsiaView.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -32,6 +34,8 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/napryamky/bilhorod-dnistrovskyi" element={<BilhorodDnistrovskyi />} />
           <Route path="/podiyi/festyval-vyna-ta-smaku-bessarabii" element={<EventBessarabiaFestival />} />
+          <Route path="/restorany/rybnyy-dvir" element={<RestaurantRybnyiDvir />} />
+          <Route path="/hoteli/fortetsia-view-hotel" element={<HotelFortetsiaView />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
