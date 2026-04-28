@@ -1,7 +1,8 @@
 import { useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowRight, ArrowUpRight, CloudSun, Facebook, Hotel, Info, Instagram, Linkedin, MapPin, Send, Ticket, Twitter, Utensils, Youtube } from "lucide-react";
+import { ArrowRight, ArrowUpRight, CloudSun, Hotel, Ticket, Utensils } from "lucide-react";
+import BackButton from "@/components/BackButton";
+import SiteFooter from "@/components/SiteFooter";
 
 const localTabs = [
   { id: "main", label: "Найголовніше" },
@@ -11,7 +12,6 @@ const localTabs = [
   { id: "hotels", label: "Готелі" },
   { id: "offers", label: "Актуальні пропозиції" },
   { id: "restaurants", label: "Ресторани" },
-  { id: "info", label: "Інформація" },
 ];
 
 const brightMoments = [
@@ -132,52 +132,6 @@ const restaurants = [
   },
 ];
 
-const infoCards = [
-  {
-    icon: MapPin,
-    title: "Контакти",
-    lines: ["Турцентр Аккерман", "вул. Ізмаїльська, 10", "+38 (04849) 2 20 20"],
-    image: "https://images.unsplash.com/photo-1489515217757-5fd1be406fef?auto=format&fit=crop&w=1200&q=80",
-  },
-  {
-    icon: Hotel,
-    title: "Проживання",
-    lines: ["Готелі", "Апартаменти", "Садиби"],
-    image: "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?auto=format&fit=crop&w=1200&q=80",
-  },
-  {
-    icon: Ticket,
-    title: "Квитки",
-    lines: ["Фортеця", "Музей", "Фестивалі"],
-    image: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=80",
-  },
-  {
-    icon: Info,
-    title: "Довідка",
-    lines: ["Маршрути", "Транспорт", "Паркінги"],
-    image: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1200&q=80",
-  },
-];
-
-const footerColumns = [
-  {
-    title: "Мандрівнику",
-    links: ["Що подивитись", "Куди поїхати", "Планування", "Події", "Про регіон"],
-  },
-  {
-    title: "Партнерам",
-    links: ["Чому Одещина", "Маркетингові матеріали", "Статистика та дані", "Контакти"],
-  },
-  {
-    title: "Медіа",
-    links: ["Новини", "Фото та відео", "Прес-кит", "Логотипи"],
-  },
-  {
-    title: "Бізнес-події",
-    links: ["MICE в регіоні", "Локації", "Натхнення", "Партнери"],
-  },
-];
-
 const BilhorodDnistrovskyi = () => {
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
 
@@ -204,12 +158,7 @@ const BilhorodDnistrovskyi = () => {
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,47,94,0.18),rgba(0,16,34,0.56))]" />
 
         <div className="relative z-10 flex min-h-screen flex-col justify-between px-6 py-8 md:px-14 md:py-10">
-          <Link
-            to="/"
-            className="w-fit rounded-full bg-[#002f5e] px-5 py-2 text-[14px] leading-none tracking-[0.04em] text-[#fff2e8] transition-opacity hover:opacity-90 font-odesa-medium"
-          >
-            ← Назад
-          </Link>
+          <BackButton to="/" invert={false} />
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -389,65 +338,7 @@ const BilhorodDnistrovskyi = () => {
         </div>
       </section>
 
-      <section ref={setSectionRef("info")} id="info" className="scroll-mt-24 bg-[#002f5e] px-4 py-14 text-[#fff2e8] md:scroll-mt-28 md:px-10">
-        <div className="mx-auto max-w-[1400px]">
-          <h2 className="text-[42px] md:text-[58px] leading-none font-odesa-medium">Інформація</h2>
-          <div className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
-            {infoCards.map((card) => {
-              const Icon = card.icon;
-              return (
-                <article key={card.title} className="overflow-hidden rounded-[22px] bg-[#0e467f]">
-                  <div className="h-[170px]">
-                    <img src={card.image} alt={card.title} className="h-full w-full object-cover" />
-                  </div>
-                  <div className="p-5 md:p-6">
-                    <Icon className="h-8 w-8" />
-                    <h3 className="mt-4 text-[30px] md:text-[38px] leading-[1.02] font-odesa-medium">{card.title}</h3>
-                    <ul className="mt-4 space-y-2 text-[18px] md:text-[24px] text-[#fff2e8]/88">
-                      {card.lines.map((line) => (
-                        <li key={line}>{line}</li>
-                      ))}
-                    </ul>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      <footer className="relative z-10 bg-[#fff2e8] px-4 py-20 text-[#002f5e] md:px-10">
-        <div className="mx-auto grid max-w-[1400px] gap-10 border-t border-[#002f5e]/20 pt-14 md:grid-cols-[1.1fr_1.1fr_1fr_1.1fr_0.9fr]">
-          {footerColumns.map((col) => (
-            <div key={col.title}>
-              <h4 className="text-[34px] leading-none font-odesa-medium">{col.title}</h4>
-              <nav className="mt-6 space-y-4">
-                {col.links.map((link) => (
-                  <a key={link} href="#" className="block text-[22px] leading-none text-[#002f5e]/82 transition-colors hover:text-[#002f5e] font-odesa-regular">
-                    {link}
-                  </a>
-                ))}
-              </nav>
-            </div>
-          ))}
-
-          <div>
-            <h4 className="text-[34px] leading-none text-[#002f5e]/70 font-odesa-medium">Зв'язок</h4>
-            <div className="mt-7 grid grid-cols-3 gap-4">
-              {[Youtube, Instagram, Facebook, Linkedin, Twitter, Send].map((Icon, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  className="flex h-12 w-12 items-center justify-center rounded-full border border-[#002f5e]/30 text-[#002f5e] transition-colors hover:bg-[#002f5e] hover:text-[#fff2e8]"
-                  aria-label="Соціальна мережа"
-                >
-                  <Icon className="h-6 w-6" />
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 };

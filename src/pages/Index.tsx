@@ -4,6 +4,7 @@ import { ArrowRight, ChevronLeft, ChevronRight, Facebook, Instagram } from "luci
 import { Link } from "react-router-dom";
 import heroVideo from "@/assets/episode-01.mp4";
 import geminiLogo from "@/assets/gemini-svg-2.svg";
+import SiteFooter from "@/components/SiteFooter";
 
 const navLeft = ["Райони", "Локації"];
 const navRight = ["Гіди", "Контакти"];
@@ -101,6 +102,7 @@ const events = [
   {
     title: "Фестиваль вина та смаку Бессарабії",
     locationDate: "Болград, 24.04 - 03.05.2026",
+    href: "/podiyi/festyval-vyna-ta-smaku-bessarabii",
     badgeTop: "до",
     badgeDay: "3",
     badgeMonth: "травень",
@@ -169,27 +171,6 @@ const events = [
     badgeMonth: "травень",
     image:
       "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=1200&q=80",
-  },
-];
-
-const footerColumns = [
-  {
-    title: "Мандрівнику",
-    links: ["Що подивитись", "Куди поїхати", "Маршрути", "Події", "Інформація"],
-  },
-  {
-    title: "Партнерам",
-    links: ["Чому Одещина", "Маркетингові матеріали", "Статистика та дані", "Контакти"],
-    hidden: true,
-  },
-  {
-    title: "Медіа",
-    links: ["Новини", "Фото та відео", "Контакти", "Логотипи"],
-  },
-  {
-    title: "Бізнес-події",
-    links: ["MICE в регіоні", "Локації", "Натхнення", "Партнери"],
-    hidden: true,
   },
 ];
 
@@ -387,15 +368,15 @@ const Index = () => {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.75, delay: 0.4 }}
-            className="mt-10 border border-[#fff2e8] bg-[#fff2e8] px-8 py-2 text-[12px] leading-none text-[#00376c] font-odesa-semi"
+            className="mt-10 rounded-full border border-[#fff2e8] bg-[#fff2e8] px-9 py-2 text-[12px] leading-none text-[#00376c] font-odesa-semi"
             type="button"
           >
             Маршрути
           </motion.button>
 
-          <section className="mt-auto w-full pt-4">
-            <div className="mx-auto flex max-w-[1060px] flex-col items-center gap-8 md:relative md:min-h-[140px] md:block">
-              <div className="inline-flex items-center gap-4 bg-[#fff2e8] px-8 py-4 text-[#00376c] md:absolute md:bottom-0 md:left-1/2 md:-translate-x-1/2">
+          <section className="mt-auto w-full pt-0">
+            <div className="mx-auto flex max-w-[1060px] flex-col items-center gap-6 md:relative md:min-h-[120px] md:block">
+              <div className="inline-flex items-center gap-4 rounded-full bg-[#fff2e8] px-8 py-4 text-[#00376c] md:absolute md:bottom-0 md:left-1/2 md:-translate-x-1/2">
                 {socialLinks.map(({ label, href, Icon }) => (
                   <a
                     key={label}
@@ -660,24 +641,44 @@ const Index = () => {
               transition={{ duration: 0.35 }}
               className="mt-10 grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-4"
             >
-              {pagedEvents.map((event) => (
-                <article key={event.title} className="group">
-                  <div className="relative h-[260px] overflow-hidden rounded-[26px] md:h-[360px]">
-                    <img
-                      src={event.image}
-                      alt={event.title}
-                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
-                    <div className="absolute left-4 top-4 rounded-[18px] bg-[#002f5e] px-4 py-3 text-[#fff2e8]">
-                      {event.badgeTop ? <div className="text-[16px] leading-none font-odesa-regular">{event.badgeTop}</div> : null}
-                      <div className="mt-1 text-[36px] leading-none font-odesa-medium">{event.badgeDay}</div>
-                      <div className="text-[32px] leading-none font-odesa-medium">{event.badgeMonth}</div>
+              {pagedEvents.map((event) => {
+                const eventCard = (
+                  <>
+                    <div className="relative h-[260px] overflow-hidden rounded-[26px] md:h-[360px]">
+                      <img
+                        src={event.image}
+                        alt={event.title}
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                      <div className="absolute left-4 top-4 rounded-[18px] bg-[#002f5e] px-4 py-3 text-[#fff2e8]">
+                        {event.badgeTop ? <div className="text-[16px] leading-none font-odesa-regular">{event.badgeTop}</div> : null}
+                        <div className="mt-1 text-[36px] leading-none font-odesa-medium">{event.badgeDay}</div>
+                        <div className="text-[32px] leading-none font-odesa-medium">{event.badgeMonth}</div>
+                      </div>
                     </div>
-                  </div>
-                  <h4 className="mt-4 text-[28px] leading-[1.03] font-odesa-medium">{event.title}</h4>
-                  <p className="mt-2 text-[20px] leading-none text-[#002f5e]/80 font-odesa-regular">{event.locationDate}</p>
-                </article>
-              ))}
+                    <h4 className="mt-4 text-[28px] leading-[1.03] font-odesa-medium">{event.title}</h4>
+                    <p className="mt-2 text-[20px] leading-none text-[#002f5e]/80 font-odesa-regular">{event.locationDate}</p>
+                  </>
+                );
+
+                if (event.href) {
+                  return (
+                    <Link
+                      key={event.title}
+                      to={event.href}
+                      className="group block transition-transform duration-300 hover:-translate-y-1"
+                    >
+                      {eventCard}
+                    </Link>
+                  );
+                }
+
+                return (
+                  <article key={event.title} className="group">
+                    {eventCard}
+                  </article>
+                );
+              })}
             </motion.div>
           </AnimatePresence>
 
@@ -695,40 +696,9 @@ const Index = () => {
         </div>
       </section>
 
-      <footer ref={setSectionRef(5)} className="relative z-10 bg-[#fff2e8] px-4 py-20 text-[#002f5e] md:px-10">
-        <div className="mx-auto grid max-w-[1400px] gap-10 border-t border-[#002f5e]/20 pt-14 md:grid-cols-[1.2fr_1fr_0.9fr]">
-          {footerColumns.filter((col) => !col.hidden).map((col) => (
-            <div key={col.title}>
-              <h4 className="text-[34px] leading-none font-odesa-medium">{col.title}</h4>
-              <nav className="mt-6 space-y-4">
-                {col.links.map((link) => (
-                  <a key={link} href="#" className="block text-[22px] leading-none text-[#002f5e]/82 transition-colors hover:text-[#002f5e] font-odesa-regular">
-                    {link}
-                  </a>
-                ))}
-              </nav>
-            </div>
-          ))}
-
-          <div>
-            <h4 className="text-[34px] leading-none text-[#002f5e]/70 font-odesa-medium">Зв'язок</h4>
-            <div className="mt-7 grid grid-cols-3 gap-4">
-              {socialLinks.map(({ label, href, Icon }) => (
-                <a
-                  key={label}
-                  href={href}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex h-12 w-12 items-center justify-center rounded-full border border-[#002f5e]/30 text-[#002f5e] transition-colors hover:bg-[#002f5e] hover:text-[#fff2e8]"
-                  aria-label={label}
-                >
-                  <Icon className="h-6 w-6" />
-                </a>
-              ))}
-            </div>
-          </div>
-        </div>
-      </footer>
+      <div ref={setSectionRef(5)}>
+        <SiteFooter />
+      </div>
     </div>
   );
 };
