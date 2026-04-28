@@ -1,4 +1,6 @@
-import { Facebook, Instagram } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Facebook, Instagram, Search } from "lucide-react";
+import { cities, districts, regions, tourismObjects } from "@/data/hierarchyMockData";
 
 const footerColumns = [
   {
@@ -28,8 +30,50 @@ const socialLinks = [
 ];
 
 const SiteFooter = () => {
+  const [query, setQuery] = useState("");
+
+  const searchItems = useMemo(
+    () => [
+      ...regions.map((x) => ({ label: x.name, meta: "Область", href: "#" })),
+      ...districts.map((x) => ({ label: x.name, meta: "Район", href: "#" })),
+      ...cities.map((x) => ({ label: x.name, meta: "Місто", href: "#" })),
+      ...tourismObjects.map((x) => ({ label: x.name, meta: typeMeta(x.type), href: "#" })),
+    ],
+    [],
+  );
+
+  const filtered = useMemo(() => {
+    const normalized = query.trim().toLowerCase();
+    if (!normalized) return [];
+    return searchItems
+      .filter((item) => item.label.toLowerCase().includes(normalized))
+      .slice(0, 8);
+  }, [query, searchItems]);
+
   return (
     <footer className="relative z-10 bg-[#fff2e8] px-4 py-16 text-[#002f5e] md:px-10">
+      <div className="mx-auto mb-8 max-w-[1200px]">
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-6 top-1/2 h-6 w-6 -translate-y-1/2 text-[#fff2e8]/70" />
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Пошук"
+            className="h-16 w-full rounded-full border border-[#002f5e]/10 bg-[#9f1f47] pl-16 pr-6 text-[24px] text-[#fff2e8] placeholder:text-[#fff2e8]/70 outline-none transition-colors focus:border-[#002f5e]/40 focus:bg-[#8f1a40] font-odesa-medium"
+          />
+        </div>
+        {filtered.length > 0 ? (
+          <div className="mt-3 overflow-hidden rounded-2xl border border-[#002f5e]/20 bg-[#fff2e8] shadow-[0_10px_30px_rgba(0,47,94,0.10)]">
+            {filtered.map((item) => (
+              <a key={`${item.meta}-${item.label}`} href={item.href} className="flex items-center justify-between border-b border-[#002f5e]/10 px-4 py-3 transition-colors last:border-b-0 hover:bg-[#002f5e]/5">
+                <span className="text-[18px] text-[#002f5e] font-odesa-medium">{item.label}</span>
+                <span className="rounded-full bg-[#002f5e]/10 px-3 py-1 text-[12px] text-[#002f5e]/80">{item.meta}</span>
+              </a>
+            ))}
+          </div>
+        ) : null}
+      </div>
+
       <div className="mx-auto grid max-w-[1200px] gap-7 border-t border-[#002f5e]/20 pt-10 md:grid-cols-[1fr_1fr_auto]">
         {footerColumns.map((col) => (
           <div key={col.title}>
@@ -65,5 +109,12 @@ const SiteFooter = () => {
     </footer>
   );
 };
+
+function typeMeta(type: "event" | "hotel" | "restaurant" | "attraction") {
+  if (type === "event") return "Подія";
+  if (type === "hotel") return "Готель";
+  if (type === "restaurant") return "Ресторан";
+  return "Об'єкт";
+}
 
 export default SiteFooter;

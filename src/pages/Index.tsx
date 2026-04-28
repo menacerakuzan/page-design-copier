@@ -1,10 +1,12 @@
-import { useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight, ChevronLeft, ChevronRight, Facebook, Instagram } from "lucide-react";
 import { Link } from "react-router-dom";
 import heroVideo from "@/assets/episode-01.mp4";
 import geminiLogo from "@/assets/gemini-svg-2.svg";
 import SiteFooter from "@/components/SiteFooter";
+import { fallbackContentCards } from "@/data/contentCardsFallback";
+import { usePageContentCards } from "@/hooks/usePageContentCards";
 
 const navLeft = ["Райони", "Локації"];
 const navRight = ["Гіди", "Контакти"];
@@ -206,10 +208,71 @@ const ArrowGlyph = ({ direction }: { direction: "up" | "down" }) => (
 const star = "✦";
 
 const Index = () => {
+  const { data: indexCardsData } = usePageContentCards("index");
   const sectionRefs = useRef<Array<HTMLElement | null>>([]);
   const destinationsScrollerRef = useRef<HTMLDivElement | null>(null);
   const [activeAttraction, setActiveAttraction] = useState(0);
   const [eventsPage, setEventsPage] = useState(0);
+
+  const indexCards = useMemo(() => {
+    const liveCards = (indexCardsData ?? []).filter((card) => card.pageKey === "index");
+    const fallbackIndex = fallbackContentCards.filter((card) => card.pageKey === "index" && card.published);
+    return { liveCards, fallbackIndex };
+  }, [indexCardsData]);
+
+  const getSectionCards = (sectionKey: string) => {
+    const live = indexCards.liveCards.filter((card) => card.sectionKey === sectionKey);
+    if (live.length) return live;
+    return indexCards.fallbackIndex.filter((card) => card.sectionKey === sectionKey);
+  };
+
+  const destinationCards = getSectionCards("directions").map((card) => ({
+    title: card.title,
+    href: card.href ?? undefined,
+    image: card.imageUrl ?? "",
+  }));
+
+  const summerFeaturedCard = getSectionCards("interesting-featured")[0];
+  const summerRecommendations = {
+    featured: {
+      title: summerFeaturedCard?.title ?? "Винний маршрут Одещини",
+      image:
+        summerFeaturedCard?.imageUrl ??
+        "https://images.unsplash.com/photo-1505764706515-aa95265c5abc?auto=format&fit=crop&w=1800&q=80",
+    },
+    items: getSectionCards("interesting").map((card) => ({
+      title: card.title,
+      image: card.imageUrl ?? "",
+    })),
+  };
+
+  const topAttractions = getSectionCards("attractions").map((card) => ({
+    title: card.title,
+    subtitle: card.subtitle ?? "",
+    description: String(card.payload?.description ?? ""),
+    image: card.imageUrl ?? "",
+  }));
+  const safeTopAttractions = topAttractions.length
+    ? topAttractions
+    : [
+        {
+          title: "Одещина",
+          subtitle: "",
+          description: "Додайте картки у розділ attractions для головної сторінки.",
+          image:
+            "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=2200&q=80",
+        },
+      ];
+
+  const events = getSectionCards("events").map((card) => ({
+    title: card.title,
+    locationDate: card.subtitle ?? "",
+    href: card.href ?? undefined,
+    badgeTop: String(card.payload?.badgeTop ?? ""),
+    badgeDay: String(card.payload?.badgeDay ?? ""),
+    badgeMonth: String(card.payload?.badgeMonth ?? ""),
+    image: card.imageUrl ?? "",
+  }));
 
   const setSectionRef = (index: number) => (el: HTMLElement | null) => {
     sectionRefs.current[index] = el;
@@ -231,16 +294,24 @@ const Index = () => {
   };
 
   const goPrevAttraction = () => {
-    setActiveAttraction((prev) => (prev - 1 + topAttractions.length) % topAttractions.length);
+    setActiveAttraction((prev) => (prev - 1 + safeTopAttractions.length) % safeTopAttractions.length);
   };
 
   const goNextAttraction = () => {
-    setActiveAttraction((prev) => (prev + 1) % topAttractions.length);
+    setActiveAttraction((prev) => (prev + 1) % safeTopAttractions.length);
   };
 
   const eventsPerPage = 4;
-  const totalEventPages = Math.ceil(events.length / eventsPerPage);
+  const totalEventPages = Math.max(1, Math.ceil(events.length / eventsPerPage));
   const pagedEvents = events.slice(eventsPage * eventsPerPage, (eventsPage + 1) * eventsPerPage);
+
+  useEffect(() => {
+    setActiveAttraction((prev) => Math.min(prev, Math.max(safeTopAttractions.length - 1, 0)));
+  }, [safeTopAttractions.length]);
+
+  useEffect(() => {
+    setEventsPage((prev) => Math.min(prev, Math.max(totalEventPages - 1, 0)));
+  }, [totalEventPages]);
 
   const goPrevEventsPage = () => {
     setEventsPage((prev) => (prev - 1 + totalEventPages) % totalEventPages);
@@ -538,9 +609,9 @@ const Index = () => {
           <div className="relative h-full w-full overflow-hidden rounded-[30px] md:rounded-[40px]">
             <AnimatePresence mode="wait">
               <motion.img
-                key={topAttractions[activeAttraction].image}
-                src={topAttractions[activeAttraction].image}
-                alt={topAttractions[activeAttraction].title}
+                key={safeTopAttractions[activeAttraction].image}
+                src={safeTopAttractions[activeAttraction].image}
+                alt={safeTopAttractions[activeAttraction].title}
                 initial={{ opacity: 0.35, scale: 1.05 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0.2, scale: 1.02 }}
@@ -564,10 +635,10 @@ const Index = () => {
                 className="rounded-[30px] bg-[#2a0015]/92 p-6 md:p-10"
               >
                 <h3 className="mt-3 text-[54px] leading-[0.96] md:text-[84px] font-odesa-medium">
-                  {topAttractions[activeAttraction].title}
+                  {safeTopAttractions[activeAttraction].title}
                 </h3>
                 <p className="mt-6 max-w-[680px] text-[26px] leading-[1.22] md:text-[36px] font-odesa-regular">
-                  {topAttractions[activeAttraction].description}
+                  {safeTopAttractions[activeAttraction].description}
                 </p>
                 <button className="mt-8 inline-flex items-center gap-2 text-[36px] text-[#9f1f47] font-odesa-medium" type="button">
                   Детальніше <ArrowRight className="h-8 w-8" />

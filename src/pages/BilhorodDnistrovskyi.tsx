@@ -1,9 +1,11 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowRight, ArrowUpRight, CloudSun, Hotel, Ticket, Utensils } from "lucide-react";
 import BackButton from "@/components/BackButton";
 import SiteFooter from "@/components/SiteFooter";
+import { fallbackContentCards } from "@/data/contentCardsFallback";
+import { usePageContentCards } from "@/hooks/usePageContentCards";
 
 const localTabs = [
   { id: "main", label: "Найголовніше", hidden: true },
@@ -127,7 +129,43 @@ const restaurants = [
 ];
 
 const BilhorodDnistrovskyi = () => {
+  const { data: cityCardsData } = usePageContentCards("city-bilhorod");
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
+
+  const cityCards = useMemo(() => {
+    const liveCards = (cityCardsData ?? []).filter((card) => card.pageKey === "city-bilhorod");
+    const fallbackCards = fallbackContentCards.filter(
+      (card) => card.pageKey === "city-bilhorod" && card.published,
+    );
+    return { liveCards, fallbackCards };
+  }, [cityCardsData]);
+
+  const getSectionCards = (sectionKey: string) => {
+    const live = cityCards.liveCards.filter((card) => card.sectionKey === sectionKey);
+    if (live.length) return live;
+    return cityCards.fallbackCards.filter((card) => card.sectionKey === sectionKey);
+  };
+
+  const mainText = String(getSectionCards("main")[0]?.payload?.text ?? "");
+  const brightMoments = getSectionCards("media").map((card) => ({
+    title: card.title,
+    subtitle: card.subtitle ?? "",
+    image: card.imageUrl ?? "",
+  }));
+  const hotels = getSectionCards("hotels").map((card) => ({
+    title: card.title,
+    subtitle: card.subtitle ?? "",
+    href: card.href ?? "#",
+    rating: String(card.payload?.rating ?? ""),
+    image: card.imageUrl ?? "",
+  }));
+  const restaurants = getSectionCards("restaurants").map((card) => ({
+    title: card.title,
+    subtitle: card.subtitle ?? "",
+    href: card.href ?? "#",
+    image: card.imageUrl ?? "",
+  }));
+  const infoItems = getSectionCards("info").map((card) => card.title);
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
@@ -194,8 +232,8 @@ const BilhorodDnistrovskyi = () => {
         <div className="mx-auto max-w-[1400px] grid grid-cols-1 gap-8 lg:grid-cols-[1.3fr_0.8fr]">
           <div>
             <p className="mt-5 text-[20px] md:text-[30px] leading-[1.22]">
-              У Білгороді-Дністровському ви зможете доторкнутися до історії Аккерманської фортеці, прогулятися старими вулицями
-              міста та відчути атмосферу Дністровського лиману.
+              {mainText ||
+                "У Білгороді-Дністровському ви зможете доторкнутися до історії Аккерманської фортеці, прогулятися старими вулицями міста та відчути атмосферу Дністровського лиману."}
             </p>
           </div>
           <aside className="h-fit rounded-[24px] bg-[#5f2238]/90 p-5 md:p-6">
@@ -342,7 +380,7 @@ const BilhorodDnistrovskyi = () => {
         <div className="mx-auto max-w-[1400px]">
           <h2 className="text-[42px] md:text-[58px] leading-none font-odesa-medium">Інформація</h2>
           <div className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
-            {["Історія та культура", "Гастрономія", "Контакти", "Як дістатись"].map((item) => (
+            {(infoItems.length ? infoItems : ["Історія та культура", "Гастрономія", "Контакти", "Як дістатись"]).map((item) => (
               <article key={item} className="rounded-[22px] bg-[#0e467f] p-6">
                 <h3 className="text-[30px] md:text-[36px] leading-[1.05] font-odesa-medium">{item}</h3>
               </article>

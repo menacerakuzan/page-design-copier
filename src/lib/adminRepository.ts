@@ -1,0 +1,435 @@
+import {
+  cities as seedCities,
+  districts as seedDistricts,
+  regions as seedRegions,
+  tourismObjects as seedObjects,
+} from "@/data/hierarchyMockData";
+import { fallbackContentCards } from "@/data/contentCardsFallback";
+import { supabase, hasSupabaseConfig } from "@/lib/supabaseClient";
+import { AdminChangeLog, ContentCardEntity } from "@/types/cms";
+import { City, District, Region, TourismObject } from "@/types/hierarchy";
+
+type Snapshot = {
+  regions: Region[];
+  districts: District[];
+  cities: City[];
+  objects: TourismObject[];
+  contentCards: ContentCardEntity[];
+};
+
+const tableNames = {
+  regions: "regions",
+  districts: "districts",
+  cities: "cities",
+  objects: "tourism_objects",
+  contentCards: "content_cards",
+  changeLogs: "admin_change_logs",
+} as const;
+
+const isTableMissingError = (error: any) => {
+  const code = error?.code ?? "";
+  const message = String(error?.message ?? "").toLowerCase();
+  return code === "42P01" || message.includes("does not exist");
+};
+
+const normalizePayload = (payload: any): Record<string, any> => {
+  if (payload && typeof payload === "object" && !Array.isArray(payload)) return payload;
+  return {};
+};
+
+const mapDbCard = (row: any): ContentCardEntity => ({
+  id: row.id,
+  pageKey: row.page_key,
+  sectionKey: row.section_key,
+  cardType: row.card_type,
+  title: row.title,
+  subtitle: row.subtitle ?? null,
+  imageUrl: row.image_url ?? null,
+  href: row.href ?? null,
+  cityId: row.city_id ?? null,
+  districtId: row.district_id ?? null,
+  regionId: row.region_id ?? null,
+  sortOrder: row.sort_order ?? 0,
+  published: Boolean(row.published),
+  payload: normalizePayload(row.payload),
+});
+
+const toDbCard = (card: ContentCardEntity) => ({
+  id: card.id,
+  page_key: card.pageKey,
+  section_key: card.sectionKey,
+  card_type: card.cardType,
+  title: card.title,
+  subtitle: card.subtitle,
+  image_url: card.imageUrl,
+  href: card.href,
+  city_id: card.cityId,
+  district_id: card.districtId,
+  region_id: card.regionId,
+  sort_order: card.sortOrder,
+  published: card.published,
+  payload: normalizePayload(card.payload),
+});
+
+const mapDbObject = (row: any): TourismObject => ({
+  id: row.id,
+  districtId: row.district_id,
+  cityId: row.city_id,
+  type: row.type,
+  name: row.name,
+  slug: row.slug,
+  published: Boolean(row.published),
+});
+
+const toDbObject = (obj: TourismObject) => ({
+  id: obj.id,
+  district_id: obj.districtId,
+  city_id: obj.cityId,
+  type: obj.type,
+  name: obj.name,
+  slug: obj.slug,
+  published: obj.published,
+});
+
+const mapDbChange = (row: any): AdminChangeLog => ({
+  id: row.id,
+  entityType: row.entity_type,
+  entityId: row.entity_id,
+  action: row.action,
+  beforeData: row.before_data ?? null,
+  afterData: row.after_data ?? null,
+  actorEmail: row.actor_email ?? null,
+  createdAt: row.created_at,
+});
+
+const entityTableMap: Record<string, string> = {
+  tourism_object: tableNames.objects,
+  content_card: tableNames.contentCards,
+  region: tableNames.regions,
+  district: tableNames.districts,
+  city: tableNames.cities,
+};
+
+async function getActorEmail() {
+  if (!supabase) return null;
+  const { data } = await supabase.auth.getUser();
+  return data.user?.email ?? null;
+}
+
+async function appendChangeLog(entry: {
+  entityType: string;
+  entityId: string;
+  action: string;
+  beforeData: Record<string, any> | null;
+  afterData: Record<string, any> | null;
+}) {
+  if (!hasSupabaseConfig || !supabase) return;
+  const actorEmail = await getActorEmail();
+  const { error } = await supabase.from(tableNames.changeLogs).insert({
+    entity_type: entry.entityType,
+    entity_id: entry.entityId,
+    action: entry.action,
+    before_data: entry.beforeData,
+    after_data: entry.afterData,
+    actor_email: actorEmail,
+  });
+  if (error && !isTableMissingError(error)) {
+    throw error;
+  }
+}
+
+export async function loadHierarchySnapshot(): Promise<Snapshot> {
+  if (!hasSupabaseConfig || !supabase) {
+    return {
+      regions: seedRegions,
+      districts: seedDistricts,
+      cities: seedCities,
+      objects: seedObjects,
+      contentCards: fallbackContentCards,
+    };
+  }
+
+  const [regionsRes, districtsRes, citiesRes, objectsRes, contentCardsRes] = await Promise.all([
+    supabase.from(tableNames.regions).select("*").order("name"),
+    supabase.from(tableNames.districts).select("*").order("name"),
+    supabase.from(tableNames.cities).select("*").order("name"),
+    supabase.from(tableNames.objects).select("*").order("name"),
+    supabase.from(tableNames.contentCards).select("*").order("sort_order").order("title"),
+  ]);
+
+  if (regionsRes.error) throw regionsRes.error;
+  if (districtsRes.error) throw districtsRes.error;
+  if (citiesRes.error) throw citiesRes.error;
+  if (objectsRes.error) throw objectsRes.error;
+  if (contentCardsRes.error && !isTableMissingError(contentCardsRes.error)) throw contentCardsRes.error;
+
+  return {
+    regions: (regionsRes.data ?? []).map((row: any) => ({
+      id: row.id,
+      name: row.name,
+      slug: row.slug,
+    })) as Region[],
+    districts: (districtsRes.data ?? []).map((row: any) => ({
+      id: row.id,
+      regionId: row.region_id,
+      name: row.name,
+      slug: row.slug,
+    })) as District[],
+    cities: (citiesRes.data ?? []).map((row: any) => ({
+      id: row.id,
+      districtId: row.district_id,
+      name: row.name,
+      slug: row.slug,
+    })) as City[],
+    objects: (objectsRes.data ?? []).map(mapDbObject) as TourismObject[],
+    contentCards: contentCardsRes.error
+      ? fallbackContentCards
+      : (contentCardsRes.data ?? []).map(mapDbCard),
+  };
+}
+
+export async function loadPublishedContentCards(pageKey: string) {
+  if (!hasSupabaseConfig || !supabase) {
+    return fallbackContentCards
+      .filter((card) => card.pageKey === pageKey && card.published)
+      .sort((a, b) => a.sortOrder - b.sortOrder || a.title.localeCompare(b.title));
+  }
+
+  const { data, error } = await supabase
+    .from(tableNames.contentCards)
+    .select("*")
+    .eq("page_key", pageKey)
+    .eq("published", true)
+    .order("sort_order")
+    .order("title");
+  if (error) {
+    if (isTableMissingError(error)) {
+      return fallbackContentCards
+        .filter((card) => card.pageKey === pageKey && card.published)
+        .sort((a, b) => a.sortOrder - b.sortOrder || a.title.localeCompare(b.title));
+    }
+    throw error;
+  }
+  return (data ?? []).map(mapDbCard);
+}
+
+export async function upsertTourismObject(obj: TourismObject) {
+  if (!hasSupabaseConfig || !supabase) return obj;
+  const { data: beforeData, error: beforeError } = await supabase
+    .from(tableNames.objects)
+    .select("*")
+    .eq("id", obj.id)
+    .maybeSingle();
+  if (beforeError) throw beforeError;
+
+  const dbObj = toDbObject(obj);
+  const { error } = await supabase.from(tableNames.objects).upsert(dbObj);
+  if (error) throw error;
+
+  await appendChangeLog({
+    entityType: "tourism_object",
+    entityId: obj.id,
+    action: beforeData ? "update" : "create",
+    beforeData: beforeData ?? null,
+    afterData: dbObj,
+  });
+  return obj;
+}
+
+export async function insertTourismObject(obj: TourismObject) {
+  if (!hasSupabaseConfig || !supabase) return obj;
+  const dbObj = toDbObject(obj);
+  const { error } = await supabase.from(tableNames.objects).insert(dbObj);
+  if (error) throw error;
+  await appendChangeLog({
+    entityType: "tourism_object",
+    entityId: obj.id,
+    action: "create",
+    beforeData: null,
+    afterData: dbObj,
+  });
+  return obj;
+}
+
+export async function deleteTourismObject(id: string) {
+  if (!hasSupabaseConfig || !supabase) return;
+  const { data: beforeData, error: beforeError } = await supabase
+    .from(tableNames.objects)
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+  if (beforeError) throw beforeError;
+
+  const { error } = await supabase.from(tableNames.objects).delete().eq("id", id);
+  if (error) throw error;
+  await appendChangeLog({
+    entityType: "tourism_object",
+    entityId: id,
+    action: "delete",
+    beforeData: beforeData ?? null,
+    afterData: null,
+  });
+}
+
+export async function upsertContentCard(card: ContentCardEntity) {
+  if (!hasSupabaseConfig || !supabase) return card;
+  const { data: beforeData, error: beforeError } = await supabase
+    .from(tableNames.contentCards)
+    .select("*")
+    .eq("id", card.id)
+    .maybeSingle();
+  if (beforeError) throw beforeError;
+
+  const dbCard = toDbCard(card);
+  const { error } = await supabase.from(tableNames.contentCards).upsert(dbCard);
+  if (error) throw error;
+  await appendChangeLog({
+    entityType: "content_card",
+    entityId: card.id,
+    action: beforeData ? "update" : "create",
+    beforeData: beforeData ?? null,
+    afterData: dbCard,
+  });
+  return card;
+}
+
+export async function insertContentCard(card: ContentCardEntity) {
+  if (!hasSupabaseConfig || !supabase) return card;
+  const dbCard = toDbCard(card);
+  const { error } = await supabase.from(tableNames.contentCards).insert(dbCard);
+  if (error) throw error;
+  await appendChangeLog({
+    entityType: "content_card",
+    entityId: card.id,
+    action: "create",
+    beforeData: null,
+    afterData: dbCard,
+  });
+  return card;
+}
+
+export async function deleteContentCard(id: string) {
+  if (!hasSupabaseConfig || !supabase) return;
+  const { data: beforeData, error: beforeError } = await supabase
+    .from(tableNames.contentCards)
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+  if (beforeError) throw beforeError;
+
+  const { error } = await supabase.from(tableNames.contentCards).delete().eq("id", id);
+  if (error) throw error;
+  await appendChangeLog({
+    entityType: "content_card",
+    entityId: id,
+    action: "delete",
+    beforeData: beforeData ?? null,
+    afterData: null,
+  });
+}
+
+export async function loadChangeLogs(limit = 80) {
+  if (!hasSupabaseConfig || !supabase) return [] as AdminChangeLog[];
+  const { data, error } = await supabase
+    .from(tableNames.changeLogs)
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (error) {
+    if (isTableMissingError(error)) return [] as AdminChangeLog[];
+    throw error;
+  }
+  return (data ?? []).map(mapDbChange);
+}
+
+export async function rollbackChange(logId: string) {
+  if (!hasSupabaseConfig || !supabase) return;
+  const { data: logRow, error: logError } = await supabase
+    .from(tableNames.changeLogs)
+    .select("*")
+    .eq("id", logId)
+    .maybeSingle();
+  if (logError) throw logError;
+  if (!logRow) return;
+
+  const table = entityTableMap[logRow.entity_type];
+  if (!table) return;
+
+  if (logRow.action === "create") {
+    const { error } = await supabase.from(table).delete().eq("id", logRow.entity_id);
+    if (error) throw error;
+  } else if (logRow.before_data) {
+    const { error } = await supabase.from(table).upsert(logRow.before_data);
+    if (error) throw error;
+  }
+
+  await appendChangeLog({
+    entityType: logRow.entity_type,
+    entityId: logRow.entity_id,
+    action: "rollback",
+    beforeData: logRow.after_data ?? null,
+    afterData: logRow.before_data ?? null,
+  });
+}
+
+export async function syncContentCardsFromFallback() {
+  if (!hasSupabaseConfig || !supabase) return;
+  const rows = fallbackContentCards.map(toDbCard);
+  const { error } = await supabase.from(tableNames.contentCards).upsert(rows);
+  if (error) throw error;
+}
+
+export async function insertRegion(region: Region) {
+  if (!hasSupabaseConfig || !supabase) return region;
+  const dbRegion = { id: region.id, name: region.name, slug: region.slug };
+  const { error } = await supabase.from(tableNames.regions).insert(dbRegion);
+  if (error) throw error;
+  await appendChangeLog({
+    entityType: "region",
+    entityId: region.id,
+    action: "create",
+    beforeData: null,
+    afterData: dbRegion,
+  });
+  return region;
+}
+
+export async function insertDistrict(district: District) {
+  if (!hasSupabaseConfig || !supabase) return district;
+  const dbDistrict = {
+    id: district.id,
+    region_id: district.regionId,
+    name: district.name,
+    slug: district.slug,
+  };
+  const { error } = await supabase.from(tableNames.districts).insert(dbDistrict);
+  if (error) throw error;
+  await appendChangeLog({
+    entityType: "district",
+    entityId: district.id,
+    action: "create",
+    beforeData: null,
+    afterData: dbDistrict,
+  });
+  return district;
+}
+
+export async function insertCity(city: City) {
+  if (!hasSupabaseConfig || !supabase) return city;
+  const dbCity = {
+    id: city.id,
+    district_id: city.districtId,
+    name: city.name,
+    slug: city.slug,
+  };
+  const { error } = await supabase.from(tableNames.cities).insert(dbCity);
+  if (error) throw error;
+  await appendChangeLog({
+    entityType: "city",
+    entityId: city.id,
+    action: "create",
+    beforeData: null,
+    afterData: dbCity,
+  });
+  return city;
+}

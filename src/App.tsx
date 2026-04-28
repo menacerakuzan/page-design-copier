@@ -9,6 +9,7 @@ import BilhorodDnistrovskyi from "./pages/BilhorodDnistrovskyi.tsx";
 import EventBessarabiaFestival from "./pages/EventBessarabiaFestival.tsx";
 import RestaurantRybnyiDvir from "./pages/RestaurantRybnyiDvir.tsx";
 import HotelFortetsiaView from "./pages/HotelFortetsiaView.tsx";
+import Admin from "./pages/Admin.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -36,6 +37,7 @@ const App = () => (
           <Route path="/podiyi/festyval-vyna-ta-smaku-bessarabii" element={<EventBessarabiaFestival />} />
           <Route path="/restorany/rybnyy-dvir" element={<RestaurantRybnyiDvir />} />
           <Route path="/hoteli/fortetsia-view-hotel" element={<HotelFortetsiaView />} />
+          <Route path="/admin" element={<Admin />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
