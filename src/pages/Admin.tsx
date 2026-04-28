@@ -20,6 +20,9 @@ import { ContentCardEntity } from "@/types/cms";
 import { City, District, Region, TourismObject, TourismObjectType } from "@/types/hierarchy";
 import { hasSupabaseConfig, supabase } from "@/lib/supabaseClient";
 import {
+  deleteCity,
+  deleteDistrict,
+  deleteRegion,
   deleteContentCard,
   deleteTourismObject,
   insertCity,
@@ -75,6 +78,13 @@ const builderTypeLabels: Record<BuilderType, string> = {
   attraction: "Локація",
 };
 
+const builderTypeTheme: Record<BuilderType, { bg: string; panel: string; accent: string; text: string }> = {
+  event: { bg: "#002f5e", panel: "#174773", accent: "#df9b3b", text: "#fff2e8" },
+  hotel: { bg: "#df9b3b", panel: "#e8ac4e", accent: "#9f1f47", text: "#002f5e" },
+  restaurant: { bg: "#9f1f47", panel: "#b53461", accent: "#df9b3b", text: "#fff2e8" },
+  attraction: { bg: "#002f5e", panel: "#174773", accent: "#df9b3b", text: "#fff2e8" },
+};
+
 const slugify = (input: string) =>
   input
     .toLowerCase()
@@ -101,6 +111,10 @@ const Admin = () => {
   const [payloadDraft, setPayloadDraft] = useState("{}");
   const [pageFilter, setPageFilter] = useState("all");
   const [sectionFilter, setSectionFilter] = useState("all");
+  const [objectDistrictFilter, setObjectDistrictFilter] = useState("all");
+  const [objectCityFilter, setObjectCityFilter] = useState("all");
+  const [cardDistrictFilter, setCardDistrictFilter] = useState("all");
+  const [cardCityFilter, setCardCityFilter] = useState("all");
 
   const [loading, setLoading] = useState(true);
   const [errorText, setErrorText] = useState("");
@@ -121,10 +135,19 @@ const Admin = () => {
     payments: [] as string[],
     rating: "4.8",
     gallery: [] as string[],
+    sections: {
+      hero: true,
+      overview: true,
+      info: true,
+      gallery: true,
+      contacts: true,
+      map: true,
+    },
     districtId: "",
     cityId: "",
     showOnMain: true,
     mainSection: "directions",
+    published: true,
   });
   const [builderTagInput, setBuilderTagInput] = useState("");
   const [builderPaymentInput, setBuilderPaymentInput] = useState("");
@@ -141,8 +164,12 @@ const Admin = () => {
   });
 
   const filteredObjects = useMemo(
-    () => objects.filter((obj) => obj.type === selectedType),
-    [objects, selectedType],
+    () =>
+      objects
+        .filter((obj) => obj.type === selectedType)
+        .filter((obj) => (objectDistrictFilter === "all" ? true : obj.districtId === objectDistrictFilter))
+        .filter((obj) => (objectCityFilter === "all" ? true : obj.cityId === objectCityFilter)),
+    [objects, selectedType, objectDistrictFilter, objectCityFilter],
   );
 
   const selectedObject =
@@ -157,8 +184,10 @@ const Admin = () => {
     return contentCards
       .filter((card) => (pageFilter === "all" ? true : card.pageKey === pageFilter))
       .filter((card) => (sectionFilter === "all" ? true : card.sectionKey === sectionFilter))
+      .filter((card) => (cardDistrictFilter === "all" ? true : card.districtId === cardDistrictFilter))
+      .filter((card) => (cardCityFilter === "all" ? true : card.cityId === cardCityFilter))
       .sort((a, b) => a.sortOrder - b.sortOrder || a.title.localeCompare(b.title));
-  }, [contentCards, pageFilter, sectionFilter]);
+  }, [contentCards, pageFilter, sectionFilter, cardDistrictFilter, cardCityFilter]);
 
   const sectionOptions = useMemo(() => {
     const source =
@@ -592,7 +621,7 @@ const Admin = () => {
       type: builderType,
       name: title,
       slug,
-      published: true,
+      published: builderDraft.published,
     };
 
     const validationObject = validateObjectDraft(newObject, [newObject, ...objects], districts, cities);
@@ -618,7 +647,7 @@ const Admin = () => {
       districtId: district.id,
       regionId,
       sortOrder: maxCitySort + 1,
-      published: true,
+      published: builderDraft.published,
       payload:
         builderType === "event"
           ? { badgeTop: "до", badgeDay: "1", badgeMonth: "травень" }
@@ -640,7 +669,8 @@ const Admin = () => {
     }
 
     const detailCards: ContentCardEntity[] = [
-      {
+      ...(builderDraft.sections.hero
+        ? [{
         id: `card-detail-hero-${now}`,
         pageKey: detailPageKey,
         sectionKey: "hero",
@@ -653,10 +683,12 @@ const Admin = () => {
         districtId: district.id,
         regionId,
         sortOrder: 1,
-        published: true,
+        published: builderDraft.published,
         payload: {},
-      },
-      {
+      }]
+        : []),
+      ...(builderDraft.sections.overview
+        ? [{
         id: `card-detail-overview-${now}`,
         pageKey: detailPageKey,
         sectionKey: "overview",
@@ -669,14 +701,16 @@ const Admin = () => {
         districtId: district.id,
         regionId,
         sortOrder: 1,
-        published: true,
+        published: builderDraft.published,
         payload: {
           text:
             builderDraft.description.trim() ||
             `${title} — нова сторінка, створена в конструкторі. Заповніть текст у секції overview.`,
         },
-      },
-      {
+      }]
+        : []),
+      ...(builderDraft.sections.info
+        ? [{
         id: `card-detail-info-${now}`,
         pageKey: detailPageKey,
         sectionKey: "info",
@@ -694,7 +728,7 @@ const Admin = () => {
         districtId: district.id,
         regionId,
         sortOrder: 1,
-        published: true,
+        published: builderDraft.published,
         payload: {
           mapUrl: builderDraft.mapUrl.trim() || null,
           eventDates: builderDraft.eventDates,
@@ -704,8 +738,10 @@ const Admin = () => {
           rating: builderDraft.rating,
           gallery: builderDraft.gallery,
         },
-      },
-      {
+      }]
+        : []),
+      ...(builderDraft.sections.contacts
+        ? [{
         id: `card-detail-contacts-${now}`,
         pageKey: detailPageKey,
         sectionKey: "contacts",
@@ -718,14 +754,15 @@ const Admin = () => {
         districtId: district.id,
         regionId,
         sortOrder: 1,
-        published: true,
+        published: builderDraft.published,
         payload: {
           address: builderDraft.address.trim() || city.name,
           phone: builderDraft.phone.trim() || "+38 (000) 000 00 00",
         },
-      },
+      }]
+        : []),
     ];
-    if (builderDraft.gallery.length) {
+    if (builderDraft.sections.gallery && builderDraft.gallery.length) {
       detailCards.push({
         id: `card-detail-gallery-${now}`,
         pageKey: detailPageKey,
@@ -739,7 +776,7 @@ const Admin = () => {
         districtId: district.id,
         regionId,
         sortOrder: 1,
-        published: true,
+        published: builderDraft.published,
         payload: { images: builderDraft.gallery },
       });
     }
@@ -802,13 +839,64 @@ const Admin = () => {
         payments: [],
         rating: "4.8",
         gallery: [],
+        sections: {
+          hero: true,
+          overview: true,
+          info: true,
+          gallery: true,
+          contacts: true,
+          map: true,
+        },
         mainSection: "directions",
+        published: true,
       }));
       setSavingState("Створено і прив'язано до сторінки");
     } catch (error: any) {
       setErrorText(error?.message ?? "Помилка створення");
     } finally {
       window.setTimeout(() => setSavingState(""), 1200);
+    }
+  };
+
+  const deleteRegionAction = async (regionId: string) => {
+    const region = regions.find((r) => r.id === regionId);
+    if (!region) return;
+    const ok = window.prompt(`Введіть назву області для видалення:\n${region.name}`);
+    if (ok !== region.name) return;
+    try {
+      await deleteRegion(regionId);
+      await loadAllData();
+      await loadLogs();
+    } catch (error: any) {
+      setErrorText(error?.message ?? "Не вдалося видалити область");
+    }
+  };
+
+  const deleteDistrictAction = async (districtId: string) => {
+    const district = districts.find((d) => d.id === districtId);
+    if (!district) return;
+    const ok = window.prompt(`Введіть назву району для видалення:\n${district.name}`);
+    if (ok !== district.name) return;
+    try {
+      await deleteDistrict(districtId);
+      await loadAllData();
+      await loadLogs();
+    } catch (error: any) {
+      setErrorText(error?.message ?? "Не вдалося видалити район");
+    }
+  };
+
+  const deleteCityAction = async (cityId: string) => {
+    const city = cities.find((c) => c.id === cityId);
+    if (!city) return;
+    const ok = window.prompt(`Введіть назву міста для видалення:\n${city.name}`);
+    if (ok !== city.name) return;
+    try {
+      await deleteCity(cityId);
+      await loadAllData();
+      await loadLogs();
+    } catch (error: any) {
+      setErrorText(error?.message ?? "Не вдалося видалити місто");
     }
   };
 
@@ -930,7 +1018,7 @@ const Admin = () => {
 
         <div className="mt-6 flex flex-wrap gap-2">
           {[
-            { id: "builder", label: "Конструктор (простий)" },
+            { id: "builder", label: "Конструктор сторінки" },
             { id: "objects", label: "Карточки об'єктів" },
             { id: "cards", label: "Секції сайту (content_cards)" },
             { id: "hierarchy", label: "Область / Район / Місто" },
@@ -951,7 +1039,15 @@ const Admin = () => {
 
         {activeTab === "builder" ? (
           <section className="mt-8 rounded-[24px] border border-[#002f5e]/20 bg-white/60 p-6 md:p-8">
-            <h2 className="font-odesa-medium text-[34px]">Конструктор сторінки (розширений)</h2>
+            <h2 className="font-odesa-medium text-[34px]">
+              {builderType === "event"
+                ? "Створити Подію"
+                : builderType === "hotel"
+                  ? "Створити Готель"
+                  : builderType === "restaurant"
+                    ? "Створити Ресторан"
+                    : "Створити Локацію"}
+            </h2>
             <p className="mt-2 text-[16px] text-[#002f5e]/75">
               Обери тип, заповни великі блоки і одразу бачиш, як виглядатиме картка/сторінка.
             </p>
@@ -969,6 +1065,41 @@ const Admin = () => {
                   {builderTypeLabels[type]}
                 </button>
               ))}
+            </div>
+            <div className="mt-3 rounded-xl border border-[#002f5e]/15 bg-white p-3 text-[13px] text-[#002f5e]/80">
+              Активний екран конструктора:{" "}
+              <span className="font-semibold text-[#002f5e]">{builderTypeLabels[builderType]}</span>. Заповнюй блоки прямо
+              в макеті нижче: hero, опис, інфо, галерея, контакти.
+            </div>
+            <div className="mt-4 rounded-xl border border-[#002f5e]/15 bg-white p-4">
+              <p className="text-[14px] font-semibold text-[#002f5e]">Секції сторінки (вмикай/вимикай)</p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {[
+                  ["hero", "Hero"],
+                  ["overview", "Опис"],
+                  ["info", "Інфо блоки"],
+                  ["gallery", "Галерея"],
+                  ["contacts", "Контакти"],
+                ].map(([key, label]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() =>
+                      setBuilderDraft((prev) => ({
+                        ...prev,
+                        sections: { ...prev.sections, [key]: !prev.sections[key as keyof typeof prev.sections] },
+                      }))
+                    }
+                    className={`rounded-full px-3 py-1 text-[12px] ${
+                      builderDraft.sections[key as keyof typeof builderDraft.sections]
+                        ? "bg-[#002f5e] text-[#fff2e8]"
+                        : "bg-[#002f5e]/10 text-[#002f5e]"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
             </div>
 
             <div className="mt-6 grid gap-4 md:grid-cols-2">
@@ -1027,6 +1158,29 @@ const Admin = () => {
                   className="h-24 w-full rounded-lg border border-[#002f5e]/25 bg-white px-3 py-2"
                 />
               </label>
+              <div className="text-[14px]">
+                <span className="mb-1 block text-[#002f5e]/75">Статус сторінки</span>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setBuilderDraft((prev) => ({ ...prev, published: true }))}
+                    className={`rounded-full px-4 py-2 text-[13px] ${
+                      builderDraft.published ? "bg-[#002f5e] text-[#fff2e8]" : "bg-[#002f5e]/10"
+                    }`}
+                  >
+                    Опублікувати
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setBuilderDraft((prev) => ({ ...prev, published: false }))}
+                    className={`rounded-full px-4 py-2 text-[13px] ${
+                      !builderDraft.published ? "bg-[#9f1f47] text-[#fff2e8]" : "bg-[#002f5e]/10"
+                    }`}
+                  >
+                    Чернетка
+                  </button>
+                </div>
+              </div>
               <label className="text-[14px]">
                 <span className="mb-1 block text-[#002f5e]/75">Район</span>
                 <select
@@ -1383,21 +1537,76 @@ const Admin = () => {
                 Зберегти і додати на сайт
               </button>
             </div>
-            <div className="mt-8 rounded-xl border border-[#002f5e]/20 bg-[#002f5e] p-5 text-[#fff2e8]">
-              <p className="text-[13px] uppercase tracking-[0.15em] text-[#fff2e8]/70">Превʼю</p>
+            <div
+              className="mt-8 rounded-xl border border-[#002f5e]/20 p-5"
+              style={{
+                backgroundColor: builderTypeTheme[builderType].bg,
+                color: builderTypeTheme[builderType].text,
+              }}
+            >
+              <p className="text-[13px] uppercase tracking-[0.15em] opacity-70">Превʼю сторінки</p>
               <h3 className="mt-2 font-odesa-medium text-[30px]">{builderDraft.title || "Назва обʼєкта"}</h3>
-              <p className="text-[17px] text-[#fff2e8]/80">{builderDraft.subtitle || "Підзаголовок"}</p>
+              <p className="text-[17px] opacity-80">{builderDraft.subtitle || "Підзаголовок"}</p>
               {builderDraft.imageUrl ? (
                 <img src={builderDraft.imageUrl} alt="" className="mt-3 h-48 w-full rounded-xl object-cover" />
               ) : null}
-              <div className="mt-3 grid gap-2 md:grid-cols-2">
-                <div className="rounded-lg bg-[#fff2e8]/12 p-3">
-                  <p className="text-[13px] text-[#fff2e8]/70">Адреса</p>
-                  <p className="text-[15px]">{builderDraft.address || "—"}</p>
+              <div className="mt-4 grid gap-3 lg:grid-cols-[1.3fr_0.7fr]">
+                <div className="space-y-3">
+                  <div className="rounded-lg p-3" style={{ backgroundColor: builderTypeTheme[builderType].panel }}>
+                    <p className="text-[13px] opacity-75">Опис секції</p>
+                    <textarea
+                      value={builderDraft.description}
+                      onChange={(e) => setBuilderDraft((prev) => ({ ...prev, description: e.target.value }))}
+                      className="mt-1 h-24 w-full rounded-md border border-white/20 bg-black/10 px-2 py-1 text-[13px] text-inherit"
+                      placeholder="Введи текст..."
+                    />
+                  </div>
+                  <div className="rounded-lg p-3" style={{ backgroundColor: builderTypeTheme[builderType].panel }}>
+                    <p className="text-[13px] opacity-75">
+                      {builderType === "event" ? "Дати" : builderType === "hotel" ? "Зручності" : "Пропозиції"}
+                    </p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {(builderType === "event"
+                        ? builderDraft.eventDates.map((d) => `${d.from || "..."} - ${d.to || "..."}`)
+                        : builderDraft.amenities.length
+                          ? builderDraft.amenities
+                          : ["Додай елементи вище"]).map((item, idx) => (
+                        <span
+                          key={`preview-pill-${idx}`}
+                          className="rounded-full px-3 py-1 text-[12px]"
+                          style={{ backgroundColor: builderTypeTheme[builderType].accent, color: builderTypeTheme[builderType].text }}
+                        >
+                          {item}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-                <div className="rounded-lg bg-[#fff2e8]/12 p-3">
-                  <p className="text-[13px] text-[#fff2e8]/70">Телефон</p>
-                  <p className="text-[15px]">{builderDraft.phone || "—"}</p>
+                <div className="space-y-3">
+                  <div className="rounded-lg p-3" style={{ backgroundColor: builderTypeTheme[builderType].panel }}>
+                    <p className="text-[13px] opacity-75">Адреса</p>
+                    <input
+                      value={builderDraft.address}
+                      onChange={(e) => setBuilderDraft((prev) => ({ ...prev, address: e.target.value }))}
+                      className="mt-1 w-full rounded-md border border-white/20 bg-black/10 px-2 py-1 text-[13px] text-inherit"
+                    />
+                    <p className="mt-2 text-[13px] opacity-75">Телефон</p>
+                    <input
+                      value={builderDraft.phone}
+                      onChange={(e) => setBuilderDraft((prev) => ({ ...prev, phone: e.target.value }))}
+                      className="mt-1 w-full rounded-md border border-white/20 bg-black/10 px-2 py-1 text-[13px] text-inherit"
+                    />
+                  </div>
+                  <div className="rounded-lg p-3" style={{ backgroundColor: builderTypeTheme[builderType].panel }}>
+                    <p className="text-[13px] opacity-75">Автопривʼязка</p>
+                    <p className="text-[13px]">
+                      Район: {districts.find((d) => d.id === builderDraft.districtId)?.name || "—"}
+                    </p>
+                    <p className="text-[13px]">
+                      Місто: {cities.find((c) => c.id === builderDraft.cityId)?.name || "—"}
+                    </p>
+                    <p className="mt-1 text-[12px] opacity-80">Після збереження звʼязки створяться автоматично.</p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1407,6 +1616,39 @@ const Admin = () => {
         {activeTab === "objects" ? (
           <div className="mt-8 grid gap-6 lg:grid-cols-[320px_1fr]">
             <aside className="rounded-[24px] border border-[#002f5e]/20 bg-white/50 p-4">
+              <div className="mb-3 grid gap-2">
+                <select
+                  value={objectDistrictFilter}
+                  onChange={(e) => {
+                    setObjectDistrictFilter(e.target.value);
+                    setObjectCityFilter("all");
+                  }}
+                  className="w-full rounded-lg border border-[#002f5e]/25 bg-white px-3 py-2 text-[13px]"
+                >
+                  <option value="all">Усі райони</option>
+                  {districts.map((district) => (
+                    <option key={district.id} value={district.id}>
+                      {district.name}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={objectCityFilter}
+                  onChange={(e) => setObjectCityFilter(e.target.value)}
+                  className="w-full rounded-lg border border-[#002f5e]/25 bg-white px-3 py-2 text-[13px]"
+                >
+                  <option value="all">Усі міста</option>
+                  {cities
+                    .filter((city) =>
+                      objectDistrictFilter === "all" ? true : city.districtId === objectDistrictFilter,
+                    )
+                    .map((city) => (
+                      <option key={city.id} value={city.id}>
+                        {city.name}
+                      </option>
+                    ))}
+                </select>
+              </div>
               <div className="flex flex-wrap gap-2">
                 {(["event", "hotel", "restaurant", "attraction"] as TourismObjectType[]).map((type) => (
                   <button
@@ -1607,6 +1849,43 @@ const Admin = () => {
                         {page}
                       </option>
                     ))}
+                  </select>
+                </label>
+                <label className="text-[13px] text-[#002f5e]/80">
+                  Район
+                  <select
+                    className="mt-1 w-full rounded-lg border border-[#002f5e]/25 bg-white px-3 py-2 text-[14px]"
+                    value={cardDistrictFilter}
+                    onChange={(e) => {
+                      setCardDistrictFilter(e.target.value);
+                      setCardCityFilter("all");
+                    }}
+                  >
+                    <option value="all">Усі</option>
+                    {districts.map((district) => (
+                      <option key={district.id} value={district.id}>
+                        {district.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="text-[13px] text-[#002f5e]/80">
+                  Місто
+                  <select
+                    className="mt-1 w-full rounded-lg border border-[#002f5e]/25 bg-white px-3 py-2 text-[14px]"
+                    value={cardCityFilter}
+                    onChange={(e) => setCardCityFilter(e.target.value)}
+                  >
+                    <option value="all">Усі</option>
+                    {cities
+                      .filter((city) =>
+                        cardDistrictFilter === "all" ? true : city.districtId === cardDistrictFilter,
+                      )
+                      .map((city) => (
+                        <option key={city.id} value={city.id}>
+                          {city.name}
+                        </option>
+                      ))}
                   </select>
                 </label>
                 <label className="text-[13px] text-[#002f5e]/80">
@@ -1890,8 +2169,11 @@ const Admin = () => {
               <h2 className="font-odesa-medium text-[28px]">Області</h2>
               <div className="mt-3 space-y-2">
                 {regions.map((r) => (
-                  <div key={r.id} className="rounded-lg bg-[#002f5e]/10 px-3 py-2 text-[15px]">
-                    {r.name}
+                  <div key={r.id} className="flex items-center justify-between rounded-lg bg-[#002f5e]/10 px-3 py-2 text-[15px]">
+                    <span>{r.name}</span>
+                    <button type="button" className="text-[12px] text-[#9f1f47]" onClick={() => void deleteRegionAction(r.id)}>
+                      Видалити
+                    </button>
                   </div>
                 ))}
               </div>
@@ -1919,8 +2201,11 @@ const Admin = () => {
               <h2 className="font-odesa-medium text-[28px]">Райони</h2>
               <div className="mt-3 space-y-2">
                 {districts.map((d) => (
-                  <div key={d.id} className="rounded-lg bg-[#002f5e]/10 px-3 py-2 text-[15px]">
-                    {d.name}
+                  <div key={d.id} className="flex items-center justify-between rounded-lg bg-[#002f5e]/10 px-3 py-2 text-[15px]">
+                    <span>{d.name}</span>
+                    <button type="button" className="text-[12px] text-[#9f1f47]" onClick={() => void deleteDistrictAction(d.id)}>
+                      Видалити
+                    </button>
                   </div>
                 ))}
               </div>
@@ -1949,8 +2234,11 @@ const Admin = () => {
               <h2 className="font-odesa-medium text-[28px]">Міста</h2>
               <div className="mt-3 space-y-2">
                 {cities.map((c) => (
-                  <div key={c.id} className="rounded-lg bg-[#002f5e]/10 px-3 py-2 text-[15px]">
-                    {c.name}
+                  <div key={c.id} className="flex items-center justify-between rounded-lg bg-[#002f5e]/10 px-3 py-2 text-[15px]">
+                    <span>{c.name}</span>
+                    <button type="button" className="text-[12px] text-[#9f1f47]" onClick={() => void deleteCityAction(c.id)}>
+                      Видалити
+                    </button>
                   </div>
                 ))}
               </div>

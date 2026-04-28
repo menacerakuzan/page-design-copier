@@ -433,3 +433,60 @@ export async function insertCity(city: City) {
   });
   return city;
 }
+
+export async function deleteRegion(id: string) {
+  if (!hasSupabaseConfig || !supabase) return;
+  const { data: beforeData, error: beforeError } = await supabase
+    .from(tableNames.regions)
+    .select("*")
+    .eq("id", id)
+    .single();
+  if (beforeError) throw beforeError;
+  const { error } = await supabase.from(tableNames.regions).delete().eq("id", id);
+  if (error) throw error;
+  await appendChangeLog({
+    entityType: "region",
+    entityId: id,
+    action: "delete",
+    beforeData: beforeData ?? null,
+    afterData: null,
+  });
+}
+
+export async function deleteDistrict(id: string) {
+  if (!hasSupabaseConfig || !supabase) return;
+  const { data: beforeData, error: beforeError } = await supabase
+    .from(tableNames.districts)
+    .select("*")
+    .eq("id", id)
+    .single();
+  if (beforeError) throw beforeError;
+  const { error } = await supabase.from(tableNames.districts).delete().eq("id", id);
+  if (error) throw error;
+  await appendChangeLog({
+    entityType: "district",
+    entityId: id,
+    action: "delete",
+    beforeData: beforeData ?? null,
+    afterData: null,
+  });
+}
+
+export async function deleteCity(id: string) {
+  if (!hasSupabaseConfig || !supabase) return;
+  const { data: beforeData, error: beforeError } = await supabase
+    .from(tableNames.cities)
+    .select("*")
+    .eq("id", id)
+    .single();
+  if (beforeError) throw beforeError;
+  const { error } = await supabase.from(tableNames.cities).delete().eq("id", id);
+  if (error) throw error;
+  await appendChangeLog({
+    entityType: "city",
+    entityId: id,
+    action: "delete",
+    beforeData: beforeData ?? null,
+    afterData: null,
+  });
+}
