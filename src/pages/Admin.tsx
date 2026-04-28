@@ -65,7 +65,23 @@ const cardTypeLabels: Record<(typeof cardTypeOptions)[number], string> = {
   text: "Текст",
 };
 
-type AdminTab = "objects" | "cards" | "hierarchy" | "history";
+type AdminTab = "builder" | "objects" | "cards" | "hierarchy" | "history";
+type BuilderType = "event" | "hotel" | "restaurant" | "attraction";
+
+const builderTypeLabels: Record<BuilderType, string> = {
+  event: "Подія",
+  hotel: "Готель",
+  restaurant: "Ресторан",
+  attraction: "Локація",
+};
+
+const sectionTargets = [
+  { label: "Головна / Події", pageKey: "index", sectionKey: "events", type: "event" as BuilderType },
+  { label: "Головна / Основні напрямки", pageKey: "index", sectionKey: "directions", type: "attraction" as BuilderType },
+  { label: "Сторінка району / Що відвідати", pageKey: "city-bilhorod", sectionKey: "media", type: "attraction" as BuilderType },
+  { label: "Сторінка району / Готелі", pageKey: "city-bilhorod", sectionKey: "hotels", type: "hotel" as BuilderType },
+  { label: "Сторінка району / Ресторани", pageKey: "city-bilhorod", sectionKey: "restaurants", type: "restaurant" as BuilderType },
+] as const;
 
 const slugify = (input: string) =>
   input
@@ -79,6 +95,7 @@ const slugify = (input: string) =>
 const Admin = () => {
   const [activeTab, setActiveTab] = useState<AdminTab>("objects");
   const [selectedType, setSelectedType] = useState<TourismObjectType>("event");
+  const [builderType, setBuilderType] = useState<BuilderType>("event");
 
   const [objects, setObjects] = useState<TourismObject[]>(seedObjects);
   const [regions, setRegions] = useState<Region[]>(seedRegions);
@@ -96,6 +113,15 @@ const Admin = () => {
   const [loading, setLoading] = useState(true);
   const [errorText, setErrorText] = useState("");
   const [savingState, setSavingState] = useState("");
+  const [builderDraft, setBuilderDraft] = useState({
+    title: "",
+    subtitle: "",
+    imageUrl: "",
+    href: "",
+    districtId: "",
+    cityId: "",
+    targetKey: "index|events",
+  });
 
   const [authLoading, setAuthLoading] = useState(true);
   const [isAuthed, setIsAuthed] = useState(false);
@@ -135,6 +161,19 @@ const Admin = () => {
 
   const selectedCard =
     contentCards.find((card) => card.id === selectedCardId) ?? filteredCards[0] ?? contentCards[0];
+
+  const builderDistrictOptions = useMemo(() => districts, [districts]);
+  const builderCityOptions = useMemo(
+    () =>
+      cities.filter((city) =>
+        builderDraft.districtId ? city.districtId === builderDraft.districtId : true,
+      ),
+    [cities, builderDraft.districtId],
+  );
+  const builderTargets = useMemo(
+    () => sectionTargets.filter((target) => target.type === builderType),
+    [builderType],
+  );
 
   useEffect(() => {
     if (!selectedCard) return;
@@ -234,24 +273,26 @@ const Admin = () => {
     const next = { ...selectedObject, ...patch };
     const nextObjects = objects.map((obj) => (obj.id === selectedObject.id ? next : obj));
     setObjects(nextObjects);
+  };
 
-    const validationError = validateObjectDraft(next, nextObjects, districts, cities);
+  const saveObject = async () => {
+    if (!selectedObject) return;
+    const validationError = validateObjectDraft(selectedObject, objects, districts, cities);
     if (validationError) {
       setErrorText(validationError);
       return;
     }
-
     setErrorText("");
     setSavingState("Зберігаємо об'єкт...");
-    void upsertTourismObject(next)
-      .then(() => {
-        setSavingState("Об'єкт збережено");
-        void loadLogs();
-      })
-      .catch((error) => setErrorText(error.message ?? "Помилка збереження об'єкта"))
-      .finally(() => {
-        window.setTimeout(() => setSavingState(""), 1000);
-      });
+    try {
+      await upsertTourismObject(selectedObject);
+      await loadLogs();
+      setSavingState("Об'єкт збережено");
+    } catch (error: any) {
+      setErrorText(error?.message ?? "Помилка збереження об'єкта");
+    } finally {
+      window.setTimeout(() => setSavingState(""), 1000);
+    }
   };
 
   const createObject = async () => {
@@ -320,24 +361,32 @@ const Admin = () => {
     if (patch.id && patch.id !== selectedCard.id) {
       setSelectedCardId(patch.id);
     }
+  };
 
-    const validationError = validateContentCardDraft(next, nextCards, regions, districts, cities);
+  const saveCard = async () => {
+    if (!selectedCard) return;
+    const validationError = validateContentCardDraft(
+      selectedCard,
+      contentCards,
+      regions,
+      districts,
+      cities,
+    );
     if (validationError) {
       setErrorText(validationError);
       return;
     }
-
     setErrorText("");
     setSavingState("Зберігаємо картку...");
-    void upsertContentCard(next)
-      .then(() => {
-        setSavingState("Картку збережено");
-        void loadLogs();
-      })
-      .catch((error) => setErrorText(error.message ?? "Помилка збереження картки"))
-      .finally(() => {
-        window.setTimeout(() => setSavingState(""), 1000);
-      });
+    try {
+      await upsertContentCard(selectedCard);
+      await loadLogs();
+      setSavingState("Картку збережено");
+    } catch (error: any) {
+      setErrorText(error?.message ?? "Помилка збереження картки");
+    } finally {
+      window.setTimeout(() => setSavingState(""), 1000);
+    }
   };
 
   const createCard = async () => {
@@ -404,6 +453,128 @@ const Admin = () => {
       await loadLogs();
     } catch (error: any) {
       setErrorText(error?.message ?? "Не вдалося виконати rollback");
+    }
+  };
+
+  const createFromTemplate = async () => {
+    const title = builderDraft.title.trim();
+    if (!title) {
+      setErrorText("Вкажіть назву");
+      return;
+    }
+    if (!builderDraft.districtId || !builderDraft.cityId) {
+      setErrorText("Оберіть район та місто");
+      return;
+    }
+    const city = cities.find((c) => c.id === builderDraft.cityId);
+    const district = districts.find((d) => d.id === builderDraft.districtId);
+    if (!city || !district) {
+      setErrorText("Невірна прив'язка місто/район");
+      return;
+    }
+    if (city.districtId !== district.id) {
+      setErrorText("Місто не належить обраному району");
+      return;
+    }
+    const target = sectionTargets.find(
+      (item) => `${item.pageKey}|${item.sectionKey}` === builderDraft.targetKey,
+    );
+    if (!target) {
+      setErrorText("Оберіть, де показувати картку");
+      return;
+    }
+
+    const now = Date.now();
+    const slug = slugify(title) || `${builderType}-${now}`;
+    const objectId = `obj-${builderType}-${now}`;
+    const cardId = `card-${builderType}-${now}`;
+    const regionId = district.regionId;
+    const href =
+      builderDraft.href.trim() ||
+      (builderType === "event"
+        ? `/podiyi/${slug}`
+        : builderType === "hotel"
+          ? `/hoteli/${slug}`
+          : builderType === "restaurant"
+            ? `/restorany/${slug}`
+            : "");
+
+    const newObject: TourismObject = {
+      id: objectId,
+      districtId: district.id,
+      cityId: city.id,
+      type: builderType,
+      name: title,
+      slug,
+      published: true,
+    };
+
+    const validationObject = validateObjectDraft(newObject, [newObject, ...objects], districts, cities);
+    if (validationObject) {
+      setErrorText(validationObject);
+      return;
+    }
+
+    const sectionCards = contentCards.filter(
+      (card) => card.pageKey === target.pageKey && card.sectionKey === target.sectionKey,
+    );
+    const maxSort = sectionCards.length ? Math.max(...sectionCards.map((c) => c.sortOrder)) : 0;
+    const newCard: ContentCardEntity = {
+      id: cardId,
+      pageKey: target.pageKey,
+      sectionKey: target.sectionKey,
+      cardType: builderType,
+      title,
+      subtitle: builderDraft.subtitle.trim() || city.name,
+      imageUrl: builderDraft.imageUrl.trim() || null,
+      href: href || null,
+      cityId: city.id,
+      districtId: district.id,
+      regionId,
+      sortOrder: maxSort + 1,
+      published: true,
+      payload:
+        builderType === "event"
+          ? { badgeTop: "до", badgeDay: "1", badgeMonth: "травень" }
+          : builderType === "hotel"
+            ? { rating: "4.8" }
+            : {},
+    };
+
+    const validationCard = validateContentCardDraft(
+      newCard,
+      [newCard, ...contentCards],
+      regions,
+      districts,
+      cities,
+    );
+    if (validationCard) {
+      setErrorText(validationCard);
+      return;
+    }
+
+    setErrorText("");
+    setSavingState("Створюємо...");
+    try {
+      await insertTourismObject(newObject);
+      await insertContentCard(newCard);
+      await loadAllData();
+      await loadLogs();
+      setSelectedType(builderType);
+      setSelectedObjectId(objectId);
+      setSelectedCardId(cardId);
+      setBuilderDraft((prev) => ({
+        ...prev,
+        title: "",
+        subtitle: "",
+        imageUrl: "",
+        href: "",
+      }));
+      setSavingState("Створено і прив'язано до сторінки");
+    } catch (error: any) {
+      setErrorText(error?.message ?? "Помилка створення");
+    } finally {
+      window.setTimeout(() => setSavingState(""), 1200);
     }
   };
 
@@ -484,9 +655,17 @@ const Admin = () => {
             {errorText}
           </p>
         ) : null}
+        {!hasSupabaseConfig ? (
+          <p className="mt-3 inline-flex items-center gap-2 rounded-lg bg-[#df9b3b]/20 px-3 py-2 text-[14px] text-[#002f5e]">
+            <ShieldAlert className="h-4 w-4" />
+            Зараз local mode: зміни не записуються в Supabase. Додайте VITE_SUPABASE_URL та
+            VITE_SUPABASE_ANON_KEY у Vercel Environment Variables.
+          </p>
+        ) : null}
 
         <div className="mt-6 flex flex-wrap gap-2">
           {[
+            { id: "builder", label: "Конструктор (простий)" },
             { id: "objects", label: "Карточки об'єктів" },
             { id: "cards", label: "Секції сайту (content_cards)" },
             { id: "hierarchy", label: "Область / Район / Місто" },
@@ -504,6 +683,134 @@ const Admin = () => {
             </button>
           ))}
         </div>
+
+        {activeTab === "builder" ? (
+          <section className="mt-8 rounded-[24px] border border-[#002f5e]/20 bg-white/60 p-6 md:p-8">
+            <h2 className="font-odesa-medium text-[34px]">Додати новий матеріал</h2>
+            <p className="mt-2 text-[16px] text-[#002f5e]/75">
+              Обери тип, заповни поля і вкажи, на якій сторінці показувати. Система сама створить об'єкт та картку.
+            </p>
+
+            <div className="mt-6 flex flex-wrap gap-2">
+              {(Object.keys(builderTypeLabels) as BuilderType[]).map((type) => (
+                <button
+                  key={type}
+                  type="button"
+                  onClick={() => {
+                    const nextTarget = sectionTargets.find((target) => target.type === type);
+                    setBuilderType(type);
+                    setBuilderDraft((prev) => ({
+                      ...prev,
+                      targetKey: nextTarget ? `${nextTarget.pageKey}|${nextTarget.sectionKey}` : prev.targetKey,
+                    }));
+                  }}
+                  className={`rounded-full px-4 py-2 text-[15px] ${
+                    builderType === type ? "bg-[#002f5e] text-[#fff2e8]" : "bg-[#002f5e]/10"
+                  }`}
+                >
+                  {builderTypeLabels[type]}
+                </button>
+              ))}
+            </div>
+
+            <div className="mt-6 grid gap-4 md:grid-cols-2">
+              <label className="text-[14px]">
+                <span className="mb-1 block text-[#002f5e]/75">Назва</span>
+                <input
+                  value={builderDraft.title}
+                  onChange={(e) => setBuilderDraft((prev) => ({ ...prev, title: e.target.value }))}
+                  className="w-full rounded-lg border border-[#002f5e]/25 bg-white px-3 py-2"
+                  placeholder="Наприклад: Фестиваль Бессарабії"
+                />
+              </label>
+              <label className="text-[14px]">
+                <span className="mb-1 block text-[#002f5e]/75">Підзаголовок</span>
+                <input
+                  value={builderDraft.subtitle}
+                  onChange={(e) => setBuilderDraft((prev) => ({ ...prev, subtitle: e.target.value }))}
+                  className="w-full rounded-lg border border-[#002f5e]/25 bg-white px-3 py-2"
+                  placeholder="Болград, 24.04 - 03.05.2026"
+                />
+              </label>
+              <label className="text-[14px] md:col-span-2">
+                <span className="mb-1 block text-[#002f5e]/75">Картинка (URL)</span>
+                <input
+                  value={builderDraft.imageUrl}
+                  onChange={(e) => setBuilderDraft((prev) => ({ ...prev, imageUrl: e.target.value }))}
+                  className="w-full rounded-lg border border-[#002f5e]/25 bg-white px-3 py-2"
+                  placeholder="https://..."
+                />
+              </label>
+              <label className="text-[14px] md:col-span-2">
+                <span className="mb-1 block text-[#002f5e]/75">Посилання на сторінку (опціонально)</span>
+                <input
+                  value={builderDraft.href}
+                  onChange={(e) => setBuilderDraft((prev) => ({ ...prev, href: e.target.value }))}
+                  className="w-full rounded-lg border border-[#002f5e]/25 bg-white px-3 py-2"
+                  placeholder="Залиш порожнім, згенеруємо автоматично"
+                />
+              </label>
+              <label className="text-[14px]">
+                <span className="mb-1 block text-[#002f5e]/75">Район</span>
+                <select
+                  value={builderDraft.districtId}
+                  onChange={(e) => {
+                    const districtId = e.target.value;
+                    const firstCity = cities.find((city) => city.districtId === districtId)?.id ?? "";
+                    setBuilderDraft((prev) => ({ ...prev, districtId, cityId: firstCity }));
+                  }}
+                  className="w-full rounded-lg border border-[#002f5e]/25 bg-white px-3 py-2"
+                >
+                  <option value="">Оберіть район</option>
+                  {builderDistrictOptions.map((district) => (
+                    <option key={district.id} value={district.id}>
+                      {district.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="text-[14px]">
+                <span className="mb-1 block text-[#002f5e]/75">Місто</span>
+                <select
+                  value={builderDraft.cityId}
+                  onChange={(e) => setBuilderDraft((prev) => ({ ...prev, cityId: e.target.value }))}
+                  className="w-full rounded-lg border border-[#002f5e]/25 bg-white px-3 py-2"
+                >
+                  <option value="">Оберіть місто</option>
+                  {builderCityOptions.map((city) => (
+                    <option key={city.id} value={city.id}>
+                      {city.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="text-[14px] md:col-span-2">
+                <span className="mb-1 block text-[#002f5e]/75">Де показувати</span>
+                <select
+                  value={builderDraft.targetKey}
+                  onChange={(e) => setBuilderDraft((prev) => ({ ...prev, targetKey: e.target.value }))}
+                  className="w-full rounded-lg border border-[#002f5e]/25 bg-white px-3 py-2"
+                >
+                  {builderTargets.map((target) => (
+                    <option key={`${target.pageKey}|${target.sectionKey}`} value={`${target.pageKey}|${target.sectionKey}`}>
+                      {target.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+
+            <div className="mt-6">
+              <button
+                type="button"
+                onClick={() => void createFromTemplate()}
+                className="rounded-full bg-[#002f5e] px-6 py-3 text-[15px] text-[#fff2e8]"
+              >
+                Зберегти і додати на сайт
+              </button>
+            </div>
+          </section>
+        ) : null}
 
         {activeTab === "objects" ? (
           <div className="mt-8 grid gap-6 lg:grid-cols-[320px_1fr]">
@@ -637,6 +944,15 @@ const Admin = () => {
                         {selectedObject.published ? "Опубліковано" : "Чернетка"}
                       </button>
                     </label>
+                    <div className="md:col-span-2">
+                      <button
+                        type="button"
+                        onClick={() => void saveObject()}
+                        className="rounded-full bg-[#002f5e] px-5 py-2 text-[14px] text-[#fff2e8]"
+                      >
+                        Зберегти об'єкт
+                      </button>
+                    </div>
                   </div>
                 )}
               </section>
@@ -961,6 +1277,15 @@ const Admin = () => {
                       {selectedCard.published ? "Опубліковано" : "Чернетка"}
                     </button>
                   </label>
+                  <div className="md:col-span-2">
+                    <button
+                      type="button"
+                      onClick={() => void saveCard()}
+                      className="rounded-full bg-[#002f5e] px-5 py-2 text-[14px] text-[#fff2e8]"
+                    >
+                      Зберегти картку
+                    </button>
+                  </div>
                 </div>
               )}
             </section>

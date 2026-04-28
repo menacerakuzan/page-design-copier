@@ -1,15 +1,28 @@
 import { useMemo, useState } from "react";
 import { Facebook, Instagram, Search } from "lucide-react";
 import { cities, districts, regions, tourismObjects } from "@/data/hierarchyMockData";
+import { fallbackContentCards } from "@/data/contentCardsFallback";
+import { usePageContentCards } from "@/hooks/usePageContentCards";
 
 const footerColumns = [
   {
     title: "Мандрівнику",
-    links: ["Що подивитись", "Куди поїхати", "Маршрути", "Події", "Інформація"],
+    links: [
+      { label: "Що подивитись", href: "#" },
+      { label: "Куди поїхати", href: "#" },
+      { label: "Маршрути", href: "#" },
+      { label: "Події", href: "#" },
+      { label: "Інформація", href: "#" },
+    ],
   },
   {
     title: "Медіа",
-    links: ["Новини", "Фото та відео", "Контакти", "Логотипи"],
+    links: [
+      { label: "Новини", href: "#" },
+      { label: "Фото та відео", href: "#" },
+      { label: "Контакти", href: "#" },
+      { label: "Логотипи", href: "#" },
+    ],
   },
 ];
 
@@ -30,7 +43,44 @@ const socialLinks = [
 ];
 
 const SiteFooter = () => {
+  const { data: globalCardsData } = usePageContentCards("global");
   const [query, setQuery] = useState("");
+
+  const globalCards = useMemo(() => {
+    const live = (globalCardsData ?? []).filter((card) => card.pageKey === "global");
+    if (live.length) return live;
+    return fallbackContentCards.filter((card) => card.pageKey === "global" && card.published);
+  }, [globalCardsData]);
+
+  const footerColumnsData = useMemo(() => {
+    const visitorCards = globalCards.filter((c) => c.sectionKey === "footer-visitor");
+    const mediaCards = globalCards.filter((c) => c.sectionKey === "footer-media");
+
+    if (!visitorCards.length && !mediaCards.length) return footerColumns;
+    return [
+      { title: "Мандрівнику", links: visitorCards.map((c) => ({ label: c.title, href: c.href || "#" })) },
+      { title: "Медіа", links: mediaCards.map((c) => ({ label: c.title, href: c.href || "#" })) },
+    ];
+  }, [globalCards]);
+
+  const socialLinksData = useMemo(() => {
+    const socialCards = globalCards.filter((c) => c.sectionKey === "footer-social");
+    if (!socialCards.length) return socialLinks;
+
+    const iconsMap: Record<string, any> = {
+      instagram: Instagram,
+      tiktok: TikTokIcon,
+      facebook: Facebook,
+    };
+    return socialCards.map((card) => {
+      const key = String(card.payload?.icon ?? "").toLowerCase();
+      return {
+        label: card.title,
+        href: card.href || "#",
+        Icon: iconsMap[key] || Instagram,
+      };
+    });
+  }, [globalCards]);
 
   const searchItems = useMemo(
     () => [
@@ -75,13 +125,13 @@ const SiteFooter = () => {
       </div>
 
       <div className="mx-auto grid max-w-[1200px] gap-7 border-t border-[#002f5e]/20 pt-10 md:grid-cols-[1fr_1fr_auto]">
-        {footerColumns.map((col) => (
+        {footerColumnsData.map((col) => (
           <div key={col.title}>
             <h4 className="text-[30px] leading-none font-odesa-medium">{col.title}</h4>
             <nav className="mt-4 space-y-3">
               {col.links.map((link) => (
-                <a key={link} href="#" className="block text-[20px] leading-none text-[#002f5e]/82 transition-colors hover:text-[#002f5e] font-odesa-regular">
-                  {link}
+                <a key={link.label} href={link.href} className="block text-[20px] leading-none text-[#002f5e]/82 transition-colors hover:text-[#002f5e] font-odesa-regular">
+                  {link.label}
                 </a>
               ))}
             </nav>
@@ -91,7 +141,7 @@ const SiteFooter = () => {
         <div>
           <h4 className="text-[30px] leading-none text-[#002f5e]/70 font-odesa-medium">Зв'язок</h4>
           <div className="mt-4 flex items-center gap-2">
-            {socialLinks.map(({ label, href, Icon }) => (
+            {socialLinksData.map(({ label, href, Icon }) => (
               <a
                 key={label}
                 href={href}
