@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { ChangeEvent, useEffect, useMemo, useState } from "react";
 import {
   CheckCircle2,
   Circle,
@@ -113,12 +113,22 @@ const Admin = () => {
     description: "",
     address: "",
     phone: "",
+    mapUrl: "",
     hours: "",
+    eventDates: [{ from: "", to: "", label: "Основні дати" }],
+    workSlots: [{ days: "ПН-НД", from: "10:00", to: "20:00" }],
+    amenities: [] as string[],
+    payments: [] as string[],
+    rating: "4.8",
+    gallery: [] as string[],
     districtId: "",
     cityId: "",
     showOnMain: true,
     mainSection: "directions",
   });
+  const [builderTagInput, setBuilderTagInput] = useState("");
+  const [builderPaymentInput, setBuilderPaymentInput] = useState("");
+  const [uploadingMedia, setUploadingMedia] = useState(false);
 
   const [authLoading, setAuthLoading] = useState(true);
   const [isAuthed, setIsAuthed] = useState(false);
@@ -671,8 +681,13 @@ const Admin = () => {
         pageKey: detailPageKey,
         sectionKey: "info",
         cardType: "info",
-        title: "Графік",
-        subtitle: builderDraft.hours.trim() || "Додайте графік",
+        title:
+          builderType === "event"
+            ? "Дати і час"
+            : builderType === "hotel"
+              ? "Зручності та сервіси"
+              : "Меню та атмосфера",
+        subtitle: builderDraft.hours.trim() || "Додайте параметри",
         imageUrl: null,
         href: null,
         cityId: city.id,
@@ -680,7 +695,15 @@ const Admin = () => {
         regionId,
         sortOrder: 1,
         published: true,
-        payload: {},
+        payload: {
+          mapUrl: builderDraft.mapUrl.trim() || null,
+          eventDates: builderDraft.eventDates,
+          workSlots: builderDraft.workSlots,
+          amenities: builderDraft.amenities,
+          payments: builderDraft.payments,
+          rating: builderDraft.rating,
+          gallery: builderDraft.gallery,
+        },
       },
       {
         id: `card-detail-contacts-${now}`,
@@ -702,6 +725,24 @@ const Admin = () => {
         },
       },
     ];
+    if (builderDraft.gallery.length) {
+      detailCards.push({
+        id: `card-detail-gallery-${now}`,
+        pageKey: detailPageKey,
+        sectionKey: "gallery",
+        cardType: builderType,
+        title: "Галерея",
+        subtitle: null,
+        imageUrl: builderDraft.gallery[0],
+        href: null,
+        cityId: city.id,
+        districtId: district.id,
+        regionId,
+        sortOrder: 1,
+        published: true,
+        payload: { images: builderDraft.gallery },
+      });
+    }
 
     const listCards = [...contentCards, newCard];
     if (builderDraft.showOnMain) {
@@ -753,7 +794,14 @@ const Admin = () => {
         description: "",
         address: "",
         phone: "",
+        mapUrl: "",
         hours: "",
+        eventDates: [{ from: "", to: "", label: "Основні дати" }],
+        workSlots: [{ days: "ПН-НД", from: "10:00", to: "20:00" }],
+        amenities: [],
+        payments: [],
+        rating: "4.8",
+        gallery: [],
         mainSection: "directions",
       }));
       setSavingState("Створено і прив'язано до сторінки");
@@ -761,6 +809,37 @@ const Admin = () => {
       setErrorText(error?.message ?? "Помилка створення");
     } finally {
       window.setTimeout(() => setSavingState(""), 1200);
+    }
+  };
+
+  const uploadBuilderMedia = async (event: ChangeEvent<HTMLInputElement>, target: "cover" | "gallery") => {
+    const file = event.target.files?.[0];
+    if (!file || !supabase) return;
+    setUploadingMedia(true);
+    setErrorText("");
+    try {
+      const ext = file.name.split(".").pop() || "jpg";
+      const path = `cms/${builderType}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error: uploadError } = await supabase.storage.from("media").upload(path, file, {
+        upsert: false,
+        contentType: file.type,
+      });
+      if (uploadError) throw uploadError;
+      const { data } = supabase.storage.from("media").getPublicUrl(path);
+      const url = data.publicUrl;
+      if (target === "cover") {
+        setBuilderDraft((prev) => ({ ...prev, imageUrl: url }));
+      } else {
+        setBuilderDraft((prev) => ({ ...prev, gallery: [...prev.gallery, url] }));
+      }
+    } catch (error: any) {
+      setErrorText(
+        error?.message ??
+          "Помилка завантаження. Перевір bucket `media` і policy на insert/select для authenticated.",
+      );
+    } finally {
+      setUploadingMedia(false);
+      event.target.value = "";
     }
   };
 
@@ -872,9 +951,9 @@ const Admin = () => {
 
         {activeTab === "builder" ? (
           <section className="mt-8 rounded-[24px] border border-[#002f5e]/20 bg-white/60 p-6 md:p-8">
-            <h2 className="font-odesa-medium text-[34px]">Додати новий матеріал</h2>
+            <h2 className="font-odesa-medium text-[34px]">Конструктор сторінки (розширений)</h2>
             <p className="mt-2 text-[16px] text-[#002f5e]/75">
-              Обери тип, заповни поля і вкажи, на якій сторінці показувати. Система сама створить об'єкт та картку.
+              Обери тип, заповни великі блоки і одразу бачиш, як виглядатиме картка/сторінка.
             </p>
 
             <div className="mt-6 flex flex-wrap gap-2">
@@ -912,13 +991,24 @@ const Admin = () => {
                 />
               </label>
               <label className="text-[14px] md:col-span-2">
-                <span className="mb-1 block text-[#002f5e]/75">Картинка (URL)</span>
-                <input
-                  value={builderDraft.imageUrl}
-                  onChange={(e) => setBuilderDraft((prev) => ({ ...prev, imageUrl: e.target.value }))}
-                  className="w-full rounded-lg border border-[#002f5e]/25 bg-white px-3 py-2"
-                  placeholder="https://..."
-                />
+                <span className="mb-1 block text-[#002f5e]/75">Обкладинка (URL або upload)</span>
+                <div className="flex flex-col gap-2 md:flex-row">
+                  <input
+                    value={builderDraft.imageUrl}
+                    onChange={(e) => setBuilderDraft((prev) => ({ ...prev, imageUrl: e.target.value }))}
+                    className="w-full rounded-lg border border-[#002f5e]/25 bg-white px-3 py-2"
+                    placeholder="https://..."
+                  />
+                  <label className="cursor-pointer rounded-lg bg-[#002f5e] px-4 py-2 text-center text-[13px] text-[#fff2e8]">
+                    {uploadingMedia ? "Завантаження..." : "Upload"}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => void uploadBuilderMedia(e, "cover")}
+                    />
+                  </label>
+                </div>
               </label>
               <label className="text-[14px] md:col-span-2">
                 <span className="mb-1 block text-[#002f5e]/75">Посилання на сторінку (опціонально)</span>
@@ -988,13 +1078,279 @@ const Admin = () => {
                 />
               </label>
               <label className="text-[14px] md:col-span-2">
-                <span className="mb-1 block text-[#002f5e]/75">Години роботи / дати</span>
+                <span className="mb-1 block text-[#002f5e]/75">Карта (URL embed/Google Maps)</span>
                 <input
-                  value={builderDraft.hours}
-                  onChange={(e) => setBuilderDraft((prev) => ({ ...prev, hours: e.target.value }))}
+                  value={builderDraft.mapUrl}
+                  onChange={(e) => setBuilderDraft((prev) => ({ ...prev, mapUrl: e.target.value }))}
                   className="w-full rounded-lg border border-[#002f5e]/25 bg-white px-3 py-2"
                 />
               </label>
+              <div className="md:col-span-2 rounded-xl border border-[#002f5e]/15 bg-white p-4">
+                <p className="text-[14px] font-semibold text-[#002f5e]">Години роботи / дати (структуровано)</p>
+                <div className="mt-3 grid gap-3 md:grid-cols-2">
+                  {builderDraft.workSlots.map((slot, idx) => (
+                    <div key={`slot-${idx}`} className="rounded-lg border border-[#002f5e]/15 p-3">
+                      <input
+                        value={slot.days}
+                        onChange={(e) =>
+                          setBuilderDraft((prev) => ({
+                            ...prev,
+                            workSlots: prev.workSlots.map((s, i) =>
+                              i === idx ? { ...s, days: e.target.value } : s,
+                            ),
+                          }))
+                        }
+                        className="w-full rounded-md border border-[#002f5e]/25 px-2 py-1 text-[13px]"
+                        placeholder="ПН-ПТ"
+                      />
+                      <div className="mt-2 grid grid-cols-2 gap-2">
+                        <input
+                          value={slot.from}
+                          onChange={(e) =>
+                            setBuilderDraft((prev) => ({
+                              ...prev,
+                              workSlots: prev.workSlots.map((s, i) =>
+                                i === idx ? { ...s, from: e.target.value } : s,
+                              ),
+                            }))
+                          }
+                          className="rounded-md border border-[#002f5e]/25 px-2 py-1 text-[13px]"
+                          placeholder="09:00"
+                        />
+                        <input
+                          value={slot.to}
+                          onChange={(e) =>
+                            setBuilderDraft((prev) => ({
+                              ...prev,
+                              workSlots: prev.workSlots.map((s, i) =>
+                                i === idx ? { ...s, to: e.target.value } : s,
+                              ),
+                            }))
+                          }
+                          className="rounded-md border border-[#002f5e]/25 px-2 py-1 text-[13px]"
+                          placeholder="18:00"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-2 flex gap-2">
+                  <button
+                    type="button"
+                    className="rounded-full bg-[#002f5e] px-3 py-1 text-[12px] text-[#fff2e8]"
+                    onClick={() =>
+                      setBuilderDraft((prev) => ({
+                        ...prev,
+                        workSlots: [...prev.workSlots, { days: "", from: "", to: "" }],
+                      }))
+                    }
+                  >
+                    + Додати слот
+                  </button>
+                </div>
+              </div>
+              {builderType === "event" ? (
+                <div className="md:col-span-2 rounded-xl border border-[#002f5e]/15 bg-white p-4">
+                  <p className="text-[14px] font-semibold text-[#002f5e]">Дати події</p>
+                  <div className="mt-3 grid gap-3 md:grid-cols-2">
+                    {builderDraft.eventDates.map((item, idx) => (
+                      <div key={`date-${idx}`} className="rounded-lg border border-[#002f5e]/15 p-3">
+                        <input
+                          value={item.label}
+                          onChange={(e) =>
+                            setBuilderDraft((prev) => ({
+                              ...prev,
+                              eventDates: prev.eventDates.map((d, i) =>
+                                i === idx ? { ...d, label: e.target.value } : d,
+                              ),
+                            }))
+                          }
+                          className="w-full rounded-md border border-[#002f5e]/25 px-2 py-1 text-[13px]"
+                          placeholder="Основні дати"
+                        />
+                        <div className="mt-2 grid grid-cols-2 gap-2">
+                          <input
+                            value={item.from}
+                            onChange={(e) =>
+                              setBuilderDraft((prev) => ({
+                                ...prev,
+                                eventDates: prev.eventDates.map((d, i) =>
+                                  i === idx ? { ...d, from: e.target.value } : d,
+                                ),
+                              }))
+                            }
+                            className="rounded-md border border-[#002f5e]/25 px-2 py-1 text-[13px]"
+                            placeholder="24.04.2026"
+                          />
+                          <input
+                            value={item.to}
+                            onChange={(e) =>
+                              setBuilderDraft((prev) => ({
+                                ...prev,
+                                eventDates: prev.eventDates.map((d, i) =>
+                                  i === idx ? { ...d, to: e.target.value } : d,
+                                ),
+                              }))
+                            }
+                            className="rounded-md border border-[#002f5e]/25 px-2 py-1 text-[13px]"
+                            placeholder="03.05.2026"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <button
+                    type="button"
+                    className="mt-2 rounded-full bg-[#002f5e] px-3 py-1 text-[12px] text-[#fff2e8]"
+                    onClick={() =>
+                      setBuilderDraft((prev) => ({
+                        ...prev,
+                        eventDates: [...prev.eventDates, { from: "", to: "", label: "" }],
+                      }))
+                    }
+                  >
+                    + Додати діапазон дат
+                  </button>
+                </div>
+              ) : null}
+              {(builderType === "hotel" || builderType === "restaurant") ? (
+                <>
+                  <div className="md:col-span-2 rounded-xl border border-[#002f5e]/15 bg-white p-4">
+                    <p className="text-[14px] font-semibold text-[#002f5e]">Зручності (кнопками)</p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {builderDraft.amenities.map((item, idx) => (
+                        <button
+                          key={`am-${idx}`}
+                          type="button"
+                          className="rounded-full bg-[#002f5e]/10 px-3 py-1 text-[12px]"
+                          onClick={() =>
+                            setBuilderDraft((prev) => ({
+                              ...prev,
+                              amenities: prev.amenities.filter((_, i) => i !== idx),
+                            }))
+                          }
+                        >
+                          {item} ×
+                        </button>
+                      ))}
+                    </div>
+                    <div className="mt-2 flex gap-2">
+                      <input
+                        value={builderTagInput}
+                        onChange={(e) => setBuilderTagInput(e.target.value)}
+                        className="w-full rounded-md border border-[#002f5e]/25 px-2 py-1 text-[13px]"
+                        placeholder="Додати: Тераса, Wi‑Fi..."
+                      />
+                      <button
+                        type="button"
+                        className="rounded-md bg-[#002f5e] px-3 py-1 text-[12px] text-[#fff2e8]"
+                        onClick={() => {
+                          const value = builderTagInput.trim();
+                          if (!value) return;
+                          setBuilderDraft((prev) => ({ ...prev, amenities: [...prev.amenities, value] }));
+                          setBuilderTagInput("");
+                        }}
+                      >
+                        Додати
+                      </button>
+                    </div>
+                  </div>
+                  <div className="md:col-span-2 rounded-xl border border-[#002f5e]/15 bg-white p-4">
+                    <p className="text-[14px] font-semibold text-[#002f5e]">Оплата / параметри</p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {builderDraft.payments.map((item, idx) => (
+                        <button
+                          key={`pay-${idx}`}
+                          type="button"
+                          className="rounded-full bg-[#002f5e]/10 px-3 py-1 text-[12px]"
+                          onClick={() =>
+                            setBuilderDraft((prev) => ({
+                              ...prev,
+                              payments: prev.payments.filter((_, i) => i !== idx),
+                            }))
+                          }
+                        >
+                          {item} ×
+                        </button>
+                      ))}
+                    </div>
+                    <div className="mt-2 flex gap-2">
+                      <input
+                        value={builderPaymentInput}
+                        onChange={(e) => setBuilderPaymentInput(e.target.value)}
+                        className="w-full rounded-md border border-[#002f5e]/25 px-2 py-1 text-[13px]"
+                        placeholder="Visa, MasterCard, Apple Pay..."
+                      />
+                      <button
+                        type="button"
+                        className="rounded-md bg-[#002f5e] px-3 py-1 text-[12px] text-[#fff2e8]"
+                        onClick={() => {
+                          const value = builderPaymentInput.trim();
+                          if (!value) return;
+                          setBuilderDraft((prev) => ({ ...prev, payments: [...prev.payments, value] }));
+                          setBuilderPaymentInput("");
+                        }}
+                      >
+                        Додати
+                      </button>
+                    </div>
+                    <div className="mt-3">
+                      <span className="text-[13px] text-[#002f5e]/70">Рейтинг</span>
+                      <input
+                        value={builderDraft.rating}
+                        onChange={(e) => setBuilderDraft((prev) => ({ ...prev, rating: e.target.value }))}
+                        className="mt-1 w-[140px] rounded-md border border-[#002f5e]/25 px-2 py-1 text-[13px]"
+                        placeholder="4.8"
+                      />
+                    </div>
+                  </div>
+                </>
+              ) : null}
+              <div className="md:col-span-2 rounded-xl border border-[#002f5e]/15 bg-white p-4">
+                <p className="text-[14px] font-semibold text-[#002f5e]">Галерея</p>
+                <div className="mt-2 grid gap-2 md:grid-cols-3">
+                  {builderDraft.gallery.map((url, idx) => (
+                    <div key={`gallery-${idx}`} className="rounded-md border border-[#002f5e]/20 p-2">
+                      <img src={url} alt="" className="h-20 w-full rounded-md object-cover" />
+                      <button
+                        type="button"
+                        className="mt-1 text-[12px] text-[#9f1f47]"
+                        onClick={() =>
+                          setBuilderDraft((prev) => ({
+                            ...prev,
+                            gallery: prev.gallery.filter((_, i) => i !== idx),
+                          }))
+                        }
+                      >
+                        Видалити
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-2 flex flex-col gap-2 md:flex-row">
+                  <input
+                    className="w-full rounded-md border border-[#002f5e]/25 px-2 py-1 text-[13px]"
+                    placeholder="Додати URL зображення і натиснути Enter"
+                    onKeyDown={(e) => {
+                      if (e.key !== "Enter") return;
+                      e.preventDefault();
+                      const value = (e.currentTarget.value || "").trim();
+                      if (!value) return;
+                      setBuilderDraft((prev) => ({ ...prev, gallery: [...prev.gallery, value] }));
+                      e.currentTarget.value = "";
+                    }}
+                  />
+                  <label className="cursor-pointer rounded-lg bg-[#002f5e] px-4 py-2 text-center text-[13px] text-[#fff2e8]">
+                    {uploadingMedia ? "Завантаження..." : "Upload у галерею"}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => void uploadBuilderMedia(e, "gallery")}
+                    />
+                  </label>
+                </div>
+              </div>
               <label className="text-[14px] md:col-span-2 inline-flex items-center gap-3">
                 <input
                   type="checkbox"
@@ -1026,6 +1382,24 @@ const Admin = () => {
               >
                 Зберегти і додати на сайт
               </button>
+            </div>
+            <div className="mt-8 rounded-xl border border-[#002f5e]/20 bg-[#002f5e] p-5 text-[#fff2e8]">
+              <p className="text-[13px] uppercase tracking-[0.15em] text-[#fff2e8]/70">Превʼю</p>
+              <h3 className="mt-2 font-odesa-medium text-[30px]">{builderDraft.title || "Назва обʼєкта"}</h3>
+              <p className="text-[17px] text-[#fff2e8]/80">{builderDraft.subtitle || "Підзаголовок"}</p>
+              {builderDraft.imageUrl ? (
+                <img src={builderDraft.imageUrl} alt="" className="mt-3 h-48 w-full rounded-xl object-cover" />
+              ) : null}
+              <div className="mt-3 grid gap-2 md:grid-cols-2">
+                <div className="rounded-lg bg-[#fff2e8]/12 p-3">
+                  <p className="text-[13px] text-[#fff2e8]/70">Адреса</p>
+                  <p className="text-[15px]">{builderDraft.address || "—"}</p>
+                </div>
+                <div className="rounded-lg bg-[#fff2e8]/12 p-3">
+                  <p className="text-[13px] text-[#fff2e8]/70">Телефон</p>
+                  <p className="text-[15px]">{builderDraft.phone || "—"}</p>
+                </div>
+              </div>
             </div>
           </section>
         ) : null}
