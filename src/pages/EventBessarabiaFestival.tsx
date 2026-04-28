@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { ArrowRight, MapPin, Phone } from "lucide-react";
 import BackButton from "@/components/BackButton";
 import SiteFooter from "@/components/SiteFooter";
+import { CONTENT_THEMES } from "@/config/contentThemes";
 
 const eventTabs = [
   { id: "overview", label: "Опис" },
@@ -13,6 +14,7 @@ const eventTabs = [
 ];
 
 const EventBessarabiaFestival = () => {
+  const theme = CONTENT_THEMES.event;
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
 
   useEffect(() => {
@@ -28,7 +30,7 @@ const EventBessarabiaFestival = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#002f5e] text-[#fff2e8]">
+    <div className="min-h-screen" style={{ backgroundColor: theme.pageBg, color: theme.text }}>
       <section className="px-4 pb-10 pt-10 md:px-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -42,12 +44,12 @@ const EventBessarabiaFestival = () => {
             Фестиваль вина та смаку Бессарабії
           </h1>
           <p className="mt-4 text-[22px] text-[#fff2e8]/85 font-odesa-regular">
-            Події <span className="mx-2 text-[#9f1f47]">•</span> Болград
+            Події <span className="mx-2" style={{ color: theme.accent }}>•</span> Болград
           </p>
         </motion.div>
       </section>
 
-      <section className="sticky top-0 z-40 bg-[#5f2238]/90 px-4 py-3 backdrop-blur md:px-10">
+      <section className="sticky top-0 z-40 px-4 py-3 backdrop-blur md:px-10" style={{ backgroundColor: theme.stickyBg }}>
         <div className="mx-auto max-w-[1400px] overflow-x-auto">
           <div className="flex min-w-max items-center gap-8 text-[16px] md:text-[22px] font-odesa-medium">
             {eventTabs.map((tab) => (
@@ -59,7 +61,7 @@ const EventBessarabiaFestival = () => {
         </div>
       </section>
 
-      <section className="px-4 pb-24 md:px-10">
+      <section className="px-4 pb-24 pt-6 md:px-10">
         <div className="mx-auto grid max-w-[1400px] gap-8 xl:grid-cols-[1fr_420px]">
           <div className="space-y-10">
             <article className="overflow-hidden rounded-[26px] border border-[#fff2e8]/20">
@@ -102,7 +104,7 @@ const EventBessarabiaFestival = () => {
                 </div>
                 <div className="grid gap-3 py-5 md:grid-cols-[220px_1fr]">
                   <p className="text-[24px] text-[#fff2e8]/86 font-odesa-medium">Сайт події</p>
-                  <a href="#" className="text-[24px] text-[#df9b3b] underline underline-offset-4 font-odesa-regular">
+                  <a href="#" className="text-[24px] underline underline-offset-4 font-odesa-regular" style={{ color: theme.accentSoft }}>
                     Форма для бронювання скоро зʼявиться
                   </a>
                 </div>
@@ -141,7 +143,8 @@ const EventBessarabiaFestival = () => {
                   <h3 className="text-[30px] md:text-[38px] font-odesa-medium">Локації поблизу фестивалю</h3>
                   <button
                     type="button"
-                    className="inline-flex items-center gap-2 rounded-full bg-[#9f1f47] px-6 py-3 text-[20px] text-[#fff2e8] font-odesa-medium transition-colors hover:bg-[#ba2c5a]"
+                    className="inline-flex items-center gap-2 rounded-full px-6 py-3 text-[20px] font-odesa-medium transition-opacity hover:opacity-90"
+                    style={{ backgroundColor: theme.accent, color: "#002f5e" }}
                   >
                     Детальна карта <ArrowRight className="h-5 w-5" />
                   </button>
@@ -165,27 +168,27 @@ const EventBessarabiaFestival = () => {
           </div>
 
           <aside className="space-y-6 xl:sticky xl:top-6 xl:self-start">
-            <div className="rounded-[24px] bg-[#30557e] p-7">
+            <div className="rounded-[24px] p-7" style={{ backgroundColor: theme.panelBg }}>
               <p className="text-[28px] text-[#fff2e8]/80 font-odesa-regular">Дата</p>
               <p className="mt-2 text-[60px] leading-[0.95] font-odesa-medium">24.04 - 03.05</p>
               <p className="mt-2 text-[34px] leading-none font-odesa-medium">2026</p>
             </div>
 
-            <div className="rounded-[24px] bg-[#30557e] p-7">
+            <div className="rounded-[24px] p-7" style={{ backgroundColor: theme.panelBg }}>
               <p className="text-[28px] text-[#fff2e8]/80 font-odesa-regular">Щодня</p>
               <p className="mt-2 text-[44px] leading-none font-odesa-medium">9:00 - 18:00</p>
             </div>
 
-            <div className="rounded-[24px] bg-[#30557e] p-7">
+            <div className="rounded-[24px] p-7" style={{ backgroundColor: theme.panelBg }}>
               <p className="text-[40px] leading-none font-odesa-medium">BERNEXPO AG</p>
               <p className="mt-3 text-[30px] leading-[1.2] text-[#fff2e8]/90 font-odesa-regular">Mingerstrasse 6</p>
               <p className="text-[30px] leading-[1.2] text-[#fff2e8]/90 font-odesa-regular">3000 Bern</p>
               <p className="mt-4 flex items-center gap-3 text-[28px] leading-[1.2] font-odesa-regular">
-                <MapPin className="h-6 w-6 text-[#df9b3b]" />
+                <MapPin className="h-6 w-6" style={{ color: theme.accentSoft }} />
                 Болград
               </p>
               <p className="mt-2 flex items-center gap-3 text-[28px] leading-[1.2] font-odesa-regular">
-                <Phone className="h-6 w-6 text-[#df9b3b]" />
+                <Phone className="h-6 w-6" style={{ color: theme.accentSoft }} />
                 +41 (0)31 340 11 41
               </p>
             </div>
