@@ -1,8 +1,8 @@
 import { useMemo, useState } from "react";
 import { Facebook, Instagram, Search } from "lucide-react";
-import { cities, districts, regions, tourismObjects } from "@/data/hierarchyMockData";
 import { fallbackContentCards } from "@/data/contentCardsFallback";
 import { usePageContentCards } from "@/hooks/usePageContentCards";
+import { useHierarchySnapshot } from "@/hooks/useHierarchySnapshot";
 
 const footerColumns = [
   {
@@ -44,6 +44,7 @@ const socialLinks = [
 
 const SiteFooter = () => {
   const { data: globalCardsData } = usePageContentCards("global");
+  const { data: hierarchy } = useHierarchySnapshot();
   const [query, setQuery] = useState("");
 
   const globalCards = useMemo(() => {
@@ -84,12 +85,23 @@ const SiteFooter = () => {
 
   const searchItems = useMemo(
     () => [
-      ...regions.map((x) => ({ label: x.name, meta: "Область", href: "#" })),
-      ...districts.map((x) => ({ label: x.name, meta: "Район", href: "#" })),
-      ...cities.map((x) => ({ label: x.name, meta: "Місто", href: "#" })),
-      ...tourismObjects.map((x) => ({ label: x.name, meta: typeMeta(x.type), href: "#" })),
+      ...(hierarchy?.regions ?? []).map((x) => ({ label: x.name, meta: "Область", href: "#" })),
+      ...(hierarchy?.districts ?? []).map((x) => ({ label: x.name, meta: "Район", href: "#" })),
+      ...(hierarchy?.cities ?? []).map((x) => ({ label: x.name, meta: "Місто", href: `/napryamky/${x.slug}` })),
+      ...(hierarchy?.objects ?? []).map((x) => ({
+        label: x.name,
+        meta: typeMeta(x.type),
+        href:
+          x.type === "event"
+            ? `/podiyi/${x.slug}`
+            : x.type === "hotel"
+              ? `/hoteli/${x.slug}`
+              : x.type === "restaurant"
+                ? `/restorany/${x.slug}`
+                : "#",
+      })),
     ],
-    [],
+    [hierarchy],
   );
 
   const filtered = useMemo(() => {

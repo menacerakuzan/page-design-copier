@@ -5,10 +5,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Index from "./pages/Index.tsx";
-import BilhorodDnistrovskyi from "./pages/BilhorodDnistrovskyi.tsx";
-import EventBessarabiaFestival from "./pages/EventBessarabiaFestival.tsx";
-import RestaurantRybnyiDvir from "./pages/RestaurantRybnyiDvir.tsx";
-import HotelFortetsiaView from "./pages/HotelFortetsiaView.tsx";
+import CityPage from "./pages/CityPage.tsx";
+import EntityDetail from "./pages/EntityDetail.tsx";
 import Admin from "./pages/Admin.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
@@ -33,10 +31,10 @@ const App = () => (
         <ScrollToTop />
         <Routes>
           <Route path="/" element={<Index />} />
-          <Route path="/napryamky/bilhorod-dnistrovskyi" element={<BilhorodDnistrovskyi />} />
-          <Route path="/podiyi/festyval-vyna-ta-smaku-bessarabii" element={<EventBessarabiaFestival />} />
-          <Route path="/restorany/rybnyy-dvir" element={<RestaurantRybnyiDvir />} />
-          <Route path="/hoteli/fortetsia-view-hotel" element={<HotelFortetsiaView />} />
+          <Route path="/napryamky/:citySlug" element={<CityPage />} />
+          <Route path="/podiyi/:slug" element={<EntityDetail type="event" />} />
+          <Route path="/restorany/:slug" element={<EntityDetail type="restaurant" />} />
+          <Route path="/hoteli/:slug" element={<EntityDetail type="hotel" />} />
           <Route path="/admin" element={<Admin />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
