@@ -71,6 +71,11 @@ const cardTypeLabels: Record<(typeof cardTypeOptions)[number], string> = {
 type AdminTab = "workspace" | "hierarchy" | "history";
 type BuilderType = "event" | "hotel" | "restaurant" | "attraction";
 type ObjectEditorStep = "general" | "builder" | "seo" | "history";
+type PlacementState = {
+  cityPage: boolean;
+  districtPage: boolean;
+  featuredHome: boolean;
+};
 
 const builderTypeLabels: Record<BuilderType, string> = {
   event: "Подія",
@@ -160,6 +165,11 @@ const Admin = () => {
   const [advancedMode, setAdvancedMode] = useState(false);
   const [previewTick, setPreviewTick] = useState(0);
   const [objectCardsEdits, setObjectCardsEdits] = useState<ContentCardEntity[]>([]);
+  const [placements, setPlacements] = useState<PlacementState>({
+    cityPage: true,
+    districtPage: false,
+    featuredHome: false,
+  });
 
   const [presetByObjectId, setPresetByObjectId] = useState<Record<string, string>>({
     "obj-event-bessarabia": "event-default",
@@ -257,7 +267,9 @@ const Admin = () => {
     const detailPageKey = `detail-${selectedObject.type}-${selectedObject.slug}`;
     const related = contentCards
       .filter((card) => {
-        const payloadObjectId = String((card.payload as any)?.objectId ?? "");
+        const payloadObjectId = String(
+          (card.payload as any)?.tourism_object_id ?? (card.payload as any)?.objectId ?? "",
+        );
         const href = card.href ?? "";
         const byPayload = payloadObjectId === selectedObject.id;
         const byDetailPage = card.pageKey === detailPageKey;
@@ -267,6 +279,23 @@ const Admin = () => {
       .sort((a, b) => a.sortOrder - b.sortOrder);
     setObjectCardsEdits(related);
   }, [selectedObject?.id, selectedObject?.slug, selectedObject?.type, contentCards]);
+
+  useEffect(() => {
+    if (!selectedObject) return;
+    const city = cities.find((item) => item.id === selectedObject.cityId);
+    const district = districts.find((item) => item.id === selectedObject.districtId);
+    if (!city || !district) return;
+    const cityPageKey = `city-${city.slug}`;
+    const districtPageKey = `district-${district.slug}`;
+    const linked = contentCards.filter(
+      (card) => String((card.payload as any)?.tourism_object_id ?? "") === selectedObject.id,
+    );
+    setPlacements({
+      cityPage: linked.some((card) => card.pageKey === cityPageKey),
+      districtPage: linked.some((card) => card.pageKey === districtPageKey),
+      featuredHome: linked.some((card) => card.pageKey === "index" && card.sectionKey === "featured"),
+    });
+  }, [selectedObject?.id, selectedObject?.cityId, selectedObject?.districtId, contentCards, cities, districts]);
 
   const selectedDistricts = selectedObject
     ? districts.filter((d) => d.id === selectedObject.districtId || d.regionId === regions[0]?.id)
@@ -323,9 +352,81 @@ const Admin = () => {
       return;
     }
     setErrorText("");
-    setSavingState("Зберігаємо об'єкт...");
+    setSavingState("Зберігаємо об'єкт і синхронізуємо розміщення...");
     try {
       await upsertTourismObject(selectedObject);
+      const city = cities.find((item) => item.id === selectedObject.cityId);
+      const district = districts.find((item) => item.id === selectedObject.districtId);
+      if (city && district) {
+        const cityPageKey = `city-${city.slug}`;
+        const districtPageKey = `district-${district.slug}`;
+        const sectionForCityPage = `${selectedObject.type}s`;
+        const href =
+          selectedObject.type === "event"
+            ? `/podiyi/${selectedObject.slug}`
+            : selectedObject.type === "hotel"
+              ? `/hoteli/${selectedObject.slug}`
+              : selectedObject.type === "restaurant"
+                ? `/restorany/${selectedObject.slug}`
+                : `/napryamky/${city.slug}`;
+        const linkedCards = contentCards.filter(
+          (card) => String((card.payload as any)?.tourism_object_id ?? "") === selectedObject.id,
+        );
+        const mainImage =
+          objectCardsEdits.find((card) => card.sectionKey === "hero" && card.imageUrl)?.imageUrl ??
+          objectCardsEdits.find((card) => card.imageUrl)?.imageUrl ??
+          null;
+        const targets = [
+          {
+            enabled: placements.cityPage,
+            pageKey: cityPageKey,
+            sectionKey: sectionForCityPage,
+          },
+          {
+            enabled: placements.districtPage,
+            pageKey: districtPageKey,
+            sectionKey: "main",
+          },
+          {
+            enabled: placements.featuredHome,
+            pageKey: "index",
+            sectionKey: "featured",
+          },
+        ];
+        for (const target of targets) {
+          const existing = linkedCards.filter((card) => card.pageKey === target.pageKey);
+          if (target.enabled) {
+            const draftCard: ContentCardEntity = {
+              id: existing[0]?.id ?? `card-placement-${selectedObject.id}-${target.pageKey}-${Date.now()}`,
+              pageKey: target.pageKey,
+              sectionKey: target.sectionKey,
+              cardType: selectedObject.type,
+              title: selectedObject.name,
+              subtitle: city.name,
+              imageUrl: mainImage,
+              href,
+              cityId: selectedObject.cityId,
+              districtId: selectedObject.districtId,
+              regionId: district.regionId,
+              sortOrder: existing[0]?.sortOrder ?? 999,
+              published: selectedObject.published,
+              payload: {
+                ...(existing[0]?.payload ?? {}),
+                tourism_object_id: selectedObject.id,
+                status: selectedObject.published ? "published" : "draft",
+              },
+            };
+            await upsertContentCard(draftCard);
+            for (const duplicate of existing.slice(1)) {
+              await deleteContentCard(duplicate.id);
+            }
+          } else {
+            for (const card of existing) {
+              await deleteContentCard(card.id);
+            }
+          }
+        }
+      }
       await loadLogs();
       setSavingState("Об'єкт збережено");
     } catch (error: any) {
@@ -400,7 +501,7 @@ const Admin = () => {
         regionId: districts.find((d) => d.id === newObject.districtId)?.regionId ?? null,
         sortOrder: 1,
         published: false,
-        payload: { objectId: newObject.id },
+        payload: { objectId: newObject.id, tourism_object_id: newObject.id },
       });
       await insertContentCard({
         id: `card-detail-overview-${now}-${uid}`,
@@ -416,7 +517,7 @@ const Admin = () => {
         regionId: districts.find((d) => d.id === newObject.districtId)?.regionId ?? null,
         sortOrder: 2,
         published: false,
-        payload: { objectId: newObject.id, text: "" },
+        payload: { objectId: newObject.id, tourism_object_id: newObject.id, text: "" },
       });
       await loadLogs();
     } catch (error: any) {
@@ -435,10 +536,18 @@ const Admin = () => {
         sortOrder: idx + 1,
         cityId: selectedObject.cityId,
         districtId: selectedObject.districtId,
-        payload: { ...(card.payload ?? {}), objectId: selectedObject.id },
+        payload: {
+          ...(card.payload ?? {}),
+          objectId: selectedObject.id,
+          tourism_object_id: selectedObject.id,
+        },
       }));
       const existingRelatedIds = contentCards
-        .filter((card) => String((card.payload as any)?.objectId ?? "") === selectedObject.id)
+        .filter(
+          (card) =>
+            String((card.payload as any)?.tourism_object_id ?? (card.payload as any)?.objectId ?? "") ===
+            selectedObject.id,
+        )
         .map((card) => card.id);
       const removedIds = existingRelatedIds.filter((id) => !nextCards.some((card) => card.id === id));
       for (const id of removedIds) {
@@ -481,7 +590,7 @@ const Admin = () => {
         regionId: districts.find((d) => d.id === selectedObject.districtId)?.regionId ?? null,
         sortOrder: prev.length + 1,
         published: true,
-        payload: { objectId: selectedObject.id },
+        payload: { objectId: selectedObject.id, tourism_object_id: selectedObject.id },
       },
     ]);
   };
@@ -774,10 +883,10 @@ const Admin = () => {
       published: builderDraft.published,
       payload:
         builderType === "event"
-          ? { badgeTop: "до", badgeDay: "1", badgeMonth: "травень", objectId }
+          ? { badgeTop: "до", badgeDay: "1", badgeMonth: "травень", objectId, tourism_object_id: objectId }
           : builderType === "hotel"
-            ? { rating: "4.8", objectId }
-            : { objectId },
+            ? { rating: "4.8", objectId, tourism_object_id: objectId }
+            : { objectId, tourism_object_id: objectId },
     };
 
     const validationCard = validateContentCardDraft(
@@ -808,7 +917,7 @@ const Admin = () => {
         regionId,
         sortOrder: 1,
         published: builderDraft.published,
-        payload: { objectId },
+        payload: { objectId, tourism_object_id: objectId },
       }]
         : []),
       ...(builderDraft.sections.overview
@@ -828,6 +937,7 @@ const Admin = () => {
         published: builderDraft.published,
         payload: {
           objectId,
+          tourism_object_id: objectId,
           text:
             builderDraft.description.trim() ||
             `${title} — нова сторінка, створена в конструкторі. Заповніть текст у секції overview.`,
@@ -857,6 +967,7 @@ const Admin = () => {
         payload: {
           mapUrl: builderDraft.mapUrl.trim() || null,
           objectId,
+          tourism_object_id: objectId,
           eventDates: builderDraft.eventDates,
           workSlots: builderDraft.workSlots,
           amenities: builderDraft.amenities,
@@ -885,6 +996,7 @@ const Admin = () => {
           address: builderDraft.address.trim() || city.name,
           phone: builderDraft.phone.trim() || "+38 (000) 000 00 00",
           objectId,
+          tourism_object_id: objectId,
         },
       }]
         : []),
@@ -904,7 +1016,7 @@ const Admin = () => {
         regionId,
         sortOrder: 1,
         published: builderDraft.published,
-        payload: { images: builderDraft.gallery, objectId },
+        payload: { images: builderDraft.gallery, objectId, tourism_object_id: objectId },
       });
     }
 
@@ -927,8 +1039,8 @@ const Admin = () => {
           sortOrder: maxMainSort + 1,
           payload:
             builderType === "event"
-              ? { badgeTop: "до", badgeDay: "1", badgeMonth: "травень", objectId }
-              : { objectId },
+              ? { badgeTop: "до", badgeDay: "1", badgeMonth: "травень", objectId, tourism_object_id: objectId }
+              : { objectId, tourism_object_id: objectId },
         });
       }
     }
@@ -1960,6 +2072,57 @@ const Admin = () => {
                         {selectedObject.published ? "Опубліковано" : "Чернетка"}
                       </button>
                     </label>
+                    <div className="md:col-span-2 rounded-xl border border-[#002f5e]/15 bg-white p-3">
+                      <p className="text-[14px] font-semibold text-[#002f5e]">Placements</p>
+                      <p className="text-[12px] text-[#002f5e]/70">
+                        Розміщення керують auto-sync в `content_cards` (pageKey/sectionKey проставляються автоматично).
+                      </p>
+                      <div className="mt-2 space-y-2">
+                        <label className="flex items-center justify-between rounded-md bg-[#002f5e]/5 px-3 py-2 text-[13px]">
+                          <span>Show on City Page</span>
+                          <input
+                            type="checkbox"
+                            checked={placements.cityPage}
+                            onChange={(e) =>
+                              setPlacements((prev) => ({ ...prev, cityPage: e.target.checked }))
+                            }
+                          />
+                        </label>
+                        <label className="flex items-center justify-between rounded-md bg-[#002f5e]/5 px-3 py-2 text-[13px]">
+                          <span>Show on District Page</span>
+                          <input
+                            type="checkbox"
+                            checked={placements.districtPage}
+                            onChange={(e) =>
+                              setPlacements((prev) => ({ ...prev, districtPage: e.target.checked }))
+                            }
+                          />
+                        </label>
+                        <label className="flex items-center justify-between rounded-md bg-[#002f5e]/5 px-3 py-2 text-[13px]">
+                          <span>Featured on Homepage</span>
+                          <input
+                            type="checkbox"
+                            checked={placements.featuredHome}
+                            onChange={(e) =>
+                              setPlacements((prev) => ({ ...prev, featuredHome: e.target.checked }))
+                            }
+                          />
+                        </label>
+                      </div>
+                      <div className="mt-2 rounded-md bg-[#002f5e]/10 px-3 py-2 text-[12px] text-[#002f5e]/80">
+                        <p>
+                          City page: <code>city-{cities.find((c) => c.id === selectedObject.cityId)?.slug ?? "..."}</code> /{" "}
+                          <code>{selectedObject.type}s</code>
+                        </p>
+                        <p>
+                          District page: <code>district-{districts.find((d) => d.id === selectedObject.districtId)?.slug ?? "..."}</code> /{" "}
+                          <code>main</code>
+                        </p>
+                        <p>
+                          Homepage: <code>index</code> / <code>featured</code>
+                        </p>
+                      </div>
+                    </div>
                     <div className="md:col-span-2">
                       <button
                         type="button"
@@ -2122,7 +2285,11 @@ const Admin = () => {
                           .filter((log) => {
                             if (log.entityId === selectedObject.id) return true;
                             const payloadObjectId =
-                              log.afterData?.payload?.objectId ?? log.beforeData?.payload?.objectId ?? null;
+                              log.afterData?.payload?.tourism_object_id ??
+                              log.beforeData?.payload?.tourism_object_id ??
+                              log.afterData?.payload?.objectId ??
+                              log.beforeData?.payload?.objectId ??
+                              null;
                             return payloadObjectId === selectedObject.id;
                           })
                           .slice(0, 20)
