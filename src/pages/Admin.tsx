@@ -68,7 +68,7 @@ const cardTypeLabels: Record<(typeof cardTypeOptions)[number], string> = {
   text: "Текст",
 };
 
-type AdminTab = "builder" | "objects" | "cards" | "hierarchy" | "history";
+type AdminTab = "builder" | "content" | "hierarchy" | "history";
 type BuilderType = "event" | "hotel" | "restaurant" | "attraction";
 
 const builderTypeLabels: Record<BuilderType, string> = {
@@ -153,10 +153,6 @@ const Admin = () => {
   const [builderPaymentInput, setBuilderPaymentInput] = useState("");
   const [uploadingMedia, setUploadingMedia] = useState(false);
 
-  const [authLoading, setAuthLoading] = useState(true);
-  const [isAuthed, setIsAuthed] = useState(false);
-  const [email, setEmail] = useState("");
-  const [emailSent, setEmailSent] = useState(false);
   const [presetByObjectId, setPresetByObjectId] = useState<Record<string, string>>({
     "obj-event-bessarabia": "event-default",
     "obj-hotel-fortetsia": "hotel-sand",
@@ -193,6 +189,13 @@ const Admin = () => {
     const source =
       pageFilter === "all" ? contentCards : contentCards.filter((card) => card.pageKey === pageFilter);
     return Array.from(new Set(source.map((card) => card.sectionKey))).sort((a, b) => a.localeCompare(b));
+  }, [contentCards, pageFilter]);
+
+  const visualPageCards = useMemo(() => {
+    if (pageFilter === "all") return [];
+    return contentCards
+      .filter((card) => card.pageKey === pageFilter)
+      .sort((a, b) => a.sortOrder - b.sortOrder);
   }, [contentCards, pageFilter]);
 
   const selectedCard =
@@ -248,57 +251,9 @@ const Admin = () => {
   };
 
   useEffect(() => {
-    let mounted = true;
-    const initAuth = async () => {
-      if (!hasSupabaseConfig || !supabase) {
-        if (mounted) {
-          setIsAuthed(true);
-          setAuthLoading(false);
-        }
-        return;
-      }
-      const { data } = await supabase.auth.getSession();
-      if (!mounted) return;
-      setIsAuthed(Boolean(data.session));
-      setAuthLoading(false);
-    };
-    void initAuth();
-
-    const sub = supabase?.auth.onAuthStateChange((_event, session) => {
-      setIsAuthed(Boolean(session));
-    });
-
-    return () => {
-      mounted = false;
-      sub?.data.subscription.unsubscribe();
-    };
-  }, []);
-
-  useEffect(() => {
     void loadAllData();
     void loadLogs();
   }, []);
-
-  const sendMagicLink = async () => {
-    if (!supabase || !email.trim()) return;
-    setErrorText("");
-    const { error } = await supabase.auth.signInWithOtp({
-      email: email.trim(),
-      options: {
-        emailRedirectTo: `${window.location.origin}/admin`,
-      },
-    });
-    if (error) {
-      setErrorText(error.message);
-      return;
-    }
-    setEmailSent(true);
-  };
-
-  const signOut = async () => {
-    if (!supabase) return;
-    await supabase.auth.signOut();
-  };
 
   const updateObject = (patch: Partial<TourismObject>) => {
     if (!selectedObject) return;
@@ -781,7 +736,7 @@ const Admin = () => {
       });
     }
 
-    const listCards = [...contentCards, newCard];
+    const listCards: ContentCardEntity[] = [];
     if (builderDraft.showOnMain) {
       const mainSection =
         builderType === "event"
@@ -814,7 +769,7 @@ const Admin = () => {
       for (const card of detailCards) {
         await insertContentCard(card);
       }
-      for (const card of listCards.slice(1)) {
+      for (const card of listCards) {
         await insertContentCard(card);
       }
       await loadAllData();
@@ -931,41 +886,6 @@ const Admin = () => {
     }
   };
 
-  if (authLoading) {
-    return <div className="min-h-screen bg-[#fff2e8] p-8 text-[#002f5e]">Перевірка доступу...</div>;
-  }
-
-  if (!isAuthed) {
-    return (
-      <div className="min-h-screen bg-[#fff2e8] px-4 py-10 text-[#002f5e] md:px-10">
-        <div className="mx-auto max-w-[560px] rounded-[24px] border border-[#002f5e]/20 bg-white/70 p-6">
-          <h1 className="font-odesa-medium text-[42px] leading-none">Admin Login</h1>
-          <p className="mt-3 text-[16px] text-[#002f5e]/80">
-            Вхід лише через magic link на email.
-          </p>
-          <label className="mt-6 block text-[14px]">
-            <span className="mb-1 block text-[#002f5e]/75">Email</span>
-            <input
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-lg border border-[#002f5e]/25 bg-white px-3 py-2"
-              placeholder="you@example.com"
-            />
-          </label>
-          <button
-            type="button"
-            onClick={sendMagicLink}
-            className="mt-4 rounded-full bg-[#002f5e] px-5 py-2 text-[#fff2e8]"
-          >
-            Надіслати посилання
-          </button>
-          {emailSent ? <p className="mt-3 text-[14px] text-[#002f5e]/80">Лист відправлено.</p> : null}
-          {errorText ? <p className="mt-3 text-[14px] text-[#9f1f47]">{errorText}</p> : null}
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-[#fff2e8] px-4 py-8 text-[#002f5e] md:px-10">
       <div className="mx-auto max-w-[1460px]">
@@ -982,13 +902,6 @@ const Admin = () => {
           </span>
         </div>
         <div className="mt-3 flex flex-wrap items-center gap-3">
-          <button
-            type="button"
-            onClick={signOut}
-            className="rounded-full bg-[#9f1f47] px-4 py-2 text-[13px] text-[#fff2e8]"
-          >
-            Вийти
-          </button>
           <button
             type="button"
             onClick={() => {
@@ -1019,8 +932,7 @@ const Admin = () => {
         <div className="mt-6 flex flex-wrap gap-2">
           {[
             { id: "builder", label: "Конструктор сторінки" },
-            { id: "objects", label: "Карточки об'єктів" },
-            { id: "cards", label: "Секції сайту (content_cards)" },
+            { id: "content", label: "Редактор усього контенту" },
             { id: "hierarchy", label: "Область / Район / Місто" },
             { id: "history", label: "Історія / Rollback" },
           ].map((tab) => (
@@ -1538,7 +1450,7 @@ const Admin = () => {
               </button>
             </div>
             <div
-              className="mt-8 rounded-xl border border-[#002f5e]/20 p-5"
+              className="mt-8 overflow-hidden rounded-xl border border-[#002f5e]/20 p-5 break-words"
               style={{
                 backgroundColor: builderTypeTheme[builderType].bg,
                 color: builderTypeTheme[builderType].text,
@@ -1613,7 +1525,7 @@ const Admin = () => {
           </section>
         ) : null}
 
-        {activeTab === "objects" ? (
+        {activeTab === "content" ? (
           <div className="mt-8 grid gap-6 lg:grid-cols-[320px_1fr]">
             <aside className="rounded-[24px] border border-[#002f5e]/20 bg-white/50 p-4">
               <div className="mb-3 grid gap-2">
@@ -1829,7 +1741,7 @@ const Admin = () => {
           </div>
         ) : null}
 
-        {activeTab === "cards" ? (
+        {activeTab === "content" ? (
           <div className="mt-8 grid gap-6 lg:grid-cols-[360px_1fr]">
             <aside className="rounded-[24px] border border-[#002f5e]/20 bg-white/50 p-4">
               <div className="grid gap-2">
@@ -1958,6 +1870,53 @@ const Admin = () => {
             </aside>
 
             <section className="rounded-[24px] border border-[#002f5e]/20 bg-white/60 p-5 md:p-6">
+              <h2 className="mb-4 font-odesa-medium text-[30px]">Візуальний редактор сторінки</h2>
+              <p className="mb-4 text-[14px] text-[#002f5e]/75">
+                Обери `Page` зліва і редагуй блоки цієї сторінки тут же, без переходів.
+              </p>
+              {pageFilter !== "all" ? (
+                <div className="mb-6 space-y-3 overflow-hidden rounded-xl border border-[#002f5e]/15 bg-white p-4">
+                  {visualPageCards.map((card) => (
+                    <article key={`visual-${card.id}`} className="rounded-lg border border-[#002f5e]/15 p-3">
+                      <p className="text-[11px] uppercase tracking-[0.08em] text-[#002f5e]/70">
+                        {card.sectionKey} · {card.cardType}
+                      </p>
+                      <input
+                        value={card.title}
+                        onChange={(e) =>
+                          setContentCards((prev) =>
+                            prev.map((c) => (c.id === card.id ? { ...c, title: e.target.value } : c)),
+                          )
+                        }
+                        className="mt-2 w-full rounded-md border border-[#002f5e]/20 px-2 py-1 text-[14px]"
+                      />
+                      <input
+                        value={card.subtitle ?? ""}
+                        onChange={(e) =>
+                          setContentCards((prev) =>
+                            prev.map((c) =>
+                              c.id === card.id ? { ...c, subtitle: e.target.value || null } : c,
+                            ),
+                          )
+                        }
+                        className="mt-2 w-full rounded-md border border-[#002f5e]/20 px-2 py-1 text-[13px]"
+                        placeholder="Підзаголовок"
+                      />
+                      {card.imageUrl ? (
+                        <img
+                          src={card.imageUrl}
+                          alt=""
+                          className="mt-2 h-36 w-full rounded-md object-cover"
+                        />
+                      ) : null}
+                    </article>
+                  ))}
+                </div>
+              ) : (
+                <p className="mb-6 rounded-lg bg-[#002f5e]/10 px-3 py-2 text-[13px] text-[#002f5e]/80">
+                  Для візуального редагування вибери конкретну `Page` замість `Усі`.
+                </p>
+              )}
               <h2 className="flex items-center gap-2 font-odesa-medium text-[30px]">
                 <Layers className="h-6 w-6" />
                 Редактор content_cards
