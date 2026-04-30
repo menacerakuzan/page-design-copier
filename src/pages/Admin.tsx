@@ -1851,7 +1851,7 @@ const Admin = () => {
           </section>
         ) : null}
 
-        {false ? (
+        {activeTab === "workspace" ? (
           <div className="mt-8 grid gap-6 lg:grid-cols-[320px_1fr]">
             <aside className="rounded-[24px] border border-[#002f5e]/20 bg-white/50 p-4">
               <div className="mb-4 rounded-xl border border-[#002f5e]/15 bg-white p-3">
@@ -2420,7 +2420,7 @@ const Admin = () => {
           </div>
         ) : null}
 
-        {activeTab === "workspace" ? (
+        {false ? (
           <div className="mt-8 grid gap-6 lg:grid-cols-[360px_1fr]">
             <aside className="rounded-[24px] border border-[#002f5e]/20 bg-white/50 p-4">
               <div className="grid gap-2">
