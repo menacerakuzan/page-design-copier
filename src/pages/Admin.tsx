@@ -68,8 +68,9 @@ const cardTypeLabels: Record<(typeof cardTypeOptions)[number], string> = {
   text: "Текст",
 };
 
-type AdminTab = "builder" | "content" | "hierarchy" | "history";
+type AdminTab = "workspace" | "hierarchy" | "history";
 type BuilderType = "event" | "hotel" | "restaurant" | "attraction";
+type ObjectEditorStep = "general" | "builder" | "seo" | "history";
 
 const builderTypeLabels: Record<BuilderType, string> = {
   event: "Подія",
@@ -95,7 +96,7 @@ const slugify = (input: string) =>
     .replace(/[^\x00-\x7F]/g, "");
 
 const Admin = () => {
-  const [activeTab, setActiveTab] = useState<AdminTab>("builder");
+  const [activeTab, setActiveTab] = useState<AdminTab>("workspace");
   const [selectedType, setSelectedType] = useState<TourismObjectType>("event");
   const [builderType, setBuilderType] = useState<BuilderType>("event");
 
@@ -152,6 +153,13 @@ const Admin = () => {
   const [builderTagInput, setBuilderTagInput] = useState("");
   const [builderPaymentInput, setBuilderPaymentInput] = useState("");
   const [uploadingMedia, setUploadingMedia] = useState(false);
+  const [selectedRegionId, setSelectedRegionId] = useState("all");
+  const [selectedDistrictId, setSelectedDistrictId] = useState("all");
+  const [selectedCityId, setSelectedCityId] = useState("all");
+  const [objectEditorStep, setObjectEditorStep] = useState<ObjectEditorStep>("general");
+  const [advancedMode, setAdvancedMode] = useState(false);
+  const [previewTick, setPreviewTick] = useState(0);
+  const [objectCardsEdits, setObjectCardsEdits] = useState<ContentCardEntity[]>([]);
 
   const [presetByObjectId, setPresetByObjectId] = useState<Record<string, string>>({
     "obj-event-bessarabia": "event-default",
@@ -164,12 +172,28 @@ const Admin = () => {
       objects
         .filter((obj) => obj.type === selectedType)
         .filter((obj) => (objectDistrictFilter === "all" ? true : obj.districtId === objectDistrictFilter))
-        .filter((obj) => (objectCityFilter === "all" ? true : obj.cityId === objectCityFilter)),
-    [objects, selectedType, objectDistrictFilter, objectCityFilter],
+        .filter((obj) => (objectCityFilter === "all" ? true : obj.cityId === objectCityFilter))
+        .filter((obj) => {
+          if (selectedCityId !== "all") return obj.cityId === selectedCityId;
+          if (selectedDistrictId !== "all") return obj.districtId === selectedDistrictId;
+          if (selectedRegionId !== "all") {
+            const d = districts.find((x) => x.id === obj.districtId);
+            return d?.regionId === selectedRegionId;
+          }
+          return true;
+        }),
+    [objects, selectedType, objectDistrictFilter, objectCityFilter, selectedCityId, selectedDistrictId, selectedRegionId, districts],
   );
 
   const selectedObject =
     objects.find((obj) => obj.id === selectedObjectId) ?? filteredObjects[0] ?? objects[0];
+
+  const selectedRegionForSidebar =
+    selectedRegionId !== "all" ? regions.find((region) => region.id === selectedRegionId) ?? null : null;
+  const districtForSidebar =
+    selectedDistrictId !== "all" ? districts.find((district) => district.id === selectedDistrictId) ?? null : null;
+  const cityForSidebar =
+    selectedCityId !== "all" ? cities.find((city) => city.id === selectedCityId) ?? null : null;
 
   const cardPageOptions = useMemo(
     () => Array.from(new Set(contentCards.map((card) => card.pageKey))).sort((a, b) => a.localeCompare(b)),
@@ -201,6 +225,16 @@ const Admin = () => {
   const selectedCard =
     contentCards.find((card) => card.id === selectedCardId) ?? filteredCards[0] ?? contentCards[0];
 
+  const selectedObjectRoute = selectedObject
+    ? selectedObject.type === "event"
+      ? `/podiyi/${selectedObject.slug}`
+      : selectedObject.type === "hotel"
+        ? `/hoteli/${selectedObject.slug}`
+        : selectedObject.type === "restaurant"
+          ? `/restorany/${selectedObject.slug}`
+          : `/napryamky/${cities.find((city) => city.id === selectedObject.cityId)?.slug ?? ""}`
+    : "";
+
   const builderDistrictOptions = useMemo(() => districts, [districts]);
   const builderCityOptions = useMemo(
     () =>
@@ -214,6 +248,25 @@ const Admin = () => {
     if (!selectedCard) return;
     setPayloadDraft(JSON.stringify(selectedCard.payload ?? {}, null, 2));
   }, [selectedCard?.id]);
+
+  useEffect(() => {
+    if (!selectedObject) {
+      setObjectCardsEdits([]);
+      return;
+    }
+    const detailPageKey = `detail-${selectedObject.type}-${selectedObject.slug}`;
+    const related = contentCards
+      .filter((card) => {
+        const payloadObjectId = String((card.payload as any)?.objectId ?? "");
+        const href = card.href ?? "";
+        const byPayload = payloadObjectId === selectedObject.id;
+        const byDetailPage = card.pageKey === detailPageKey;
+        const byHref = href.includes(`/${selectedObject.slug}`);
+        return byPayload || byDetailPage || byHref;
+      })
+      .sort((a, b) => a.sortOrder - b.sortOrder);
+    setObjectCardsEdits(related);
+  }, [selectedObject?.id, selectedObject?.slug, selectedObject?.type, contentCards]);
 
   const selectedDistricts = selectedObject
     ? districts.filter((d) => d.id === selectedObject.districtId || d.regionId === regions[0]?.id)
@@ -283,20 +336,29 @@ const Admin = () => {
   };
 
   const createObject = async () => {
-    const districtId = districts[0]?.id;
-    const cityId = cities.find((city) => city.districtId === districtId)?.id ?? cities[0]?.id;
+    const districtId =
+      selectedDistrictId !== "all"
+        ? selectedDistrictId
+        : selectedCityId !== "all"
+          ? cities.find((c) => c.id === selectedCityId)?.districtId ?? districts[0]?.id
+          : districts[0]?.id;
+    const cityId =
+      selectedCityId !== "all"
+        ? selectedCityId
+        : cities.find((city) => city.districtId === districtId)?.id ?? cities[0]?.id;
     if (!districtId || !cityId) {
       setErrorText("Спочатку додайте район і місто");
       return;
     }
     const now = Date.now();
+    const uid = Math.random().toString(36).slice(2, 8);
     const newObject: TourismObject = {
-      id: `obj-${selectedType}-${now}`,
+      id: `obj-${selectedType}-${now}-${uid}`,
       districtId,
       cityId,
       type: selectedType,
       name: `Новий ${typeLabels[selectedType].toLowerCase()}`,
-      slug: `${selectedType}-${now}`,
+      slug: `${selectedType}-${now}-${uid}`,
       published: false,
     };
     const nextObjects = [newObject, ...objects];
@@ -312,10 +374,116 @@ const Admin = () => {
     setErrorText("");
     try {
       await insertTourismObject(newObject);
+      const city = cities.find((item) => item.id === cityId);
+      const detailPageKey = `detail-${selectedType}-${newObject.slug}`;
+      const href =
+        selectedType === "event"
+          ? `/podiyi/${newObject.slug}`
+          : selectedType === "hotel"
+            ? `/hoteli/${newObject.slug}`
+            : selectedType === "restaurant"
+              ? `/restorany/${newObject.slug}`
+              : city
+                ? `/napryamky/${city.slug}`
+                : null;
+      await insertContentCard({
+        id: `card-detail-hero-${now}-${uid}`,
+        pageKey: detailPageKey,
+        sectionKey: "hero",
+        cardType: selectedType,
+        title: newObject.name,
+        subtitle: city?.name ?? null,
+        imageUrl: null,
+        href,
+        cityId: newObject.cityId,
+        districtId: newObject.districtId,
+        regionId: districts.find((d) => d.id === newObject.districtId)?.regionId ?? null,
+        sortOrder: 1,
+        published: false,
+        payload: { objectId: newObject.id },
+      });
+      await insertContentCard({
+        id: `card-detail-overview-${now}-${uid}`,
+        pageKey: detailPageKey,
+        sectionKey: "overview",
+        cardType: "text",
+        title: "Опис",
+        subtitle: null,
+        imageUrl: null,
+        href: null,
+        cityId: newObject.cityId,
+        districtId: newObject.districtId,
+        regionId: districts.find((d) => d.id === newObject.districtId)?.regionId ?? null,
+        sortOrder: 2,
+        published: false,
+        payload: { objectId: newObject.id, text: "" },
+      });
       await loadLogs();
     } catch (error: any) {
       setErrorText(error?.message ?? "Помилка створення об'єкта");
     }
+  };
+
+  const saveObjectCards = async () => {
+    if (!selectedObject) return;
+    setSavingState("Зберігаємо секції сторінки...");
+    setErrorText("");
+    try {
+      const knownIds = new Set(contentCards.map((card) => card.id));
+      const nextCards = objectCardsEdits.map((card, idx) => ({
+        ...card,
+        sortOrder: idx + 1,
+        cityId: selectedObject.cityId,
+        districtId: selectedObject.districtId,
+        payload: { ...(card.payload ?? {}), objectId: selectedObject.id },
+      }));
+      const existingRelatedIds = contentCards
+        .filter((card) => String((card.payload as any)?.objectId ?? "") === selectedObject.id)
+        .map((card) => card.id);
+      const removedIds = existingRelatedIds.filter((id) => !nextCards.some((card) => card.id === id));
+      for (const id of removedIds) {
+        await deleteContentCard(id);
+      }
+      for (const card of nextCards) {
+        if (knownIds.has(card.id)) {
+          await upsertContentCard(card);
+        } else {
+          await insertContentCard(card);
+        }
+      }
+      await loadAllData();
+      await loadLogs();
+      setSavingState("Секції сторінки збережено");
+    } catch (error: any) {
+      setErrorText(error?.message ?? "Помилка збереження секцій сторінки");
+    } finally {
+      window.setTimeout(() => setSavingState(""), 1200);
+    }
+  };
+
+  const addObjectCard = () => {
+    if (!selectedObject) return;
+    const now = Date.now();
+    const detailPageKey = `detail-${selectedObject.type}-${selectedObject.slug}`;
+    setObjectCardsEdits((prev) => [
+      ...prev,
+      {
+        id: `card-${selectedObject.type}-${now}`,
+        pageKey: detailPageKey,
+        sectionKey: "overview",
+        cardType: selectedObject.type,
+        title: "Новий блок",
+        subtitle: null,
+        imageUrl: null,
+        href: selectedObjectRoute || null,
+        cityId: selectedObject.cityId,
+        districtId: selectedObject.districtId,
+        regionId: districts.find((d) => d.id === selectedObject.districtId)?.regionId ?? null,
+        sortOrder: prev.length + 1,
+        published: true,
+        payload: { objectId: selectedObject.id },
+      },
+    ]);
   };
 
   const removeObject = async () => {
@@ -545,9 +713,10 @@ const Admin = () => {
       return;
     }
     const now = Date.now();
+    const uid = Math.random().toString(36).slice(2, 8);
     const slug = slugify(title) || `${builderType}-${now}`;
-    const objectId = `obj-${builderType}-${now}`;
-    const cardId = `card-${builderType}-${now}`;
+    const objectId = `obj-${builderType}-${now}-${uid}`;
+    const cardId = `card-${builderType}-${now}-${uid}`;
     const detailPageKey = `detail-${builderType}-${slug}`;
     const regionId = district.regionId;
     const cityPageKey = `city-${city.slug}`;
@@ -605,10 +774,10 @@ const Admin = () => {
       published: builderDraft.published,
       payload:
         builderType === "event"
-          ? { badgeTop: "до", badgeDay: "1", badgeMonth: "травень" }
+          ? { badgeTop: "до", badgeDay: "1", badgeMonth: "травень", objectId }
           : builderType === "hotel"
-            ? { rating: "4.8" }
-            : {},
+            ? { rating: "4.8", objectId }
+            : { objectId },
     };
 
     const validationCard = validateContentCardDraft(
@@ -626,7 +795,7 @@ const Admin = () => {
     const detailCards: ContentCardEntity[] = [
       ...(builderDraft.sections.hero
         ? [{
-        id: `card-detail-hero-${now}`,
+        id: `card-detail-hero-${now}-${uid}`,
         pageKey: detailPageKey,
         sectionKey: "hero",
         cardType: builderType,
@@ -639,12 +808,12 @@ const Admin = () => {
         regionId,
         sortOrder: 1,
         published: builderDraft.published,
-        payload: {},
+        payload: { objectId },
       }]
         : []),
       ...(builderDraft.sections.overview
         ? [{
-        id: `card-detail-overview-${now}`,
+        id: `card-detail-overview-${now}-${uid}`,
         pageKey: detailPageKey,
         sectionKey: "overview",
         cardType: "text",
@@ -658,6 +827,7 @@ const Admin = () => {
         sortOrder: 1,
         published: builderDraft.published,
         payload: {
+          objectId,
           text:
             builderDraft.description.trim() ||
             `${title} — нова сторінка, створена в конструкторі. Заповніть текст у секції overview.`,
@@ -666,7 +836,7 @@ const Admin = () => {
         : []),
       ...(builderDraft.sections.info
         ? [{
-        id: `card-detail-info-${now}`,
+        id: `card-detail-info-${now}-${uid}`,
         pageKey: detailPageKey,
         sectionKey: "info",
         cardType: "info",
@@ -686,6 +856,7 @@ const Admin = () => {
         published: builderDraft.published,
         payload: {
           mapUrl: builderDraft.mapUrl.trim() || null,
+          objectId,
           eventDates: builderDraft.eventDates,
           workSlots: builderDraft.workSlots,
           amenities: builderDraft.amenities,
@@ -697,7 +868,7 @@ const Admin = () => {
         : []),
       ...(builderDraft.sections.contacts
         ? [{
-        id: `card-detail-contacts-${now}`,
+        id: `card-detail-contacts-${now}-${uid}`,
         pageKey: detailPageKey,
         sectionKey: "contacts",
         cardType: "info",
@@ -713,13 +884,14 @@ const Admin = () => {
         payload: {
           address: builderDraft.address.trim() || city.name,
           phone: builderDraft.phone.trim() || "+38 (000) 000 00 00",
+          objectId,
         },
       }]
         : []),
     ];
     if (builderDraft.sections.gallery && builderDraft.gallery.length) {
       detailCards.push({
-        id: `card-detail-gallery-${now}`,
+        id: `card-detail-gallery-${now}-${uid}`,
         pageKey: detailPageKey,
         sectionKey: "gallery",
         cardType: builderType,
@@ -732,7 +904,7 @@ const Admin = () => {
         regionId,
         sortOrder: 1,
         published: builderDraft.published,
-        payload: { images: builderDraft.gallery },
+        payload: { images: builderDraft.gallery, objectId },
       });
     }
 
@@ -749,14 +921,14 @@ const Admin = () => {
         const maxMainSort = mainCards.length ? Math.max(...mainCards.map((c) => c.sortOrder)) : 0;
         listCards.push({
           ...newCard,
-          id: `card-main-${builderType}-${now}`,
+          id: `card-main-${builderType}-${now}-${uid}`,
           pageKey: "index",
           sectionKey: mainSection,
           sortOrder: maxMainSort + 1,
           payload:
             builderType === "event"
-              ? { badgeTop: "до", badgeDay: "1", badgeMonth: "травень" }
-              : {},
+              ? { badgeTop: "до", badgeDay: "1", badgeMonth: "травень", objectId }
+              : { objectId },
         });
       }
     }
@@ -931,8 +1103,7 @@ const Admin = () => {
 
         <div className="mt-6 flex flex-wrap gap-2">
           {[
-            { id: "builder", label: "Конструктор сторінки" },
-            { id: "content", label: "Редактор усього контенту" },
+            { id: "workspace", label: "Object Workspace" },
             { id: "hierarchy", label: "Область / Район / Місто" },
             { id: "history", label: "Історія / Rollback" },
           ].map((tab) => (
@@ -949,7 +1120,7 @@ const Admin = () => {
           ))}
         </div>
 
-        {activeTab === "builder" ? (
+        {false ? (
           <section className="mt-8 rounded-[24px] border border-[#002f5e]/20 bg-white/60 p-6 md:p-8">
             <h2 className="font-odesa-medium text-[34px]">
               {builderType === "event"
@@ -1525,9 +1696,84 @@ const Admin = () => {
           </section>
         ) : null}
 
-        {activeTab === "content" ? (
+        {false ? (
           <div className="mt-8 grid gap-6 lg:grid-cols-[320px_1fr]">
             <aside className="rounded-[24px] border border-[#002f5e]/20 bg-white/50 p-4">
+              <div className="mb-4 rounded-xl border border-[#002f5e]/15 bg-white p-3">
+                <p className="text-[12px] uppercase tracking-[0.08em] text-[#002f5e]/70">Hierarchy</p>
+                <button
+                  type="button"
+                  className={`mt-2 w-full rounded-md px-2 py-1 text-left text-[13px] ${
+                    selectedRegionId === "all" ? "bg-[#002f5e] text-[#fff2e8]" : "bg-[#002f5e]/10"
+                  }`}
+                  onClick={() => {
+                    setSelectedRegionId("all");
+                    setSelectedDistrictId("all");
+                    setSelectedCityId("all");
+                  }}
+                >
+                  Всі регіони
+                </button>
+                <div className="mt-2 max-h-[240px] space-y-1 overflow-auto pr-1">
+                  {regions.map((region) => (
+                    <div key={region.id}>
+                      <button
+                        type="button"
+                        className={`w-full rounded-md px-2 py-1 text-left text-[13px] ${
+                          selectedRegionId === region.id ? "bg-[#002f5e] text-[#fff2e8]" : "bg-[#002f5e]/10"
+                        }`}
+                        onClick={() => {
+                          setSelectedRegionId(region.id);
+                          setSelectedDistrictId("all");
+                          setSelectedCityId("all");
+                        }}
+                      >
+                        {region.name}
+                      </button>
+                      {selectedRegionId === region.id
+                        ? districts
+                            .filter((district) => district.regionId === region.id)
+                            .map((district) => (
+                              <div key={district.id} className="ml-2 mt-1">
+                                <button
+                                  type="button"
+                                  className={`w-full rounded-md px-2 py-1 text-left text-[12px] ${
+                                    selectedDistrictId === district.id
+                                      ? "bg-[#df9b3b] text-[#002f5e]"
+                                      : "bg-[#002f5e]/5"
+                                  }`}
+                                  onClick={() => {
+                                    setSelectedDistrictId(district.id);
+                                    setSelectedCityId("all");
+                                  }}
+                                >
+                                  {district.name}
+                                </button>
+                                {selectedDistrictId === district.id
+                                  ? cities
+                                      .filter((city) => city.districtId === district.id)
+                                      .map((city) => (
+                                        <button
+                                          key={city.id}
+                                          type="button"
+                                          className={`ml-2 mt-1 block w-[calc(100%-0.5rem)] rounded-md px-2 py-1 text-left text-[12px] ${
+                                            selectedCityId === city.id
+                                              ? "bg-[#9f1f47] text-[#fff2e8]"
+                                              : "bg-[#002f5e]/5"
+                                          }`}
+                                          onClick={() => setSelectedCityId(city.id)}
+                                        >
+                                          {city.name}
+                                        </button>
+                                      ))
+                                  : null}
+                              </div>
+                            ))
+                        : null}
+                    </div>
+                  ))}
+                </div>
+              </div>
               <div className="mb-3 grid gap-2">
                 <select
                   value={objectDistrictFilter}
@@ -1597,6 +1843,9 @@ const Admin = () => {
                   Видалити
                 </button>
               </div>
+              <p className="mt-2 text-[11px] text-[#002f5e]/65">
+                Smart default: новий об'єкт бере місто/район з поточної папки в sidebar.
+              </p>
 
               <div className="mt-4 space-y-2">
                 {filteredObjects.map((obj) => (
@@ -1621,9 +1870,30 @@ const Admin = () => {
 
             <main className="grid gap-6 xl:grid-cols-[1fr_360px]">
               <section className="rounded-[24px] border border-[#002f5e]/20 bg-white/60 p-5 md:p-6">
-                <h2 className="font-odesa-medium text-[30px]">Налаштування об'єкта</h2>
+                <h2 className="font-odesa-medium text-[30px]">Object Workspace</h2>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {[
+                    { id: "general", label: "General Info" },
+                    { id: "builder", label: "Page Builder" },
+                    { id: "seo", label: "SEO / Settings" },
+                    { id: "history", label: "History" },
+                  ].map((step) => (
+                    <button
+                      key={step.id}
+                      type="button"
+                      onClick={() => setObjectEditorStep(step.id as ObjectEditorStep)}
+                      className={`rounded-full px-3 py-1 text-[12px] ${
+                        objectEditorStep === step.id ? "bg-[#002f5e] text-[#fff2e8]" : "bg-[#002f5e]/10"
+                      }`}
+                    >
+                      {step.label}
+                    </button>
+                  ))}
+                </div>
                 {!selectedObject ? null : (
                   <div className="mt-5 grid gap-4 md:grid-cols-2">
+                    {objectEditorStep === "general" ? (
+                      <>
                     <label className="text-[14px]">
                       <span className="mb-1 block text-[#002f5e]/75">Назва</span>
                       <input
@@ -1699,41 +1969,232 @@ const Admin = () => {
                         Зберегти об'єкт
                       </button>
                     </div>
+                      </>
+                    ) : null}
+                    {objectEditorStep === "builder" ? (
+                      <div className="md:col-span-2">
+                        <div className="mb-3 flex items-center justify-between">
+                          <p className="text-[14px] text-[#002f5e]/75">
+                            Керування секціями сторінки обʼєкта (auto content_cards)
+                          </p>
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              onClick={addObjectCard}
+                              className="rounded-full bg-[#002f5e] px-3 py-1 text-[12px] text-[#fff2e8]"
+                            >
+                              + Блок
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => void saveObjectCards()}
+                              className="rounded-full bg-[#9f1f47] px-3 py-1 text-[12px] text-[#fff2e8]"
+                            >
+                              Зберегти секції
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setAdvancedMode((v) => !v)}
+                              className="rounded-full bg-[#df9b3b] px-3 py-1 text-[12px] text-[#002f5e]"
+                            >
+                              {advancedMode ? "Advanced: ON" : "Advanced: OFF"}
+                            </button>
+                          </div>
+                        </div>
+                        <div className="space-y-3">
+                          {objectCardsEdits.map((card, idx) => (
+                            <article key={card.id} className="rounded-xl border border-[#002f5e]/15 p-3">
+                              <div className="grid gap-2 md:grid-cols-2">
+                                <input
+                                  value={card.title}
+                                  onChange={(e) =>
+                                    setObjectCardsEdits((prev) =>
+                                      prev.map((c) => (c.id === card.id ? { ...c, title: e.target.value } : c)),
+                                    )
+                                  }
+                                  className="rounded-md border border-[#002f5e]/20 px-2 py-1 text-[13px]"
+                                  placeholder="Title"
+                                />
+                                <input
+                                  value={card.subtitle ?? ""}
+                                  onChange={(e) =>
+                                    setObjectCardsEdits((prev) =>
+                                      prev.map((c) =>
+                                        c.id === card.id ? { ...c, subtitle: e.target.value || null } : c,
+                                      ),
+                                    )
+                                  }
+                                  className="rounded-md border border-[#002f5e]/20 px-2 py-1 text-[13px]"
+                                  placeholder="Subtitle"
+                                />
+                                <input
+                                  value={card.sectionKey}
+                                  onChange={(e) =>
+                                    setObjectCardsEdits((prev) =>
+                                      prev.map((c) => (c.id === card.id ? { ...c, sectionKey: e.target.value } : c)),
+                                    )
+                                  }
+                                  className="rounded-md border border-[#002f5e]/20 px-2 py-1 text-[13px]"
+                                  placeholder="sectionKey"
+                                />
+                                <input
+                                  value={card.imageUrl ?? ""}
+                                  onChange={(e) =>
+                                    setObjectCardsEdits((prev) =>
+                                      prev.map((c) =>
+                                        c.id === card.id ? { ...c, imageUrl: e.target.value || null } : c,
+                                      ),
+                                    )
+                                  }
+                                  className="rounded-md border border-[#002f5e]/20 px-2 py-1 text-[13px]"
+                                  placeholder="imageUrl"
+                                />
+                              </div>
+                              {advancedMode ? (
+                                <textarea
+                                  value={JSON.stringify(card.payload ?? {}, null, 2)}
+                                  onChange={(e) => {
+                                    try {
+                                      const parsed = JSON.parse(e.target.value || "{}");
+                                      setObjectCardsEdits((prev) =>
+                                        prev.map((c) => (c.id === card.id ? { ...c, payload: parsed } : c)),
+                                      );
+                                    } catch {
+                                      // ignore until valid
+                                    }
+                                  }}
+                                  className="mt-2 h-24 w-full rounded-md border border-[#002f5e]/20 px-2 py-1 font-mono text-[12px]"
+                                />
+                              ) : null}
+                              <div className="mt-2 flex justify-between">
+                                <span className="text-[11px] text-[#002f5e]/70">#{idx + 1}</span>
+                                <button
+                                  type="button"
+                                  className="text-[12px] text-[#9f1f47]"
+                                  onClick={() =>
+                                    setObjectCardsEdits((prev) => prev.filter((c) => c.id !== card.id))
+                                  }
+                                >
+                                  Видалити блок
+                                </button>
+                              </div>
+                            </article>
+                          ))}
+                        </div>
+                      </div>
+                    ) : null}
+                    {objectEditorStep === "seo" ? (
+                      <div className="md:col-span-2 grid gap-3 md:grid-cols-2">
+                        <label className="text-[14px]">
+                          <span className="mb-1 block text-[#002f5e]/75">Slug</span>
+                          <input
+                            value={selectedObject.slug}
+                            onChange={(e) => updateObject({ slug: e.target.value })}
+                            className="w-full rounded-lg border border-[#002f5e]/25 bg-white px-3 py-2"
+                          />
+                        </label>
+                        <label className="text-[14px]">
+                          <span className="mb-1 block text-[#002f5e]/75">Published</span>
+                          <button
+                            type="button"
+                            onClick={() => updateObject({ published: !selectedObject.published })}
+                            className={`w-full rounded-lg px-3 py-2 text-left ${
+                              selectedObject.published ? "bg-[#002f5e] text-[#fff2e8]" : "bg-[#9f1f47] text-[#fff2e8]"
+                            }`}
+                          >
+                            {selectedObject.published ? "Опубліковано" : "Чернетка"}
+                          </button>
+                        </label>
+                        <div className="md:col-span-2">
+                          <button
+                            type="button"
+                            onClick={() => void saveObject()}
+                            className="rounded-full bg-[#002f5e] px-5 py-2 text-[14px] text-[#fff2e8]"
+                          >
+                            Зберегти SEO/Settings
+                          </button>
+                        </div>
+                      </div>
+                    ) : null}
+                    {objectEditorStep === "history" ? (
+                      <div className="md:col-span-2 space-y-2">
+                        {changeLogs
+                          .filter((log) => {
+                            if (log.entityId === selectedObject.id) return true;
+                            const payloadObjectId =
+                              log.afterData?.payload?.objectId ?? log.beforeData?.payload?.objectId ?? null;
+                            return payloadObjectId === selectedObject.id;
+                          })
+                          .slice(0, 20)
+                          .map((log) => (
+                            <article key={log.id} className="flex items-center justify-between rounded-lg border border-[#002f5e]/15 px-3 py-2">
+                              <div>
+                                <p className="text-[13px]">{log.entityType} / {log.action}</p>
+                                <p className="text-[11px] text-[#002f5e]/70">{new Date(log.createdAt).toLocaleString("uk-UA")}</p>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => void rollback(log.id)}
+                                className="rounded-full bg-[#9f1f47] px-3 py-1 text-[11px] text-[#fff2e8]"
+                              >
+                                Rollback
+                              </button>
+                            </article>
+                          ))}
+                      </div>
+                    ) : null}
                   </div>
                 )}
               </section>
 
               <section className="rounded-[24px] border border-[#002f5e]/20 bg-white/60 p-5 md:p-6">
                 <h2 className="flex items-center gap-2 font-odesa-medium text-[30px]">
-                  <Palette className="h-6 w-6" /> Пресет кольорів
+                  <Palette className="h-6 w-6" /> Preview
                 </h2>
                 {!selectedObject ? null : (
                   <div className="mt-4 space-y-3">
-                    {colorPresets.map((preset) => (
-                      <button
-                        key={preset.id}
-                        type="button"
-                        onClick={() =>
-                          setPresetByObjectId((prev) => ({ ...prev, [selectedObject.id]: preset.id }))
-                        }
-                        className={`w-full rounded-xl border p-3 text-left transition-colors ${
-                          presetByObjectId[selectedObject.id] === preset.id
-                            ? "border-[#002f5e] bg-[#002f5e]/10"
-                            : "border-[#002f5e]/20 bg-white"
-                        }`}
-                      >
-                        <p className="font-odesa-medium text-[15px]">{preset.name}</p>
-                        <div className="mt-2 flex gap-2">
-                          {[preset.pageBg, preset.text, preset.accent, preset.panel].map((c) => (
-                            <span
-                              key={`${preset.id}-${c}`}
-                              className="h-5 w-5 rounded-full border border-black/10"
-                              style={{ backgroundColor: c }}
-                            />
-                          ))}
-                        </div>
-                      </button>
-                    ))}
+                    <button
+                      type="button"
+                      onClick={() => setPreviewTick((v) => v + 1)}
+                      className="rounded-full bg-[#002f5e] px-3 py-1 text-[12px] text-[#fff2e8]"
+                    >
+                      Оновити preview
+                    </button>
+                    {selectedObjectRoute ? (
+                      <iframe
+                        title="object-preview"
+                        src={`${selectedObjectRoute}?adminPreview=${previewTick}`}
+                        className="h-[520px] w-full rounded-xl border border-[#002f5e]/20 bg-white"
+                      />
+                    ) : null}
+                    <div className="space-y-2">
+                      <p className="text-[12px] uppercase tracking-[0.08em] text-[#002f5e]/70">Color preset</p>
+                      {colorPresets.map((preset) => (
+                        <button
+                          key={preset.id}
+                          type="button"
+                          onClick={() =>
+                            setPresetByObjectId((prev) => ({ ...prev, [selectedObject.id]: preset.id }))
+                          }
+                          className={`w-full rounded-xl border p-3 text-left transition-colors ${
+                            presetByObjectId[selectedObject.id] === preset.id
+                              ? "border-[#002f5e] bg-[#002f5e]/10"
+                              : "border-[#002f5e]/20 bg-white"
+                          }`}
+                        >
+                          <p className="font-odesa-medium text-[15px]">{preset.name}</p>
+                          <div className="mt-2 flex gap-2">
+                            {[preset.pageBg, preset.text, preset.accent, preset.panel].map((c) => (
+                              <span
+                                key={`${preset.id}-${c}`}
+                                className="h-5 w-5 rounded-full border border-black/10"
+                                style={{ backgroundColor: c }}
+                              />
+                            ))}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 )}
               </section>
@@ -1741,7 +2202,7 @@ const Admin = () => {
           </div>
         ) : null}
 
-        {activeTab === "content" ? (
+        {activeTab === "workspace" ? (
           <div className="mt-8 grid gap-6 lg:grid-cols-[360px_1fr]">
             <aside className="rounded-[24px] border border-[#002f5e]/20 bg-white/50 p-4">
               <div className="grid gap-2">
