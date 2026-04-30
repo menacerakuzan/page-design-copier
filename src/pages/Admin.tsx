@@ -244,6 +244,42 @@ const Admin = () => {
           ? `/restorany/${selectedObject.slug}`
           : `/napryamky/${cities.find((city) => city.id === selectedObject.cityId)?.slug ?? ""}`
     : "";
+  const canUsePlacements = Boolean(selectedObject?.cityId && selectedObject?.districtId);
+
+  const buildPlacementPayload = (object: TourismObject, existingPayload?: Record<string, any>) => {
+    const overview = objectCardsEdits.find((card) => card.sectionKey === "overview");
+    const info = objectCardsEdits.find((card) => card.sectionKey === "info");
+    const base = {
+      ...(existingPayload ?? {}),
+      tourism_object_id: object.id,
+      objectId: object.id,
+      status: object.published ? "published" : "draft",
+      objectType: object.type,
+      summary: String((overview?.payload as any)?.text ?? object.name).slice(0, 220),
+    };
+    if (object.type === "hotel") {
+      return {
+        ...base,
+        priceRange: (info?.payload as any)?.priceRange ?? (info?.payload as any)?.rating ?? null,
+        amenities: (info?.payload as any)?.amenities ?? [],
+      };
+    }
+    if (object.type === "event") {
+      return {
+        ...base,
+        eventDate: (info?.payload as any)?.eventDates?.[0] ?? null,
+        eventDates: (info?.payload as any)?.eventDates ?? [],
+      };
+    }
+    if (object.type === "restaurant") {
+      return {
+        ...base,
+        cuisine: (info?.payload as any)?.cuisine ?? null,
+        priceRange: (info?.payload as any)?.priceRange ?? null,
+      };
+    }
+    return base;
+  };
 
   const builderDistrictOptions = useMemo(() => districts, [districts]);
   const builderCityOptions = useMemo(
@@ -355,82 +391,89 @@ const Admin = () => {
     setSavingState("Зберігаємо об'єкт і синхронізуємо розміщення...");
     try {
       await upsertTourismObject(selectedObject);
-      const city = cities.find((item) => item.id === selectedObject.cityId);
-      const district = districts.find((item) => item.id === selectedObject.districtId);
-      if (city && district) {
-        const cityPageKey = `city-${city.slug}`;
-        const districtPageKey = `district-${district.slug}`;
-        const sectionForCityPage = `${selectedObject.type}s`;
-        const href =
-          selectedObject.type === "event"
-            ? `/podiyi/${selectedObject.slug}`
-            : selectedObject.type === "hotel"
-              ? `/hoteli/${selectedObject.slug}`
-              : selectedObject.type === "restaurant"
-                ? `/restorany/${selectedObject.slug}`
-                : `/napryamky/${city.slug}`;
-        const linkedCards = contentCards.filter(
-          (card) => String((card.payload as any)?.tourism_object_id ?? "") === selectedObject.id,
-        );
-        const mainImage =
-          objectCardsEdits.find((card) => card.sectionKey === "hero" && card.imageUrl)?.imageUrl ??
-          objectCardsEdits.find((card) => card.imageUrl)?.imageUrl ??
-          null;
-        const targets = [
-          {
-            enabled: placements.cityPage,
-            pageKey: cityPageKey,
-            sectionKey: sectionForCityPage,
-          },
-          {
-            enabled: placements.districtPage,
-            pageKey: districtPageKey,
-            sectionKey: "main",
-          },
-          {
-            enabled: placements.featuredHome,
-            pageKey: "index",
-            sectionKey: "featured",
-          },
-        ];
-        for (const target of targets) {
-          const existing = linkedCards.filter((card) => card.pageKey === target.pageKey);
-          if (target.enabled) {
-            const draftCard: ContentCardEntity = {
-              id: existing[0]?.id ?? `card-placement-${selectedObject.id}-${target.pageKey}-${Date.now()}`,
-              pageKey: target.pageKey,
-              sectionKey: target.sectionKey,
-              cardType: selectedObject.type,
-              title: selectedObject.name,
-              subtitle: city.name,
-              imageUrl: mainImage,
-              href,
-              cityId: selectedObject.cityId,
-              districtId: selectedObject.districtId,
-              regionId: district.regionId,
-              sortOrder: existing[0]?.sortOrder ?? 999,
-              published: selectedObject.published,
-              payload: {
-                ...(existing[0]?.payload ?? {}),
-                tourism_object_id: selectedObject.id,
-                status: selectedObject.published ? "published" : "draft",
-              },
-            };
-            await upsertContentCard(draftCard);
-            for (const duplicate of existing.slice(1)) {
-              await deleteContentCard(duplicate.id);
-            }
-          } else {
-            for (const card of existing) {
-              await deleteContentCard(card.id);
-            }
-          }
-        }
-      }
+      await syncPlacementsForObject(selectedObject);
       await loadLogs();
       setSavingState("Об'єкт збережено");
     } catch (error: any) {
       setErrorText(error?.message ?? "Помилка збереження об'єкта");
+    } finally {
+      window.setTimeout(() => setSavingState(""), 1000);
+    }
+  };
+
+  const syncPlacementsForObject = async (object: TourismObject) => {
+    const city = cities.find((item) => item.id === object.cityId);
+    const district = districts.find((item) => item.id === object.districtId);
+    if (!city || !district) return;
+    const cityPageKey = `city-${city.slug}`;
+    const districtPageKey = `district-${district.slug}`;
+    const sectionForCityPage = `${object.type}s`;
+    const href =
+      object.type === "event"
+        ? `/podiyi/${object.slug}`
+        : object.type === "hotel"
+          ? `/hoteli/${object.slug}`
+          : object.type === "restaurant"
+            ? `/restorany/${object.slug}`
+            : `/napryamky/${city.slug}`;
+    const linkedCards = contentCards.filter(
+      (card) =>
+        String((card.payload as any)?.tourism_object_id ?? (card.payload as any)?.objectId ?? "") === object.id,
+    );
+    const mainImage =
+      objectCardsEdits.find((card) => card.sectionKey === "hero" && card.imageUrl)?.imageUrl ??
+      objectCardsEdits.find((card) => card.imageUrl)?.imageUrl ??
+      null;
+    const targets = [
+      { enabled: placements.cityPage, pageKey: cityPageKey, sectionKey: sectionForCityPage },
+      { enabled: placements.districtPage, pageKey: districtPageKey, sectionKey: "main" },
+      { enabled: placements.featuredHome, pageKey: "index", sectionKey: "featured" },
+    ];
+    for (const target of targets) {
+      const existing = linkedCards.filter((card) => card.pageKey === target.pageKey);
+      if (target.enabled) {
+        const draftCard: ContentCardEntity = {
+          id: existing[0]?.id ?? `card-placement-${object.id}-${target.pageKey}-${Date.now()}`,
+          pageKey: target.pageKey,
+          sectionKey: target.sectionKey,
+          cardType: object.type,
+          title: object.name,
+          subtitle: city.name,
+          imageUrl: mainImage,
+          href,
+          cityId: object.cityId,
+          districtId: object.districtId,
+          regionId: district.regionId,
+          sortOrder: existing[0]?.sortOrder ?? 999,
+          published: object.published,
+          payload: buildPlacementPayload(object, existing[0]?.payload ?? {}),
+        };
+        await upsertContentCard(draftCard);
+        for (const duplicate of existing.slice(1)) {
+          await deleteContentCard(duplicate.id);
+        }
+      } else {
+        for (const card of existing) {
+          await deleteContentCard(card.id);
+        }
+      }
+    }
+  };
+
+  const toggleObjectStatusAndSync = async () => {
+    if (!selectedObject) return;
+    const next = { ...selectedObject, published: !selectedObject.published };
+    updateObject({ published: next.published });
+    setSavingState("Оновлюємо статус...");
+    setErrorText("");
+    try {
+      await upsertTourismObject(next);
+      await syncPlacementsForObject(next);
+      await loadAllData();
+      await loadLogs();
+      setSavingState("Статус оновлено");
+    } catch (error: any) {
+      setErrorText(error?.message ?? "Помилка оновлення статусу");
     } finally {
       window.setTimeout(() => setSavingState(""), 1000);
     }
@@ -2062,7 +2105,7 @@ const Admin = () => {
                       <span className="mb-1 block text-[#002f5e]/75">Статус</span>
                       <button
                         type="button"
-                        onClick={() => updateObject({ published: !selectedObject.published })}
+                        onClick={() => void toggleObjectStatusAndSync()}
                         className={`w-full rounded-lg px-3 py-2 text-left ${
                           selectedObject.published
                             ? "bg-[#002f5e] text-[#fff2e8]"
@@ -2083,6 +2126,7 @@ const Admin = () => {
                           <input
                             type="checkbox"
                             checked={placements.cityPage}
+                            disabled={!canUsePlacements}
                             onChange={(e) =>
                               setPlacements((prev) => ({ ...prev, cityPage: e.target.checked }))
                             }
@@ -2093,6 +2137,7 @@ const Admin = () => {
                           <input
                             type="checkbox"
                             checked={placements.districtPage}
+                            disabled={!canUsePlacements}
                             onChange={(e) =>
                               setPlacements((prev) => ({ ...prev, districtPage: e.target.checked }))
                             }
@@ -2103,12 +2148,18 @@ const Admin = () => {
                           <input
                             type="checkbox"
                             checked={placements.featuredHome}
+                            disabled={!canUsePlacements}
                             onChange={(e) =>
                               setPlacements((prev) => ({ ...prev, featuredHome: e.target.checked }))
                             }
                           />
                         </label>
                       </div>
+                      {!canUsePlacements ? (
+                        <p className="mt-2 text-[12px] text-[#9f1f47]">
+                          Щоб увімкнути розміщення, оберіть місто і район для обʼєкта.
+                        </p>
+                      ) : null}
                       <div className="mt-2 rounded-md bg-[#002f5e]/10 px-3 py-2 text-[12px] text-[#002f5e]/80">
                         <p>
                           City page: <code>city-{cities.find((c) => c.id === selectedObject.cityId)?.slug ?? "..."}</code> /{" "}
@@ -2260,7 +2311,7 @@ const Admin = () => {
                           <span className="mb-1 block text-[#002f5e]/75">Published</span>
                           <button
                             type="button"
-                            onClick={() => updateObject({ published: !selectedObject.published })}
+                            onClick={() => void toggleObjectStatusAndSync()}
                             className={`w-full rounded-lg px-3 py-2 text-left ${
                               selectedObject.published ? "bg-[#002f5e] text-[#fff2e8]" : "bg-[#9f1f47] text-[#fff2e8]"
                             }`}
