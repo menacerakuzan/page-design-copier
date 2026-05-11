@@ -197,7 +197,7 @@ const MediaGroup = ({ imageUrl, videoUrl, onImage, onVideo }: { imageUrl: string
 );
 
 // ─── EntityCard ───────────────────────────────────────────────────────────────
-const EntityCard = ({ title, subtitle, imageUrl, onDelete, onEdit, badge, isEditing }: { title: string; subtitle?: string; imageUrl?: string; onDelete: () => void; onEdit: () => void; badge?: { label: string; color: string }; isEditing?: boolean }) => (
+const EntityCard = ({ title, subtitle, imageUrl, onDelete, onEdit, badge, isEditing, icon }: { title: string; subtitle?: string; imageUrl?: string; onDelete: () => void; onEdit: () => void; badge?: { label: string; color: string }; isEditing?: boolean; icon?: React.ReactNode }) => (
   <div
     role="button"
     tabIndex={0}
@@ -213,7 +213,7 @@ const EntityCard = ({ title, subtitle, imageUrl, onDelete, onEdit, badge, isEdit
       <img src={imageUrl} alt="" className="h-12 w-12 flex-shrink-0 rounded-xl object-cover" onError={e => (e.currentTarget.style.display = "none")} />
     ) : (
       <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-[#002f5e]/8">
-        <Landmark className="h-5 w-5 text-[#002f5e]/40" />
+        {icon ?? <Landmark className="h-5 w-5 text-[#002f5e]/40" />}
       </div>
     )}
     <div className="min-w-0 flex-1">
@@ -520,11 +520,18 @@ const Admin = () => {
                 {/* Form */}
                 <section className="flex-1 min-w-0">
                   <div className="sticky top-0 rounded-2xl border border-[#002f5e]/12 bg-white/80 p-6 shadow-sm backdrop-blur">
-                    <div className="mb-5 flex items-center gap-2">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#002f5e]/8">
-                        <MapPin className="h-4 w-4 text-[#002f5e]" />
+                    <div className="mb-5 flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#002f5e]/8">
+                          <MapPin className="h-4 w-4 text-[#002f5e]" />
+                        </div>
+                        <h2 className="text-[18px] font-semibold">{editingDistrictId ? "Редагувати район" : "Новий район"}</h2>
                       </div>
-                      <h2 className="text-[18px] font-semibold">{editingDistrictId ? "Редагувати район" : "Новий район"}</h2>
+                      {editingDistrictId && (
+                        <button type="button" onClick={() => { setEditingDistrictId(null); setDistrictForm(emptyDistrict(defaultRegionId)); }} className="rounded-xl border border-[#002f5e]/15 px-3 py-1.5 text-[13px] text-[#002f5e]/50 hover:border-[#002f5e]/30 hover:text-[#002f5e] transition">
+                          ✕ Скасувати
+                        </button>
+                      )}
                     </div>
                     <form onSubmit={e => void handleDistrictSubmit(e)} className="flex flex-col gap-4">
                       <FieldGroup label="Регіон">
@@ -550,11 +557,6 @@ const Admin = () => {
                       />
                       <div className="flex items-center justify-between pt-2">
                         <SaveBtn saving={saving} label={editingDistrictId ? "Оновити район" : "Створити район"} />
-                        {editingDistrictId && (
-                          <button type="button" onClick={() => { setEditingDistrictId(null); setDistrictForm(emptyDistrict(defaultRegionId)); }} className="text-[13px] text-[#002f5e]/50 hover:text-[#002f5e] transition">
-                            Скасувати
-                          </button>
-                        )}
                       </div>
                     </form>
                   </div>
@@ -578,6 +580,7 @@ const Admin = () => {
                           title={d.name}
                           subtitle={d.subtitle ?? regions.find(r => r.id === d.regionId)?.name}
                           imageUrl={d.imageUrl}
+                          icon={<MapPin className="h-5 w-5 text-[#002f5e]/40" />}
                           isEditing={editingDistrictId === d.id}
                           onEdit={() => editDistrict(d)}
                           onDelete={() => void handleDeleteDistrict(d.id)}
@@ -594,11 +597,18 @@ const Admin = () => {
               <>
                 <section className="flex-1 min-w-0">
                   <div className="sticky top-0 rounded-2xl border border-[#002f5e]/12 bg-white/80 p-6 shadow-sm backdrop-blur">
-                    <div className="mb-5 flex items-center gap-2">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#002f5e]/8">
-                        <Building2 className="h-4 w-4 text-[#002f5e]" />
+                    <div className="mb-5 flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#002f5e]/8">
+                          <Building2 className="h-4 w-4 text-[#002f5e]" />
+                        </div>
+                        <h2 className="text-[18px] font-semibold">{editingCityId ? "Редагувати місто" : "Нове місто"}</h2>
                       </div>
-                      <h2 className="text-[18px] font-semibold">{editingCityId ? "Редагувати місто" : "Нове місто"}</h2>
+                      {editingCityId && (
+                        <button type="button" onClick={() => { setEditingCityId(null); setCityForm(emptyCity(cityForm.districtId)); }} className="rounded-xl border border-[#002f5e]/15 px-3 py-1.5 text-[13px] text-[#002f5e]/50 hover:border-[#002f5e]/30 hover:text-[#002f5e] transition">
+                          ✕ Скасувати
+                        </button>
+                      )}
                     </div>
                     <form onSubmit={e => void handleCitySubmit(e)} className="flex flex-col gap-4">
                       <FieldGroup label="Район *">
@@ -625,11 +635,6 @@ const Admin = () => {
                       />
                       <div className="flex items-center justify-between pt-2">
                         <SaveBtn saving={saving} label={editingCityId ? "Оновити місто" : "Створити місто"} />
-                        {editingCityId && (
-                          <button type="button" onClick={() => { setEditingCityId(null); setCityForm(emptyCity(cityForm.districtId)); }} className="text-[13px] text-[#002f5e]/50 hover:text-[#002f5e] transition">
-                            Скасувати
-                          </button>
-                        )}
                       </div>
                     </form>
                   </div>
@@ -654,6 +659,7 @@ const Admin = () => {
                             title={c.name}
                             subtitle={dist?.name ?? c.districtId}
                             imageUrl={c.imageUrl}
+                            icon={<Building2 className="h-5 w-5 text-[#002f5e]/40" />}
                             isEditing={editingCityId === c.id}
                             onEdit={() => editCity(c)}
                             onDelete={() => void handleDeleteCity(c.id)}
@@ -671,11 +677,18 @@ const Admin = () => {
               <>
                 <section className="flex-1 min-w-0">
                   <div className="sticky top-0 rounded-2xl border border-[#002f5e]/12 bg-white/80 p-6 shadow-sm backdrop-blur">
-                    <div className="mb-5 flex items-center gap-2">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#002f5e]/8">
-                        <Landmark className="h-4 w-4 text-[#002f5e]" />
+                    <div className="mb-5 flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#002f5e]/8">
+                          <Landmark className="h-4 w-4 text-[#002f5e]" />
+                        </div>
+                        <h2 className="text-[18px] font-semibold">{editingPlaceId ? "Редагувати місце" : "Нове місце"}</h2>
                       </div>
-                      <h2 className="text-[18px] font-semibold">{editingPlaceId ? "Редагувати місце" : "Нове місце"}</h2>
+                      {editingPlaceId && (
+                        <button type="button" onClick={() => { setEditingPlaceId(null); setPlaceForm(emptyPlace(placeForm.cityId)); }} className="rounded-xl border border-[#002f5e]/15 px-3 py-1.5 text-[13px] text-[#002f5e]/50 hover:border-[#002f5e]/30 hover:text-[#002f5e] transition">
+                          ✕ Скасувати
+                        </button>
+                      )}
                     </div>
                     <form onSubmit={e => void handlePlaceSubmit(e)} className="flex flex-col gap-4">
                       {/* Type selector */}
@@ -779,11 +792,6 @@ const Admin = () => {
 
                       <div className="flex items-center justify-between pt-2">
                         <SaveBtn saving={saving} label={editingPlaceId ? "Оновити місце" : "Створити місце"} />
-                        {editingPlaceId && (
-                          <button type="button" onClick={() => { setEditingPlaceId(null); setPlaceForm(emptyPlace(placeForm.cityId)); }} className="text-[13px] text-[#002f5e]/50 hover:text-[#002f5e] transition">
-                            Скасувати
-                          </button>
-                        )}
                       </div>
                     </form>
                   </div>
@@ -809,6 +817,7 @@ const Admin = () => {
                             title={p.name}
                             subtitle={city?.name}
                             imageUrl={p.imageUrl}
+                            icon={<Landmark className="h-5 w-5 text-[#002f5e]/40" />}
                             badge={typeInfo ? { label: typeInfo.label, color: typeInfo.color } : undefined}
                             isEditing={editingPlaceId === p.id}
                             onEdit={() => editPlace(p)}
