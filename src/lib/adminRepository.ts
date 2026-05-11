@@ -79,6 +79,42 @@ const mapDbObject = (row: any): TourismObject => ({
   name: row.name,
   slug: row.slug,
   published: Boolean(row.published),
+  subtitle: row.subtitle ?? undefined,
+  description: row.description ?? undefined,
+  detailedInfo: row.detailed_info ?? undefined,
+  imageUrl: row.image_url ?? undefined,
+  videoUrl: row.video_url ?? undefined,
+  mapUrl: row.map_url ?? undefined,
+  address: row.address ?? undefined,
+  phone: row.phone ?? undefined,
+  website: row.website ?? undefined,
+  eventDates: row.event_dates ?? undefined,
+  hours: row.hours ?? undefined,
+  amenities: row.amenities ?? undefined,
+});
+
+const mapDbDistrict = (row: any): District => ({
+  id: row.id,
+  regionId: row.region_id,
+  name: row.name,
+  slug: row.slug,
+  subtitle: row.subtitle ?? undefined,
+  description: row.description ?? undefined,
+  detailedInfo: row.detailed_info ?? undefined,
+  imageUrl: row.image_url ?? undefined,
+  videoUrl: row.video_url ?? undefined,
+});
+
+const mapDbCity = (row: any): City => ({
+  id: row.id,
+  districtId: row.district_id,
+  name: row.name,
+  slug: row.slug,
+  subtitle: row.subtitle ?? undefined,
+  description: row.description ?? undefined,
+  detailedInfo: row.detailed_info ?? undefined,
+  imageUrl: row.image_url ?? undefined,
+  videoUrl: row.video_url ?? undefined,
 });
 
 const toDbObject = (obj: TourismObject) => ({
@@ -89,6 +125,18 @@ const toDbObject = (obj: TourismObject) => ({
   name: obj.name,
   slug: obj.slug,
   published: obj.published,
+  subtitle: obj.subtitle ?? null,
+  description: obj.description ?? null,
+  detailed_info: obj.detailedInfo ?? null,
+  image_url: obj.imageUrl ?? null,
+  video_url: obj.videoUrl ?? null,
+  map_url: obj.mapUrl ?? null,
+  address: obj.address ?? null,
+  phone: obj.phone ?? null,
+  website: obj.website ?? null,
+  event_dates: obj.eventDates ?? null,
+  hours: obj.hours ?? null,
+  amenities: obj.amenities ?? null,
 });
 
 const mapDbChange = (row: any): AdminChangeLog => ({
@@ -169,18 +217,8 @@ export async function loadHierarchySnapshot(): Promise<Snapshot> {
       name: row.name,
       slug: row.slug,
     })) as Region[],
-    districts: (districtsRes.data ?? []).map((row: any) => ({
-      id: row.id,
-      regionId: row.region_id,
-      name: row.name,
-      slug: row.slug,
-    })) as District[],
-    cities: (citiesRes.data ?? []).map((row: any) => ({
-      id: row.id,
-      districtId: row.district_id,
-      name: row.name,
-      slug: row.slug,
-    })) as City[],
+    districts: (districtsRes.data ?? []).map(mapDbDistrict) as District[],
+    cities: (citiesRes.data ?? []).map(mapDbCity) as City[],
     objects: (objectsRes.data ?? []).map(mapDbObject) as TourismObject[],
     contentCards: contentCardsRes.error
       ? fallbackContentCards
@@ -401,14 +439,45 @@ export async function insertDistrict(district: District) {
     region_id: district.regionId,
     name: district.name,
     slug: district.slug,
+    subtitle: district.subtitle ?? null,
+    description: district.description ?? null,
+    detailed_info: district.detailedInfo ?? null,
+    image_url: district.imageUrl ?? null,
+    video_url: district.videoUrl ?? null,
   };
-  const { error } = await supabase.from(tableNames.districts).insert(dbDistrict);
+  const { error } = await supabase.from(tableNames.districts).upsert(dbDistrict);
   if (error) throw error;
   await appendChangeLog({
     entityType: "district",
     entityId: district.id,
     action: "create",
     beforeData: null,
+    afterData: dbDistrict,
+  });
+  return district;
+}
+
+export async function upsertDistrict(district: District) {
+  if (!hasSupabaseConfig || !supabase) return district;
+  const { data: beforeData } = await supabase.from(tableNames.districts).select("*").eq("id", district.id).maybeSingle();
+  const dbDistrict = {
+    id: district.id,
+    region_id: district.regionId,
+    name: district.name,
+    slug: district.slug,
+    subtitle: district.subtitle ?? null,
+    description: district.description ?? null,
+    detailed_info: district.detailedInfo ?? null,
+    image_url: district.imageUrl ?? null,
+    video_url: district.videoUrl ?? null,
+  };
+  const { error } = await supabase.from(tableNames.districts).upsert(dbDistrict);
+  if (error) throw error;
+  await appendChangeLog({
+    entityType: "district",
+    entityId: district.id,
+    action: beforeData ? "update" : "create",
+    beforeData: beforeData ?? null,
     afterData: dbDistrict,
   });
   return district;
@@ -421,14 +490,45 @@ export async function insertCity(city: City) {
     district_id: city.districtId,
     name: city.name,
     slug: city.slug,
+    subtitle: city.subtitle ?? null,
+    description: city.description ?? null,
+    detailed_info: city.detailedInfo ?? null,
+    image_url: city.imageUrl ?? null,
+    video_url: city.videoUrl ?? null,
   };
-  const { error } = await supabase.from(tableNames.cities).insert(dbCity);
+  const { error } = await supabase.from(tableNames.cities).upsert(dbCity);
   if (error) throw error;
   await appendChangeLog({
     entityType: "city",
     entityId: city.id,
     action: "create",
     beforeData: null,
+    afterData: dbCity,
+  });
+  return city;
+}
+
+export async function upsertCity(city: City) {
+  if (!hasSupabaseConfig || !supabase) return city;
+  const { data: beforeData } = await supabase.from(tableNames.cities).select("*").eq("id", city.id).maybeSingle();
+  const dbCity = {
+    id: city.id,
+    district_id: city.districtId,
+    name: city.name,
+    slug: city.slug,
+    subtitle: city.subtitle ?? null,
+    description: city.description ?? null,
+    detailed_info: city.detailedInfo ?? null,
+    image_url: city.imageUrl ?? null,
+    video_url: city.videoUrl ?? null,
+  };
+  const { error } = await supabase.from(tableNames.cities).upsert(dbCity);
+  if (error) throw error;
+  await appendChangeLog({
+    entityType: "city",
+    entityId: city.id,
+    action: beforeData ? "update" : "create",
+    beforeData: beforeData ?? null,
     afterData: dbCity,
   });
   return city;

@@ -11,6 +11,11 @@ export type District = {
   regionId: EntityId;
   name: string;
   slug: string;
+  subtitle?: string;
+  description?: string;
+  detailedInfo?: string;
+  imageUrl?: string;
+  videoUrl?: string;
 };
 
 export type City = {
@@ -18,6 +23,11 @@ export type City = {
   districtId: EntityId;
   name: string;
   slug: string;
+  subtitle?: string;
+  description?: string;
+  detailedInfo?: string;
+  imageUrl?: string;
+  videoUrl?: string;
 };
 
 export type TourismObjectType = "event" | "hotel" | "restaurant" | "attraction";
@@ -30,4 +40,16 @@ export type TourismObject = {
   name: string;
   slug: string;
   published: boolean;
+  subtitle?: string;
+  description?: string;
+  detailedInfo?: string;
+  imageUrl?: string;
+  videoUrl?: string;
+  mapUrl?: string;
+  address?: string;
+  phone?: string;
+  website?: string;
+  eventDates?: string;
+  hours?: string;
+  amenities?: string;
 };

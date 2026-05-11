@@ -89,19 +89,19 @@ for select using (published = true);
 
 drop policy if exists "editor full regions" on public.regions;
 create policy "editor full regions" on public.regions
-for all to authenticated using (true) with check (true);
+for all using (true) with check (true);
 
 drop policy if exists "editor full districts" on public.districts;
 create policy "editor full districts" on public.districts
-for all to authenticated using (true) with check (true);
+for all using (true) with check (true);
 
 drop policy if exists "editor full cities" on public.cities;
 create policy "editor full cities" on public.cities
-for all to authenticated using (true) with check (true);
+for all using (true) with check (true);
 
 drop policy if exists "editor full objects" on public.tourism_objects;
 create policy "editor full objects" on public.tourism_objects
-for all to authenticated using (true) with check (true);
+for all using (true) with check (true);
 
 drop policy if exists "public read published cards" on public.content_cards;
 create policy "public read published cards" on public.content_cards
@@ -109,11 +109,11 @@ for select using (published = true);
 
 drop policy if exists "editor full cards" on public.content_cards;
 create policy "editor full cards" on public.content_cards
-for all to authenticated using (true) with check (true);
+for all using (true) with check (true);
 
 drop policy if exists "editor full audit logs" on public.admin_change_logs;
 create policy "editor full audit logs" on public.admin_change_logs
-for all to authenticated using (true) with check (true);
+for all using (true) with check (true);
 
 -- Storage bucket for admin media uploads
 insert into storage.buckets (id, name, public)
@@ -140,3 +140,31 @@ drop policy if exists "authenticated delete media" on storage.objects;
 create policy "authenticated delete media" on storage.objects
 for delete to authenticated
 using (bucket_id = 'media');
+
+-- Extended fields for districts
+alter table public.districts add column if not exists subtitle text;
+alter table public.districts add column if not exists description text;
+alter table public.districts add column if not exists detailed_info text;
+alter table public.districts add column if not exists image_url text;
+alter table public.districts add column if not exists video_url text;
+
+-- Extended fields for cities
+alter table public.cities add column if not exists subtitle text;
+alter table public.cities add column if not exists description text;
+alter table public.cities add column if not exists detailed_info text;
+alter table public.cities add column if not exists image_url text;
+alter table public.cities add column if not exists video_url text;
+
+-- Extended fields for tourism_objects
+alter table public.tourism_objects add column if not exists subtitle text;
+alter table public.tourism_objects add column if not exists description text;
+alter table public.tourism_objects add column if not exists detailed_info text;
+alter table public.tourism_objects add column if not exists image_url text;
+alter table public.tourism_objects add column if not exists video_url text;
+alter table public.tourism_objects add column if not exists map_url text;
+alter table public.tourism_objects add column if not exists address text;
+alter table public.tourism_objects add column if not exists phone text;
+alter table public.tourism_objects add column if not exists website text;
+alter table public.tourism_objects add column if not exists event_dates text;
+alter table public.tourism_objects add column if not exists hours text;
+alter table public.tourism_objects add column if not exists amenities text;
