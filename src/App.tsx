@@ -1,14 +1,13 @@
 import { useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { Toaster } from "@/components/ui/toaster";
+import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import Index from "./pages/Index.tsx";
-import CityPage from "./pages/CityPage.tsx";
-import EntityDetail from "./pages/EntityDetail.tsx";
-import Admin from "./pages/Admin.tsx";
-import NotFound from "./pages/NotFound.tsx";
+import Index from "./pages/Index";
+import CityPage from "./pages/CityPage";
+import EntityDetail from "./pages/EntityDetail";
+import Admin from "./pages/Admin";
+import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
@@ -25,10 +24,9 @@ const ScrollToTop = () => {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Toaster />
-      <Sonner />
       <BrowserRouter>
         <ScrollToTop />
+        <Toaster />
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/napryamky/:citySlug" element={<CityPage />} />
@@ -36,7 +34,6 @@ const App = () => (
           <Route path="/restorany/:slug" element={<EntityDetail type="restaurant" />} />
           <Route path="/hoteli/:slug" element={<EntityDetail type="hotel" />} />
           <Route path="/admin" element={<Admin />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
