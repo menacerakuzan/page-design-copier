@@ -17,6 +17,17 @@ const uid = () => Math.random().toString(36).slice(2, 10);
 
 type AdminSection = "districts" | "cities" | "places";
 
+const TOURISM_TYPES = [
+  "Гастрономічний туризм",
+  "Історико-культурний туризм",
+  "Медико-оздоровчий туризм",
+  "Морський туризм",
+  "Релігійний туризм",
+  "Розважальний туризм",
+  "Сільський та зелений туризм",
+  "Спортивний туризм",
+];
+
 const PLACE_TYPES: { value: TourismObjectType; label: string; color: string }[] = [
   { value: "attraction", label: "Туристичний об'єкт", color: "#002f5e" },
   { value: "event",      label: "Подія",              color: "#9f1f47" },
@@ -42,12 +53,12 @@ type PlaceForm = {
   cityId: string; type: TourismObjectType;
   mapUrl: string; address: string; phone: string; website: string;
   eventDates: string; hours: string; amenities: string;
-  published: boolean;
+  published: boolean; tourismTypes: string[];
 };
 
 const emptyDistrict = (regionId: string): DistrictForm => ({ id: "", name: "", subtitle: "", description: "", detailedInfo: "", imageUrl: "", videoUrl: "", regionId });
 const emptyCity = (districtId: string): CityForm => ({ id: "", name: "", subtitle: "", description: "", detailedInfo: "", imageUrl: "", videoUrl: "", districtId });
-const emptyPlace = (cityId: string): PlaceForm => ({ id: "", name: "", subtitle: "", description: "", detailedInfo: "", imageUrl: "", videoUrl: "", cityId, type: "attraction", mapUrl: "", address: "", phone: "", website: "", eventDates: "", hours: "", amenities: "", published: true });
+const emptyPlace = (cityId: string): PlaceForm => ({ id: "", name: "", subtitle: "", description: "", detailedInfo: "", imageUrl: "", videoUrl: "", cityId, type: "attraction", mapUrl: "", address: "", phone: "", website: "", eventDates: "", hours: "", amenities: "", published: true, tourismTypes: [] });
 
 // ─── sub-components ───────────────────────────────────────────────────────────
 
@@ -403,6 +414,7 @@ const Admin = () => {
         eventDates: placeForm.eventDates || undefined,
         hours: placeForm.hours || undefined,
         amenities: placeForm.amenities || undefined,
+        tourismTypes: placeForm.tourismTypes.length ? placeForm.tourismTypes : undefined,
       };
       await upsertTourismObject(place);
       setPlaces(prev => editingPlaceId ? prev.map(p => p.id === id ? place : p) : [place, ...prev]);
@@ -418,7 +430,7 @@ const Admin = () => {
 
   const editPlace = (p: TourismObject) => {
     setEditingPlaceId(p.id);
-    setPlaceForm({ id: p.id, name: p.name, subtitle: p.subtitle ?? "", description: p.description ?? "", detailedInfo: p.detailedInfo ?? "", imageUrl: p.imageUrl ?? "", videoUrl: p.videoUrl ?? "", cityId: p.cityId, type: p.type, mapUrl: p.mapUrl ?? "", address: p.address ?? "", phone: p.phone ?? "", website: p.website ?? "", eventDates: p.eventDates ?? "", hours: p.hours ?? "", amenities: p.amenities ?? "", published: p.published });
+    setPlaceForm({ id: p.id, name: p.name, subtitle: p.subtitle ?? "", description: p.description ?? "", detailedInfo: p.detailedInfo ?? "", imageUrl: p.imageUrl ?? "", videoUrl: p.videoUrl ?? "", cityId: p.cityId, type: p.type, mapUrl: p.mapUrl ?? "", address: p.address ?? "", phone: p.phone ?? "", website: p.website ?? "", eventDates: p.eventDates ?? "", hours: p.hours ?? "", amenities: p.amenities ?? "", published: p.published, tourismTypes: p.tourismTypes ?? [] });
   };
 
   const handleDeletePlace = async (id: string) => {
@@ -778,6 +790,29 @@ const Admin = () => {
                         imageUrl={placeForm.imageUrl} videoUrl={placeForm.videoUrl}
                         onImage={v => setPlaceForm(p => ({ ...p, imageUrl: v }))} onVideo={v => setPlaceForm(p => ({ ...p, videoUrl: v }))}
                       />
+
+                      {/* Тип туризму */}
+                      <div>
+                        <Label>Тип туризму</Label>
+                        <div className="flex flex-col gap-1 rounded-xl border border-[#002f5e]/12 bg-[#002f5e]/3 p-3">
+                          {TOURISM_TYPES.map(tt => (
+                            <label key={tt} className="flex cursor-pointer items-center gap-2.5 rounded-lg px-2 py-1.5 transition hover:bg-[#002f5e]/5">
+                              <input
+                                type="checkbox"
+                                checked={placeForm.tourismTypes.includes(tt)}
+                                onChange={e => setPlaceForm(p => ({
+                                  ...p,
+                                  tourismTypes: e.target.checked
+                                    ? [...p.tourismTypes, tt]
+                                    : p.tourismTypes.filter(x => x !== tt),
+                                }))}
+                                className="h-4 w-4 shrink-0 rounded accent-[#002f5e]"
+                              />
+                              <span className="text-[13px] text-[#002f5e]">{tt}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
 
                       <div className="flex items-center gap-3 rounded-xl bg-[#002f5e]/5 px-4 py-3">
                         <input

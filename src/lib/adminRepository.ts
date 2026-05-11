@@ -91,6 +91,7 @@ const mapDbObject = (row: any): TourismObject => ({
   eventDates: row.event_dates ?? undefined,
   hours: row.hours ?? undefined,
   amenities: row.amenities ?? undefined,
+  tourismTypes: row.tourism_types ?? [],
 });
 
 const mapDbDistrict = (row: any): District => ({
@@ -137,6 +138,7 @@ const toDbObject = (obj: TourismObject) => ({
   event_dates: obj.eventDates ?? null,
   hours: obj.hours ?? null,
   amenities: obj.amenities ?? null,
+  tourism_types: obj.tourismTypes ?? [],
 });
 
 const mapDbChange = (row: any): AdminChangeLog => ({

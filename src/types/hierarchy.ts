@@ -52,4 +52,5 @@ export type TourismObject = {
   eventDates?: string;
   hours?: string;
   amenities?: string;
+  tourismTypes?: string[];
 };

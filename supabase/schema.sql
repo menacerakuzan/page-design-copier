@@ -126,19 +126,22 @@ for select to public
 using (bucket_id = 'media');
 
 drop policy if exists "authenticated upload media" on storage.objects;
-create policy "authenticated upload media" on storage.objects
-for insert to authenticated
+drop policy if exists "anon upload media" on storage.objects;
+create policy "anon upload media" on storage.objects
+for insert
 with check (bucket_id = 'media');
 
 drop policy if exists "authenticated update media" on storage.objects;
-create policy "authenticated update media" on storage.objects
-for update to authenticated
+drop policy if exists "anon update media" on storage.objects;
+create policy "anon update media" on storage.objects
+for update
 using (bucket_id = 'media')
 with check (bucket_id = 'media');
 
 drop policy if exists "authenticated delete media" on storage.objects;
-create policy "authenticated delete media" on storage.objects
-for delete to authenticated
+drop policy if exists "anon delete media" on storage.objects;
+create policy "anon delete media" on storage.objects
+for delete
 using (bucket_id = 'media');
 
 -- Extended fields for districts
@@ -168,3 +171,4 @@ alter table public.tourism_objects add column if not exists website text;
 alter table public.tourism_objects add column if not exists event_dates text;
 alter table public.tourism_objects add column if not exists hours text;
 alter table public.tourism_objects add column if not exists amenities text;
+alter table public.tourism_objects add column if not exists tourism_types text[] default '{}';
