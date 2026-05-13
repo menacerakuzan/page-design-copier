@@ -498,16 +498,16 @@ const Index = () => {
       </section>
 
       <section ref={setSectionRef(3)} className="relative min-h-screen overflow-hidden bg-black text-[#fff2e8]">
-        {/* Crossfade images — mode sync so they overlap cleanly, no bg flash */}
+        {/* Crossfade images — opacity only, no filter, compositor-only = smooth 60fps */}
         <AnimatePresence mode="sync">
           <motion.img
             key={safeTopAttractions[activeAttraction].image}
             src={safeTopAttractions[activeAttraction].image}
             alt={safeTopAttractions[activeAttraction].title}
-            initial={{ opacity: 0, scale: 1.04, filter: "blur(8px)" }}
-            animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
-            exit={{ opacity: 0, scale: 1.02, filter: "blur(4px)" }}
-            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+            initial={{ opacity: 0, scale: 1.03 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.45, ease: "easeInOut" }}
             className="absolute inset-0 h-full w-full object-cover"
           />
         </AnimatePresence>
@@ -522,7 +522,7 @@ const Index = () => {
             transition={{ duration: 0.5 }}
             className="inline-block rounded-full border border-white/25 bg-white/10 px-5 py-2 text-[12px] uppercase tracking-[0.2em] font-odesa-medium backdrop-blur-sm"
           >
-            Топ атракції
+            Топ місць
           </motion.span>
         </div>
 
