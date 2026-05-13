@@ -399,7 +399,9 @@ const Index = () => {
         </div>
       </section>
 
-      <section ref={setSectionRef(2)} className="relative z-10 bg-[#002f5e] pl-4 py-10 md:pl-10 text-[#fff2e8] h-screen overflow-y-hidden flex flex-col justify-start">
+      <section ref={setSectionRef(2)} className="relative z-10 bg-[#002f5e] pl-20 py-10 md:pl-24 text-[#fff2e8] h-screen overflow-y-hidden flex flex-col justify-start">
+          {/* Right-edge fade hint */}
+          <div className="pointer-events-none absolute right-0 inset-y-0 w-72 z-10" aria-hidden="true" style={{ background: "linear-gradient(to left, #1c1a15aa 0%, #1c1a1577 30%, #1c1a1533 60%, transparent 100%)" }} />
           <motion.div
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
@@ -495,67 +497,97 @@ const Index = () => {
           </motion.div>
       </section>
 
-      <section ref={setSectionRef(3)} className="relative min-h-screen overflow-hidden bg-[#9f1f47] text-[#fff2e8]">
-        <div className="absolute inset-0 p-3 md:p-5">
-          <div className="relative h-full w-full overflow-hidden rounded-[30px] md:rounded-[40px]">
-            <AnimatePresence mode="wait">
-              <motion.img
-                key={safeTopAttractions[activeAttraction].image}
-                src={safeTopAttractions[activeAttraction].image}
-                alt={safeTopAttractions[activeAttraction].title}
-                initial={{ opacity: 0.35, scale: 1.05 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0.2, scale: 1.02 }}
-                transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-                className="absolute inset-0 h-full w-full object-cover"
-              />
-            </AnimatePresence>
-            <div className="absolute inset-0 bg-gradient-to-b from-[#002f5e]/20 via-[#002f5e]/20 to-[#14000c]/60" />
-          </div>
+      <section ref={setSectionRef(3)} className="relative min-h-screen overflow-hidden bg-black text-[#fff2e8]">
+        {/* Crossfade images — mode sync so they overlap cleanly, no bg flash */}
+        <AnimatePresence mode="sync">
+          <motion.img
+            key={safeTopAttractions[activeAttraction].image}
+            src={safeTopAttractions[activeAttraction].image}
+            alt={safeTopAttractions[activeAttraction].title}
+            initial={{ opacity: 0, scale: 1.04, filter: "blur(8px)" }}
+            animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+            exit={{ opacity: 0, scale: 1.02, filter: "blur(4px)" }}
+            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        </AnimatePresence>
+        <div className="absolute inset-0 bg-gradient-to-b from-[#002f5e]/20 via-transparent to-[#14000c]/70" />
+
+        {/* Top bar: pill label */}
+        <div className="relative z-10 pl-20 pr-4 pt-10 md:pl-24 md:pr-8">
+          <motion.span
+            initial={{ opacity: 0, y: -10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="inline-block rounded-full border border-white/25 bg-white/10 px-5 py-2 text-[12px] uppercase tracking-[0.2em] font-odesa-medium backdrop-blur-sm"
+          >
+            Топ атракції
+          </motion.span>
         </div>
 
-        <div className="relative z-10 mx-auto flex min-h-screen max-w-[1680px] items-end justify-between gap-8 px-4 pb-6 md:px-8 md:pb-8">
-          <div className="w-full max-w-[820px]">
-            <AnimatePresence mode="wait">
-              <motion.article
-                key={safeTopAttractions[activeAttraction].title}
-                initial={{ opacity: 0, y: 28 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 18 }}
-                transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-                className="rounded-[30px] bg-[#2a0015]/92 p-6 md:p-10"
-              >
-                <h3 className="mt-3 text-[54px] leading-[0.96] md:text-[84px] font-odesa-medium">
-                  {safeTopAttractions[activeAttraction].title}
-                </h3>
-                <p className="mt-6 max-w-[680px] text-[26px] leading-[1.22] md:text-[36px] font-odesa-regular">
-                  {safeTopAttractions[activeAttraction].description}
-                </p>
-                <button className="mt-8 inline-flex items-center gap-2 text-[36px] text-[#9f1f47] font-odesa-medium" type="button">
-                  Детальніше <ArrowRight className="h-8 w-8" />
-                </button>
-              </motion.article>
-            </AnimatePresence>
+        {/* Bottom content */}
+        <div className="relative z-10 flex min-h-[calc(100vh-76px)] flex-col justify-end pl-20 pr-4 pb-10 md:pl-24 md:pr-8 md:pb-12">
+          {/* Dot indicators */}
+          <div className="mb-5 flex items-center gap-2">
+            {safeTopAttractions.map((_, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => setActiveAttraction(idx)}
+                className={`rounded-full transition-all duration-300 ${
+                  idx === activeAttraction
+                    ? "h-2 w-7 bg-[#fff2e8]"
+                    : "h-2 w-2 bg-[#fff2e8]/35 hover:bg-[#fff2e8]/60"
+                }`}
+                aria-label={`Атракція ${idx + 1}`}
+              />
+            ))}
           </div>
 
-          <div className="mb-0 flex shrink-0 items-center overflow-hidden rounded-[28px] bg-[#2a0015]/92">
-            <button
-              type="button"
-              onClick={goPrevAttraction}
-              className="flex h-[120px] w-[120px] items-center justify-center border-r border-white/15 transition-colors hover:bg-[#3a0020]"
-              aria-label="Попередній об'єкт"
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={safeTopAttractions[activeAttraction].title}
+              initial={{ opacity: 0, y: 28 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 18 }}
+              transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+              className="w-full max-w-[640px] rounded-[28px] border border-white/12 bg-white/8 p-5 backdrop-blur-xl md:p-7"
             >
-              <ChevronLeft className="h-12 w-12" />
-            </button>
-            <button
-              type="button"
-              onClick={goNextAttraction}
-              className="flex h-[120px] w-[120px] items-center justify-center transition-colors hover:bg-[#5a3245]"
-              aria-label="Наступний об'єкт"
-            >
-              <ChevronRight className="h-12 w-12" />
-            </button>
-          </div>
+              <h3 className="text-[36px] leading-[0.96] md:text-[52px] font-odesa-medium">
+                {safeTopAttractions[activeAttraction].title}
+              </h3>
+              {safeTopAttractions[activeAttraction].description && (
+                <p className="mt-3 text-[13px] leading-[1.6] text-[#fff2e8]/75 md:text-[15px] font-odesa-regular">
+                  {safeTopAttractions[activeAttraction].description}
+                </p>
+              )}
+              <div className="mt-5 flex items-center gap-3">
+                <button
+                  className="inline-flex items-center gap-2 rounded-full border border-[#fff2e8]/50 px-6 py-2.5 text-[14px] text-[#fff2e8] transition-all hover:bg-[#fff2e8]/10 font-odesa-medium"
+                  type="button"
+                >
+                  Детальніше <ArrowRight className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={goPrevAttraction}
+                  className="flex h-10 w-10 items-center justify-center rounded-full border border-white/30 bg-white/10 backdrop-blur-sm transition-all hover:bg-white/20"
+                  aria-label="Попередній"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={goNextAttraction}
+                  className="flex h-10 w-10 items-center justify-center rounded-full border border-white/30 bg-white/10 backdrop-blur-sm transition-all hover:bg-white/20"
+                  aria-label="Наступний"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
+            </motion.div>
+          </AnimatePresence>
         </div>
       </section>
 
