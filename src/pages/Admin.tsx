@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { CheckCircle2, MapPin, Building2, Landmark, Plus, Trash2, Settings2, AlertCircle, Upload, Link } from "lucide-react";
+import { CheckCircle2, MapPin, Building2, Landmark, Plus, Trash2, Settings2, AlertCircle, Upload, Link, LayoutDashboard } from "lucide-react";
 import BackButton from "@/components/BackButton";
 import { regions as seedRegions, districts as seedDistricts, cities as seedCities, tourismObjects as seedObjects } from "@/data/hierarchyMockData";
 import { District, City, Region, TourismObject, TourismObjectType } from "@/types/hierarchy";
+import { ContentCardEntity } from "@/types/cms";
 import { hasSupabaseConfig, supabase } from "@/lib/supabaseClient";
 import { loadHierarchySnapshot, upsertDistrict, upsertCity, upsertTourismObject, deleteDistrict, deleteCity, deleteTourismObject } from "@/lib/adminRepository";
+import AdminConstructor from "./AdminConstructor";
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
@@ -15,7 +17,7 @@ const slugify = (s: string) =>
 
 const uid = () => Math.random().toString(36).slice(2, 10);
 
-type AdminSection = "districts" | "cities" | "places";
+type AdminSection = "districts" | "cities" | "places" | "constructor";
 
 const TOURISM_TYPES = [
   "Гастрономічний туризм",
@@ -254,6 +256,7 @@ const Admin = () => {
   const [districts, setDistricts] = useState<District[]>(seedDistricts);
   const [cities, setCities] = useState<City[]>(seedCities);
   const [places, setPlaces] = useState<TourismObject[]>(seedObjects);
+  const [contentCards, setContentCards] = useState<ContentCardEntity[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
@@ -284,6 +287,7 @@ const Admin = () => {
       setDistricts(snap.districts);
       setCities(snap.cities);
       setPlaces(snap.objects);
+      setContentCards(snap.contentCards ?? []);
     } catch (e: any) {
       showToast(e?.message ?? "Помилка завантаження", false);
     } finally {
@@ -445,10 +449,11 @@ const Admin = () => {
   // ─── Render ─────────────────────────────────────────────────────────────────
 
   const navItems: { id: AdminSection; label: string; icon: React.ReactNode; count: number }[] = [
-    { id: "districts", label: "Райони",  icon: <MapPin className="h-5 w-5" />,      count: districts.length },
-    { id: "cities",    label: "Міста",   icon: <Building2 className="h-5 w-5" />,   count: cities.length },
-    { id: "places",    label: "Місця",   icon: <Landmark className="h-5 w-5" />,    count: places.length },
+    { id: "districts", label: "Райони",      icon: <MapPin className="h-5 w-5" />,          count: districts.length },
+    { id: "cities",    label: "Міста",       icon: <Building2 className="h-5 w-5" />,       count: cities.length },
+    { id: "places",    label: "Місця",       icon: <Landmark className="h-5 w-5" />,        count: places.length },
   ];
+  const constructorItem = { id: "constructor" as AdminSection, label: "Конструктор", icon: <LayoutDashboard className="h-5 w-5" />, count: contentCards.filter(c => c.pageKey === "index").length };
 
   return (
     <div className="min-h-screen bg-[#fff2e8] text-[#002f5e]">
@@ -496,6 +501,29 @@ const Admin = () => {
               <p className="mb-2 px-2 text-[11px] font-semibold uppercase tracking-widest text-[#002f5e]/40">Об'єкти</p>
               <nav className="flex flex-col gap-1">
                 {navItems.map(item => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => setSection(item.id)}
+                    className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-[14px] font-medium transition ${
+                      section === item.id
+                        ? "bg-[#002f5e] text-[#fff2e8]"
+                        : "text-[#002f5e]/70 hover:bg-[#002f5e]/8 hover:text-[#002f5e]"
+                    }`}
+                  >
+                    {item.icon}
+                    {item.label}
+                    <span className={`ml-auto rounded-full px-2 py-0.5 text-[11px] font-semibold ${section === item.id ? "bg-white/20 text-white" : "bg-[#002f5e]/8 text-[#002f5e]/60"}`}>
+                      {item.count}
+                    </span>
+                  </button>
+                ))}
+              </nav>
+
+              <div className="my-3 h-px bg-[#002f5e]/10" />
+              <p className="mb-2 px-2 text-[11px] font-semibold uppercase tracking-widest text-[#002f5e]/40">Сайт</p>
+              <nav className="flex flex-col gap-1">
+                {[constructorItem].map(item => (
                   <button
                     key={item.id}
                     type="button"
@@ -864,6 +892,18 @@ const Admin = () => {
                   )}
                 </section>
               </>
+            )}
+
+            {/* ── CONSTRUCTOR ── */}
+            {section === "constructor" && (
+              <AdminConstructor
+                contentCards={contentCards}
+                places={places}
+                districts={districts}
+                cities={cities}
+                onCardsChange={setContentCards}
+                showToast={showToast}
+              />
             )}
 
           </main>
