@@ -399,13 +399,13 @@ const Index = () => {
         </div>
       </section>
 
-      <section ref={setSectionRef(2)} className="relative z-10 bg-[#002f5e] px-4 py-10 text-[#fff2e8] overflow-hidden md:px-10 h-screen flex flex-col justify-center">
+      <section ref={setSectionRef(2)} className="relative z-10 bg-[#002f5e] pl-4 py-10 md:pl-10 text-[#fff2e8] h-screen overflow-y-hidden flex flex-col justify-start">
           <motion.div
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true, amount: 0.15 }}
             transition={{ duration: 0.6 }}
-            className="overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            className="overflow-x-auto overflow-y-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           >
             {interestingCards.length === 0 ? (
               <p className="text-[#fff2e8]/30 text-[15px] font-odesa-regular py-8">
@@ -439,7 +439,7 @@ const Index = () => {
                   return (
                     <div
                       key={item.title + item.row + "text"}
-                      className="relative shrink-0 flex flex-col justify-start rounded-[22px] px-6 py-7"
+                      className="relative shrink-0 flex flex-col justify-start rounded-[22px] px-6 pt-5 pb-5"
                       style={{ width: w, height: CARD_H_CSS }}
                     >
                       <h4 className={`leading-[0.92] font-odesa-medium ${textSizeClass}`}>{item.title}</h4>
@@ -487,6 +487,8 @@ const Index = () => {
                   {botCards.length > 0 && (
                     <div className="flex" style={{ gap: GAP }}>{botCards.map(renderCard)}</div>
                   )}
+                  {/* right breathing room so last card isn't flush with viewport edge */}
+                  <div style={{ width: 1 }} aria-hidden="true" className="shrink-0" />
                 </div>
               );
             })()}
