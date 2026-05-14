@@ -301,12 +301,12 @@ const Index = () => {
                 ))}
               </div>
 
-              <div className="grid grid-cols-1 items-start gap-6 md:absolute md:bottom-0 md:right-0 md:grid-cols-2 md:gap-8">
+              <div className="grid grid-cols-1 items-end gap-6 md:absolute md:bottom-0 md:right-0 md:grid-cols-2 md:gap-8">
                 {featureCards.map((item) => (
                   <article key={item.number} className="w-full max-w-[170px] text-left">
-                    <div className="flex items-start gap-2">
+                    <div className="flex items-end gap-2">
                       <span className="text-[40px] leading-none font-odesa-regular">{item.number}</span>
-                      <div className="pt-1 text-[22px] leading-[0.95] font-odesa-medium">
+                      <div className="flex min-h-[44px] flex-col justify-end pb-[5px] text-[22px] leading-[0.95] font-odesa-medium">
                         <div>{item.first}</div>
                         {item.second ? <div>{item.second}</div> : null}
                       </div>
@@ -365,12 +365,12 @@ const Index = () => {
           >
             <div
               ref={destinationsScrollerRef}
-              className="flex gap-6 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              className="flex gap-6 overflow-x-auto pt-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
             >
               {destinationCards.map((card) => {
                 const cardBody = (
                   <>
-                    <img src={card.image} alt={card.title} className="h-full w-full object-cover" />
+                    <img src={card.image} alt={card.title} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#002f5e]/70 via-transparent to-transparent" />
                     <h4 className="absolute bottom-8 left-7 text-[42px] leading-none text-[#fff2e8] font-odesa-medium">{card.title}</h4>
                   </>
@@ -381,16 +381,20 @@ const Index = () => {
                     <Link
                       key={card.title}
                       to={card.href}
-                      className="relative h-[520px] w-[350px] shrink-0 overflow-hidden rounded-[26px] bg-[#002f5e]/10 transition-transform duration-300 hover:-translate-y-1 md:w-[420px]"
+                      className="group relative h-[520px] w-[350px] shrink-0 rounded-[26px] transition-transform duration-300 hover:-translate-y-2 md:w-[420px]"
                     >
-                      {cardBody}
+                      <div className="relative h-full w-full overflow-hidden rounded-[26px] bg-[#002f5e]/10">
+                        {cardBody}
+                      </div>
                     </Link>
                   );
                 }
 
                 return (
-                  <article key={card.title} className="relative h-[520px] w-[350px] shrink-0 overflow-hidden rounded-[26px] bg-[#002f5e]/10 md:w-[420px]">
-                    {cardBody}
+                  <article key={card.title} className="group relative h-[520px] w-[350px] shrink-0 rounded-[26px] md:w-[420px]">
+                    <div className="relative h-full w-full overflow-hidden rounded-[26px] bg-[#002f5e]/10">
+                      {cardBody}
+                    </div>
                   </article>
                 );
               })}
@@ -399,7 +403,7 @@ const Index = () => {
         </div>
       </section>
 
-      <section ref={setSectionRef(2)} className="relative z-10 bg-[#002f5e] pl-20 py-10 md:pl-24 text-[#fff2e8] h-screen overflow-y-hidden flex flex-col justify-start">
+      <section ref={setSectionRef(2)} className="relative z-10 bg-[#002f5e] pl-20 py-5 md:pl-24 text-[#fff2e8] h-screen overflow-y-hidden flex flex-col justify-start">
           {/* Right-edge fade hint */}
           <div className="pointer-events-none absolute right-0 inset-y-0 w-72 z-10" aria-hidden="true" style={{ background: "linear-gradient(to left, #1c1a15aa 0%, #1c1a1577 30%, #1c1a1533 60%, transparent 100%)" }} />
           <motion.div
@@ -407,20 +411,19 @@ const Index = () => {
             whileInView={{ opacity: 1 }}
             viewport={{ once: true, amount: 0.15 }}
             transition={{ duration: 0.6 }}
-            className="overflow-x-auto overflow-y-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            className="overflow-x-auto [overflow-y:clip] pt-2 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           >
             {interestingCards.length === 0 ? (
               <p className="text-[#fff2e8]/30 text-[15px] font-odesa-regular py-8">
                 Картки ще не додано — налаштуйте розділ в адмінці
               </p>
             ) : (() => {
-              const GAP = 14;
-              // CARD_H = (100vh - 80px vertical padding - gap) / 2
-              // expressed as CSS calc; UNIT = CARD_H so single card is a square
-              const CARD_H_CSS = "calc((100vh - 80px - 14px) / 2)";
+              const GAP = 20;
+              // CARD_H = (100vh - vertical padding - gap) / 2
+              const CARD_H_CSS = "calc((100vh - 56px - 20px) / 2)";
               const cardW_CSS = (colSpan: number) =>
-                colSpan === 3 ? `calc(${CARD_H_CSS} * 3 + 28px)`
-                : colSpan === 2 ? `calc(${CARD_H_CSS} * 2 + 14px)`
+                colSpan === 3 ? `calc(${CARD_H_CSS} * 3 + 40px)`
+                : colSpan === 2 ? `calc(${CARD_H_CSS} * 2 + 20px)`
                 : CARD_H_CSS;
 
               const topCards = interestingCards.filter(c => (c.row ?? 1) !== 2);
@@ -435,26 +438,32 @@ const Index = () => {
 
                 if (item.isText) {
                   const descSizeClass =
-                    item.descSize === "lg" ? "text-[18px] md:text-[22px]"
-                    : item.descSize === "md" ? "text-[15px] md:text-[17px]"
+                    item.descSize === "lg" ? "text-[16px] md:text-[19px]"
+                    : item.descSize === "md" ? "text-[14px] md:text-[16px]"
                     : "text-[13px] md:text-[14px]";
                   return (
                     <div
                       key={item.title + item.row + "text"}
-                      className="relative shrink-0 flex flex-col justify-start rounded-[22px] px-6 pt-5 pb-5"
+                      className="relative shrink-0 flex flex-col justify-between rounded-[22px] border border-[#fff2e8]/10 bg-[#fff2e8]/5 px-7 pt-6 pb-6 backdrop-blur-sm transition-transform duration-300 hover:-translate-y-2"
                       style={{ width: w, height: CARD_H_CSS }}
                     >
-                      <h4 className={`leading-[0.92] font-odesa-medium ${textSizeClass}`}>{item.title}</h4>
-                      {item.description && (
-                        <p className={`mt-3 leading-[1.55] text-[#fff2e8]/60 font-odesa-regular ${descSizeClass}`}>{item.description}</p>
-                      )}
+                      {/* top decorative line */}
+                      <div className="h-[1px] w-full bg-[#fff2e8]/10" />
+                      <div>
+                        <h4 className={`leading-[0.93] font-odesa-medium ${textSizeClass}`}>{item.title}</h4>
+                        {item.description && (
+                          <p className={`mt-4 leading-[1.65] text-[#fff2e8]/55 font-odesa-regular ${descSizeClass}`}>{item.description}</p>
+                        )}
+                      </div>
+                      {/* bottom decorative line */}
+                      <div className="h-[1px] w-full bg-[#fff2e8]/10" />
                     </div>
                   );
                 }
 
                 const inner = (
                   <>
-                    <img src={item.imageUrl} alt={item.title} className="h-full w-full object-cover" />
+                    <img src={item.imageUrl} alt={item.title} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
                     <h4 className={`absolute bottom-5 left-5 right-5 leading-[0.95] font-odesa-medium ${textSizeClass}`}>
                       {item.title}
@@ -465,18 +474,22 @@ const Index = () => {
                   <Link
                     key={item.title + item.imageUrl + item.row}
                     to={item.href}
-                    className="relative shrink-0 overflow-hidden rounded-[22px] transition-transform duration-300 hover:-translate-y-1"
+                    className="group relative shrink-0 rounded-[22px] transition-transform duration-300 hover:-translate-y-2"
                     style={{ width: w, height: CARD_H_CSS }}
                   >
-                    {inner}
+                    <div className="relative h-full w-full overflow-hidden rounded-[22px]">
+                      {inner}
+                    </div>
                   </Link>
                 ) : (
                   <article
                     key={item.title + item.imageUrl + item.row}
-                    className="relative shrink-0 overflow-hidden rounded-[22px]"
+                    className="group relative shrink-0 rounded-[22px] transition-transform duration-300 hover:-translate-y-2"
                     style={{ width: w, height: CARD_H_CSS }}
                   >
-                    {inner}
+                    <div className="relative h-full w-full overflow-hidden rounded-[22px]">
+                      {inner}
+                    </div>
                   </article>
                 );
               };
