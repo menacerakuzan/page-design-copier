@@ -403,7 +403,7 @@ const Index = () => {
         </div>
       </section>
 
-      <section ref={setSectionRef(2)} className="relative z-10 bg-[#002f5e] pl-20 py-5 md:pl-24 text-[#fff2e8] h-screen overflow-y-hidden flex flex-col justify-start">
+      <section ref={setSectionRef(2)} className="relative z-10 py-5 text-[#fff2e8] h-screen overflow-y-hidden flex flex-col justify-start" style={{ background: "linear-gradient(160deg, #001a3d 0%, #001a3dcc 100%)" }}>
           {/* Right-edge fade hint */}
           <div className="pointer-events-none absolute right-0 inset-y-0 w-72 z-10" aria-hidden="true" style={{ background: "linear-gradient(to left, #1c1a15aa 0%, #1c1a1577 30%, #1c1a1533 60%, transparent 100%)" }} />
           <motion.div
@@ -411,7 +411,7 @@ const Index = () => {
             whileInView={{ opacity: 1 }}
             viewport={{ once: true, amount: 0.15 }}
             transition={{ duration: 0.6 }}
-            className="overflow-x-auto [overflow-y:clip] pt-2 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            className="overflow-x-auto [overflow-y:clip] pt-3 pb-2 pl-20 md:pl-24 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           >
             {interestingCards.length === 0 ? (
               <p className="text-[#fff2e8]/30 text-[15px] font-odesa-regular py-8">
@@ -533,7 +533,7 @@ const Index = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
-            className="inline-block rounded-full border border-white/25 bg-white/10 px-5 py-2 text-[12px] uppercase tracking-[0.2em] font-odesa-medium backdrop-blur-sm"
+            className="inline-block rounded-full border border-white/15 bg-white/10 px-5 py-2 text-[12px] uppercase tracking-[0.2em] font-odesa-medium backdrop-blur-sm"
           >
             Топ місць
           </motion.span>
@@ -565,7 +565,7 @@ const Index = () => {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 18 }}
               transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-              className="w-full max-w-[640px] rounded-[28px] border border-white/12 bg-white/8 p-5 backdrop-blur-xl md:p-7"
+              className="w-full max-w-[640px] rounded-[28px] bg-white/8 p-5 backdrop-blur-xl md:p-7" style={{ border: "1px solid rgba(255,242,232,0.2)" }}
             >
               <h3 className="text-[36px] leading-[0.96] md:text-[52px] font-odesa-medium">
                 {safeTopAttractions[activeAttraction].title}
@@ -577,7 +577,7 @@ const Index = () => {
               )}
               <div className="mt-5 flex items-center gap-3">
                 <button
-                  className="inline-flex items-center gap-2 rounded-full border border-[#fff2e8]/50 px-6 py-2.5 text-[14px] text-[#fff2e8] transition-all hover:bg-[#fff2e8]/10 font-odesa-medium"
+                  className="inline-flex items-center gap-2 rounded-full border border-[#fff2e8]/20 px-6 py-2.5 text-[14px] text-[#fff2e8] transition-all hover:bg-[#fff2e8]/10 font-odesa-medium"
                   type="button"
                 >
                   Детальніше <ArrowRight className="h-4 w-4" />
@@ -585,7 +585,7 @@ const Index = () => {
                 <button
                   type="button"
                   onClick={goPrevAttraction}
-                  className="flex h-10 w-10 items-center justify-center rounded-full border border-white/30 bg-white/10 backdrop-blur-sm transition-all hover:bg-white/20"
+                  className="flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-white/6 transition-all hover:bg-white/25"
                   aria-label="Попередній"
                 >
                   <ChevronLeft className="h-4 w-4" />
@@ -593,7 +593,7 @@ const Index = () => {
                 <button
                   type="button"
                   onClick={goNextAttraction}
-                  className="flex h-10 w-10 items-center justify-center rounded-full border border-white/30 bg-white/10 backdrop-blur-sm transition-all hover:bg-white/20"
+                  className="flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-white/6 transition-all hover:bg-white/25"
                   aria-label="Наступний"
                 >
                   <ChevronRight className="h-4 w-4" />
