@@ -320,7 +320,7 @@ const Index = () => {
         </main>
       </section>
 
-      <section ref={setSectionRef(1)} className="relative z-10 bg-[#fff2e8] px-4 py-20 text-[#002f5e] md:px-10">
+      <section ref={setSectionRef(1)} className="relative z-10 bg-[#fff2e8] px-4 pt-10 pb-20 text-[#002f5e] md:px-10">
         <div className="mx-auto max-w-[1400px]">
           <motion.div
             initial={{ opacity: 0, y: 24 }}
