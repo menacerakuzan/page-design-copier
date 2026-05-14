@@ -23,6 +23,8 @@ export type City = {
   districtId: EntityId;
   name: string;
   slug: string;
+  /** English city name for OpenWeather API (e.g. "Odessa"). Falls back to `name` if not set. */
+  weatherCityName?: string;
   subtitle?: string;
   description?: string;
   detailedInfo?: string;

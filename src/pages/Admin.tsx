@@ -47,10 +47,11 @@ type DistrictForm = {
 type CityForm = {
   id: string; name: string; subtitle: string; description: string;
   detailedInfo: string; imageUrl: string; videoUrl: string; districtId: string;
+  weatherCityName: string;
 };
 
 type PlaceForm = {
-  id: string; name: string; subtitle: string; description: string;
+  id: string; slug: string; name: string; subtitle: string; description: string;
   detailedInfo: string; imageUrl: string; videoUrl: string;
   cityId: string; type: TourismObjectType;
   mapUrl: string; address: string; phone: string; website: string;
@@ -59,8 +60,8 @@ type PlaceForm = {
 };
 
 const emptyDistrict = (regionId: string): DistrictForm => ({ id: "", name: "", subtitle: "", description: "", detailedInfo: "", imageUrl: "", videoUrl: "", regionId });
-const emptyCity = (districtId: string): CityForm => ({ id: "", name: "", subtitle: "", description: "", detailedInfo: "", imageUrl: "", videoUrl: "", districtId });
-const emptyPlace = (cityId: string): PlaceForm => ({ id: "", name: "", subtitle: "", description: "", detailedInfo: "", imageUrl: "", videoUrl: "", cityId, type: "attraction", mapUrl: "", address: "", phone: "", website: "", eventDates: "", hours: "", amenities: "", published: true, tourismTypes: [] });
+const emptyCity = (districtId: string): CityForm => ({ id: "", name: "", subtitle: "", description: "", detailedInfo: "", imageUrl: "", videoUrl: "", districtId, weatherCityName: "" });
+const emptyPlace = (cityId: string): PlaceForm => ({ id: "", slug: "", name: "", subtitle: "", description: "", detailedInfo: "", imageUrl: "", videoUrl: "", cityId, type: "attraction", mapUrl: "", address: "", phone: "", website: "", eventDates: "", hours: "", amenities: "", published: true, tourismTypes: [] });
 
 // ─── sub-components ───────────────────────────────────────────────────────────
 
@@ -98,7 +99,7 @@ const FormSelect = ({ value, onChange, children, disabled = false }: { value: st
   </select>
 );
 
-const FieldGroup = ({ label, children }: { label: string; children: React.ReactNode }) => (
+const FieldGroup = ({ label, children }: { label: React.ReactNode; children: React.ReactNode }) => (
   <div>
     <Label>{label}</Label>
     {children}
@@ -361,6 +362,7 @@ const Admin = () => {
         detailedInfo: cityForm.detailedInfo || undefined,
         imageUrl: cityForm.imageUrl || undefined,
         videoUrl: cityForm.videoUrl || undefined,
+        weatherCityName: cityForm.weatherCityName || undefined,
       };
       await upsertCity(city);
       setCities(prev => editingCityId ? prev.map(c => c.id === id ? city : c) : [city, ...prev]);
@@ -376,7 +378,7 @@ const Admin = () => {
 
   const editCity = (c: City) => {
     setEditingCityId(c.id);
-    setCityForm({ id: c.id, name: c.name, subtitle: c.subtitle ?? "", description: c.description ?? "", detailedInfo: c.detailedInfo ?? "", imageUrl: c.imageUrl ?? "", videoUrl: c.videoUrl ?? "", districtId: c.districtId });
+    setCityForm({ id: c.id, name: c.name, subtitle: c.subtitle ?? "", description: c.description ?? "", detailedInfo: c.detailedInfo ?? "", imageUrl: c.imageUrl ?? "", videoUrl: c.videoUrl ?? "", districtId: c.districtId, weatherCityName: c.weatherCityName ?? "" });
   };
 
   const handleDeleteCity = async (id: string) => {
@@ -404,7 +406,8 @@ const Admin = () => {
         cityId: placeForm.cityId,
         districtId: district?.id ?? "",
         name: placeForm.name.trim(),
-        slug: slugify(placeForm.name),
+        slug: editingPlaceId ? placeForm.slug : `${slugify(placeForm.name)}-${uid().slice(0, 6)}`,
+
         published: placeForm.published,
         subtitle: placeForm.subtitle || undefined,
         description: placeForm.description || undefined,
@@ -434,7 +437,7 @@ const Admin = () => {
 
   const editPlace = (p: TourismObject) => {
     setEditingPlaceId(p.id);
-    setPlaceForm({ id: p.id, name: p.name, subtitle: p.subtitle ?? "", description: p.description ?? "", detailedInfo: p.detailedInfo ?? "", imageUrl: p.imageUrl ?? "", videoUrl: p.videoUrl ?? "", cityId: p.cityId, type: p.type, mapUrl: p.mapUrl ?? "", address: p.address ?? "", phone: p.phone ?? "", website: p.website ?? "", eventDates: p.eventDates ?? "", hours: p.hours ?? "", amenities: p.amenities ?? "", published: p.published, tourismTypes: p.tourismTypes ?? [] });
+    setPlaceForm({ id: p.id, slug: p.slug, name: p.name, subtitle: p.subtitle ?? "", description: p.description ?? "", detailedInfo: p.detailedInfo ?? "", imageUrl: p.imageUrl ?? "", videoUrl: p.videoUrl ?? "", cityId: p.cityId, type: p.type, mapUrl: p.mapUrl ?? "", address: p.address ?? "", phone: p.phone ?? "", website: p.website ?? "", eventDates: p.eventDates ?? "", hours: p.hours ?? "", amenities: p.amenities ?? "", published: p.published, tourismTypes: p.tourismTypes ?? [] });
   };
 
   const handleDeletePlace = async (id: string) => {
@@ -673,6 +676,9 @@ const Admin = () => {
                         imageUrl={cityForm.imageUrl} videoUrl={cityForm.videoUrl}
                         onImage={v => setCityForm(p => ({ ...p, imageUrl: v }))} onVideo={v => setCityForm(p => ({ ...p, videoUrl: v }))}
                       />
+                      <FieldGroup label={<>WeatherName <span className="normal-case text-[11px] text-[#002f5e]/40 font-normal">(необов&apos;язково — англ. назва для OpenWeather, напр. &ldquo;Odessa&rdquo;)</span></>}>
+                        <Input value={cityForm.weatherCityName} onChange={v => setCityForm(p => ({ ...p, weatherCityName: v }))} placeholder="напр. Odessa, Bolhrad..." />
+                      </FieldGroup>
                       <div className="flex items-center justify-between pt-2">
                         <SaveBtn saving={saving} label={editingCityId ? "Оновити місто" : "Створити місто"} />
                       </div>

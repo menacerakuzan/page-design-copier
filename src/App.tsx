@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Index from "./pages/Index";
 import CityPage from "./pages/CityPage";
+import DistrictPage from "./pages/DistrictPage";
 import EntityDetail from "./pages/EntityDetail";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
@@ -30,6 +31,8 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/napryamky/:citySlug" element={<CityPage />} />
+          <Route path="/raion/:districtSlug" element={<DistrictPage />} />
+          <Route path="/mistse/:slug" element={<EntityDetail type="attraction" />} />
           <Route path="/podiyi/:slug" element={<EntityDetail type="event" />} />
           <Route path="/restorany/:slug" element={<EntityDetail type="restaurant" />} />
           <Route path="/hoteli/:slug" element={<EntityDetail type="hotel" />} />
