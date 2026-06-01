@@ -131,7 +131,7 @@ const DistrictPage = () => {
         </div>
 
         {/* hero body */}
-        <div className="relative z-10 flex min-h-[calc(100vh-80px)] flex-col justify-end px-6 pb-14 text-[#fff2e8] md:px-14 md:pb-20">
+        <div className="relative z-10 flex min-h-[calc(100vh-80px)] flex-col justify-end px-6 pb-14 text-[#fff2e8] md:px-14 md:pb-15">
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="mb-5">
             <span className="inline-block rounded-full border border-white/25 bg-white/10 px-5 py-2 text-[12px] uppercase tracking-[0.2em] font-odesa-medium text-[#fff2e8] backdrop-blur-md">
               Район
@@ -249,7 +249,7 @@ const DistrictPage = () => {
                         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,5,20,0.08)_0%,transparent_30%,rgba(0,5,20,0.85)_100%)]" />
                         <div className="absolute bottom-0 left-0 right-0 p-3">
                           {/* bg-black/30 → прозорість фону; backdrop-blur-md → сила розмиття */}
-                          <div className="rounded-[20px] bg-black/30 px-5 py-4 backdrop-blur-md">
+                          <div className="rounded-[20px] bg-black/30 px-5 py-4 backdrop-blur-md" style={{ border: "1px solid rgba(255,242,232,0.2)" }}>
                             <p className="font-odesa-medium text-[24px] leading-[1.05] text-[#fff2e8]">{c.name}</p>
                             {c.subtitle && (
                               <p className="mt-1 text-[13px] font-odesa-regular text-[#fff2e8]/60 line-clamp-1">{c.subtitle}</p>
@@ -335,9 +335,9 @@ const DistrictPage = () => {
                             {LABEL_SHORT[obj.type]}
                           </span>
                         </div>
-                        {/* bottom blur panel — no border */}
+                        {/* bottom blur panel */}
                         <div className="absolute bottom-0 left-0 right-0 p-3">
-                          <div className="rounded-[18px] bg-black/30 px-4 py-4 backdrop-blur-md">
+                          <div className="rounded-[18px] bg-black/30 px-4 py-4 backdrop-blur-md" style={{ border: "1px solid rgba(255,242,232,0.2)" }}>
                             <p className="font-odesa-medium text-[20px] leading-[1.1] text-[#fff2e8]">{obj.name}</p>
                             {obj.subtitle && (
                               <p className="mt-1 text-[12px] font-odesa-regular text-[#fff2e8]/60 line-clamp-1">{obj.subtitle}</p>
