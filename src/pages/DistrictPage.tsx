@@ -201,7 +201,7 @@ const DistrictPage = () => {
       {cities.length > 0 && (
         <section
           ref={setRef("cities")}
-          className="scroll-mt-[52px] flex h-screen flex-col overflow-hidden px-4 py-14 md:px-10"
+          className="scroll-mt-[52px] flex h-screen flex-col overflow-x-hidden px-4 py-14 md:px-10"
           style={{ background: "linear-gradient(160deg, #ffdfc6 0%, #fde9da 100%)" }}
         >
           <div className="mx-auto flex h-full w-full max-w-[1400px] flex-col">
@@ -230,7 +230,7 @@ const DistrictPage = () => {
               ref={(el) => { scrollRefs.current["cities"] = el; }}
               className="flex-1 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
             >
-              <div className="flex h-full gap-5 pb-2" style={{ width: "max-content" }}>
+              <div className="flex h-full gap-5 pb-2 pt-3" style={{ width: "max-content" }}>
                 {cities.map((c, idx) => (
                   <motion.div key={c.id} className="h-full"
                     initial={{ opacity: 0, x: 24 }} whileInView={{ opacity: 1, x: 0 }}
@@ -274,7 +274,7 @@ const DistrictPage = () => {
         <section
           key={section.type}
           ref={setRef(section.type)}
-          className="scroll-mt-[52px] flex h-screen flex-col overflow-hidden px-4 py-14 md:px-10"
+          className="scroll-mt-[52px] flex h-screen flex-col overflow-x-hidden px-4 py-14 md:px-10"
           style={{ background: `linear-gradient(160deg, ${section.bg} 0%, ${section.bg}cc 100%)` }}
         >
           <div className="mx-auto flex h-full w-full max-w-[1400px] flex-col">
@@ -307,7 +307,7 @@ const DistrictPage = () => {
               ref={(el) => { scrollRefs.current[section.type] = el; }}
               className="flex-1 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
             >
-              <div className="flex h-full gap-5 pb-2" style={{ width: "max-content" }}>
+              <div className="flex h-full gap-5 pb-2 pt-3" style={{ width: "max-content" }}>
                 {section.items.map((obj, idx) => (
                   <motion.div key={obj.id} className="h-full"
                     initial={{ opacity: 0, x: 24 }} whileInView={{ opacity: 1, x: 0 }}
