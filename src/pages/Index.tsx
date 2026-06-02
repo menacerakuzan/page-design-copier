@@ -97,7 +97,7 @@ const Index = () => {
         {
           title: "Одещина",
           subtitle: "",
-          description: "Додайте картки у розділ attractions для головної сторінки.",
+          description: "Додайте картки у розділ attractions для головної сторінки",
           image:
             "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=2200&q=80",
         },
