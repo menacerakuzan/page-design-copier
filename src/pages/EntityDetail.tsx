@@ -209,12 +209,12 @@ const EntityDetail = ({ type }: { type: PageType }) => {
                       <p className="font-odesa-medium text-[26px] leading-[1.05]">{object.name}</p>
                       <div className="mt-1 h-px w-full bg-white/10" />
                       <div className="mt-5 space-y-4">
-                        {address && (
-                          <div className="flex items-start gap-3">
+                        {address && address.split("\n").filter(Boolean).map((a, i) => (
+                          <div key={i} className="flex items-start gap-3">
                             <MapPin className="mt-0.5 h-5 w-5 shrink-0" style={{ color: GOLD }} />
-                            <span className="text-[17px] font-odesa-regular leading-[1.35] text-[#fff2e8]/90">{address}</span>
+                            <span className="text-[17px] font-odesa-regular leading-[1.35] text-[#fff2e8]/90">{a}</span>
                           </div>
-                        )}
+                        ))}
                         {hours && (
                           <div className="flex items-start gap-3">
                             <Clock className="mt-0.5 h-5 w-5 shrink-0" style={{ color: GOLD }} />
@@ -227,20 +227,20 @@ const EntityDetail = ({ type }: { type: PageType }) => {
                             <span className="text-[17px] font-odesa-regular leading-[1.35] text-[#fff2e8]/90">{object.eventDates}</span>
                           </div>
                         )}
-                        {phone && (
-                          <a href={`tel:${phone}`} className="flex items-center gap-3 transition-opacity hover:opacity-75">
+                        {phone && phone.split("\n").filter(Boolean).map((p, i) => (
+                          <a key={i} href={`tel:${p}`} className="flex items-center gap-3 transition-opacity hover:opacity-75">
                             <Phone className="h-5 w-5 shrink-0" style={{ color: GOLD }} />
-                            <span className="text-[17px] font-odesa-regular text-[#fff2e8]/90">{phone}</span>
+                            <span className="text-[17px] font-odesa-regular text-[#fff2e8]/90">{p}</span>
                           </a>
-                        )}
-                        {website && (
-                          <a href={website} target="_blank" rel="noreferrer"
+                        ))}
+                        {website && website.split("\n").filter(Boolean).map((w, i) => (
+                          <a key={i} href={w} target="_blank" rel="noreferrer"
                             className="flex items-center gap-3 transition-opacity hover:opacity-75">
                             <Globe className="h-5 w-5 shrink-0" style={{ color: GOLD }} />
                             <span className="text-[17px] font-odesa-regular text-[#fff2e8]/90 underline underline-offset-2">Офіційний сайт</span>
                             <ArrowUpRight className="h-4 w-4 text-[#fff2e8]/50" />
                           </a>
-                        )}
+                        ))}
                       </div>
                       {mapUrl && (
                         <a href={mapUrl} target="_blank" rel="noreferrer"
@@ -285,9 +285,15 @@ const EntityDetail = ({ type }: { type: PageType }) => {
                 style={{ backgroundColor: NAVY, color: BG, borderColor: `${m.accent}35` }}>
                 <p className="font-odesa-medium text-[24px] text-[#fff2e8]">{section.title}</p>
                 <div className="mt-4 space-y-4">
-                  {address && <div className="flex items-start gap-3"><MapPin className="mt-0.5 h-5 w-5 shrink-0" style={{ color: GOLD }} /><span className="text-[16px] font-odesa-regular text-[#fff2e8]/90">{address}</span></div>}
-                  {phone && <a href={`tel:${phone}`} className="flex items-center gap-3 hover:opacity-75"><Phone className="h-5 w-5 shrink-0" style={{ color: GOLD }} /><span className="text-[16px] font-odesa-regular text-[#fff2e8]/90">{phone}</span></a>}
-                  {website && <a href={website} target="_blank" rel="noreferrer" className="flex items-center gap-3 hover:opacity-75"><Globe className="h-5 w-5 shrink-0" style={{ color: GOLD }} /><span className="text-[16px] font-odesa-regular text-[#fff2e8]/90 underline">Офіційний сайт</span></a>}
+                  {address && address.split("\n").filter(Boolean).map((a, i) => (
+                    <div key={i} className="flex items-start gap-3"><MapPin className="mt-0.5 h-5 w-5 shrink-0" style={{ color: GOLD }} /><span className="text-[16px] font-odesa-regular text-[#fff2e8]/90">{a}</span></div>
+                  ))}
+                  {phone && phone.split("\n").filter(Boolean).map((p, i) => (
+                    <a key={i} href={`tel:${p}`} className="flex items-center gap-3 hover:opacity-75"><Phone className="h-5 w-5 shrink-0" style={{ color: GOLD }} /><span className="text-[16px] font-odesa-regular text-[#fff2e8]/90">{p}</span></a>
+                  ))}
+                  {website && website.split("\n").filter(Boolean).map((w, i) => (
+                    <a key={i} href={w} target="_blank" rel="noreferrer" className="flex items-center gap-3 hover:opacity-75"><Globe className="h-5 w-5 shrink-0" style={{ color: GOLD }} /><span className="text-[16px] font-odesa-regular text-[#fff2e8]/90 underline">Офіційний сайт</span></a>
+                  ))}
                 </div>
               </div>
             </div>

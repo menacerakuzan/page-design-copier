@@ -101,6 +101,49 @@ const Textarea = ({ value, onChange, placeholder = "", rows = 3 }: { value: stri
   />
 );
 
+const MultiField = ({ label, value, onChange, placeholder }: {
+  label: string; value: string; onChange: (v: string) => void; placeholder?: string;
+}) => {
+  const items = value ? value.split("\n") : [""];
+  const update = (idx: number, val: string) => {
+    const next = [...items]; next[idx] = val; onChange(next.join("\n"));
+  };
+  const add = () => onChange([...items, ""].join("\n"));
+  const remove = (idx: number) => {
+    const next = items.filter((_, i) => i !== idx);
+    onChange(next.length ? next.join("\n") : "");
+  };
+  return (
+    <div>
+      <Label>{label}</Label>
+      <div className="flex flex-col gap-2">
+        {items.map((item, idx) => (
+          <div key={idx} className="flex items-center gap-2">
+            <input
+              value={item}
+              onChange={e => update(idx, e.target.value)}
+              placeholder={placeholder}
+              className="w-full rounded-xl border border-[#002f5e]/15 bg-white px-4 py-2.5 text-[14px] text-[#002f5e] placeholder:text-[#002f5e]/30 focus:border-[#002f5e]/40 focus:outline-none focus:ring-2 focus:ring-[#002f5e]/10 transition"
+            />
+            {items.length > 1 && (
+              <button type="button" onClick={() => remove(idx)}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[#9f1f47]/20 text-[#9f1f47]/50 transition hover:border-[#9f1f47]/50 hover:bg-[#9f1f47]/8 hover:text-[#9f1f47]">
+                <span className="text-[18px] leading-none">−</span>
+              </button>
+            )}
+            {idx === items.length - 1 && (
+              <button type="button" onClick={add}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[#002f5e]/20 text-[#002f5e]/50 transition hover:border-[#002f5e]/40 hover:bg-[#002f5e]/8 hover:text-[#002f5e]">
+                <span className="text-[18px] leading-none">+</span>
+              </button>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 const FormSelect = ({ value, onChange, children, disabled = false }: { value: string; onChange: (v: string) => void; children: React.ReactNode; disabled?: boolean }) => (
   <select
     value={value}
@@ -864,17 +907,9 @@ const Admin = () => {
 
                       {(placeForm.type === "restaurant" || placeForm.type === "hotel") && (
                         <>
-                          <FieldGroup label="Адреса">
-                            <Input value={placeForm.address} onChange={v => setPlaceForm(p => ({ ...p, address: v }))} placeholder="вул. Пушкінська, 15" />
-                          </FieldGroup>
-                          <div className="grid grid-cols-2 gap-3">
-                            <FieldGroup label="Телефон">
-                              <Input value={placeForm.phone} onChange={v => setPlaceForm(p => ({ ...p, phone: v }))} placeholder="+380..." />
-                            </FieldGroup>
-                            <FieldGroup label="Сайт">
-                              <Input value={placeForm.website} onChange={v => setPlaceForm(p => ({ ...p, website: v }))} placeholder="https://..." />
-                            </FieldGroup>
-                          </div>
+                          <MultiField label="Адреса" value={placeForm.address} onChange={v => setPlaceForm(p => ({ ...p, address: v }))} placeholder="вул. Пушкінська, 15" />
+                          <MultiField label="Телефон" value={placeForm.phone} onChange={v => setPlaceForm(p => ({ ...p, phone: v }))} placeholder="+380..." />
+                          <MultiField label="Сайт" value={placeForm.website} onChange={v => setPlaceForm(p => ({ ...p, website: v }))} placeholder="https://..." />
                           <FieldGroup label={placeForm.type === "restaurant" ? "Години роботи" : "Зручності та послуги"}>
                             <Input
                               value={placeForm.type === "restaurant" ? placeForm.hours : placeForm.amenities}
