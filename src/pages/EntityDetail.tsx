@@ -186,6 +186,10 @@ const EntityDetail = ({ type }: { type: PageType }) => {
                   viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.7, delay: 0.05 }}>
                   <p className="text-[20px] leading-[1.55] font-odesa-regular md:text-[28px]"
                     style={{ color: `${textColor}e6` }}>{description}</p>
+                  {object.detailedInfo && (
+                    <p className="mt-6 text-[17px] leading-[1.65] font-odesa-regular md:text-[20px]"
+                      style={{ color: `${textColor}88` }}>{object.detailedInfo}</p>
+                  )}
                   {tourismTypes.length > 0 && (
                     <div className="mt-8 flex flex-wrap gap-2">
                       {tourismTypes.map(t => (
@@ -298,7 +302,7 @@ const EntityDetail = ({ type }: { type: PageType }) => {
         return (
           <section key={section.id} ref={setRef("schedule")}
             className="scroll-mt-[52px] px-4 py-20 text-[#fff2e8] md:px-10"
-            style={{ background: `linear-gradient(160deg, ${bg} 0%, ${bg}bb 100%)` }}>
+            style={{ background: `linear-gradient(160deg, transparent 0%, transparent 30%, rgba(0,0,0,0.04) 42%, rgba(0,0,0,0.04) 52%, rgba(0,0,0,0.12) 62%, rgba(0,0,0,0.12) 72%, rgba(0,0,0,0.28) 82%, rgba(0,0,0,0.28) 90%, rgba(0,0,0,0.48) 100%), ${bg}` }}>
             <div className="mx-auto max-w-[1400px]">
               <ScheduleHeader type={type} accent={m.accent} />
               <div className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
@@ -319,7 +323,7 @@ const EntityDetail = ({ type }: { type: PageType }) => {
         return (
           <section key={section.id} ref={setRef("schedule")}
             className="scroll-mt-[52px] px-4 py-20 text-[#fff2e8] md:px-10"
-            style={{ background: `linear-gradient(160deg, ${bg} 0%, ${bg}bb 100%)` }}>
+            style={{ background: `linear-gradient(160deg, transparent 0%, transparent 30%, rgba(0,0,0,0.04) 42%, rgba(0,0,0,0.04) 52%, rgba(0,0,0,0.12) 62%, rgba(0,0,0,0.12) 72%, rgba(0,0,0,0.28) 82%, rgba(0,0,0,0.28) 90%, rgba(0,0,0,0.48) 100%), ${bg}` }}>
             <div className="mx-auto max-w-[1400px]">
               <ScheduleHeader type={type} accent={m.accent} />
               <div className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
@@ -340,7 +344,7 @@ const EntityDetail = ({ type }: { type: PageType }) => {
         return (
           <section key={section.id} ref={setRef("schedule")}
             className="scroll-mt-[52px] px-4 py-20 text-[#fff2e8] md:px-10"
-            style={{ background: `linear-gradient(160deg, ${bg} 0%, ${bg}bb 100%)` }}>
+            style={{ background: `linear-gradient(160deg, transparent 0%, transparent 30%, rgba(0,0,0,0.04) 42%, rgba(0,0,0,0.04) 52%, rgba(0,0,0,0.12) 62%, rgba(0,0,0,0.12) 72%, rgba(0,0,0,0.28) 82%, rgba(0,0,0,0.28) 90%, rgba(0,0,0,0.48) 100%), ${bg}` }}>
             <div className="mx-auto max-w-[1400px]">
               <ScheduleHeader type={type} accent={m.accent} />
               <div className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
@@ -572,20 +576,20 @@ const EntityDetail = ({ type }: { type: PageType }) => {
             {city && district && <span className="text-[#fff2e8]/30">/</span>}
             {district && <Link to={`/raion/${district.slug}`} className="hover:text-[#fff2e8]">{district.name}</Link>}
           </motion.div>
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.65 }} className="mb-5">
-            <span className="inline-block rounded-full px-5 py-2 text-[12px] uppercase tracking-[0.2em] font-odesa-medium backdrop-blur-md shadow-lg"
-              style={{ backgroundColor: `${m.accent}40`, color: m.accent, border: `1px solid ${m.accent}70`, boxShadow: `0 0 18px ${m.accent}35` }}>
-              {m.label}
-            </span>
-          </motion.div>
           <motion.h1 initial={{ opacity: 0, y: 28 }} animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.85, ease: [0.22, 1, 0.36, 1] }}
             className="font-odesa-medium text-[58px] leading-[0.93] md:text-[100px] lg:text-[120px]">
             {object.name}
           </motion.h1>
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.65, delay: 0.1 }} className="mt-5">
+            <span className="inline-block rounded-full px-5 py-2 text-[12px] uppercase tracking-[0.2em] font-odesa-medium backdrop-blur-md shadow-lg"
+              style={{ backgroundColor: `${m.accent}40`, color: m.accent, border: `1px solid ${m.accent}70`, boxShadow: `0 0 18px ${m.accent}35` }}>
+              {m.label}
+            </span>
+          </motion.div>
           {object.subtitle && (
-            <motion.p initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.75, delay: 0.12 }}
-              className="mt-4 text-[18px] font-odesa-regular text-[#fff2e8]/80 md:text-[26px]">
+            <motion.p initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.75, delay: 0.18 }}
+              className="mt-3 text-[18px] font-odesa-regular text-[#fff2e8]/80 md:text-[26px]">
               {object.subtitle}
             </motion.p>
           )}
@@ -617,10 +621,6 @@ const EntityDetail = ({ type }: { type: PageType }) => {
                 <MapPin className="h-3.5 w-3.5" style={{ color: GOLD }} />{address}
               </div>
             )}
-          </motion.div>
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1.2, delay: 0.7 }}
-            className="mt-8 flex items-center gap-2 text-[12px] font-odesa-regular text-[#fff2e8]/45">
-            <div className="h-px w-10 bg-[#fff2e8]/30" /> Гортайте вниз
           </motion.div>
         </div>
       </section>
@@ -698,7 +698,7 @@ const RelatedSection = ({
   scrollRefs: React.MutableRefObject<Record<string, HTMLDivElement | null>>;
 }) => (
   <section ref={setRef(sectionId)} className="scroll-mt-[52px] flex h-screen flex-col overflow-x-hidden px-4 py-14 md:px-10"
-    style={{ background: `linear-gradient(160deg, ${bg} 0%, ${bg}cc 100%)` }}>
+    style={{ background: `linear-gradient(160deg, transparent 0%, transparent 30%, rgba(0,0,0,0.04) 42%, rgba(0,0,0,0.04) 52%, rgba(0,0,0,0.12) 62%, rgba(0,0,0,0.12) 72%, rgba(0,0,0,0.28) 82%, rgba(0,0,0,0.28) 90%, rgba(0,0,0,0.48) 100%), ${bg}` }}>
     <div className="mx-auto flex h-full w-full max-w-[1400px] flex-col">
       <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.15 }} transition={{ duration: 0.7 }}

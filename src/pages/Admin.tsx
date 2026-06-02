@@ -11,10 +11,18 @@ import AdminPageEditor from "./AdminPageEditor";
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
+const CYRILLIC_MAP: Record<string, string> = {
+  а: "a", б: "b", в: "v", г: "h", ґ: "g", д: "d", е: "e", є: "ye", ж: "zh",
+  з: "z", и: "y", і: "i", ї: "yi", й: "y", к: "k", л: "l", м: "m", н: "n",
+  о: "o", п: "p", р: "r", с: "s", т: "t", у: "u", ф: "f", х: "kh", ц: "ts",
+  ч: "ch", ш: "sh", щ: "shch", ь: "", ю: "yu", я: "ya",
+};
+
 const slugify = (s: string) =>
   s.toLowerCase().trim()
-    .replace(/[іії]/g, "i").replace(/[єе]/g, "e").replace(/[аа]/g, "a")
-    .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+    .replace(/[а-яіїєґь]/g, (c) => CYRILLIC_MAP[c] ?? c)
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 
 const uid = () => Math.random().toString(36).slice(2, 10);
 
@@ -193,15 +201,23 @@ const MediaField = ({ label, value, onChange, accept, isVideo }: {
       <input ref={fileRef} type="file" accept={accept} className="hidden" onChange={handleFile} />
       {value && (
         isVideo ? (
-          <div className="mt-2 h-32 w-full overflow-hidden rounded-lg bg-[#002f5e]/5">
+          <div className="relative mt-2 h-32 w-full overflow-hidden rounded-lg bg-[#002f5e]/5">
             {value.match(/\.(gif)$/i) ? (
               <img src={value} alt="gif" className="h-full w-full object-cover" />
             ) : (
               <video src={value} className="h-full w-full object-cover" muted loop autoPlay playsInline />
             )}
+            <button type="button" onClick={() => onChange("")}
+              className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white transition hover:bg-[#9f1f47]"
+              title="Видалити">✕</button>
           </div>
         ) : (
-          <img src={value} alt="" className="mt-2 h-32 w-full rounded-lg object-cover opacity-90" onError={e => (e.currentTarget.style.display = "none")} />
+          <div className="relative mt-2">
+            <img src={value} alt="" className="h-32 w-full rounded-lg object-cover opacity-90" onError={e => (e.currentTarget.style.display = "none")} />
+            <button type="button" onClick={() => onChange("")}
+              className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white transition hover:bg-[#9f1f47]"
+              title="Видалити">✕</button>
+          </div>
         )
       )}
     </div>
@@ -259,10 +275,10 @@ const EntityCard = ({ title, subtitle, imageUrl, onDelete, onEdit, badge, isEdit
 const Admin = () => {
   const [section, setSection] = useState<AdminSection>("districts");
   const [placePageType, setPlacePageType] = useState<PlacePageType>("attraction");
-  const [regions, setRegions] = useState<Region[]>(seedRegions);
-  const [districts, setDistricts] = useState<District[]>(seedDistricts);
-  const [cities, setCities] = useState<City[]>(seedCities);
-  const [places, setPlaces] = useState<TourismObject[]>(seedObjects);
+  const [regions, setRegions] = useState<Region[]>(hasSupabaseConfig ? [] : seedRegions);
+  const [districts, setDistricts] = useState<District[]>(hasSupabaseConfig ? [] : seedDistricts);
+  const [cities, setCities] = useState<City[]>(hasSupabaseConfig ? [] : seedCities);
+  const [places, setPlaces] = useState<TourismObject[]>(hasSupabaseConfig ? [] : seedObjects);
   const [contentCards, setContentCards] = useState<ContentCardEntity[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -295,6 +311,9 @@ const Admin = () => {
       setCities(snap.cities);
       setPlaces(snap.objects);
       setContentCards(snap.contentCards ?? []);
+      // оновлюємо дефолтні id у формах після завантаження реальних даних
+      setCityForm(prev => prev.districtId && snap.districts.find(d => d.id === prev.districtId) ? prev : emptyCity(snap.districts[0]?.id ?? ""));
+      setPlaceForm(prev => prev.cityId && snap.cities.find(c => c.id === prev.cityId) ? prev : emptyPlace(snap.cities[0]?.id ?? ""));
     } catch (e: any) {
       showToast(e?.message ?? "Помилка завантаження", false);
     } finally {
@@ -312,11 +331,12 @@ const Admin = () => {
     setSaving(true);
     try {
       const id = editingDistrictId ?? `district-${uid()}`;
+      const existingDistrict = districts.find(d => d.id === id);
       const district: District = {
         id,
         regionId: districtForm.regionId || defaultRegionId,
         name: districtForm.name.trim(),
-        slug: slugify(districtForm.name),
+        slug: existingDistrict?.slug ?? slugify(districtForm.name),
         subtitle: districtForm.subtitle || undefined,
         description: districtForm.description || undefined,
         detailedInfo: districtForm.detailedInfo || undefined,
@@ -358,11 +378,12 @@ const Admin = () => {
     setSaving(true);
     try {
       const id = editingCityId ?? `city-${uid()}`;
+      const existingCity = cities.find(c => c.id === id);
       const city: City = {
         id,
         districtId: cityForm.districtId,
         name: cityForm.name.trim(),
-        slug: slugify(cityForm.name),
+        slug: existingCity?.slug ?? slugify(cityForm.name),
         subtitle: cityForm.subtitle || undefined,
         description: cityForm.description || undefined,
         detailedInfo: cityForm.detailedInfo || undefined,
@@ -825,7 +846,7 @@ const Admin = () => {
                       </FieldGroup>
 
                       {/* Type-specific fields */}
-                      {(placeForm.type === "attraction" || placeForm.type === "event") && (
+                      {(placeForm.type === "attraction" || placeForm.type === "event" || placeForm.type === "hotel" || placeForm.type === "restaurant") && (
                         <FieldGroup label="Місцезнаходження (посилання на карту)">
                           <Input value={placeForm.mapUrl} onChange={v => setPlaceForm(p => ({ ...p, mapUrl: v }))} placeholder="https://maps.google.com/..." />
                         </FieldGroup>

@@ -89,6 +89,7 @@ const CityPage = () => {
 
   const district  = snapshot?.districts.find((d) => d.id === city.districtId);
   const heroImage = city.imageUrl ?? "https://images.unsplash.com/photo-1464817739973-0128fe77aaa1?auto=format&fit=crop&w=2400&q=80";
+  const heroVideo = city.videoUrl;
 
   const displayConfig = config ?? makeDefaultConfig("city", city.id);
   const activeSections = [...displayConfig.sections]
@@ -136,6 +137,11 @@ const CityPage = () => {
                 <p className="mt-6 max-w-[860px] text-[20px] leading-[1.55] font-odesa-regular text-[#002f5e]/75 md:text-[26px]">
                   {city.description}
                 </p>
+                {city.detailedInfo && (
+                  <p className="mt-6 max-w-[860px] text-[17px] leading-[1.65] font-odesa-regular text-[#002f5e]/55 md:text-[20px]">
+                    {city.detailedInfo}
+                  </p>
+                )}
               </motion.div>
             </div>
           </section>
@@ -261,7 +267,12 @@ const CityPage = () => {
 
       {/* ══════════════════  HERO  ══════════════════════════════════════ */}
       <section className="relative min-h-screen overflow-hidden">
-        <img src={heroImage} alt={city.name} className="absolute inset-0 h-full w-full object-cover" />
+        {heroVideo ? (
+          <video src={heroVideo} autoPlay muted loop playsInline
+            className="absolute inset-0 h-full w-full object-cover" />
+        ) : (
+          <img src={heroImage} alt={city.name} className="absolute inset-0 h-full w-full object-cover" />
+        )}
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,12,33,0.28)_0%,rgba(0,12,33,0.0)_38%,rgba(0,12,33,0.9)_100%)]" />
 
         {/* top bar */}
@@ -370,7 +381,7 @@ const ObjectSection = ({
   scrollRefs: React.MutableRefObject<Record<string, HTMLDivElement | null>>;
 }) => (
   <section ref={setRef(sectionId)} className="scroll-mt-[52px] flex h-screen flex-col overflow-x-hidden px-4 py-14 md:px-10"
-    style={{ background: `linear-gradient(160deg, ${bg} 0%, ${bg}cc 100%)` }}>
+    style={{ background: `linear-gradient(160deg, transparent 0%, transparent 30%, rgba(0,0,0,0.04) 42%, rgba(0,0,0,0.04) 52%, rgba(0,0,0,0.12) 62%, rgba(0,0,0,0.12) 72%, rgba(0,0,0,0.28) 82%, rgba(0,0,0,0.28) 90%, rgba(0,0,0,0.48) 100%), ${bg}` }}>
     <div className="mx-auto flex h-full w-full max-w-[1400px] flex-col">
       <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.15 }} transition={{ duration: 0.7 }}

@@ -403,7 +403,7 @@ const Index = () => {
         </div>
       </section>
 
-      <section ref={setSectionRef(2)} className="relative z-10 py-5 text-[#fff2e8] h-screen overflow-y-hidden flex flex-col justify-start" style={{ background: "linear-gradient(160deg, #001a3d 0%, #001a3dcc 100%)" }}>
+      <section ref={setSectionRef(2)} className="relative z-10 py-5 text-[#fff2e8] h-screen overflow-y-hidden flex flex-col justify-start" style={{ background: "linear-gradient(160deg, transparent 0%, transparent 30%, rgba(0,0,0,0.04) 42%, rgba(0,0,0,0.04) 52%, rgba(0,0,0,0.12) 62%, rgba(0,0,0,0.12) 72%, rgba(0,0,0,0.28) 82%, rgba(0,0,0,0.28) 90%, rgba(0,0,0,0.48) 100%), #001a3d" }}>
           {/* Right-edge fade hint */}
           <div className="pointer-events-none absolute right-0 inset-y-0 w-72 z-10" aria-hidden="true" style={{ background: "linear-gradient(to left, #1c1a15aa 0%, #1c1a1577 30%, #1c1a1533 60%, transparent 100%)" }} />
           <motion.div

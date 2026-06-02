@@ -794,7 +794,7 @@ const AdminConstructor = ({ contentCards, places, districts, cities, onCardsChan
       title: district.name,
       subtitle: null,
       imageUrl: district.imageUrl ?? null,
-      href: `/napryamky/${district.id}`,
+      href: `/raion/${district.slug}`,
       cityId: null,
       districtId: district.id,
       regionId: null,
