@@ -805,6 +805,13 @@ const AdminConstructor = ({ contentCards, places, districts, cities, onCardsChan
     await applyCardChange(card);
   };
 
+  const PLACE_ROUTE: Record<string, string> = {
+    attraction: "/mistse",
+    event: "/podiyi",
+    hotel: "/hoteli",
+    restaurant: "/restorany",
+  };
+
   const addFromPlace = async (place: TourismObject, sectionKey: string) => {
     const maxOrder = tabCards.reduce((m, c) => Math.max(m, c.sortOrder), -1);
     const city = cities.find(c => c.id === place.cityId);
@@ -817,7 +824,7 @@ const AdminConstructor = ({ contentCards, places, districts, cities, onCardsChan
       title: place.name,
       subtitle: place.address ?? (city ? city.name : null),
       imageUrl: place.imageUrl ?? null,
-      href: null,
+      href: `${PLACE_ROUTE[place.type]}/${place.slug}`,
       cityId: place.cityId,
       districtId: place.districtId,
       regionId: null,

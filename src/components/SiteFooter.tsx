@@ -136,21 +136,8 @@ const SiteFooter = () => {
         ) : null}
       </div>
 
-      <div className="mx-auto grid max-w-[1200px] gap-7 border-t border-[#002f5e]/20 pt-10 md:grid-cols-[1fr_1fr_auto]">
-        {footerColumnsData.map((col) => (
-          <div key={col.title}>
-            <h4 className="text-[30px] leading-none font-odesa-medium">{col.title}</h4>
-            <nav className="mt-4 space-y-3">
-              {col.links.map((link) => (
-                <a key={link.label} href={link.href} className="block text-[20px] leading-none text-[#002f5e]/82 transition-colors hover:text-[#002f5e] font-odesa-regular">
-                  {link.label}
-                </a>
-              ))}
-            </nav>
-          </div>
-        ))}
-
-        <div>
+      <div className="mx-auto max-w-[1200px] border-t border-[#002f5e]/20 pt-10">
+        <div className="flex flex-col items-center text-center">
           <h4 className="text-[30px] leading-none text-[#002f5e]/70 font-odesa-medium">Зв'язок</h4>
           <div className="mt-4 flex items-center gap-2">
             {socialLinksData.map(({ label, href, Icon }) => (
@@ -166,6 +153,13 @@ const SiteFooter = () => {
               </a>
             ))}
           </div>
+          <p className="mt-6 max-w-[420px] text-[15px] leading-[1.6] text-[#002f5e]/60 font-odesa-regular">
+            Для звернень щодо додавання об'єкту на сайт — напишіть нам на пошту:
+          </p>
+          <a href="mailto:tourism@od.gov.ua"
+            className="mt-2 inline-block text-[18px] font-odesa-medium text-[#9f1f47] transition-opacity hover:opacity-70">
+            tourism@od.gov.ua
+          </a>
         </div>
       </div>
     </footer>

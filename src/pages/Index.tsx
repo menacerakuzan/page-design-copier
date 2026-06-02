@@ -90,6 +90,7 @@ const Index = () => {
     subtitle: card.subtitle ?? "",
     description: String(card.payload?.description ?? ""),
     image: card.imageUrl ?? "",
+    href: card.href ?? undefined,
   }));
   const safeTopAttractions = topAttractions.length
     ? topAttractions
@@ -98,8 +99,8 @@ const Index = () => {
           title: "Одещина",
           subtitle: "",
           description: "Додайте картки у розділ attractions для головної сторінки",
-          image:
-            "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=2200&q=80",
+          image: "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=2200&q=80",
+          href: undefined as string | undefined,
         },
       ];
 
@@ -576,12 +577,21 @@ const Index = () => {
                 </p>
               )}
               <div className="mt-5 flex items-center gap-3">
-                <button
-                  className="inline-flex items-center gap-2 rounded-full border border-[#fff2e8]/20 px-6 py-2.5 text-[14px] text-[#fff2e8] transition-all hover:bg-[#fff2e8]/10 font-odesa-medium"
-                  type="button"
-                >
-                  Детальніше <ArrowRight className="h-4 w-4" />
-                </button>
+                {safeTopAttractions[activeAttraction].href ? (
+                  <Link
+                    to={safeTopAttractions[activeAttraction].href!}
+                    className="inline-flex items-center gap-2 rounded-full border border-[#fff2e8]/20 px-6 py-2.5 text-[14px] text-[#fff2e8] transition-all hover:bg-[#fff2e8]/10 font-odesa-medium"
+                  >
+                    Детальніше <ArrowRight className="h-4 w-4" />
+                  </Link>
+                ) : (
+                  <button
+                    className="inline-flex items-center gap-2 rounded-full border border-[#fff2e8]/20 px-6 py-2.5 text-[14px] text-[#fff2e8]/40 font-odesa-medium cursor-default"
+                    type="button" disabled
+                  >
+                    Детальніше <ArrowRight className="h-4 w-4" />
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={goPrevAttraction}
