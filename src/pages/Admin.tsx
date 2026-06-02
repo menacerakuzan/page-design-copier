@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { CheckCircle2, MapPin, Building2, Landmark, Plus, Trash2, Settings2, AlertCircle, Upload, Link, LayoutDashboard, Calendar, UtensilsCrossed, BedDouble, ChevronRight, Palmtree, Newspaper, Pencil, X } from "lucide-react";
+import { CheckCircle2, MapPin, Building2, Landmark, Plus, Trash2, Settings2, AlertCircle, Upload, Link, LayoutDashboard, Calendar, UtensilsCrossed, BedDouble, ChevronRight, Palmtree, Newspaper, Pencil, X, LogOut } from "lucide-react";
+import AdminLoginGate from "@/components/AdminLoginGate";
 import BackButton from "@/components/BackButton";
 import { regions as seedRegions, districts as seedDistricts, cities as seedCities, tourismObjects as seedObjects } from "@/data/hierarchyMockData";
 import { District, City, Region, TourismObject, TourismObjectType } from "@/types/hierarchy";
@@ -56,27 +57,27 @@ const PLACE_TYPES: { value: TourismObjectType; label: string; color: string }[] 
 
 type DistrictForm = {
   id: string; name: string; subtitle: string; description: string;
-  detailedInfo: string; imageUrl: string; videoUrl: string; regionId: string;
+  detailedInfo: string; imageUrl: string; videoUrl: string; reelUrl: string; regionId: string;
 };
 
 type CityForm = {
   id: string; name: string; subtitle: string; description: string;
-  detailedInfo: string; imageUrl: string; videoUrl: string; districtId: string;
+  detailedInfo: string; imageUrl: string; videoUrl: string; reelUrl: string; districtId: string;
   weatherCityName: string;
 };
 
 type PlaceForm = {
   id: string; slug: string; name: string; subtitle: string; description: string;
-  detailedInfo: string; imageUrl: string; videoUrl: string;
+  detailedInfo: string; imageUrl: string; videoUrl: string; reelUrl: string;
   cityId: string; type: TourismObjectType;
   mapUrl: string; address: string; phone: string; website: string;
   eventDates: string; hours: string; amenities: string;
   published: boolean; tourismTypes: string[];
 };
 
-const emptyDistrict = (regionId: string): DistrictForm => ({ id: "", name: "", subtitle: "", description: "", detailedInfo: "", imageUrl: "", videoUrl: "", regionId });
-const emptyCity = (districtId: string): CityForm => ({ id: "", name: "", subtitle: "", description: "", detailedInfo: "", imageUrl: "", videoUrl: "", districtId, weatherCityName: "" });
-const emptyPlace = (cityId: string): PlaceForm => ({ id: "", slug: "", name: "", subtitle: "", description: "", detailedInfo: "", imageUrl: "", videoUrl: "", cityId, type: "attraction", mapUrl: "", address: "", phone: "", website: "", eventDates: "", hours: "", amenities: "", published: true, tourismTypes: [] });
+const emptyDistrict = (regionId: string): DistrictForm => ({ id: "", name: "", subtitle: "", description: "", detailedInfo: "", imageUrl: "", videoUrl: "", reelUrl: "", regionId });
+const emptyCity = (districtId: string): CityForm => ({ id: "", name: "", subtitle: "", description: "", detailedInfo: "", imageUrl: "", videoUrl: "", reelUrl: "", districtId, weatherCityName: "" });
+const emptyPlace = (cityId: string): PlaceForm => ({ id: "", slug: "", name: "", subtitle: "", description: "", detailedInfo: "", imageUrl: "", videoUrl: "", reelUrl: "", cityId, type: "attraction", mapUrl: "", address: "", phone: "", website: "", eventDates: "", hours: "", amenities: "", published: true, tourismTypes: [] });
 
 // ─── sub-components ───────────────────────────────────────────────────────────
 
@@ -269,10 +270,16 @@ const MediaField = ({ label, value, onChange, accept, isVideo }: {
   );
 };
 
-const MediaGroup = ({ imageUrl, videoUrl, onImage, onVideo }: { imageUrl: string; videoUrl: string; onImage: (v: string) => void; onVideo: (v: string) => void }) => (
-  <div className="grid gap-4 sm:grid-cols-2">
-    <MediaField label="Картинка" value={imageUrl} onChange={onImage} accept="image/*" isVideo={false} />
-    <MediaField label="Відео / GIF" value={videoUrl} onChange={onVideo} accept="video/*,image/gif" isVideo={true} />
+const MediaGroup = ({ imageUrl, videoUrl, reelUrl, onImage, onVideo, onReel }: {
+  imageUrl: string; videoUrl: string; reelUrl: string;
+  onImage: (v: string) => void; onVideo: (v: string) => void; onReel: (v: string) => void;
+}) => (
+  <div className="flex flex-col gap-4">
+    <div className="grid gap-4 sm:grid-cols-2">
+      <MediaField label="Картинка (горизонтальна)" value={imageUrl} onChange={onImage} accept="image/*" isVideo={false} />
+      <MediaField label="Відео / GIF (горизонтальне)" value={videoUrl} onChange={onVideo} accept="video/*,image/gif" isVideo={true} />
+    </div>
+    <MediaField label="Вертикальне відео / Reels (9:16)" value={reelUrl} onChange={onReel} accept="video/*" isVideo={true} />
   </div>
 );
 
@@ -389,6 +396,7 @@ const Admin = () => {
         detailedInfo: districtForm.detailedInfo || undefined,
         imageUrl: districtForm.imageUrl || undefined,
         videoUrl: districtForm.videoUrl || undefined,
+        reelUrl: districtForm.reelUrl || undefined,
       };
       await upsertDistrict(district);
       setDistricts(prev => editingDistrictId ? prev.map(d => d.id === id ? district : d) : [district, ...prev]);
@@ -404,7 +412,7 @@ const Admin = () => {
 
   const editDistrict = (d: District) => {
     setEditingDistrictId(d.id);
-    setDistrictForm({ id: d.id, name: d.name, subtitle: d.subtitle ?? "", description: d.description ?? "", detailedInfo: d.detailedInfo ?? "", imageUrl: d.imageUrl ?? "", videoUrl: d.videoUrl ?? "", regionId: d.regionId });
+    setDistrictForm({ id: d.id, name: d.name, subtitle: d.subtitle ?? "", description: d.description ?? "", detailedInfo: d.detailedInfo ?? "", imageUrl: d.imageUrl ?? "", videoUrl: d.videoUrl ?? "", reelUrl: d.reelUrl ?? "", regionId: d.regionId });
   };
 
   const handleDeleteDistrict = async (id: string) => {
@@ -438,6 +446,7 @@ const Admin = () => {
         detailedInfo: cityForm.detailedInfo || undefined,
         imageUrl: cityForm.imageUrl || undefined,
         videoUrl: cityForm.videoUrl || undefined,
+        reelUrl: cityForm.reelUrl || undefined,
         weatherCityName: cityForm.weatherCityName || undefined,
       };
       await upsertCity(city);
@@ -454,7 +463,7 @@ const Admin = () => {
 
   const editCity = (c: City) => {
     setEditingCityId(c.id);
-    setCityForm({ id: c.id, name: c.name, subtitle: c.subtitle ?? "", description: c.description ?? "", detailedInfo: c.detailedInfo ?? "", imageUrl: c.imageUrl ?? "", videoUrl: c.videoUrl ?? "", districtId: c.districtId, weatherCityName: c.weatherCityName ?? "" });
+    setCityForm({ id: c.id, name: c.name, subtitle: c.subtitle ?? "", description: c.description ?? "", detailedInfo: c.detailedInfo ?? "", imageUrl: c.imageUrl ?? "", videoUrl: c.videoUrl ?? "", reelUrl: c.reelUrl ?? "", districtId: c.districtId, weatherCityName: c.weatherCityName ?? "" });
   };
 
   const handleDeleteCity = async (id: string) => {
@@ -490,6 +499,7 @@ const Admin = () => {
         detailedInfo: placeForm.detailedInfo || undefined,
         imageUrl: placeForm.imageUrl || undefined,
         videoUrl: placeForm.videoUrl || undefined,
+        reelUrl: placeForm.reelUrl || undefined,
         mapUrl: placeForm.mapUrl || undefined,
         address: placeForm.address || undefined,
         phone: placeForm.phone || undefined,
@@ -513,7 +523,7 @@ const Admin = () => {
 
   const editPlace = (p: TourismObject) => {
     setEditingPlaceId(p.id);
-    setPlaceForm({ id: p.id, slug: p.slug, name: p.name, subtitle: p.subtitle ?? "", description: p.description ?? "", detailedInfo: p.detailedInfo ?? "", imageUrl: p.imageUrl ?? "", videoUrl: p.videoUrl ?? "", cityId: p.cityId, type: p.type, mapUrl: p.mapUrl ?? "", address: p.address ?? "", phone: p.phone ?? "", website: p.website ?? "", eventDates: p.eventDates ?? "", hours: p.hours ?? "", amenities: p.amenities ?? "", published: p.published, tourismTypes: p.tourismTypes ?? [] });
+    setPlaceForm({ id: p.id, slug: p.slug, name: p.name, subtitle: p.subtitle ?? "", description: p.description ?? "", detailedInfo: p.detailedInfo ?? "", imageUrl: p.imageUrl ?? "", videoUrl: p.videoUrl ?? "", reelUrl: p.reelUrl ?? "", cityId: p.cityId, type: p.type, mapUrl: p.mapUrl ?? "", address: p.address ?? "", phone: p.phone ?? "", website: p.website ?? "", eventDates: p.eventDates ?? "", hours: p.hours ?? "", amenities: p.amenities ?? "", published: p.published, tourismTypes: p.tourismTypes ?? [] });
   };
 
   const handleDeletePlace = async (id: string) => {
@@ -548,6 +558,7 @@ const Admin = () => {
   ];
 
   return (
+    <AdminLoginGate>
     <div className="min-h-screen bg-[#fff2e8] text-[#002f5e]">
       {/* Toast */}
       {toast && (
@@ -582,6 +593,16 @@ const Admin = () => {
               >
                 {loading ? "Оновлення..." : "Оновити"}
               </button>
+              {hasSupabaseConfig && supabase && (
+                <button
+                  type="button"
+                  onClick={() => void supabase.auth.signOut()}
+                  className="flex items-center gap-1.5 rounded-xl border border-[#002f5e]/15 bg-white px-3 py-1.5 text-[13px] font-medium text-[#002f5e]/50 transition hover:bg-[#9f1f47]/8 hover:text-[#9f1f47] hover:border-[#9f1f47]/20"
+                  title="Вийти"
+                >
+                  <LogOut className="h-3.5 w-3.5" />
+                </button>
+              )}
             </div>
           </div>
         </header>
@@ -716,15 +737,15 @@ const Admin = () => {
                       <FieldGroup label="Підзаголовок">
                         <Input value={districtForm.subtitle} onChange={v => setDistrictForm(p => ({ ...p, subtitle: v }))} placeholder="Короткий підзаголовок" />
                       </FieldGroup>
-                      <FieldGroup label="Опис">
-                        <Textarea value={districtForm.description} onChange={v => setDistrictForm(p => ({ ...p, description: v }))} placeholder="Загальний опис району..." />
-                      </FieldGroup>
-                      <FieldGroup label="Детальна інформація">
-                        <Textarea value={districtForm.detailedInfo} onChange={v => setDistrictForm(p => ({ ...p, detailedInfo: v }))} rows={4} placeholder="Розширена інформація, історія, факти..." />
-                      </FieldGroup>
+                      <div><span className="mb-1 block text-[13px] font-medium text-[#002f5e]/70 uppercase tracking-wide">Опис</span>
+                        <RichTextEditor value={districtForm.description} onChange={v => setDistrictForm(p => ({ ...p, description: v }))} />
+                      </div>
+                      <div><span className="mb-1 block text-[13px] font-medium text-[#002f5e]/70 uppercase tracking-wide">Детальна інформація</span>
+                        <RichTextEditor value={districtForm.detailedInfo} onChange={v => setDistrictForm(p => ({ ...p, detailedInfo: v }))} />
+                      </div>
                       <MediaGroup
-                        imageUrl={districtForm.imageUrl} videoUrl={districtForm.videoUrl}
-                        onImage={v => setDistrictForm(p => ({ ...p, imageUrl: v }))} onVideo={v => setDistrictForm(p => ({ ...p, videoUrl: v }))}
+                        imageUrl={districtForm.imageUrl} videoUrl={districtForm.videoUrl} reelUrl={districtForm.reelUrl}
+                        onImage={v => setDistrictForm(p => ({ ...p, imageUrl: v }))} onVideo={v => setDistrictForm(p => ({ ...p, videoUrl: v }))} onReel={v => setDistrictForm(p => ({ ...p, reelUrl: v }))}
                       />
                       <div className="flex items-center justify-between pt-2">
                         <SaveBtn saving={saving} label={editingDistrictId ? "Оновити район" : "Створити район"} />
@@ -794,15 +815,15 @@ const Admin = () => {
                       <FieldGroup label="Підзаголовок">
                         <Input value={cityForm.subtitle} onChange={v => setCityForm(p => ({ ...p, subtitle: v }))} placeholder="Короткий підзаголовок" />
                       </FieldGroup>
-                      <FieldGroup label="Опис">
-                        <Textarea value={cityForm.description} onChange={v => setCityForm(p => ({ ...p, description: v }))} placeholder="Загальний опис міста..." />
-                      </FieldGroup>
-                      <FieldGroup label="Детальна інформація">
-                        <Textarea value={cityForm.detailedInfo} onChange={v => setCityForm(p => ({ ...p, detailedInfo: v }))} rows={4} placeholder="Розширена інформація, пам'ятки, факти..." />
-                      </FieldGroup>
+                      <div><span className="mb-1 block text-[13px] font-medium text-[#002f5e]/70 uppercase tracking-wide">Опис</span>
+                        <RichTextEditor value={cityForm.description} onChange={v => setCityForm(p => ({ ...p, description: v }))} />
+                      </div>
+                      <div><span className="mb-1 block text-[13px] font-medium text-[#002f5e]/70 uppercase tracking-wide">Детальна інформація</span>
+                        <RichTextEditor value={cityForm.detailedInfo} onChange={v => setCityForm(p => ({ ...p, detailedInfo: v }))} />
+                      </div>
                       <MediaGroup
-                        imageUrl={cityForm.imageUrl} videoUrl={cityForm.videoUrl}
-                        onImage={v => setCityForm(p => ({ ...p, imageUrl: v }))} onVideo={v => setCityForm(p => ({ ...p, videoUrl: v }))}
+                        imageUrl={cityForm.imageUrl} videoUrl={cityForm.videoUrl} reelUrl={cityForm.reelUrl}
+                        onImage={v => setCityForm(p => ({ ...p, imageUrl: v }))} onVideo={v => setCityForm(p => ({ ...p, videoUrl: v }))} onReel={v => setCityForm(p => ({ ...p, reelUrl: v }))}
                       />
                       <FieldGroup label={<>WeatherName <span className="normal-case text-[11px] text-[#002f5e]/40 font-normal">(необов&apos;язково — англ. назва для OpenWeather, напр. &ldquo;Odessa&rdquo;)</span></>}>
                         <Input value={cityForm.weatherCityName} onChange={v => setCityForm(p => ({ ...p, weatherCityName: v }))} placeholder="напр. Odessa, Bolhrad..." />
@@ -905,12 +926,12 @@ const Admin = () => {
                       <FieldGroup label="Підзаголовок">
                         <Input value={placeForm.subtitle} onChange={v => setPlaceForm(p => ({ ...p, subtitle: v }))} placeholder="Короткий підзаголовок" />
                       </FieldGroup>
-                      <FieldGroup label="Опис">
-                        <Textarea value={placeForm.description} onChange={v => setPlaceForm(p => ({ ...p, description: v }))} placeholder="Загальний опис..." />
-                      </FieldGroup>
-                      <FieldGroup label="Детальна інформація">
-                        <Textarea value={placeForm.detailedInfo} onChange={v => setPlaceForm(p => ({ ...p, detailedInfo: v }))} rows={4} placeholder="Розширена інформація..." />
-                      </FieldGroup>
+                      <div><span className="mb-1 block text-[13px] font-medium text-[#002f5e]/70 uppercase tracking-wide">Опис</span>
+                        <RichTextEditor value={placeForm.description} onChange={v => setPlaceForm(p => ({ ...p, description: v }))} />
+                      </div>
+                      <div><span className="mb-1 block text-[13px] font-medium text-[#002f5e]/70 uppercase tracking-wide">Детальна інформація</span>
+                        <RichTextEditor value={placeForm.detailedInfo} onChange={v => setPlaceForm(p => ({ ...p, detailedInfo: v }))} />
+                      </div>
 
                       {/* Type-specific fields */}
                       {(placeForm.type === "attraction" || placeForm.type === "event" || placeForm.type === "hotel" || placeForm.type === "restaurant") && (
@@ -941,8 +962,8 @@ const Admin = () => {
                       )}
 
                       <MediaGroup
-                        imageUrl={placeForm.imageUrl} videoUrl={placeForm.videoUrl}
-                        onImage={v => setPlaceForm(p => ({ ...p, imageUrl: v }))} onVideo={v => setPlaceForm(p => ({ ...p, videoUrl: v }))}
+                        imageUrl={placeForm.imageUrl} videoUrl={placeForm.videoUrl} reelUrl={placeForm.reelUrl}
+                        onImage={v => setPlaceForm(p => ({ ...p, imageUrl: v }))} onVideo={v => setPlaceForm(p => ({ ...p, videoUrl: v }))} onReel={v => setPlaceForm(p => ({ ...p, reelUrl: v }))}
                       />
 
                       {/* Тип туризму */}
@@ -1140,6 +1161,7 @@ const Admin = () => {
         </div>
       </div>
     </div>
+    </AdminLoginGate>
   );
 };
 

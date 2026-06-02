@@ -26,7 +26,7 @@ const socialLinks = [
   { label: "TikTok", href: "https://www.tiktok.com/@odesa.travel", Icon: TikTokIcon },
   {
     label: "Facebook",
-    href: "https://www.facebook.com/profile.php?id=61573965222850&mibextid=wwXIfr&rdid=bBZVa5vEkPiFA5UM&share_url=https%3A%2F%2Fwww.facebook.com%2Fshare%2F1Eupy1CSJE%2F%3Fmibextid%3DwwXIfr%26utm_source%3Dig%26utm_medium%3Dsocial%26utm_content%3Dlink_in_bio#",
+    href: "https://www.facebook.com/share/1BMayDdZLc/",
     Icon: Facebook,
   },
 ];

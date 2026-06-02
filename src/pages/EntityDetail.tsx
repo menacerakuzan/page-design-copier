@@ -647,6 +647,18 @@ const EntityDetail = ({ type }: { type: PageType }) => {
       {/* ══════════════════  DYNAMIC SECTIONS  ══════════════════════════ */}
       {activeSections.map(renderSection)}
 
+      {/* ══════════════════  REEL / VERTICAL VIDEO  ═════════════════════ */}
+      {object.reelUrl && (
+        <section className="px-4 py-16 md:px-10" style={{ backgroundColor: BG }}>
+          <div className="mx-auto max-w-[1400px] flex flex-col items-center">
+            <p className="mb-6 text-[12px] uppercase tracking-[0.3em] font-odesa-medium" style={{ color: m.accent }}>відео</p>
+            <div className="w-full max-w-[380px] overflow-hidden rounded-[28px] shadow-2xl" style={{ aspectRatio: "9/16" }}>
+              <video src={object.reelUrl} autoPlay muted loop playsInline className="h-full w-full object-cover" />
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* ══════════════════  FULL-BLEED IMAGE STRIP  ════════════════════ */}
       <section className="relative h-[50vh] min-h-[320px] overflow-hidden md:h-[60vh]">
         <img src={heroImage} alt={object.name} className="h-full w-full object-cover" />

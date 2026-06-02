@@ -16,6 +16,7 @@ export type District = {
   detailedInfo?: string;
   imageUrl?: string;
   videoUrl?: string;
+  reelUrl?: string;
 };
 
 export type City = {
@@ -30,6 +31,7 @@ export type City = {
   detailedInfo?: string;
   imageUrl?: string;
   videoUrl?: string;
+  reelUrl?: string;
 };
 
 export type TourismObjectType = "event" | "hotel" | "restaurant" | "attraction";
@@ -55,4 +57,5 @@ export type TourismObject = {
   hours?: string;
   amenities?: string;
   tourismTypes?: string[];
+  reelUrl?: string;
 };

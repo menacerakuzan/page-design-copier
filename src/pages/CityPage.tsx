@@ -359,6 +359,17 @@ const CityPage = () => {
       {/* ══════════════════  DYNAMIC SECTIONS  ══════════════════════════ */}
       {activeSections.map(renderSection)}
 
+      {city.reelUrl && (
+        <section className="px-4 py-16 md:px-10" style={{ backgroundColor: "#002f5e" }}>
+          <div className="mx-auto max-w-[1400px] flex flex-col items-center">
+            <p className="mb-6 text-[12px] uppercase tracking-[0.3em] font-odesa-medium text-[#df9b3b]">відео</p>
+            <div className="w-full max-w-[380px] overflow-hidden rounded-[28px] shadow-2xl" style={{ aspectRatio: "9/16" }}>
+              <video src={city.reelUrl} autoPlay muted loop playsInline className="h-full w-full object-cover" />
+            </div>
+          </div>
+        </section>
+      )}
+
       <SiteFooter />
     </div>
   );

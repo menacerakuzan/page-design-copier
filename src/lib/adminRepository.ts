@@ -92,6 +92,7 @@ const mapDbObject = (row: any): TourismObject => ({
   hours: row.hours ?? undefined,
   amenities: row.amenities ?? undefined,
   tourismTypes: row.tourism_types ?? [],
+  reelUrl: row.reel_url ?? undefined,
 });
 
 const mapDbDistrict = (row: any): District => ({
@@ -104,6 +105,7 @@ const mapDbDistrict = (row: any): District => ({
   detailedInfo: row.detailed_info ?? undefined,
   imageUrl: row.image_url ?? undefined,
   videoUrl: row.video_url ?? undefined,
+  reelUrl: row.reel_url ?? undefined,
 });
 
 const mapDbCity = (row: any): City => ({
@@ -116,6 +118,7 @@ const mapDbCity = (row: any): City => ({
   detailedInfo: row.detailed_info ?? undefined,
   imageUrl: row.image_url ?? undefined,
   videoUrl: row.video_url ?? undefined,
+  reelUrl: row.reel_url ?? undefined,
 });
 
 const toDbObject = (obj: TourismObject) => ({
@@ -131,6 +134,7 @@ const toDbObject = (obj: TourismObject) => ({
   detailed_info: obj.detailedInfo ?? null,
   image_url: obj.imageUrl ?? null,
   video_url: obj.videoUrl ?? null,
+  reel_url: obj.reelUrl ?? null,
   map_url: obj.mapUrl ?? null,
   address: obj.address ?? null,
   phone: obj.phone ?? null,
@@ -446,6 +450,7 @@ export async function insertDistrict(district: District) {
     detailed_info: district.detailedInfo ?? null,
     image_url: district.imageUrl ?? null,
     video_url: district.videoUrl ?? null,
+    reel_url: district.reelUrl ?? null,
   };
   const { error } = await supabase.from(tableNames.districts).upsert(dbDistrict);
   if (error) throw error;
@@ -472,6 +477,7 @@ export async function upsertDistrict(district: District) {
     detailed_info: district.detailedInfo ?? null,
     image_url: district.imageUrl ?? null,
     video_url: district.videoUrl ?? null,
+    reel_url: district.reelUrl ?? null,
   };
   const { error } = await supabase.from(tableNames.districts).upsert(dbDistrict);
   if (error) throw error;
@@ -497,6 +503,7 @@ export async function insertCity(city: City) {
     detailed_info: city.detailedInfo ?? null,
     image_url: city.imageUrl ?? null,
     video_url: city.videoUrl ?? null,
+    reel_url: city.reelUrl ?? null,
   };
   const { error } = await supabase.from(tableNames.cities).upsert(dbCity);
   if (error) throw error;
@@ -523,6 +530,7 @@ export async function upsertCity(city: City) {
     detailed_info: city.detailedInfo ?? null,
     image_url: city.imageUrl ?? null,
     video_url: city.videoUrl ?? null,
+    reel_url: city.reelUrl ?? null,
   };
   const { error } = await supabase.from(tableNames.cities).upsert(dbCity);
   if (error) throw error;
