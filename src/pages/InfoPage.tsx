@@ -125,7 +125,7 @@ export default function InfoPage() {
               onClick={() => setActiveArticle(null)} />
             <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 30 }}
               transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-              className="fixed bottom-0 left-1/2 top-8 z-50 w-[calc(100%-2rem)] max-w-[900px] -translate-x-1/2 overflow-y-auto rounded-t-[32px] bg-[#fff2e8]">
+              className="fixed inset-x-0 bottom-0 top-8 z-50 mx-auto w-full max-w-[900px] overflow-y-auto rounded-t-[32px] bg-[#fff2e8]">
               <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[#002f5e]/10 bg-[#fff2e8] px-6 py-4">
                 <p className="text-[13px] uppercase tracking-[0.2em] font-odesa-medium text-[#002f5e]/40">Стаття</p>
                 <button type="button" onClick={() => setActiveArticle(null)}
