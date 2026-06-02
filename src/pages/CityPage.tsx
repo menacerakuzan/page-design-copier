@@ -129,20 +129,33 @@ const CityPage = () => {
         return (
           <section key={section.id} className="px-4 py-20 md:px-10" style={{ backgroundColor: bg }}>
             <div className="mx-auto max-w-[1400px]">
-              <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.7 }}>
-                <h2 className="font-odesa-medium text-[44px] leading-none text-[#002f5e] md:text-[68px]">
-                  {section.title}
-                </h2>
-                <p className="mt-6 max-w-[860px] text-[20px] leading-[1.55] font-odesa-regular text-[#002f5e]/75 md:text-[26px]">
-                  {city.description}
-                </p>
-                {city.detailedInfo && (
-                  <p className="mt-6 max-w-[860px] text-[17px] leading-[1.65] font-odesa-regular text-[#002f5e]/55 md:text-[20px]">
-                    {city.detailedInfo}
-                  </p>
+              <div className="flex flex-col gap-10 lg:flex-row lg:items-start lg:gap-16">
+                {city.reelUrl && (
+                  <motion.div initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.7 }}
+                    className="w-full max-w-[320px] shrink-0 self-start mx-auto lg:mx-0">
+                    <div className="relative overflow-hidden rounded-[24px] shadow-xl" style={{ aspectRatio: "9/16" }}>
+                      <video ref={el => { if (el) el.muted = true; }} src={city.reelUrl} autoPlay loop playsInline className="h-full w-full object-cover"
+                        onClick={e => { const v = e.currentTarget; v.muted = !v.muted; }} />
+                      <div className="absolute bottom-3 right-3 pointer-events-none">
+                        <span className="rounded-full bg-black/40 px-2 py-1 text-[11px] text-white/70 backdrop-blur-sm">натисни для звуку</span>
+                      </div>
+                    </div>
+                  </motion.div>
                 )}
-              </motion.div>
+                <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.7 }} className="flex-1">
+                  <h2 className="font-odesa-medium text-[44px] leading-none text-[#002f5e] md:text-[68px]">
+                    {section.title}
+                  </h2>
+                  <div className="mt-6 text-[20px] leading-[1.55] font-odesa-regular text-[#002f5e]/75 md:text-[26px] article-content"
+                    dangerouslySetInnerHTML={{ __html: city.description }} />
+                  {city.detailedInfo && (
+                    <div className="mt-6 text-[17px] leading-[1.65] font-odesa-regular text-[#002f5e]/55 md:text-[20px] article-content"
+                      dangerouslySetInnerHTML={{ __html: city.detailedInfo }} />
+                  )}
+                </motion.div>
+              </div>
             </div>
           </section>
         );
@@ -358,17 +371,6 @@ const CityPage = () => {
 
       {/* ══════════════════  DYNAMIC SECTIONS  ══════════════════════════ */}
       {activeSections.map(renderSection)}
-
-      {city.reelUrl && (
-        <section className="px-4 py-16 md:px-10" style={{ backgroundColor: "#002f5e" }}>
-          <div className="mx-auto max-w-[1400px] flex flex-col items-center">
-            <p className="mb-6 text-[12px] uppercase tracking-[0.3em] font-odesa-medium text-[#df9b3b]">відео</p>
-            <div className="w-full max-w-[380px] overflow-hidden rounded-[28px] shadow-2xl" style={{ aspectRatio: "9/16" }}>
-              <video src={city.reelUrl} autoPlay muted loop playsInline className="h-full w-full object-cover" />
-            </div>
-          </div>
-        </section>
-      )}
 
       <SiteFooter />
     </div>

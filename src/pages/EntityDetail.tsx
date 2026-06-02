@@ -184,11 +184,18 @@ const EntityDetail = ({ type }: { type: PageType }) => {
               <div className="mt-12 grid gap-10 lg:grid-cols-[1fr_380px] xl:grid-cols-[1fr_420px]">
                 <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.7, delay: 0.05 }}>
-                  <p className="text-[20px] leading-[1.55] font-odesa-regular md:text-[28px]"
-                    style={{ color: `${textColor}e6` }}>{description}</p>
+                  <div className="text-[20px] leading-[1.55] font-odesa-regular md:text-[28px] article-content"
+                    style={{ color: `${textColor}e6` }} dangerouslySetInnerHTML={{ __html: description }} />
                   {object.detailedInfo && (
-                    <p className="mt-6 text-[17px] leading-[1.65] font-odesa-regular md:text-[20px]"
-                      style={{ color: `${textColor}88` }}>{object.detailedInfo}</p>
+                    <div className="mt-6 text-[17px] leading-[1.65] font-odesa-regular md:text-[20px] article-content"
+                      style={{ color: `${textColor}88` }} dangerouslySetInnerHTML={{ __html: object.detailedInfo }} />
+                  )}
+                  {object.reelUrl && (
+                    <div className="mt-8 w-full max-w-[200px]">
+                      <div className="overflow-hidden rounded-[20px] shadow-xl" style={{ aspectRatio: "9/16" }}>
+                        <video src={object.reelUrl} autoPlay muted loop playsInline className="h-full w-full object-cover" />
+                      </div>
+                    </div>
                   )}
                   {tourismTypes.length > 0 && (
                     <div className="mt-8 flex flex-wrap gap-2">
@@ -646,18 +653,6 @@ const EntityDetail = ({ type }: { type: PageType }) => {
 
       {/* ══════════════════  DYNAMIC SECTIONS  ══════════════════════════ */}
       {activeSections.map(renderSection)}
-
-      {/* ══════════════════  REEL / VERTICAL VIDEO  ═════════════════════ */}
-      {object.reelUrl && (
-        <section className="px-4 py-16 md:px-10" style={{ backgroundColor: BG }}>
-          <div className="mx-auto max-w-[1400px] flex flex-col items-center">
-            <p className="mb-6 text-[12px] uppercase tracking-[0.3em] font-odesa-medium" style={{ color: m.accent }}>відео</p>
-            <div className="w-full max-w-[380px] overflow-hidden rounded-[28px] shadow-2xl" style={{ aspectRatio: "9/16" }}>
-              <video src={object.reelUrl} autoPlay muted loop playsInline className="h-full w-full object-cover" />
-            </div>
-          </div>
-        </section>
-      )}
 
       {/* ══════════════════  FULL-BLEED IMAGE STRIP  ════════════════════ */}
       <section className="relative h-[50vh] min-h-[320px] overflow-hidden md:h-[60vh]">

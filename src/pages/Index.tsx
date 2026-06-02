@@ -224,7 +224,7 @@ const Index = () => {
                 ))}
               </nav>
 
-              <h1 className="px-2 text-center text-[42px] leading-[0.95] tracking-[0.04em] font-odesa-regular font-odesa-ss02">
+              <h1 className="px-2 text-center text-[42px] leading-[0.95] tracking-[0.04em] font-odesa-medium font-odesa-ss02">
                 ОДЕЩИНА
               </h1>
 

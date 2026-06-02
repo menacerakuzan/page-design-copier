@@ -1,6 +1,7 @@
 @font-face {
   font-family: "Odesa Region Type";
   src: url("./assets/fonts/OdesaRegionType-Regular.woff2") format("woff2"),
+       url("./assets/fonts/OdesaRegionType-Regular.woff") format("woff"),
        url("./assets/fonts/OdesaRegionType-Regular.otf") format("opentype");
   font-style: normal;
   font-weight: 400;
@@ -10,6 +11,7 @@
 @font-face {
   font-family: "Odesa Region Type";
   src: url("./assets/fonts/OdesaRegionType-Medium.woff2") format("woff2"),
+       url("./assets/fonts/OdesaRegionType-Medium.woff") format("woff"),
        url("./assets/fonts/OdesaRegionType-Medium.otf") format("opentype");
   font-style: normal;
   font-weight: 500;
@@ -19,6 +21,7 @@
 @font-face {
   font-family: "Odesa Region Type";
   src: url("./assets/fonts/OdesaRegionType-Semi.woff2") format("woff2"),
+       url("./assets/fonts/OdesaRegionType-Semi.woff") format("woff"),
        url("./assets/fonts/OdesaRegionType-Semi.otf") format("opentype");
   font-style: normal;
   font-weight: 600;
@@ -28,6 +31,7 @@
 @font-face {
   font-family: "Odesa Region Type";
   src: url("./assets/fonts/OdesaRegionType-Bold.woff2") format("woff2"),
+       url("./assets/fonts/OdesaRegionType-Bold.woff") format("woff"),
        url("./assets/fonts/OdesaRegionType-Bold.otf") format("opentype");
   font-style: normal;
   font-weight: 700;
@@ -37,6 +41,7 @@
 @font-face {
   font-family: "Odesa Region Type";
   src: url("./assets/fonts/OdesaRegionType-Heavy.woff2") format("woff2"),
+       url("./assets/fonts/OdesaRegionType-Heavy.woff") format("woff"),
        url("./assets/fonts/OdesaRegionType-Heavy.otf") format("opentype");
   font-style: normal;
   font-weight: 800;
@@ -48,6 +53,13 @@
 @tailwind utilities;
 
 @layer base {
+  * {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+
   :root {
     --background: 213 100% 18%;
     --foreground: 28 100% 95%;
