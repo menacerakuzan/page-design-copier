@@ -332,11 +332,13 @@ const Admin = () => {
     try {
       const id = editingDistrictId ?? `district-${uid()}`;
       const existingDistrict = districts.find(d => d.id === id);
+      const baseSlug = slugify(districtForm.name);
+      const slugExists = !existingDistrict && districts.some(d => d.slug === baseSlug);
       const district: District = {
         id,
         regionId: districtForm.regionId || defaultRegionId,
         name: districtForm.name.trim(),
-        slug: existingDistrict?.slug ?? slugify(districtForm.name),
+        slug: existingDistrict?.slug ?? (slugExists ? `${baseSlug}-${uid().slice(0, 4)}` : baseSlug),
         subtitle: districtForm.subtitle || undefined,
         description: districtForm.description || undefined,
         detailedInfo: districtForm.detailedInfo || undefined,
@@ -379,11 +381,13 @@ const Admin = () => {
     try {
       const id = editingCityId ?? `city-${uid()}`;
       const existingCity = cities.find(c => c.id === id);
+      const baseCitySlug = slugify(cityForm.name);
+      const citySlugExists = !existingCity && cities.some(c => c.slug === baseCitySlug);
       const city: City = {
         id,
         districtId: cityForm.districtId,
         name: cityForm.name.trim(),
-        slug: existingCity?.slug ?? slugify(cityForm.name),
+        slug: existingCity?.slug ?? (citySlugExists ? `${baseCitySlug}-${uid().slice(0, 4)}` : baseCitySlug),
         subtitle: cityForm.subtitle || undefined,
         description: cityForm.description || undefined,
         detailedInfo: cityForm.detailedInfo || undefined,
