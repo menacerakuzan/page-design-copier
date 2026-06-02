@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { CheckCircle2, MapPin, Building2, Landmark, Plus, Trash2, Settings2, AlertCircle, Upload, Link, LayoutDashboard } from "lucide-react";
+import { CheckCircle2, MapPin, Building2, Landmark, Plus, Trash2, Settings2, AlertCircle, Upload, Link, LayoutDashboard, FileStack, Calendar, UtensilsCrossed, BedDouble, ChevronRight } from "lucide-react";
 import BackButton from "@/components/BackButton";
 import { regions as seedRegions, districts as seedDistricts, cities as seedCities, tourismObjects as seedObjects } from "@/data/hierarchyMockData";
 import { District, City, Region, TourismObject, TourismObjectType } from "@/types/hierarchy";
@@ -7,6 +7,7 @@ import { ContentCardEntity } from "@/types/cms";
 import { hasSupabaseConfig, supabase } from "@/lib/supabaseClient";
 import { loadHierarchySnapshot, upsertDistrict, upsertCity, upsertTourismObject, deleteDistrict, deleteCity, deleteTourismObject } from "@/lib/adminRepository";
 import AdminConstructor from "./AdminConstructor";
+import AdminPageEditor from "./AdminPageEditor";
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
@@ -17,7 +18,11 @@ const slugify = (s: string) =>
 
 const uid = () => Math.random().toString(36).slice(2, 10);
 
-type AdminSection = "districts" | "cities" | "places" | "constructor";
+type AdminSection =
+  | "districts" | "cities" | "places" | "constructor"
+  | "pages-district" | "pages-city" | "pages-place";
+
+type PlacePageType = TourismObjectType;
 
 const TOURISM_TYPES = [
   "Гастрономічний туризм",
@@ -253,6 +258,7 @@ const EntityCard = ({ title, subtitle, imageUrl, onDelete, onEdit, badge, isEdit
 
 const Admin = () => {
   const [section, setSection] = useState<AdminSection>("districts");
+  const [placePageType, setPlacePageType] = useState<PlacePageType>("attraction");
   const [regions, setRegions] = useState<Region[]>(seedRegions);
   const [districts, setDistricts] = useState<District[]>(seedDistricts);
   const [cities, setCities] = useState<City[]>(seedCities);
@@ -458,6 +464,19 @@ const Admin = () => {
   ];
   const constructorItem = { id: "constructor" as AdminSection, label: "Конструктор", icon: <LayoutDashboard className="h-5 w-5" />, count: contentCards.filter(c => c.pageKey === "index").length };
 
+  const pageNavItems: { id: AdminSection; label: string; icon: React.ReactNode }[] = [
+    { id: "pages-district", label: "Район",  icon: <MapPin className="h-4 w-4" /> },
+    { id: "pages-city",     label: "Місто",  icon: <Building2 className="h-4 w-4" /> },
+    { id: "pages-place",    label: "Місце",  icon: <Landmark className="h-4 w-4" /> },
+  ];
+
+  const PLACE_PAGE_TYPES: { value: PlacePageType; label: string; icon: React.ReactNode; color: string }[] = [
+    { value: "attraction", label: "Тур. об'єкт", icon: <Landmark className="h-4 w-4" />,         color: "#002f5e" },
+    { value: "event",      label: "Подія",        icon: <Calendar className="h-4 w-4" />,         color: "#9f1f47" },
+    { value: "restaurant", label: "Ресторан",     icon: <UtensilsCrossed className="h-4 w-4" />,  color: "#eea846" },
+    { value: "hotel",      label: "Готель",       icon: <BedDouble className="h-4 w-4" />,        color: "#17a358" },
+  ];
+
   return (
     <div className="min-h-screen bg-[#fff2e8] text-[#002f5e]">
       {/* Toast */}
@@ -542,6 +561,27 @@ const Admin = () => {
                     <span className={`ml-auto rounded-full px-2 py-0.5 text-[11px] font-semibold ${section === item.id ? "bg-white/20 text-white" : "bg-[#002f5e]/8 text-[#002f5e]/60"}`}>
                       {item.count}
                     </span>
+                  </button>
+                ))}
+              </nav>
+
+              <div className="my-3 h-px bg-[#002f5e]/10" />
+              <p className="mb-2 px-2 text-[11px] font-semibold uppercase tracking-widest text-[#002f5e]/40">Сторінки</p>
+              <nav className="flex flex-col gap-1">
+                {pageNavItems.map(item => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => setSection(item.id)}
+                    className={`flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-[14px] font-medium transition ${
+                      section === item.id
+                        ? "bg-[#002f5e] text-[#fff2e8]"
+                        : "text-[#002f5e]/70 hover:bg-[#002f5e]/8 hover:text-[#002f5e]"
+                    }`}
+                  >
+                    {item.icon}
+                    {item.label}
+                    <ChevronRight className={`ml-auto h-3.5 w-3.5 ${section === item.id ? "text-[#fff2e8]/50" : "text-[#002f5e]/25"}`} />
                   </button>
                 ))}
               </nav>
@@ -910,6 +950,100 @@ const Admin = () => {
                 onCardsChange={setContentCards}
                 showToast={showToast}
               />
+            )}
+
+            {/* ── PAGES: DISTRICT ── */}
+            {section === "pages-district" && (
+              <div className="flex flex-1 min-w-0 flex-col">
+                <div className="mb-4 flex items-center gap-2">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#002f5e]/8">
+                    <MapPin className="h-4 w-4 text-[#002f5e]" />
+                  </div>
+                  <div>
+                    <h2 className="text-[18px] font-semibold text-[#002f5e]">Сторінки районів</h2>
+                    <p className="text-[12px] text-[#002f5e]/45">Налаштуйте блоки та розділи для сторінок районів</p>
+                  </div>
+                </div>
+                <div className="flex-1 min-h-0">
+                  <AdminPageEditor
+                    entityType="district"
+                    districts={districts}
+                    cities={cities}
+                    places={places}
+                    showToast={showToast}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* ── PAGES: CITY ── */}
+            {section === "pages-city" && (
+              <div className="flex flex-1 min-w-0 flex-col">
+                <div className="mb-4 flex items-center gap-2">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#002f5e]/8">
+                    <Building2 className="h-4 w-4 text-[#002f5e]" />
+                  </div>
+                  <div>
+                    <h2 className="text-[18px] font-semibold text-[#002f5e]">Сторінки міст</h2>
+                    <p className="text-[12px] text-[#002f5e]/45">Налаштуйте блоки та розділи для сторінок міст</p>
+                  </div>
+                </div>
+                <div className="flex-1 min-h-0">
+                  <AdminPageEditor
+                    entityType="city"
+                    districts={districts}
+                    cities={cities}
+                    places={places}
+                    showToast={showToast}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* ── PAGES: PLACE ── */}
+            {section === "pages-place" && (
+              <div className="flex flex-1 min-w-0 flex-col">
+                <div className="mb-4 flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#002f5e]/8">
+                      <Landmark className="h-4 w-4 text-[#002f5e]" />
+                    </div>
+                    <div>
+                      <h2 className="text-[18px] font-semibold text-[#002f5e]">Сторінки місць</h2>
+                      <p className="text-[12px] text-[#002f5e]/45">Налаштуйте блоки для кожного типу місця</p>
+                    </div>
+                  </div>
+                  {/* Sub-type tabs */}
+                  <div className="flex items-center gap-1 rounded-xl border border-[#002f5e]/12 bg-white/50 p-1">
+                    {PLACE_PAGE_TYPES.map(pt => (
+                      <button
+                        key={pt.value}
+                        type="button"
+                        onClick={() => setPlacePageType(pt.value)}
+                        className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[13px] font-medium transition ${
+                          placePageType === pt.value
+                            ? "text-white"
+                            : "text-[#002f5e]/60 hover:bg-[#002f5e]/8 hover:text-[#002f5e]"
+                        }`}
+                        style={placePageType === pt.value ? { backgroundColor: pt.color } : {}}
+                      >
+                        {pt.icon}
+                        {pt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="flex-1 min-h-0">
+                  <AdminPageEditor
+                    key={placePageType}
+                    entityType={placePageType}
+                    districts={districts}
+                    cities={cities}
+                    places={places.filter(p => p.type === placePageType)}
+                    showToast={showToast}
+                  />
+                </div>
+              </div>
             )}
 
           </main>

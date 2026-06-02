@@ -172,3 +172,28 @@ alter table public.tourism_objects add column if not exists event_dates text;
 alter table public.tourism_objects add column if not exists hours text;
 alter table public.tourism_objects add column if not exists amenities text;
 alter table public.tourism_objects add column if not exists tourism_types text[] default '{}';
+
+-- ─── Page section configs ──────────────────────────────────────────────────────
+-- Stores the section/block layout configuration for each entity page.
+-- entity_type: 'district' | 'city' | 'attraction' | 'event' | 'restaurant' | 'hotel'
+-- entity_id:   specific entity id, or 'default' for the template applied to all
+-- sections_json: JSON array of PageSection objects (see src/types/pages.ts)
+
+create table if not exists public.page_configs (
+  id text primary key,
+  entity_type text not null check (entity_type in ('district', 'city', 'attraction', 'event', 'restaurant', 'hotel')),
+  entity_id text not null,
+  sections_json jsonb not null default '[]'::jsonb,
+  updated_at timestamptz not null default now(),
+  constraint page_configs_entity_unique unique (entity_type, entity_id)
+);
+
+alter table public.page_configs enable row level security;
+
+drop policy if exists "public read page configs" on public.page_configs;
+create policy "public read page configs" on public.page_configs
+for select using (true);
+
+drop policy if exists "editor full page configs" on public.page_configs;
+create policy "editor full page configs" on public.page_configs
+for all using (true) with check (true);
