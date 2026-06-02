@@ -7,6 +7,8 @@ import Index from "./pages/Index";
 import CityPage from "./pages/CityPage";
 import DistrictPage from "./pages/DistrictPage";
 import EntityDetail from "./pages/EntityDetail";
+import TourismTypesPage from "./pages/TourismTypesPage";
+import InfoPage from "./pages/InfoPage";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
@@ -30,6 +32,8 @@ const App = () => (
         <Toaster />
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/types" element={<TourismTypesPage />} />
+          <Route path="/info" element={<InfoPage />} />
           <Route path="/napryamky/:citySlug" element={<CityPage />} />
           <Route path="/raion/:districtSlug" element={<DistrictPage />} />
           <Route path="/mistse/:slug" element={<EntityDetail type="attraction" />} />

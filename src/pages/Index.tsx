@@ -11,8 +11,8 @@ const navLeft = ["Райони", "Локації"];
 const navRight = ["Гіди", "Контакти"];
 
 const featureCards = [
-  { number: "01", first: "Види", second: "туризму" },
-  { number: "02", first: "Інформація", second: "" },
+  { number: "01", first: "Види", second: "туризму", href: "/types" },
+  { number: "02", first: "Інформація", second: "", href: "/info" },
 ];
 
 const TikTokIcon = ({ className = "h-6 w-6" }: { className?: string }) => (
@@ -50,6 +50,9 @@ const Index = () => {
   const { data: indexCardsData } = usePageContentCards("index");
   const sectionRefs = useRef<Array<HTMLElement | null>>([]);
   const destinationsScrollerRef = useRef<HTMLDivElement | null>(null);
+  const footerRef = useRef<HTMLElement | null>(null);
+
+  const scrollToFooter = () => footerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   const [activeAttraction, setActiveAttraction] = useState(0);
   const [eventsPage, setEventsPage] = useState(0);
 
@@ -228,7 +231,9 @@ const Index = () => {
               <nav className="flex items-center justify-center gap-4 text-[14px] leading-none md:justify-end font-odesa-medium">
                 <span className="text-[15px]">{star}</span>
                 {navRight.map((item, index) => (
-                  <a key={item} href="#" className="transition-opacity hover:opacity-75">
+                  <a key={item} href="#"
+                    onClick={item === "Контакти" ? (e) => { e.preventDefault(); scrollToFooter(); } : undefined}
+                    className="transition-opacity hover:opacity-75">
                     {item}
                     {index === 0 ? <span className="ml-4 text-[15px]">{star}</span> : null}
                   </a>
@@ -304,16 +309,24 @@ const Index = () => {
 
               <div className="grid grid-cols-1 items-end gap-6 md:absolute md:bottom-0 md:right-0 md:grid-cols-2 md:gap-8">
                 {featureCards.map((item) => (
-                  <article key={item.number} className="w-full max-w-[170px] text-left">
-                    <div className="flex items-end gap-2">
-                      <span className="text-[40px] leading-none font-odesa-regular">{item.number}</span>
-                      <div className="flex min-h-[44px] flex-col justify-end pb-[5px] text-[22px] leading-[0.95] font-odesa-medium">
+                  <Link key={item.number} to={item.href}
+                    className="group w-full max-w-[170px] text-left cursor-pointer"
+                    style={{ textDecoration: "none" }}>
+                    <div className="flex items-end gap-2 transition-colors duration-500"
+                      style={{ color: "inherit" }}>
+                      <span className="text-[40px] leading-none font-odesa-regular transition-colors duration-500 group-hover:text-[#df9b3b]"
+                        style={{ transitionProperty: "color" }}>
+                        {item.number}
+                      </span>
+                      <div className="flex min-h-[44px] flex-col justify-end pb-[5px] text-[22px] leading-[0.95] font-odesa-medium transition-colors duration-500 group-hover:text-[#df9b3b]">
                         <div>{item.first}</div>
                         {item.second ? <div>{item.second}</div> : null}
                       </div>
                     </div>
-                    <div className="mt-2 h-[6px] w-full bg-[#fff2e8]" />
-                  </article>
+                    <div className="relative mt-2 h-[6px] w-full overflow-hidden bg-[#fff2e8]/40">
+                      <div className="absolute inset-y-0 left-0 w-0 bg-[#df9b3b] transition-all duration-500 ease-in-out group-hover:w-full" />
+                    </div>
+                  </Link>
                 ))}
               </div>
             </div>
@@ -714,7 +727,9 @@ const Index = () => {
       </section>
 
       <div ref={setSectionRef(5)}>
-        <SiteFooter />
+        <div ref={el => { footerRef.current = el as HTMLElement | null; }}>
+          <SiteFooter />
+        </div>
       </div>
     </div>
   );

@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState } from "react";
-import { CheckCircle2, MapPin, Building2, Landmark, Plus, Trash2, Settings2, AlertCircle, Upload, Link, LayoutDashboard, FileStack, Calendar, UtensilsCrossed, BedDouble, ChevronRight } from "lucide-react";
+import { CheckCircle2, MapPin, Building2, Landmark, Plus, Trash2, Settings2, AlertCircle, Upload, Link, LayoutDashboard, Calendar, UtensilsCrossed, BedDouble, ChevronRight, Palmtree, Newspaper, Pencil, X } from "lucide-react";
 import BackButton from "@/components/BackButton";
 import { regions as seedRegions, districts as seedDistricts, cities as seedCities, tourismObjects as seedObjects } from "@/data/hierarchyMockData";
 import { District, City, Region, TourismObject, TourismObjectType } from "@/types/hierarchy";
 import { ContentCardEntity } from "@/types/cms";
 import { hasSupabaseConfig, supabase } from "@/lib/supabaseClient";
-import { loadHierarchySnapshot, upsertDistrict, upsertCity, upsertTourismObject, deleteDistrict, deleteCity, deleteTourismObject } from "@/lib/adminRepository";
+import { loadHierarchySnapshot, upsertDistrict, upsertCity, upsertTourismObject, deleteDistrict, deleteCity, deleteTourismObject, upsertContentCard, deleteContentCard, loadPublishedContentCards } from "@/lib/adminRepository";
 import AdminConstructor from "./AdminConstructor";
 import AdminPageEditor from "./AdminPageEditor";
+import RichTextEditor from "@/components/RichTextEditor";
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
@@ -28,6 +29,7 @@ const uid = () => Math.random().toString(36).slice(2, 10);
 
 type AdminSection =
   | "districts" | "cities" | "places" | "constructor"
+  | "tourism-types" | "articles"
   | "pages-district" | "pages-city" | "pages-place";
 
 type PlacePageType = TourismObjectType;
@@ -654,6 +656,24 @@ const Admin = () => {
                 ))}
               </nav>
 
+              <div className="my-3 h-px bg-[#002f5e]/10" />
+              <p className="mb-2 px-2 text-[11px] font-semibold uppercase tracking-widest text-[#002f5e]/40">Контент</p>
+              <nav className="flex flex-col gap-1">
+                {[
+                  { id: "tourism-types" as AdminSection, label: "Види туризму", icon: <Palmtree className="h-4 w-4" /> },
+                  { id: "articles" as AdminSection, label: "Статті", icon: <Newspaper className="h-4 w-4" /> },
+                ].map(item => (
+                  <button key={item.id} type="button" onClick={() => setSection(item.id)}
+                    className={`flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-[14px] font-medium transition ${
+                      section === item.id ? "bg-[#002f5e] text-[#fff2e8]" : "text-[#002f5e]/70 hover:bg-[#002f5e]/8 hover:text-[#002f5e]"
+                    }`}>
+                    {item.icon}
+                    {item.label}
+                    <ChevronRight className={`ml-auto h-3.5 w-3.5 ${section === item.id ? "text-[#fff2e8]/50" : "text-[#002f5e]/25"}`} />
+                  </button>
+                ))}
+              </nav>
+
               {!hasSupabaseConfig && (
                 <div className="mt-3 rounded-xl bg-amber-50 p-3 text-[11px] text-amber-700 leading-relaxed">
                   <strong>Local mode:</strong> зміни не зберігаються в базу даних. Додайте <code>VITE_SUPABASE_URL</code> та <code>VITE_SUPABASE_ANON_KEY</code>.
@@ -1106,8 +1126,291 @@ const Admin = () => {
               </div>
             )}
 
+            {/* ── TOURISM TYPES ── */}
+            {section === "tourism-types" && (
+              <TourismTypesAdmin showToast={showToast} />
+            )}
+
+            {/* ── ARTICLES ── */}
+            {section === "articles" && (
+              <ArticlesAdmin showToast={showToast} />
+            )}
+
           </main>
         </div>
+      </div>
+    </div>
+  );
+};
+
+// ─── Tourism Types Admin ──────────────────────────────────────────────────────
+const TOURISM_TYPES_LIST = [
+  "Гастрономічний туризм", "Історико-культурний туризм", "Медико-оздоровчий туризм",
+  "Морський туризм", "Релігійний туризм", "Розважальний туризм",
+  "Сільський та зелений туризм", "Спортивний туризм",
+];
+
+const TourismTypesAdmin = ({ showToast }: { showToast: (msg: string, ok?: boolean) => void }) => {
+  const [typeImages, setTypeImages] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState<string | null>(null);
+  const fileRefs = useRef<Record<string, HTMLInputElement | null>>({});
+
+  useEffect(() => {
+    loadPublishedContentCards("tourism-types").then(cards => {
+      const map: Record<string, string> = {};
+      cards.forEach(c => { if (c.imageUrl) map[c.title] = c.imageUrl; });
+      setTypeImages(map);
+    });
+  }, []);
+
+  const handleFile = async (typeName: string, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]; if (!file) return;
+    setSaving(typeName);
+    try {
+      let url = "";
+      if (supabase) {
+        const ext = file.name.split(".").pop();
+        const path = `tourism-types/${Date.now()}.${ext}`;
+        const { error } = await supabase.storage.from("media").upload(path, file, { upsert: true });
+        if (error) throw error;
+        url = supabase.storage.from("media").getPublicUrl(path).data.publicUrl;
+      } else {
+        url = URL.createObjectURL(file);
+      }
+      setTypeImages(prev => ({ ...prev, [typeName]: url }));
+      const card: ContentCardEntity = {
+        id: `tourism-type-${typeName.toLowerCase().replace(/\s+/g, "-")}`,
+        pageKey: "tourism-types", sectionKey: "type", cardType: "destination",
+        title: typeName, subtitle: null, imageUrl: url, href: null,
+        cityId: null, districtId: null, regionId: null, sortOrder: 0, published: true, payload: {},
+      };
+      await upsertContentCard(card);
+      showToast("Фото збережено");
+    } catch (err: any) {
+      showToast(err?.message ?? "Помилка", false);
+    } finally {
+      setSaving(null);
+      e.target.value = "";
+    }
+  };
+
+  return (
+    <div className="flex-1 min-w-0">
+      <div className="mb-6 flex items-center gap-2">
+        <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#002f5e]/8">
+          <Palmtree className="h-4 w-4 text-[#002f5e]" />
+        </div>
+        <div>
+          <h2 className="text-[18px] font-semibold text-[#002f5e]">Види туризму</h2>
+          <p className="text-[12px] text-[#002f5e]/45">Додайте фото для кожного виду туризму</p>
+        </div>
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {TOURISM_TYPES_LIST.map(typeName => (
+          <div key={typeName} className="overflow-hidden rounded-2xl border border-[#002f5e]/10 bg-white">
+            <div className="relative h-[140px] bg-[#002f5e]/5 cursor-pointer"
+              onClick={() => fileRefs.current[typeName]?.click()}>
+              {typeImages[typeName] ? (
+                <img src={typeImages[typeName]} alt={typeName} className="h-full w-full object-cover" />
+              ) : (
+                <div className="flex h-full flex-col items-center justify-center gap-2 text-[#002f5e]/30">
+                  <Upload className="h-6 w-6" />
+                  <span className="text-[12px]">Додати фото</span>
+                </div>
+              )}
+              {saving === typeName && (
+                <div className="absolute inset-0 flex items-center justify-center bg-white/70">
+                  <span className="h-5 w-5 animate-spin rounded-full border-2 border-[#002f5e] border-t-transparent" />
+                </div>
+              )}
+              <input ref={el => { fileRefs.current[typeName] = el; }} type="file" accept="image/*"
+                className="hidden" onChange={e => void handleFile(typeName, e)} />
+            </div>
+            <div className="px-3 py-2.5">
+              <p className="text-[13px] font-medium text-[#002f5e]">{typeName}</p>
+              <button type="button" onClick={() => fileRefs.current[typeName]?.click()}
+                className="mt-1 text-[12px] text-[#002f5e]/40 transition hover:text-[#002f5e]">
+                {typeImages[typeName] ? "Змінити фото" : "Завантажити фото"}
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// ─── Articles Admin ───────────────────────────────────────────────────────────
+type ArticleForm = {
+  id: string; title: string; subtitle: string; imageUrl: string;
+  videoUrl: string; content: string; publishedAt: string; published: boolean;
+};
+
+const emptyArticle = (): ArticleForm => ({
+  id: "", title: "", subtitle: "", imageUrl: "", videoUrl: "",
+  content: "", publishedAt: new Date().toLocaleDateString("uk-UA"), published: true,
+});
+
+const ArticlesAdmin = ({ showToast }: { showToast: (msg: string, ok?: boolean) => void }) => {
+  const [articles, setArticles] = useState<ContentCardEntity[]>([]);
+  const [form, setForm] = useState<ArticleForm>(emptyArticle());
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  const load = async () => {
+    const cards = await loadPublishedContentCards("articles");
+    setArticles(cards);
+  };
+  useEffect(() => { void load(); }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.title.trim()) return showToast("Введіть заголовок", false);
+    setSaving(true);
+    try {
+      const id = editingId ?? `article-${Math.random().toString(36).slice(2, 10)}`;
+      const card: ContentCardEntity = {
+        id, pageKey: "articles", sectionKey: "article", cardType: "text",
+        title: form.title.trim(), subtitle: form.subtitle || null,
+        imageUrl: form.imageUrl || null, href: null,
+        cityId: null, districtId: null, regionId: null,
+        sortOrder: editingId ? (articles.find(a => a.id === id)?.sortOrder ?? articles.length) : articles.length,
+        published: form.published,
+        payload: { content: form.content, publishedAt: form.publishedAt, videoUrl: form.videoUrl },
+      };
+      await upsertContentCard(card);
+      setArticles(prev => editingId ? prev.map(a => a.id === id ? card : a) : [card, ...prev]);
+      setForm(emptyArticle()); setEditingId(null);
+      showToast(editingId ? "Статтю оновлено" : "Статтю створено");
+    } catch (err: any) { showToast(err?.message ?? "Помилка", false); }
+    finally { setSaving(false); }
+  };
+
+  const startEdit = (card: ContentCardEntity) => {
+    setEditingId(card.id);
+    setForm({
+      id: card.id, title: card.title, subtitle: card.subtitle ?? "",
+      imageUrl: card.imageUrl ?? "", videoUrl: String(card.payload?.videoUrl ?? ""),
+      content: String(card.payload?.content ?? ""),
+      publishedAt: String(card.payload?.publishedAt ?? ""),
+      published: card.published,
+    });
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Видалити статтю?")) return;
+    try {
+      await deleteContentCard(id);
+      setArticles(prev => prev.filter(a => a.id !== id));
+      showToast("Статтю видалено");
+    } catch (err: any) { showToast(err?.message ?? "Помилка", false); }
+  };
+
+  return (
+    <div className="flex flex-1 min-w-0 gap-6">
+      {/* Form */}
+      <div className="flex-1 min-w-0">
+        <div className="rounded-2xl border border-[#002f5e]/12 bg-white/80 p-6 shadow-sm backdrop-blur">
+          <div className="mb-5 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#002f5e]/8">
+                <Newspaper className="h-4 w-4 text-[#002f5e]" />
+              </div>
+              <h2 className="text-[18px] font-semibold">{editingId ? "Редагувати статтю" : "Нова стаття"}</h2>
+            </div>
+            {editingId && (
+              <button type="button" onClick={() => { setEditingId(null); setForm(emptyArticle()); }}
+                className="rounded-xl border border-[#002f5e]/15 px-3 py-1.5 text-[13px] text-[#002f5e]/50 hover:text-[#002f5e] transition">
+                ✕ Скасувати
+              </button>
+            )}
+          </div>
+          <form onSubmit={e => void handleSubmit(e)} className="flex flex-col gap-4">
+            <div>
+              <span className="mb-1 block text-[13px] font-medium text-[#002f5e]/70 uppercase tracking-wide">Заголовок *</span>
+              <input value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))}
+                placeholder="Заголовок статті"
+                className="w-full rounded-xl border border-[#002f5e]/15 bg-white px-4 py-2.5 text-[14px] text-[#002f5e] focus:border-[#002f5e]/40 focus:outline-none focus:ring-2 focus:ring-[#002f5e]/10 transition" />
+            </div>
+            <div>
+              <span className="mb-1 block text-[13px] font-medium text-[#002f5e]/70 uppercase tracking-wide">Підзаголовок</span>
+              <input value={form.subtitle} onChange={e => setForm(p => ({ ...p, subtitle: e.target.value }))}
+                placeholder="Короткий опис статті"
+                className="w-full rounded-xl border border-[#002f5e]/15 bg-white px-4 py-2.5 text-[14px] text-[#002f5e] focus:border-[#002f5e]/40 focus:outline-none focus:ring-2 focus:ring-[#002f5e]/10 transition" />
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <span className="mb-1 block text-[13px] font-medium text-[#002f5e]/70 uppercase tracking-wide">Головне фото (URL)</span>
+                <input value={form.imageUrl} onChange={e => setForm(p => ({ ...p, imageUrl: e.target.value }))}
+                  placeholder="https://..."
+                  className="w-full rounded-xl border border-[#002f5e]/15 bg-white px-4 py-2.5 text-[14px] text-[#002f5e] focus:border-[#002f5e]/40 focus:outline-none focus:ring-2 focus:ring-[#002f5e]/10 transition" />
+                {form.imageUrl && <img src={form.imageUrl} alt="" className="mt-2 h-24 w-full rounded-lg object-cover" onError={e => (e.currentTarget.style.display = "none")} />}
+              </div>
+              <div>
+                <span className="mb-1 block text-[13px] font-medium text-[#002f5e]/70 uppercase tracking-wide">Відео (embed URL)</span>
+                <input value={form.videoUrl} onChange={e => setForm(p => ({ ...p, videoUrl: e.target.value }))}
+                  placeholder="https://www.youtube.com/embed/..."
+                  className="w-full rounded-xl border border-[#002f5e]/15 bg-white px-4 py-2.5 text-[14px] text-[#002f5e] focus:border-[#002f5e]/40 focus:outline-none focus:ring-2 focus:ring-[#002f5e]/10 transition" />
+              </div>
+            </div>
+            <div>
+              <span className="mb-1 block text-[13px] font-medium text-[#002f5e]/70 uppercase tracking-wide">Дата публікації</span>
+              <input value={form.publishedAt} onChange={e => setForm(p => ({ ...p, publishedAt: e.target.value }))}
+                placeholder="01.01.2026"
+                className="w-full rounded-xl border border-[#002f5e]/15 bg-white px-4 py-2.5 text-[14px] text-[#002f5e] focus:border-[#002f5e]/40 focus:outline-none focus:ring-2 focus:ring-[#002f5e]/10 transition" />
+            </div>
+            <div>
+              <span className="mb-1 block text-[13px] font-medium text-[#002f5e]/70 uppercase tracking-wide">Текст статті</span>
+              <RichTextEditor value={form.content} onChange={v => setForm(p => ({ ...p, content: v }))} />
+            </div>
+            <div className="flex items-center gap-3 rounded-xl bg-[#002f5e]/5 px-4 py-3">
+              <input type="checkbox" id="art-published" checked={form.published}
+                onChange={e => setForm(p => ({ ...p, published: e.target.checked }))}
+                className="h-4 w-4 rounded accent-[#002f5e]" />
+              <label htmlFor="art-published" className="text-[13px] font-medium text-[#002f5e]">Опубліковано</label>
+            </div>
+            <button type="submit" disabled={saving}
+              className="flex items-center gap-2 rounded-xl bg-[#002f5e] px-6 py-2.5 text-[14px] font-medium text-[#fff2e8] transition hover:bg-[#002f5e]/85 disabled:opacity-60">
+              {saving ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" /> : <CheckCircle2 className="h-4 w-4" />}
+              {saving ? "Зберігається..." : (editingId ? "Оновити статтю" : "Опублікувати")}
+            </button>
+          </form>
+        </div>
+      </div>
+
+      {/* List */}
+      <div className="w-[300px] shrink-0">
+        <h3 className="mb-4 text-[16px] font-semibold text-[#002f5e]/70">
+          Всі статті <span className="text-[#002f5e]/40">({articles.length})</span>
+        </h3>
+        {articles.length === 0 ? (
+          <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-[#002f5e]/20 py-16 text-center">
+            <Newspaper className="h-8 w-8 text-[#002f5e]/25" />
+            <p className="text-[14px] text-[#002f5e]/45">Статей поки немає</p>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-2">
+            {articles.map(a => (
+              <div key={a.id} className="group flex items-start gap-3 rounded-2xl border border-[#002f5e]/10 bg-white/70 p-3">
+                {a.imageUrl && <img src={a.imageUrl} alt="" className="h-12 w-12 shrink-0 rounded-xl object-cover" />}
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[13px] font-semibold text-[#002f5e]">{a.title}</p>
+                  <p className="text-[11px] text-[#002f5e]/40">{String(a.payload?.publishedAt ?? "")}</p>
+                </div>
+                <div className="flex shrink-0 gap-1 opacity-0 transition group-hover:opacity-100">
+                  <button type="button" onClick={() => startEdit(a)}
+                    className="rounded-lg p-1.5 text-[#002f5e]/40 hover:bg-[#002f5e]/8 hover:text-[#002f5e]">
+                    <Pencil className="h-3.5 w-3.5" />
+                  </button>
+                  <button type="button" onClick={() => void handleDelete(a.id)}
+                    className="rounded-lg p-1.5 text-[#9f1f47]/30 hover:bg-[#9f1f47]/8 hover:text-[#9f1f47]">
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
