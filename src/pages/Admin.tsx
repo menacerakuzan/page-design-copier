@@ -527,7 +527,8 @@ const Admin = () => {
 
   const editPlace = (p: TourismObject) => {
     setEditingPlaceId(p.id);
-    setPlaceForm({ id: p.id, slug: p.slug, name: p.name, subtitle: p.subtitle ?? "", description: p.description ?? "", detailedInfo: p.detailedInfo ?? "", imageUrl: p.imageUrl ?? "", videoUrl: p.videoUrl ?? "", reelUrl: p.reelUrl ?? "", cityId: p.cityId ?? "", districtOnlyMode: !p.cityId, type: p.type, mapUrl: p.mapUrl ?? "", address: p.address ?? "", phone: p.phone ?? "", website: p.website ?? "", eventDates: p.eventDates ?? "", hours: p.hours ?? "", amenities: p.amenities ?? "", published: p.published, tourismTypes: p.tourismTypes ?? [] });
+    const isDistrictOnly = !p.cityId;
+    setPlaceForm({ id: p.id, slug: p.slug, name: p.name, subtitle: p.subtitle ?? "", description: p.description ?? "", detailedInfo: p.detailedInfo ?? "", imageUrl: p.imageUrl ?? "", videoUrl: p.videoUrl ?? "", reelUrl: p.reelUrl ?? "", cityId: isDistrictOnly ? p.districtId : (p.cityId ?? ""), districtOnlyMode: isDistrictOnly, type: p.type, mapUrl: p.mapUrl ?? "", address: p.address ?? "", phone: p.phone ?? "", website: p.website ?? "", eventDates: p.eventDates ?? "", hours: p.hours ?? "", amenities: p.amenities ?? "", published: p.published, tourismTypes: p.tourismTypes ?? [] });
   };
 
   const handleDeletePlace = async (id: string) => {
@@ -597,16 +598,14 @@ const Admin = () => {
               >
                 {loading ? "Оновлення..." : "Оновити"}
               </button>
-              {hasSupabaseConfig && supabase && (
-                <button
+              <button
                   type="button"
-                  onClick={() => void supabase.auth.signOut()}
+                  onClick={() => { sessionStorage.removeItem("tourism_admin_session"); window.location.reload(); }}
                   className="flex items-center gap-1.5 rounded-xl border border-[#002f5e]/15 bg-white px-3 py-1.5 text-[13px] font-medium text-[#002f5e]/50 transition hover:bg-[#9f1f47]/8 hover:text-[#9f1f47] hover:border-[#9f1f47]/20"
                   title="Вийти"
                 >
                   <LogOut className="h-3.5 w-3.5" />
                 </button>
-              )}
             </div>
           </div>
         </header>
