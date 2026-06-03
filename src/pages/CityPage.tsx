@@ -134,12 +134,8 @@ const CityPage = () => {
                   <motion.div initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }}
                     viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.7 }}
                     className="w-full max-w-[320px] shrink-0 self-start mx-auto lg:mx-0">
-                    <div className="relative overflow-hidden rounded-[24px] shadow-xl" style={{ aspectRatio: "9/16" }}>
-                      <video ref={el => { if (el) el.muted = true; }} src={city.reelUrl} autoPlay loop playsInline className="h-full w-full object-cover"
-                        onClick={e => { const v = e.currentTarget; v.muted = !v.muted; }} />
-                      <div className="absolute bottom-3 right-3 pointer-events-none">
-                        <span className="rounded-full bg-black/40 px-2 py-1 text-[11px] text-white/70 backdrop-blur-sm">натисни для звуку</span>
-                      </div>
+                    <div className="overflow-hidden rounded-[24px] shadow-xl" style={{ aspectRatio: "9/16" }}>
+                      <video src={city.reelUrl} autoPlay muted loop playsInline className="h-full w-full object-cover" />
                     </div>
                   </motion.div>
                 )}
