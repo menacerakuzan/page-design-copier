@@ -486,11 +486,13 @@ const Admin = () => {
     try {
       const id = editingPlaceId ?? `place-${uid()}`;
       const city = placeForm.districtOnlyMode ? null : cities.find(c => c.id === placeForm.cityId) ?? null;
-      const district = districts.find(d => d.id === (city?.districtId ?? placeForm.cityId))!;
+      const districtId = placeForm.districtOnlyMode
+        ? placeForm.cityId
+        : (districts.find(d => d.id === city?.districtId)?.id ?? "");
       const place: TourismObject = {
         id, type: placeForm.type,
         cityId: placeForm.districtOnlyMode ? null : placeForm.cityId,
-        districtId: city ? (districts.find(d => d.id === city.districtId)?.id ?? "") : placeForm.cityId,
+        districtId,
         name: placeForm.name.trim(),
         slug: editingPlaceId ? placeForm.slug : `${slugify(placeForm.name)}-${uid().slice(0, 6)}`,
 
