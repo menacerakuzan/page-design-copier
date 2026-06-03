@@ -81,9 +81,7 @@ const CityPage = () => {
     [snapshot, city],
   );
 
-  const weatherName = city?.weatherCityName || null;
-  console.log("🌤 weatherCityName:", weatherName, "city:", city?.name);
-  const { data: weather } = useWeather(weatherName);
+  const { data: weather } = useWeather(city?.weatherCityName || null);
   const { config } = usePageConfig("city", city?.id ?? null);
 
   if (isLoading) return null;

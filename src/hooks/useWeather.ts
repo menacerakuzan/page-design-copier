@@ -33,7 +33,8 @@ export function useWeather(cityName: string | null | undefined) {
         cityName: json.name,
       };
     },
-    staleTime: 10 * 60 * 1000,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 0,
     enabled: !!OPENWEATHER_KEY && !!cityName,
   });
 }
