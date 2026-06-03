@@ -7,7 +7,7 @@ import geminiLogo from "@/assets/gemini-svg-2.svg";
 import SiteFooter from "@/components/SiteFooter";
 import { usePageContentCards } from "@/hooks/usePageContentCards";
 
-const navLeft = ["Райони", "Локації"];
+const navLeft = ["Райони"];
 const navRight = ["Гіди", "Контакти"];
 
 const featureCards = [
@@ -216,12 +216,7 @@ const Index = () => {
             <div className="grid grid-cols-1 items-center gap-5 md:grid-cols-[1fr_auto_1fr]">
               <nav className="flex items-center justify-center gap-4 text-[14px] leading-none md:justify-start font-odesa-medium">
                 <span className="text-[15px]">{star}</span>
-                {navLeft.map((item, index) => (
-                  <a key={item} href="#" className="transition-opacity hover:opacity-75">
-                    {item}
-                    {index === 0 ? <span className="ml-4 text-[15px]">{star}</span> : null}
-                  </a>
-                ))}
+                <Link to="/districts" className="transition-opacity hover:opacity-75">Райони</Link>
               </nav>
 
               <h1 className="px-2 text-center text-[42px] leading-[0.95] tracking-[0.04em] font-odesa-medium font-odesa-ss02">
