@@ -53,7 +53,7 @@ export default function DistrictsPage() {
 
   const cityObjects = useMemo(() => {
     if (!activeCity) return [];
-    return allObjects.filter(o => o.cityId === activeCity.id || (!o.cityId && o.districtId === activeCity.districtId));
+    return allObjects.filter(o => o.cityId === activeCity.id);
   }, [activeCity, allObjects]);
 
   const objectsByType = useMemo(() => {
