@@ -63,21 +63,21 @@ type DistrictForm = {
 type CityForm = {
   id: string; name: string; subtitle: string; description: string;
   detailedInfo: string; imageUrl: string; videoUrl: string; reelUrl: string; districtId: string;
-  weatherCityName: string;
+  weatherCityName: string; settlementType: string;
 };
 
 type PlaceForm = {
   id: string; slug: string; name: string; subtitle: string; description: string;
   detailedInfo: string; imageUrl: string; videoUrl: string; reelUrl: string;
-  cityId: string; type: TourismObjectType;
+  cityId: string; districtOnlyMode: boolean; type: TourismObjectType;
   mapUrl: string; address: string; phone: string; website: string;
   eventDates: string; hours: string; amenities: string;
   published: boolean; tourismTypes: string[];
 };
 
 const emptyDistrict = (regionId: string): DistrictForm => ({ id: "", name: "", subtitle: "", description: "", detailedInfo: "", imageUrl: "", videoUrl: "", reelUrl: "", regionId });
-const emptyCity = (districtId: string): CityForm => ({ id: "", name: "", subtitle: "", description: "", detailedInfo: "", imageUrl: "", videoUrl: "", reelUrl: "", districtId, weatherCityName: "" });
-const emptyPlace = (cityId: string): PlaceForm => ({ id: "", slug: "", name: "", subtitle: "", description: "", detailedInfo: "", imageUrl: "", videoUrl: "", reelUrl: "", cityId, type: "attraction", mapUrl: "", address: "", phone: "", website: "", eventDates: "", hours: "", amenities: "", published: true, tourismTypes: [] });
+const emptyCity = (districtId: string): CityForm => ({ id: "", name: "", subtitle: "", description: "", detailedInfo: "", imageUrl: "", videoUrl: "", reelUrl: "", districtId, weatherCityName: "", settlementType: "місто" });
+const emptyPlace = (cityId: string): PlaceForm => ({ id: "", slug: "", name: "", subtitle: "", description: "", detailedInfo: "", imageUrl: "", videoUrl: "", reelUrl: "", cityId, districtOnlyMode: false, type: "attraction", mapUrl: "", address: "", phone: "", website: "", eventDates: "", hours: "", amenities: "", published: true, tourismTypes: [] });
 
 // ─── sub-components ───────────────────────────────────────────────────────────
 
@@ -441,6 +441,7 @@ const Admin = () => {
         districtId: cityForm.districtId,
         name: cityForm.name.trim(),
         slug: existingCity?.slug ?? (citySlugExists ? `${baseCitySlug}-${uid().slice(0, 4)}` : baseCitySlug),
+        settlementType: (cityForm.settlementType as any) || undefined,
         subtitle: cityForm.subtitle || undefined,
         description: cityForm.description || undefined,
         detailedInfo: cityForm.detailedInfo || undefined,
@@ -463,7 +464,7 @@ const Admin = () => {
 
   const editCity = (c: City) => {
     setEditingCityId(c.id);
-    setCityForm({ id: c.id, name: c.name, subtitle: c.subtitle ?? "", description: c.description ?? "", detailedInfo: c.detailedInfo ?? "", imageUrl: c.imageUrl ?? "", videoUrl: c.videoUrl ?? "", reelUrl: c.reelUrl ?? "", districtId: c.districtId, weatherCityName: c.weatherCityName ?? "" });
+    setCityForm({ id: c.id, name: c.name, subtitle: c.subtitle ?? "", description: c.description ?? "", detailedInfo: c.detailedInfo ?? "", imageUrl: c.imageUrl ?? "", videoUrl: c.videoUrl ?? "", reelUrl: c.reelUrl ?? "", districtId: c.districtId, weatherCityName: c.weatherCityName ?? "", settlementType: c.settlementType ?? "місто" });
   };
 
   const handleDeleteCity = async (id: string) => {
@@ -480,16 +481,16 @@ const Admin = () => {
   const handlePlaceSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!placeForm.name.trim()) return showToast("Введіть назву місця", false);
-    if (!placeForm.cityId) return showToast("Оберіть місто", false);
+    if (!placeForm.districtOnlyMode && !placeForm.cityId) return showToast("Оберіть населений пункт", false);
     setSaving(true);
     try {
       const id = editingPlaceId ?? `place-${uid()}`;
-      const city = cities.find(c => c.id === placeForm.cityId)!;
-      const district = districts.find(d => d.id === city?.districtId)!;
+      const city = placeForm.districtOnlyMode ? null : cities.find(c => c.id === placeForm.cityId) ?? null;
+      const district = districts.find(d => d.id === (city?.districtId ?? placeForm.cityId))!;
       const place: TourismObject = {
         id, type: placeForm.type,
-        cityId: placeForm.cityId,
-        districtId: district?.id ?? "",
+        cityId: placeForm.districtOnlyMode ? null : placeForm.cityId,
+        districtId: city ? (districts.find(d => d.id === city.districtId)?.id ?? "") : placeForm.cityId,
         name: placeForm.name.trim(),
         slug: editingPlaceId ? placeForm.slug : `${slugify(placeForm.name)}-${uid().slice(0, 6)}`,
 
@@ -523,7 +524,7 @@ const Admin = () => {
 
   const editPlace = (p: TourismObject) => {
     setEditingPlaceId(p.id);
-    setPlaceForm({ id: p.id, slug: p.slug, name: p.name, subtitle: p.subtitle ?? "", description: p.description ?? "", detailedInfo: p.detailedInfo ?? "", imageUrl: p.imageUrl ?? "", videoUrl: p.videoUrl ?? "", reelUrl: p.reelUrl ?? "", cityId: p.cityId, type: p.type, mapUrl: p.mapUrl ?? "", address: p.address ?? "", phone: p.phone ?? "", website: p.website ?? "", eventDates: p.eventDates ?? "", hours: p.hours ?? "", amenities: p.amenities ?? "", published: p.published, tourismTypes: p.tourismTypes ?? [] });
+    setPlaceForm({ id: p.id, slug: p.slug, name: p.name, subtitle: p.subtitle ?? "", description: p.description ?? "", detailedInfo: p.detailedInfo ?? "", imageUrl: p.imageUrl ?? "", videoUrl: p.videoUrl ?? "", reelUrl: p.reelUrl ?? "", cityId: p.cityId ?? "", districtOnlyMode: !p.cityId, type: p.type, mapUrl: p.mapUrl ?? "", address: p.address ?? "", phone: p.phone ?? "", website: p.website ?? "", eventDates: p.eventDates ?? "", hours: p.hours ?? "", amenities: p.amenities ?? "", published: p.published, tourismTypes: p.tourismTypes ?? [] });
   };
 
   const handleDeletePlace = async (id: string) => {
@@ -539,7 +540,7 @@ const Admin = () => {
 
   const navItems: { id: AdminSection; label: string; icon: React.ReactNode; count: number }[] = [
     { id: "districts", label: "Райони",      icon: <MapPin className="h-5 w-5" />,          count: districts.length },
-    { id: "cities",    label: "Міста",       icon: <Building2 className="h-5 w-5" />,       count: cities.length },
+    { id: "cities",    label: "Нас. пункти", icon: <Building2 className="h-5 w-5" />,       count: cities.length },
     { id: "places",    label: "Місця",       icon: <Landmark className="h-5 w-5" />,        count: places.length },
   ];
   const constructorItem = { id: "constructor" as AdminSection, label: "Конструктор", icon: <LayoutDashboard className="h-5 w-5" />, count: contentCards.filter(c => c.pageKey === "index").length };
@@ -794,7 +795,7 @@ const Admin = () => {
                         <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#002f5e]/8">
                           <Building2 className="h-4 w-4 text-[#002f5e]" />
                         </div>
-                        <h2 className="text-[18px] font-semibold">{editingCityId ? "Редагувати місто" : "Нове місто"}</h2>
+                        <h2 className="text-[18px] font-semibold">{editingCityId ? "Редагувати населений пункт" : "Новий населений пункт"}</h2>
                       </div>
                       {editingCityId && (
                         <button type="button" onClick={() => { setEditingCityId(null); setCityForm(emptyCity(cityForm.districtId)); }} className="rounded-xl border border-[#002f5e]/15 px-3 py-1.5 text-[13px] text-[#002f5e]/50 hover:border-[#002f5e]/30 hover:text-[#002f5e] transition">
@@ -803,6 +804,14 @@ const Admin = () => {
                       )}
                     </div>
                     <form onSubmit={e => void handleCitySubmit(e)} className="flex flex-col gap-4">
+                      <FieldGroup label="Тип населеного пункту *">
+                        <FormSelect value={cityForm.settlementType} onChange={v => setCityForm(p => ({ ...p, settlementType: v }))}>
+                          <option value="місто">Місто</option>
+                          <option value="село">Село</option>
+                          <option value="селище">Селище</option>
+                          <option value="селище міського типу">Селище міського типу</option>
+                        </FormSelect>
+                      </FieldGroup>
                       <FieldGroup label="Район *">
                         <FormSelect value={cityForm.districtId} onChange={v => setCityForm(p => ({ ...p, districtId: v }))} disabled={districts.length === 0}>
                           {districts.length === 0 && <option value="">— Спочатку створіть район —</option>}
@@ -829,7 +838,7 @@ const Admin = () => {
                         <Input value={cityForm.weatherCityName} onChange={v => setCityForm(p => ({ ...p, weatherCityName: v }))} placeholder="напр. Odessa, Bolhrad..." />
                       </FieldGroup>
                       <div className="flex items-center justify-between pt-2">
-                        <SaveBtn saving={saving} label={editingCityId ? "Оновити місто" : "Створити місто"} />
+                        <SaveBtn saving={saving} label={editingCityId ? "Оновити" : "Створити"} />
                       </div>
                     </form>
                   </div>
@@ -837,12 +846,12 @@ const Admin = () => {
 
                 <section className="w-[300px] shrink-0">
                   <h3 className="mb-4 text-[16px] font-semibold text-[#002f5e]/70">
-                    Всі міста <span className="text-[#002f5e]/40">({cities.length})</span>
+                    Всі населені пункти <span className="text-[#002f5e]/40">({cities.length})</span>
                   </h3>
                   {cities.length === 0 ? (
                     <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-[#002f5e]/20 py-16 text-center">
                       <Plus className="h-8 w-8 text-[#002f5e]/25" />
-                      <p className="text-[14px] text-[#002f5e]/45">Ще немає міст. Спочатку створіть район, потім місто!</p>
+                      <p className="text-[14px] text-[#002f5e]/45">Ще немає населених пунктів. Спочатку створіть район!</p>
                     </div>
                   ) : (
                     <div className="flex flex-col gap-2">
@@ -908,12 +917,35 @@ const Admin = () => {
                         </div>
                       </div>
 
-                      <FieldGroup label="Місто *">
-                        <FormSelect value={placeForm.cityId} onChange={v => setPlaceForm(p => ({ ...p, cityId: v }))} disabled={cities.length === 0}>
-                          {cities.length === 0 && <option value="">— Спочатку створіть місто —</option>}
-                          {cities.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                        </FormSelect>
-                      </FieldGroup>
+                      {/* Прив'язка */}
+                      <div className="rounded-xl border border-[#002f5e]/12 bg-[#002f5e]/3 p-4">
+                        <div className="mb-3 flex items-center gap-3">
+                          <span className="text-[13px] font-medium text-[#002f5e]/70 uppercase tracking-wide">Прив'язка</span>
+                          <div className="flex rounded-lg border border-[#002f5e]/12 bg-white/60 p-0.5 text-[12px]">
+                            <button type="button"
+                              onClick={() => setPlaceForm(p => ({ ...p, districtOnlyMode: false }))}
+                              className={`rounded-md px-3 py-1 transition ${!placeForm.districtOnlyMode ? "bg-[#002f5e] text-white" : "text-[#002f5e]/50 hover:text-[#002f5e]"}`}>
+                              До населеного пункту
+                            </button>
+                            <button type="button"
+                              onClick={() => setPlaceForm(p => ({ ...p, districtOnlyMode: true, cityId: "" }))}
+                              className={`rounded-md px-3 py-1 transition ${placeForm.districtOnlyMode ? "bg-[#002f5e] text-white" : "text-[#002f5e]/50 hover:text-[#002f5e]"}`}>
+                              Тільки до району
+                            </button>
+                          </div>
+                        </div>
+                        {placeForm.districtOnlyMode ? (
+                          <FormSelect value={placeForm.cityId} onChange={v => setPlaceForm(p => ({ ...p, cityId: v }))} disabled={districts.length === 0}>
+                            {districts.length === 0 && <option value="">— Немає районів —</option>}
+                            {districts.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                          </FormSelect>
+                        ) : (
+                          <FormSelect value={placeForm.cityId} onChange={v => setPlaceForm(p => ({ ...p, cityId: v }))} disabled={cities.length === 0}>
+                            {cities.length === 0 && <option value="">— Спочатку створіть населений пункт —</option>}
+                            {cities.map(c => <option key={c.id} value={c.id}>{c.settlementType ? `${c.settlementType} ` : ""}{c.name}</option>)}
+                          </FormSelect>
+                        )}
+                      </div>
 
                       <FieldGroup label="Назва *">
                         <Input value={placeForm.name} onChange={v => setPlaceForm(p => ({ ...p, name: v }))} placeholder={

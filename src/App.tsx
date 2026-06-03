@@ -9,6 +9,7 @@ import DistrictPage from "./pages/DistrictPage";
 import EntityDetail from "./pages/EntityDetail";
 import TourismTypesPage from "./pages/TourismTypesPage";
 import InfoPage from "./pages/InfoPage";
+import DistrictsPage from "./pages/DistrictsPage";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
@@ -33,6 +34,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/types" element={<TourismTypesPage />} />
+          <Route path="/districts" element={<DistrictsPage />} />
           <Route path="/info" element={<InfoPage />} />
           <Route path="/napryamky/:citySlug" element={<CityPage />} />
           <Route path="/raion/:districtSlug" element={<DistrictPage />} />

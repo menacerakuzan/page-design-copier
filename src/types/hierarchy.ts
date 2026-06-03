@@ -19,11 +19,14 @@ export type District = {
   reelUrl?: string;
 };
 
+export type SettlementType = "місто" | "село" | "селище" | "селище міського типу";
+
 export type City = {
   id: EntityId;
   districtId: EntityId;
   name: string;
   slug: string;
+  settlementType?: SettlementType;
   /** English city name for OpenWeather API (e.g. "Odessa"). Falls back to `name` if not set. */
   weatherCityName?: string;
   subtitle?: string;
@@ -39,7 +42,7 @@ export type TourismObjectType = "event" | "hotel" | "restaurant" | "attraction";
 export type TourismObject = {
   id: EntityId;
   districtId: EntityId;
-  cityId: EntityId;
+  cityId: EntityId | null;
   type: TourismObjectType;
   name: string;
   slug: string;

@@ -301,7 +301,7 @@ const CityPage = () => {
               </div>
               <div className="flex items-center gap-3 text-[#002f5e]/65">
                 <span className="text-[15px] text-[#002f5e]/30">{star}</span>
-                <span>Місто</span>
+                <span>{city.settlementType ?? "Місто"}</span>
                 <span className="text-[15px] text-[#002f5e]/30">{star}</span>
                 <span>Одещина</span>
                 <span className="text-[15px] text-[#002f5e]/30">{star}</span>
@@ -335,7 +335,7 @@ const CityPage = () => {
 
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="mb-5">
             <span className="inline-block rounded-full border border-white/25 bg-white/10 px-5 py-2 text-[12px] uppercase tracking-[0.2em] font-odesa-medium text-[#fff2e8] backdrop-blur-md">
-              Місто
+              {city.settlementType ?? "Місто"}
             </span>
           </motion.div>
           <motion.h1 initial={{ opacity: 0, y: 32 }} animate={{ opacity: 1, y: 0 }}
