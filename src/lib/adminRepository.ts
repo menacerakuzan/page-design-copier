@@ -119,6 +119,7 @@ const mapDbCity = (row: any): City => ({
   imageUrl: row.image_url ?? undefined,
   videoUrl: row.video_url ?? undefined,
   reelUrl: row.reel_url ?? undefined,
+  weatherCityName: row.weather_city_name ?? undefined,
 });
 
 const toDbObject = (obj: TourismObject) => ({
@@ -504,6 +505,7 @@ export async function insertCity(city: City) {
     image_url: city.imageUrl ?? null,
     video_url: city.videoUrl ?? null,
     reel_url: city.reelUrl ?? null,
+    weather_city_name: city.weatherCityName ?? null,
   };
   const { error } = await supabase.from(tableNames.cities).upsert(dbCity);
   if (error) throw error;
@@ -531,6 +533,7 @@ export async function upsertCity(city: City) {
     image_url: city.imageUrl ?? null,
     video_url: city.videoUrl ?? null,
     reel_url: city.reelUrl ?? null,
+    weather_city_name: city.weatherCityName ?? null,
   };
   const { error } = await supabase.from(tableNames.cities).upsert(dbCity);
   if (error) throw error;
