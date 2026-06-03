@@ -17,8 +17,9 @@ export function useWeather(cityName: string | null | undefined) {
     queryKey: ["weather", cityName],
     queryFn: async () => {
       if (!OPENWEATHER_KEY || !cityName) return null;
+      const cleanName = cityName.replace(/,?\s*UA\s*$/i, "").trim();
       const res = await fetch(
-        `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(cityName)},UA&appid=${OPENWEATHER_KEY}&units=metric&lang=uk`,
+        `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(cleanName)},UA&appid=${OPENWEATHER_KEY}&units=metric&lang=uk`,
       );
       if (!res.ok) return null;
       const json = await res.json();
