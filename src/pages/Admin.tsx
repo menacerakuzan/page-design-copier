@@ -482,6 +482,7 @@ const Admin = () => {
     e.preventDefault();
     if (!placeForm.name.trim()) return showToast("Введіть назву місця", false);
     if (!placeForm.districtOnlyMode && !placeForm.cityId) return showToast("Оберіть населений пункт", false);
+    if (placeForm.districtOnlyMode && !placeForm.cityId) return showToast("Оберіть район", false);
     setSaving(true);
     try {
       const id = editingPlaceId ?? `place-${uid()}`;
@@ -930,7 +931,7 @@ const Admin = () => {
                               До населеного пункту
                             </button>
                             <button type="button"
-                              onClick={() => setPlaceForm(p => ({ ...p, districtOnlyMode: true, cityId: "" }))}
+                              onClick={() => setPlaceForm(p => ({ ...p, districtOnlyMode: true, cityId: districts[0]?.id ?? "" }))}
                               className={`rounded-md px-3 py-1 transition ${placeForm.districtOnlyMode ? "bg-[#002f5e] text-white" : "text-[#002f5e]/50 hover:text-[#002f5e]"}`}>
                               Тільки до району
                             </button>
