@@ -1,5 +1,6 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Facebook, Instagram, Search } from "lucide-react";
+import { AccessibilityMenu } from "@/components/AccessibilityMenu";
 import { fallbackContentCards } from "@/data/contentCardsFallback";
 import { usePageContentCards } from "@/hooks/usePageContentCards";
 import { useHierarchySnapshot } from "@/hooks/useHierarchySnapshot";
@@ -46,6 +47,8 @@ const SiteFooter = () => {
   const { data: globalCardsData } = usePageContentCards("global");
   const { data: hierarchy } = useHierarchySnapshot();
   const [query, setQuery] = useState("");
+  const [lang, setLang] = useState<"uk" | "en">("uk");
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const globalCards = useMemo(() => {
     const live = (globalCardsData ?? []).filter((card) => card.pageKey === "global");
@@ -118,6 +121,7 @@ const SiteFooter = () => {
         <div className="relative">
           <Search className="pointer-events-none absolute left-6 top-1/2 h-6 w-6 -translate-y-1/2 text-[#fff2e8]/70" />
           <input
+            ref={searchInputRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Пошук"
@@ -161,6 +165,19 @@ const SiteFooter = () => {
             tourism@od.gov.ua
           </a>
         </div>
+      </div>
+
+      {/* Accessibility menu — bottom right */}
+      <div className="mx-auto mt-8 max-w-[1200px] flex justify-end">
+        <AccessibilityMenu
+          lang={lang}
+          onLangChange={setLang}
+          align="right"
+          onSearchClick={() => {
+            searchInputRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+            setTimeout(() => searchInputRef.current?.focus(), 400);
+          }}
+        />
       </div>
     </footer>
   );

@@ -5,9 +5,10 @@ import { Link } from "react-router-dom";
 import heroVideo from "@/assets/episode-01.mp4";
 import geminiLogo from "@/assets/gemini-svg-2.svg";
 import SiteFooter from "@/components/SiteFooter";
+import { AccessibilityMenu } from "@/components/AccessibilityMenu";
 import { usePageContentCards } from "@/hooks/usePageContentCards";
 
-const navLeft = ["Райони"];
+const navLeft = ["Туристичні об'єкти"];
 const navRight = ["Гіди", "Контакти"];
 
 const featureCards = [
@@ -51,6 +52,7 @@ const Index = () => {
   const sectionRefs = useRef<Array<HTMLElement | null>>([]);
   const destinationsScrollerRef = useRef<HTMLDivElement | null>(null);
   const footerRef = useRef<HTMLElement | null>(null);
+  const [lang, setLang] = useState<"uk" | "en">("uk");
 
   const scrollToFooter = () => footerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   const [activeAttraction, setActiveAttraction] = useState(0);
@@ -174,7 +176,7 @@ const Index = () => {
 
   return (
     <div className="bg-[#fff2e8]">
-      <div className="fixed left-8 top-1/2 z-50 flex -translate-y-1/2 flex-col gap-4">
+      <div className="fixed right-8 top-1/2 z-50 flex -translate-y-1/2 flex-col gap-4">
         <button
           type="button"
           aria-label="Вгору"
@@ -216,7 +218,7 @@ const Index = () => {
             <div className="grid grid-cols-1 items-center gap-5 md:grid-cols-[1fr_auto_1fr]">
               <nav className="flex items-center justify-center gap-4 text-[14px] leading-none md:justify-start font-odesa-medium">
                 <span className="text-[15px]">{star}</span>
-                <Link to="/districts" className="transition-opacity hover:opacity-75">Райони</Link>
+                <Link to="/districts" className="transition-opacity hover:opacity-75">Туристичні об'єкти</Link>
               </nav>
 
               <h1 className="px-2 text-center text-[42px] leading-[0.95] tracking-[0.04em] font-odesa-medium font-odesa-ss02">
@@ -327,6 +329,15 @@ const Index = () => {
             </div>
           </section>
         </main>
+
+        {/* Accessibility menu — bottom left of hero */}
+        <div className="absolute bottom-6 left-6 z-20">
+          <AccessibilityMenu
+            lang={lang}
+            onLangChange={setLang}
+            onSearchClick={scrollToFooter}
+          />
+        </div>
       </section>
 
       <section ref={setSectionRef(1)} className="relative z-10 bg-[#fff2e8] px-4 pt-10 pb-20 text-[#002f5e] md:px-10">
@@ -622,7 +633,10 @@ const Index = () => {
         </div>
       </section>
 
-      <section ref={setSectionRef(4)} className="relative z-10 flex min-h-screen items-center bg-[#fff2e8] px-4 py-12 text-[#002f5e] md:px-10">
+      <div className="relative z-10"
+        style={{ backgroundColor: "#fff2e8", backgroundImage: "url(/bgpodii.svg)", backgroundSize: "cover", backgroundPosition: "center center", backgroundRepeat: "no-repeat" }}>
+        <div className="pointer-events-none absolute inset-0 z-0 bg-[#fff2e8]/65" />
+      <section ref={setSectionRef(4)} className="relative z-10 flex min-h-screen items-center px-4 py-12 text-[#002f5e] md:px-10">
         <div className="mx-auto w-full max-w-[1400px]">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -721,9 +735,10 @@ const Index = () => {
         </div>
       </section>
 
-      <div ref={setSectionRef(5)}>
-        <div ref={el => { footerRef.current = el as HTMLElement | null; }}>
-          <SiteFooter />
+        <div ref={setSectionRef(5)}>
+          <div ref={el => { footerRef.current = el as HTMLElement | null; }}>
+            <SiteFooter />
+          </div>
         </div>
       </div>
     </div>

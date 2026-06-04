@@ -980,16 +980,16 @@ const Admin = () => {
                         </FieldGroup>
                       )}
 
-                      {(placeForm.type === "restaurant" || placeForm.type === "hotel") && (
+                      {(placeForm.type === "restaurant" || placeForm.type === "hotel" || placeForm.type === "attraction") && (
                         <>
                           <MultiField label="Адреса" value={placeForm.address} onChange={v => setPlaceForm(p => ({ ...p, address: v }))} placeholder="вул. Пушкінська, 15" />
                           <MultiField label="Телефон" value={placeForm.phone} onChange={v => setPlaceForm(p => ({ ...p, phone: v }))} placeholder="+380..." />
                           <MultiField label="Сайт" value={placeForm.website} onChange={v => setPlaceForm(p => ({ ...p, website: v }))} placeholder="https://..." />
-                          <FieldGroup label={placeForm.type === "restaurant" ? "Години роботи" : "Зручності та послуги"}>
+                          <FieldGroup label={placeForm.type === "hotel" ? "Зручності та послуги" : "Години роботи"}>
                             <Input
-                              value={placeForm.type === "restaurant" ? placeForm.hours : placeForm.amenities}
-                              onChange={v => setPlaceForm(p => placeForm.type === "restaurant" ? ({ ...p, hours: v }) : ({ ...p, amenities: v }))}
-                              placeholder={placeForm.type === "restaurant" ? "Пн-Нд 10:00–22:00" : "Wi-Fi, паркінг, басейн..."}
+                              value={placeForm.type === "hotel" ? placeForm.amenities : placeForm.hours}
+                              onChange={v => setPlaceForm(p => placeForm.type === "hotel" ? ({ ...p, amenities: v }) : ({ ...p, hours: v }))}
+                              placeholder={placeForm.type === "hotel" ? "Wi-Fi, паркінг, басейн..." : "Пн-Нд 10:00–22:00"}
                             />
                           </FieldGroup>
                         </>

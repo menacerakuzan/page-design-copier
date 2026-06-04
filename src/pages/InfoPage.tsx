@@ -59,7 +59,7 @@ export default function InfoPage() {
         </div>
         <div className="relative z-10 mx-auto mt-16 max-w-[1400px] px-4 md:px-10">
           <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
-            className="text-[12px] uppercase tracking-[0.3em] font-odesa-medium text-[#df9b3b]">
+            className="text-[12px] uppercase tracking-[0.08em] font-odesa-medium text-[#df9b3b]">
             02 — матеріали
           </motion.p>
           <motion.h1 initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}
