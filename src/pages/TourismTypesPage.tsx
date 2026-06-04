@@ -67,6 +67,8 @@ export default function TourismTypesPage() {
     <div className="min-h-screen bg-[#fff2e8] font-odesa-regular text-[#002f5e]">
       {/* Hero */}
       <section className="relative overflow-hidden bg-[#002f5e] px-4 pb-20 pt-0 text-[#fff2e8] md:px-10">
+        <div className="pointer-events-none absolute inset-0 z-0 opacity-[0.08]"
+          style={{ backgroundImage: "url(/shieldtile.svg)", backgroundSize: "180px 203px", backgroundRepeat: "repeat" }} />
         <div className="relative z-10 mx-auto w-full max-w-[1180px]">
           <div className="rounded-b-[48px] bg-[#fff2e8] px-6 pb-4 pt-4 text-[#002f5e]">
             <div className="flex items-center justify-between gap-4 text-[14px] font-odesa-medium">
@@ -86,7 +88,7 @@ export default function TourismTypesPage() {
         </div>
         <div className="relative z-10 mx-auto mt-16 max-w-[1400px] px-4 md:px-10">
           <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
-            className="text-[12px] uppercase tracking-[0.3em] font-odesa-medium text-[#df9b3b]">
+            className="text-[12px] uppercase tracking-[0.08em] font-odesa-medium text-[#df9b3b]">
             01 — напрямки
           </motion.p>
           <motion.h1 initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
@@ -159,7 +161,7 @@ export default function TourismTypesPage() {
             <div className="mx-auto max-w-[1400px]">
               <div className="mb-8 flex items-center justify-between">
                 <div>
-                  <p className="text-[12px] uppercase tracking-[0.25em] font-odesa-medium text-[#df9b3b]">{activeType}</p>
+                  <p className="text-[12px] uppercase tracking-[0.08em] font-odesa-medium text-[#df9b3b]">{activeType}</p>
                   <h2 className="mt-1 font-odesa-medium text-[40px] leading-none md:text-[56px]">
                     {filteredObjects.length} об'єктів
                   </h2>

@@ -89,6 +89,8 @@ export default function DistrictsPage() {
     <div className="min-h-screen bg-[#fff2e8] font-odesa-regular text-[#002f5e]">
       {/* Hero */}
       <section className="relative overflow-hidden bg-[#002f5e] pb-20 pt-0 text-[#fff2e8]">
+        <div className="pointer-events-none absolute inset-0 z-0 opacity-[0.08]"
+          style={{ backgroundImage: "url(/shieldtile.svg)", backgroundSize: "180px 203px", backgroundRepeat: "repeat" }} />
         <div className="relative z-10 mx-auto w-full max-w-[1180px] px-4 md:px-5">
           <div className="rounded-b-[48px] bg-[#fff2e8] px-6 pb-4 pt-4 text-[#002f5e]">
             <div className="flex items-center justify-between gap-4 text-[14px] font-odesa-medium">
@@ -132,7 +134,7 @@ export default function DistrictsPage() {
           </motion.div>
 
           <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
-            className="text-[12px] uppercase tracking-[0.3em] font-odesa-medium text-[#df9b3b]">
+            className="text-[12px] uppercase tracking-[0.08em] font-odesa-medium text-[#df9b3b]">
             {activeCity ? (activeCity.settlementType ?? "місто") : activeDistrict ? "оберіть населений пункт" : "оберіть район"}
           </motion.p>
           <motion.h1 key={activeCity?.id ?? activeDistrict?.id ?? "root"}
