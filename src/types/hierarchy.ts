@@ -3,6 +3,7 @@ export type EntityId = string;
 export type Region = {
   id: EntityId;
   name: string;
+  nameEn?: string;
   slug: string;
 };
 
@@ -10,9 +11,12 @@ export type District = {
   id: EntityId;
   regionId: EntityId;
   name: string;
+  nameEn?: string;
   slug: string;
   subtitle?: string;
+  subtitleEn?: string;
   description?: string;
+  descriptionEn?: string;
   detailedInfo?: string;
   imageUrl?: string;
   videoUrl?: string;
@@ -25,12 +29,14 @@ export type City = {
   id: EntityId;
   districtId: EntityId;
   name: string;
+  nameEn?: string;
   slug: string;
   settlementType?: SettlementType;
-  /** English city name for OpenWeather API (e.g. "Odessa"). Falls back to `name` if not set. */
   weatherCityName?: string;
   subtitle?: string;
+  subtitleEn?: string;
   description?: string;
+  descriptionEn?: string;
   detailedInfo?: string;
   imageUrl?: string;
   videoUrl?: string;
@@ -45,20 +51,27 @@ export type TourismObject = {
   cityId: EntityId | null;
   type: TourismObjectType;
   name: string;
+  nameEn?: string;
   slug: string;
   published: boolean;
   subtitle?: string;
+  subtitleEn?: string;
   description?: string;
+  descriptionEn?: string;
   detailedInfo?: string;
+  detailedInfoEn?: string;
   imageUrl?: string;
   videoUrl?: string;
   mapUrl?: string;
   address?: string;
+  addressEn?: string;
   phone?: string;
   website?: string;
   eventDates?: string;
   hours?: string;
+  hoursEn?: string;
   amenities?: string;
+  amenitiesEn?: string;
   tourismTypes?: string[];
   reelUrl?: string;
 };

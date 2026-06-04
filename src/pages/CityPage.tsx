@@ -1,5 +1,6 @@
 import { useMemo, useRef } from "react";
 import { motion } from "framer-motion";
+import { useLang } from "@/lib/langContext";
 import { ArrowRight, ChevronLeft, ChevronRight, Droplets, MapPin, Wind } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import SiteFooter from "@/components/SiteFooter";
@@ -67,6 +68,7 @@ function applyFilter<T extends { id: string }>(items: T[], filter?: PageSection[
 }
 
 const CityPage = () => {
+  const { t, tl } = useLang();
   const { citySlug } = useParams<{ citySlug: string }>();
   const { data: snapshot, isLoading } = useHierarchySnapshot();
   const refs       = useRef<Record<string, HTMLElement | null>>({});
@@ -295,19 +297,19 @@ const CityPage = () => {
                   </Link>
                 ) : (
                   <Link to="/" className="inline-flex items-center gap-1.5 transition-opacity hover:opacity-70">
-                    <ChevronLeft className="h-4 w-4" /> На головну
+                    <ChevronLeft className="h-4 w-4" /> {t("backHome")}
                   </Link>
                 )}
               </div>
               <div className="flex items-center gap-3 text-[#002f5e]/65">
                 <span className="text-[15px] text-[#002f5e]/30">{star}</span>
-                <span>{city.settlementType ?? "Місто"}</span>
+                <span>{city.settlementType ?? t("city")}</span>
                 <span className="text-[15px] text-[#002f5e]/30">{star}</span>
                 <span>Одещина</span>
                 <span className="text-[15px] text-[#002f5e]/30">{star}</span>
               </div>
               <div className="flex w-[160px] justify-end pr-2">
-                <Link to="/" className="transition-opacity hover:opacity-70">Головна</Link>
+                <Link to="/" className="transition-opacity hover:opacity-70">{t("home")}</Link>
               </div>
             </div>
           </div>
@@ -388,7 +390,9 @@ const ObjectSection = ({
   setRef: (id: string) => (el: HTMLElement | null) => void;
   scroll: (key: string, dir: 1 | -1) => void;
   scrollRefs: React.MutableRefObject<Record<string, HTMLDivElement | null>>;
-}) => (
+}) => {
+  const { t } = useLang();
+  return (
   <section ref={setRef(sectionId)} className="scroll-mt-[52px] flex h-screen flex-col overflow-x-hidden px-4 py-14 md:px-10"
     style={{ background: `linear-gradient(160deg, transparent 0%, transparent 30%, rgba(0,0,0,0.04) 42%, rgba(0,0,0,0.04) 52%, rgba(0,0,0,0.12) 62%, rgba(0,0,0,0.12) 72%, rgba(0,0,0,0.28) 82%, rgba(0,0,0,0.28) 90%, rgba(0,0,0,0.48) 100%), ${bg}` }}>
     <div className="mx-auto flex h-full w-full max-w-[1400px] flex-col">
@@ -437,7 +441,7 @@ const ObjectSection = ({
                         </p>
                       )}
                       <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/12 px-4 py-1.5 text-[11px] font-odesa-medium text-[#fff2e8]">
-                        Детальніше <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-1" />
+                        {t("details")} <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-1" />
                       </div>
                     </div>
                   </div>
@@ -449,6 +453,7 @@ const ObjectSection = ({
       </div>
     </div>
   </section>
-);
+  );
+};
 
 export default CityPage;

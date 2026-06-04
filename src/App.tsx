@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { LangProvider } from "@/lib/langContext";
 import Index from "./pages/Index";
 import CityPage from "./pages/CityPage";
 import DistrictPage from "./pages/DistrictPage";
@@ -27,6 +28,7 @@ const ScrollToTop = () => {
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
+    <LangProvider>
     <TooltipProvider>
       <BrowserRouter>
         <ScrollToTop />
@@ -47,6 +49,7 @@ const App = () => (
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
+    </LangProvider>
   </QueryClientProvider>
 );
 

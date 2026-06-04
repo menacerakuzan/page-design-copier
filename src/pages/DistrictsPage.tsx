@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useLang } from "@/lib/langContext";
 import { Link } from "react-router-dom";
 import { ChevronLeft, ArrowRight, MapPin, ChevronRight, X } from "lucide-react";
 import SiteFooter from "@/components/SiteFooter";
@@ -37,6 +38,8 @@ const TYPE_BG: Record<string, string> = {
 };
 
 export default function DistrictsPage() {
+  const { lang } = useLang();
+  const t = (uk?: string | null, en?: string | null) => (lang === "en" && en) ? en : (uk ?? "");
   const { data: snapshot, isLoading } = useHierarchySnapshot();
   const [activeDistrict, setActiveDistrict] = useState<District | null>(null);
   const [activeCity, setActiveCity] = useState<City | null>(null);
@@ -135,17 +138,17 @@ export default function DistrictsPage() {
 
           <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
             className="text-[12px] uppercase tracking-[0.08em] font-odesa-medium text-[#df9b3b]">
-            {activeCity ? (activeCity.settlementType ?? "місто") : activeDistrict ? "оберіть населений пункт" : "оберіть район"}
+            {activeCity ? (activeCity.settlementType ?? "місто") : activeDistrict ? t("оберіть населений пункт", "select a settlement") : t("оберіть район", "select a district")}
           </motion.p>
           <motion.h1 key={activeCity?.id ?? activeDistrict?.id ?? "root"}
             initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}
             className="mt-3 font-odesa-medium text-[56px] leading-[0.92] md:text-[100px]">
-            {activeCity ? activeCity.name : activeDistrict ? activeDistrict.name : "Райони"}
+            {activeCity ? t(activeCity.name, activeCity.nameEn) : activeDistrict ? t(activeDistrict.name, activeDistrict.nameEn) : t("Райони", "Districts")}
           </motion.h1>
           {!activeDistrict && (
             <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8, delay: 0.2 }}
               className="mt-5 max-w-[560px] text-[18px] leading-[1.55] text-[#fff2e8]/65 font-odesa-regular">
-              Досліджуйте райони Одеської області — оберіть район, населений пункт і знайдіть найкращі місця
+              {t("Досліджуйте райони Одеської області — оберіть район, населений пункт і знайдіть найкращі місця", "Explore the districts of Odesa region — select a district, settlement and find the best places")}
             </motion.p>
           )}
         </div>
@@ -180,10 +183,10 @@ export default function DistrictsPage() {
                         <div className="absolute inset-0"
                           style={{ background: "linear-gradient(160deg, transparent 0%, transparent 30%, rgba(0,0,0,0.04) 42%, rgba(0,0,0,0.04) 52%, rgba(0,0,0,0.18) 65%, rgba(0,0,0,0.6) 100%)" }} />
                         <div className="absolute bottom-0 left-0 right-0 p-5">
-                          <p className="font-odesa-medium text-[26px] leading-[1.05] text-[#fff2e8]">{d.name}</p>
-                          {d.subtitle && <p className="mt-1 text-[14px] font-odesa-regular text-[#fff2e8]/60">{d.subtitle}</p>}
+                          <p className="font-odesa-medium text-[26px] leading-[1.05] text-[#fff2e8]">{t(d.name, d.nameEn)}</p>
+                          {d.subtitle && <p className="mt-1 text-[14px] font-odesa-regular text-[#fff2e8]/60">{t(d.subtitle, d.subtitleEn)}</p>}
                           <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/12 px-4 py-1.5 text-[13px] font-odesa-medium text-[#fff2e8]">
-                            Переглянути <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
+                            {t("Переглянути", "View")} <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
                           </div>
                         </div>
                       </motion.button>
