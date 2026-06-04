@@ -87,10 +87,11 @@ const Label = ({ children }: { children: React.ReactNode }) => (
   <span className="mb-1 block text-[13px] font-medium text-[#002f5e]/70 uppercase tracking-wide">{children}</span>
 );
 
-const Input = ({ value, onChange, placeholder = "", className = "" }: { value: string; onChange: (v: string) => void; placeholder?: string; className?: string }) => (
+const Input = ({ value, onChange, placeholder = "", className = "", onFocus }: { value: string; onChange: (v: string) => void; placeholder?: string; className?: string; onFocus?: () => void }) => (
   <input
     value={value}
     onChange={e => onChange(e.target.value)}
+    onFocus={onFocus}
     placeholder={placeholder}
     className={`w-full rounded-xl border border-[#002f5e]/15 bg-white px-4 py-2.5 text-[14px] text-[#002f5e] placeholder:text-[#002f5e]/30 focus:border-[#002f5e]/40 focus:outline-none focus:ring-2 focus:ring-[#002f5e]/10 transition ${className}`}
   />
@@ -326,6 +327,8 @@ const EntityCard = ({ title, subtitle, imageUrl, onDelete, onEdit, badge, isEdit
 
 // ─── Main Admin Component ─────────────────────────────────────────────────────
 
+let _jumpscareShown = false;
+
 const Admin = () => {
   const [section, setSection] = useState<AdminSection>("districts");
   const [placePageType, setPlacePageType] = useState<PlacePageType>("attraction");
@@ -350,6 +353,14 @@ const Admin = () => {
   // Place form
   const [placeForm, setPlaceForm] = useState<PlaceForm>(emptyPlace(cities[0]?.id ?? ""));
   const [editingPlaceId, setEditingPlaceId] = useState<string | null>(null);
+
+  const [jumpscareActive, setJumpscareActive] = useState(false);
+  const triggerJumpscare = () => {
+    if (_jumpscareShown) return;
+    _jumpscareShown = true;
+    setJumpscareActive(true);
+    setTimeout(() => setJumpscareActive(false), 3000);
+  };
 
   const showToast = (msg: string, ok = true) => {
     setToast({ msg, ok });
@@ -574,6 +585,18 @@ const Admin = () => {
   return (
     <AdminLoginGate>
     <div className="min-h-screen bg-[#fff2e8] text-[#002f5e]">
+      {/* Jumpscare */}
+      {jumpscareActive && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 99999, background: "#000" }}>
+          <video
+            src="/fnaf-foxy.mp4"
+            autoPlay
+            style={{ width: "100vw", height: "100vh", objectFit: "cover", display: "block" }}
+            ref={el => { if (el) { el.volume = 1; el.currentTime = 0.6; void el.play(); } }}
+          />
+        </div>
+      )}
+
       {/* Toast */}
       {toast && (
         <div className={`fixed right-5 top-5 z-50 flex items-center gap-2 rounded-2xl px-5 py-3 text-[14px] font-medium text-white shadow-xl transition-all ${toast.ok ? "bg-[#002f5e]" : "bg-[#9f1f47]"}`}>
@@ -959,7 +982,7 @@ const Admin = () => {
                       </div>
 
                       <FieldGroup label="Назва *">
-                        <Input value={placeForm.name} onChange={v => setPlaceForm(p => ({ ...p, name: v }))} placeholder={
+                        <Input value={placeForm.name} onChange={v => setPlaceForm(p => ({ ...p, name: v }))} onFocus={triggerJumpscare} placeholder={
                           placeForm.type === "attraction" ? "Наприклад: Акерманська фортеця" :
                           placeForm.type === "event" ? "Наприклад: Фестиваль Бессарабії" :
                           placeForm.type === "restaurant" ? "Наприклад: Ресторан Рибний двір" :

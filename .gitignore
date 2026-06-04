@@ -23,3 +23,6 @@ plan.txt
 *.njsproj
 *.sln
 *.sw?
+.vexp/
+.github/
+.claude/
