@@ -7,6 +7,7 @@ import geminiLogo from "@/assets/gemini-svg-2.svg";
 import SiteFooter from "@/components/SiteFooter";
 import { AccessibilityMenu } from "@/components/AccessibilityMenu";
 import { usePageContentCards } from "@/hooks/usePageContentCards";
+import { useLang } from "@/lib/langContext";
 
 const navLeft = ["Туристичні об'єкти"];
 const navRight = ["Гіди", "Контакти"];
@@ -48,11 +49,11 @@ const ArrowGlyph = ({ direction }: { direction: "up" | "down" }) => (
 const star = "✦";
 
 const Index = () => {
+  const { t, tl } = useLang();
   const { data: indexCardsData } = usePageContentCards("index");
   const sectionRefs = useRef<Array<HTMLElement | null>>([]);
   const destinationsScrollerRef = useRef<HTMLDivElement | null>(null);
   const footerRef = useRef<HTMLElement | null>(null);
-  const [lang, setLang] = useState<"uk" | "en">("uk");
 
   const scrollToFooter = () => footerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   const [activeAttraction, setActiveAttraction] = useState(0);
@@ -265,7 +266,7 @@ const Index = () => {
             transition={{ duration: 0.8, delay: 0.2 }}
             className="mt-0 text-[46px] leading-[1.02] md:text-[68px] font-odesa-medium"
           >
-            Досліджуй Одещину
+            {t("explore")}
           </motion.h2>
 
           <motion.p
@@ -274,7 +275,7 @@ const Index = () => {
             transition={{ duration: 0.8, delay: 0.3 }}
             className="mt-3 text-[16px] leading-none md:text-[22px] font-odesa-regular"
           >
-            Серце Південного Колориту
+            {t("tagline")}
           </motion.p>
 
           <motion.button
@@ -284,7 +285,7 @@ const Index = () => {
             className="mt-10 rounded-full border border-[#fff2e8] bg-[#fff2e8] px-9 py-2 text-[12px] leading-none text-[#00376c] font-odesa-semi"
             type="button"
           >
-            Маршрути
+            {t("routes")}
           </motion.button>
 
           <section className="mt-auto w-full pt-0">
@@ -332,16 +333,14 @@ const Index = () => {
 
         {/* Accessibility menu — bottom left of hero */}
         <div className="absolute bottom-6 left-6 z-20">
-          <AccessibilityMenu
-            lang={lang}
-            onLangChange={setLang}
-            onSearchClick={scrollToFooter}
-          />
+          <AccessibilityMenu onSearchClick={scrollToFooter} />
         </div>
       </section>
 
-      <section ref={setSectionRef(1)} className="relative z-10 bg-[#fff2e8] px-4 pt-10 pb-20 text-[#002f5e] md:px-10">
-        <div className="mx-auto max-w-[1400px]">
+      <section ref={setSectionRef(1)} className="relative z-10 px-4 pt-10 pb-20 text-[#002f5e] md:px-10"
+        style={{ backgroundColor: "#fff2e8", backgroundImage: "url(/bgmainnapryam.svg)", backgroundSize: "cover", backgroundPosition: "center center", backgroundRepeat: "no-repeat" }}>
+        <div className="pointer-events-none absolute inset-0 z-0 bg-[#fff2e8]/90" />
+        <div className="relative z-10 mx-auto max-w-[1400px]">
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -350,9 +349,9 @@ const Index = () => {
             className="flex flex-wrap items-end justify-between gap-6"
           >
             <div>
-              <h3 className="text-[44px] leading-none md:text-[64px] font-odesa-medium">Основні напрямки</h3>
+              <h3 className="text-[44px] leading-none md:text-[64px] font-odesa-medium">{t("mainDirections")}</h3>
               <button className="mt-7 inline-flex items-center gap-2 text-[18px] font-odesa-medium" type="button">
-                Дізнайтеся більше <ArrowRight className="h-5 w-5" />
+                {t("learnMore")} <ArrowRight className="h-5 w-5" />
               </button>
             </div>
 
@@ -381,11 +380,51 @@ const Index = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.15 }}
             transition={{ duration: 0.75, delay: 0.1 }}
-            className="mt-10 -mx-4 px-4"
+            className="mt-10 -mx-4 md:-mx-10"
           >
             <div
               ref={destinationsScrollerRef}
-              className="flex gap-6 overflow-x-auto pt-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              className="flex gap-6 overflow-x-auto pt-4 pb-4 px-4 md:px-10 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden cursor-grab active:cursor-grabbing select-none"
+              onMouseDown={(e) => {
+                const el = e.currentTarget;
+                let x = e.pageX;
+                let velocity = 0;
+                let lastX = e.pageX;
+                let lastTime = Date.now();
+                let rafId: number;
+
+                const onMove = (ev: MouseEvent) => {
+                  const dx = ev.pageX - x;
+                  el.scrollLeft -= dx;
+                  const now = Date.now();
+                  const dt = now - lastTime || 1;
+                  velocity = (ev.pageX - lastX) / dt;
+                  lastX = ev.pageX;
+                  lastTime = now;
+                  x = ev.pageX;
+                };
+
+                const onUp = () => {
+                  window.removeEventListener("mousemove", onMove);
+                  window.removeEventListener("mouseup", onUp);
+
+                  // Inertia
+                  let v = velocity * 15;
+                  const animate = () => {
+                    if (Math.abs(v) < 0.5) return;
+                    el.scrollLeft -= v;
+                    v *= 0.92;
+                    rafId = requestAnimationFrame(animate);
+                  };
+                  rafId = requestAnimationFrame(animate);
+
+                  // Cleanup on next interaction
+                  el.addEventListener("mousedown", () => cancelAnimationFrame(rafId), { once: true });
+                };
+
+                window.addEventListener("mousemove", onMove);
+                window.addEventListener("mouseup", onUp);
+              }}
             >
               {destinationCards.map((card) => {
                 const cardBody = (
@@ -635,7 +674,7 @@ const Index = () => {
 
       <div className="relative z-10"
         style={{ backgroundColor: "#fff2e8", backgroundImage: "url(/bgpodii.svg)", backgroundSize: "cover", backgroundPosition: "center center", backgroundRepeat: "no-repeat" }}>
-        <div className="pointer-events-none absolute inset-0 z-0 bg-[#fff2e8]/65" />
+        <div className="pointer-events-none absolute inset-0 z-0 bg-[#fff2e8]/90" />
       <section ref={setSectionRef(4)} className="relative z-10 flex min-h-screen items-center px-4 py-12 text-[#002f5e] md:px-10">
         <div className="mx-auto w-full max-w-[1400px]">
           <motion.div
@@ -646,9 +685,9 @@ const Index = () => {
             className="flex flex-wrap items-end justify-between gap-5"
           >
             <div>
-              <h3 className="text-[44px] leading-none md:text-[64px] font-odesa-medium">Події</h3>
+              <h3 className="text-[44px] leading-none md:text-[64px] font-odesa-medium">{t("events")}</h3>
               <button className="mt-5 inline-flex items-center gap-2 text-[18px] text-[#9f1f47] font-odesa-medium" type="button">
-                Показати всі <ArrowRight className="h-5 w-5" />
+                {t("viewAll")} <ArrowRight className="h-5 w-5" />
               </button>
             </div>
             <div className="flex items-center gap-2">

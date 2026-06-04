@@ -73,11 +73,13 @@ type PlaceForm = {
   mapUrl: string; address: string; phone: string; website: string;
   eventDates: string; hours: string; amenities: string;
   published: boolean; tourismTypes: string[];
+  nameEn: string; subtitleEn: string; descriptionEn: string;
+  detailedInfoEn: string; addressEn: string; hoursEn: string; amenitiesEn: string;
 };
 
 const emptyDistrict = (regionId: string): DistrictForm => ({ id: "", name: "", subtitle: "", description: "", detailedInfo: "", imageUrl: "", videoUrl: "", reelUrl: "", regionId });
 const emptyCity = (districtId: string): CityForm => ({ id: "", name: "", subtitle: "", description: "", detailedInfo: "", imageUrl: "", videoUrl: "", reelUrl: "", districtId, weatherCityName: "", settlementType: "місто" });
-const emptyPlace = (cityId: string): PlaceForm => ({ id: "", slug: "", name: "", subtitle: "", description: "", detailedInfo: "", imageUrl: "", videoUrl: "", reelUrl: "", cityId, districtOnlyMode: false, type: "attraction", mapUrl: "", address: "", phone: "", website: "", eventDates: "", hours: "", amenities: "", published: true, tourismTypes: [] });
+const emptyPlace = (cityId: string): PlaceForm => ({ id: "", slug: "", name: "", subtitle: "", description: "", detailedInfo: "", imageUrl: "", videoUrl: "", reelUrl: "", cityId, districtOnlyMode: false, type: "attraction", mapUrl: "", address: "", phone: "", website: "", eventDates: "", hours: "", amenities: "", published: true, tourismTypes: [], nameEn: "", subtitleEn: "", descriptionEn: "", detailedInfoEn: "", addressEn: "", hoursEn: "", amenitiesEn: "" });
 
 // ─── sub-components ───────────────────────────────────────────────────────────
 
@@ -512,6 +514,13 @@ const Admin = () => {
         hours: placeForm.hours || undefined,
         amenities: placeForm.amenities || undefined,
         tourismTypes: placeForm.tourismTypes.length ? placeForm.tourismTypes : undefined,
+        nameEn: placeForm.nameEn || undefined,
+        subtitleEn: placeForm.subtitleEn || undefined,
+        descriptionEn: placeForm.descriptionEn || undefined,
+        detailedInfoEn: placeForm.detailedInfoEn || undefined,
+        addressEn: placeForm.addressEn || undefined,
+        hoursEn: placeForm.hoursEn || undefined,
+        amenitiesEn: placeForm.amenitiesEn || undefined,
       };
       await upsertTourismObject(place);
       setPlaces(prev => editingPlaceId ? prev.map(p => p.id === id ? place : p) : [place, ...prev]);
@@ -528,7 +537,7 @@ const Admin = () => {
   const editPlace = (p: TourismObject) => {
     setEditingPlaceId(p.id);
     const isDistrictOnly = !p.cityId;
-    setPlaceForm({ id: p.id, slug: p.slug, name: p.name, subtitle: p.subtitle ?? "", description: p.description ?? "", detailedInfo: p.detailedInfo ?? "", imageUrl: p.imageUrl ?? "", videoUrl: p.videoUrl ?? "", reelUrl: p.reelUrl ?? "", cityId: isDistrictOnly ? p.districtId : (p.cityId ?? ""), districtOnlyMode: isDistrictOnly, type: p.type, mapUrl: p.mapUrl ?? "", address: p.address ?? "", phone: p.phone ?? "", website: p.website ?? "", eventDates: p.eventDates ?? "", hours: p.hours ?? "", amenities: p.amenities ?? "", published: p.published, tourismTypes: p.tourismTypes ?? [] });
+    setPlaceForm({ id: p.id, slug: p.slug, name: p.name, subtitle: p.subtitle ?? "", description: p.description ?? "", detailedInfo: p.detailedInfo ?? "", imageUrl: p.imageUrl ?? "", videoUrl: p.videoUrl ?? "", reelUrl: p.reelUrl ?? "", cityId: isDistrictOnly ? p.districtId : (p.cityId ?? ""), districtOnlyMode: isDistrictOnly, type: p.type, mapUrl: p.mapUrl ?? "", address: p.address ?? "", phone: p.phone ?? "", website: p.website ?? "", eventDates: p.eventDates ?? "", hours: p.hours ?? "", amenities: p.amenities ?? "", published: p.published, tourismTypes: p.tourismTypes ?? [], nameEn: p.nameEn ?? "", subtitleEn: p.subtitleEn ?? "", descriptionEn: p.descriptionEn ?? "", detailedInfoEn: p.detailedInfoEn ?? "", addressEn: p.addressEn ?? "", hoursEn: p.hoursEn ?? "", amenitiesEn: p.amenitiesEn ?? "" });
   };
 
   const handleDeletePlace = async (id: string) => {
@@ -965,6 +974,37 @@ const Admin = () => {
                       </div>
                       <div><span className="mb-1 block text-[13px] font-medium text-[#002f5e]/70 uppercase tracking-wide">Детальна інформація</span>
                         <RichTextEditor value={placeForm.detailedInfo} onChange={v => setPlaceForm(p => ({ ...p, detailedInfo: v }))} />
+                      </div>
+
+                      {/* English version */}
+                      <div className="rounded-xl border border-[#002f5e]/15 bg-[#002f5e]/3 p-4 flex flex-col gap-3">
+                        <span className="text-[13px] font-semibold text-[#002f5e]/50 uppercase tracking-wide">🇬🇧 English version</span>
+                        <FieldGroup label="Name (EN)">
+                          <Input value={placeForm.nameEn} onChange={v => setPlaceForm(p => ({ ...p, nameEn: v }))} placeholder="e.g. Akkerman Fortress" />
+                        </FieldGroup>
+                        <FieldGroup label="Subtitle (EN)">
+                          <Input value={placeForm.subtitleEn} onChange={v => setPlaceForm(p => ({ ...p, subtitleEn: v }))} placeholder="Short subtitle" />
+                        </FieldGroup>
+                        <div><span className="mb-1 block text-[13px] font-medium text-[#002f5e]/70 uppercase tracking-wide">Description (EN)</span>
+                          <RichTextEditor value={placeForm.descriptionEn} onChange={v => setPlaceForm(p => ({ ...p, descriptionEn: v }))} />
+                        </div>
+                        <div><span className="mb-1 block text-[13px] font-medium text-[#002f5e]/70 uppercase tracking-wide">Detailed info (EN)</span>
+                          <RichTextEditor value={placeForm.detailedInfoEn} onChange={v => setPlaceForm(p => ({ ...p, detailedInfoEn: v }))} />
+                        </div>
+                        {(placeForm.type === "restaurant" || placeForm.type === "hotel" || placeForm.type === "attraction") && (
+                          <>
+                            <FieldGroup label="Address (EN)">
+                              <Input value={placeForm.addressEn} onChange={v => setPlaceForm(p => ({ ...p, addressEn: v }))} placeholder="e.g. 15 Pushkinska St" />
+                            </FieldGroup>
+                            <FieldGroup label={placeForm.type === "hotel" ? "Amenities (EN)" : "Working hours (EN)"}>
+                              <Input
+                                value={placeForm.type === "hotel" ? placeForm.amenitiesEn : placeForm.hoursEn}
+                                onChange={v => setPlaceForm(p => placeForm.type === "hotel" ? ({ ...p, amenitiesEn: v }) : ({ ...p, hoursEn: v }))}
+                                placeholder={placeForm.type === "hotel" ? "Wi-Fi, parking, pool..." : "Mon-Sun 10:00–22:00"}
+                              />
+                            </FieldGroup>
+                          </>
+                        )}
                       </div>
 
                       {/* Type-specific fields */}

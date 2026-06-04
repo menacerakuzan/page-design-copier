@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef } from "react";
+import { useLang } from "@/lib/langContext";
 import { motion } from "framer-motion";
 import {
   ArrowRight, ArrowUpRight, Calendar, ChevronLeft, ChevronRight,
@@ -102,6 +103,8 @@ const EntityDetail = ({ type }: { type: PageType }) => {
   );
 
   const { config } = usePageConfig(type, object?.id ?? null);
+  const { lang } = useLang();
+  const tl = (uk?: string | null, en?: string | null) => (lang === "en" && en) ? en : (uk ?? "");
 
   useEffect(() => { window.scrollTo({ top: 0, behavior: "auto" }); }, [slug]);
 
@@ -118,13 +121,13 @@ const EntityDetail = ({ type }: { type: PageType }) => {
 
   const heroImage   = heroCard?.imageUrl ?? object.imageUrl ?? "https://images.unsplash.com/photo-1467269204594-9661b134dd2b?auto=format&fit=crop&w=2400&q=80";
   const heroVideo   = (heroCard?.payload?.videoUrl as string | undefined) ?? object.videoUrl;
-  const description = String(overviewCard?.payload?.text ?? object.description ?? `${object.name} — унікальний об'єкт Одещини.`);
-  const address     = String(contactCard?.payload?.address ?? object.address ?? city?.name ?? "Одещина");
+  const description = String(overviewCard?.payload?.text ?? tl(object.description, object.descriptionEn) ?? `${tl(object.name, object.nameEn)} — унікальний об'єкт Одещини.`);
+  const address     = String(contactCard?.payload?.address ?? tl(object.address, object.addressEn) ?? tl(city?.name, city?.nameEn) ?? "Одещина");
   const phone       = String(contactCard?.payload?.phone ?? object.phone ?? "");
   const website     = contactCard?.href ?? object.website ?? "";
   const mapUrl      = object.mapUrl ?? "";
-  const hours       = object.hours ?? "";
-  const amenities   = object.amenities ?? "";
+  const hours       = tl(object.hours, object.hoursEn);
+  const amenities   = tl(object.amenities, object.amenitiesEn);
   const tourismTypes= object.tourismTypes ?? [];
   const backTo      = city ? `/napryamky/${city.slug}` : district ? `/raion/${district.slug}` : "/";
 
@@ -186,9 +189,9 @@ const EntityDetail = ({ type }: { type: PageType }) => {
                   viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.7, delay: 0.05 }}>
                   <div className="text-[20px] leading-[1.55] font-odesa-regular md:text-[28px] article-content"
                     style={{ color: `${textColor}e6` }} dangerouslySetInnerHTML={{ __html: description }} />
-                  {object.detailedInfo && (
+                  {(object.detailedInfo || object.detailedInfoEn) && (
                     <div className="mt-6 text-[17px] leading-[1.65] font-odesa-regular md:text-[20px] article-content"
-                      style={{ color: `${textColor}88` }} dangerouslySetInnerHTML={{ __html: object.detailedInfo }} />
+                      style={{ color: `${textColor}88` }} dangerouslySetInnerHTML={{ __html: tl(object.detailedInfo, object.detailedInfoEn) }} />
                   )}
                   {object.reelUrl && (
                     <div className="mt-8 w-full max-w-[200px]">
@@ -213,7 +216,7 @@ const EntityDetail = ({ type }: { type: PageType }) => {
                     className="scroll-mt-[52px] space-y-4 lg:sticky lg:top-[64px] lg:self-start">
                     <div className="rounded-[28px] border p-7"
                       style={{ backgroundColor: NAVY, color: BG, borderColor: `${m.accent}35`, boxShadow: `0 4px 30px ${m.accent}20` }}>
-                      <p className="font-odesa-medium text-[26px] leading-[1.05]">{object.name}</p>
+                      <p className="font-odesa-medium text-[26px] leading-[1.05]">{tl(object.name, object.nameEn)}</p>
                       <div className="mt-1 h-px w-full bg-white/10" />
                       <div className="mt-5 space-y-4">
                         {address && address.split("\n").filter(Boolean).map((a, i) => (
@@ -561,7 +564,7 @@ const EntityDetail = ({ type }: { type: PageType }) => {
             <source src={heroVideo} type="video/mp4" />
           </video>
         ) : (
-          <img src={heroImage} alt={object.name} className="absolute inset-0 h-full w-full object-cover" />
+          <img src={heroImage} alt={tl(object.name, object.nameEn)} className="absolute inset-0 h-full w-full object-cover" />
         )}
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,12,33,0.28)_0%,rgba(0,12,33,0.0)_40%,rgba(0,12,33,0.85)_100%)]" />
 
@@ -592,7 +595,7 @@ const EntityDetail = ({ type }: { type: PageType }) => {
           <motion.h1 initial={{ opacity: 0, y: 28 }} animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.85, ease: [0.22, 1, 0.36, 1] }}
             className="font-odesa-medium text-[58px] leading-[0.93] md:text-[100px] lg:text-[120px]">
-            {object.name}
+            {tl(object.name, object.nameEn)}
           </motion.h1>
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.65, delay: 0.1 }} className="mt-5">
             <span className="inline-block rounded-full px-5 py-2 text-[12px] uppercase tracking-[0.2em] font-odesa-medium backdrop-blur-md shadow-lg"
@@ -603,7 +606,7 @@ const EntityDetail = ({ type }: { type: PageType }) => {
           {object.subtitle && (
             <motion.p initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.75, delay: 0.18 }}
               className="mt-3 text-[18px] font-odesa-regular text-[#fff2e8]/80 md:text-[26px]">
-              {object.subtitle}
+              {tl(object.subtitle, object.subtitleEn)}
             </motion.p>
           )}
           {tourismTypes.length > 0 && (
@@ -656,13 +659,13 @@ const EntityDetail = ({ type }: { type: PageType }) => {
 
       {/* ══════════════════  FULL-BLEED IMAGE STRIP  ════════════════════ */}
       <section className="relative h-[50vh] min-h-[320px] overflow-hidden md:h-[60vh]">
-        <img src={heroImage} alt={object.name} className="h-full w-full object-cover" />
+        <img src={heroImage} alt={tl(object.name, object.nameEn)} className="h-full w-full object-cover" />
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,12,33,0.0)_0%,rgba(0,12,33,0.55)_100%)]" />
         <div className="absolute bottom-0 left-0 right-0 px-6 pb-10 text-[#fff2e8] md:px-14">
           <p className="text-[12px] uppercase tracking-[0.25em] font-odesa-medium text-[#fff2e8]/55">
             {city?.name ?? district?.name ?? "Одещина"}
           </p>
-          <p className="mt-1 font-odesa-medium text-[36px] leading-none md:text-[52px]">{object.name}</p>
+          <p className="mt-1 font-odesa-medium text-[36px] leading-none md:text-[52px]">{tl(object.name, object.nameEn)}</p>
         </div>
       </section>
 

@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import { ChevronLeft, X, Calendar, ArrowRight } from "lucide-react";
 import SiteFooter from "@/components/SiteFooter";
+import { useLang } from "@/lib/langContext";
 import { usePageContentCards } from "@/hooks/usePageContentCards";
 
 const star = "✦";
@@ -18,6 +19,7 @@ type Article = {
 };
 
 export default function InfoPage() {
+  const { t } = useLang();
   const [activeArticle, setActiveArticle] = useState<Article | null>(null);
   const { data: cardsData } = usePageContentCards("articles");
 
@@ -44,7 +46,7 @@ export default function InfoPage() {
           <div className="rounded-b-[48px] bg-[#fff2e8] px-6 pb-4 pt-4 text-[#002f5e]">
             <div className="flex items-center justify-between gap-4 text-[14px] font-odesa-medium">
               <Link to="/" className="inline-flex items-center gap-1.5 transition-opacity hover:opacity-70">
-                <ChevronLeft className="h-4 w-4" /> На головну
+                <ChevronLeft className="h-4 w-4" /> {t("backHome")}
               </Link>
               <div className="flex items-center gap-3 text-[#002f5e]/65">
                 <span className="text-[15px] text-[#002f5e]/30">{star}</span>
@@ -53,7 +55,7 @@ export default function InfoPage() {
                 <span>Одещина</span>
                 <span className="text-[15px] text-[#002f5e]/30">{star}</span>
               </div>
-              <Link to="/" className="transition-opacity hover:opacity-70">Головна</Link>
+              <Link to="/" className="transition-opacity hover:opacity-70">{t("home")}</Link>
             </div>
           </div>
         </div>
@@ -127,7 +129,7 @@ export default function InfoPage() {
               transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
               className="fixed inset-x-0 bottom-0 top-8 z-50 mx-auto w-full max-w-[900px] overflow-y-auto rounded-t-[32px] bg-[#fff2e8]">
               <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[#002f5e]/10 bg-[#fff2e8] px-6 py-4">
-                <p className="text-[13px] uppercase tracking-[0.2em] font-odesa-medium text-[#002f5e]/40">Стаття</p>
+                <p className="text-[13px] uppercase tracking-[0.2em] font-odesa-medium text-[#002f5e]/40">{t("article")}</p>
                 <button type="button" onClick={() => setActiveArticle(null)}
                   className="flex h-9 w-9 items-center justify-center rounded-full border border-[#002f5e]/15 text-[#002f5e]/50 transition hover:bg-[#002f5e]/8">
                   <X className="h-4 w-4" />

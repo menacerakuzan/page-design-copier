@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from "react";
+import { useLang } from "@/lib/langContext";
+import type { TranslationKey } from "@/lib/i18n";
 import {
   Eye, Contrast, Palette, Link2, Type, Circle, ImageOff, VideoOff, MousePointer2, RotateCcw, X, Globe, Search,
 } from "lucide-react";
@@ -68,25 +70,25 @@ function applySettings(s: Settings) {
     : "";
 }
 
-const TOGGLE_BUTTONS = [
-  { key: "invertColors" as const, label: "Інвертувати кольори", Icon: Eye },
-  { key: "grayscale" as const, label: "Чорно-біле", Icon: Contrast },
-  { key: "highSaturation" as const, label: "Висока насиченість", Icon: Palette },
-  { key: "highlightLinks" as const, label: "Підсвічування посилань", Icon: Link2 },
-  { key: "highContrast" as const, label: "Контраст", Icon: Circle },
-  { key: "hideImages" as const, label: "Приховати зображення", Icon: ImageOff },
-  { key: "hideVideos" as const, label: "Приховати відео", Icon: VideoOff },
-  { key: "bigCursor" as const, label: "Великий курсор", Icon: MousePointer2 },
+const TOGGLE_BUTTONS: { key: keyof Omit<Settings, "fontSize">; labelKey: TranslationKey; Icon: any }[] = [
+  { key: "invertColors", labelKey: "invertColors", Icon: Eye },
+  { key: "grayscale", labelKey: "grayscale", Icon: Contrast },
+  { key: "highSaturation", labelKey: "highSaturation", Icon: Palette },
+  { key: "highlightLinks", labelKey: "highlightLinks", Icon: Link2 },
+  { key: "highContrast", labelKey: "highContrast", Icon: Circle },
+  { key: "hideImages", labelKey: "hideImages", Icon: ImageOff },
+  { key: "hideVideos", labelKey: "hideVideos", Icon: VideoOff },
+  { key: "bigCursor", labelKey: "bigCursor", Icon: MousePointer2 },
 ];
 
 interface Props {
-  lang: "uk" | "en";
-  onLangChange: (l: "uk" | "en") => void;
   onSearchClick?: () => void;
   align?: "left" | "right";
 }
 
-export function AccessibilityMenu({ lang, onLangChange, onSearchClick, align = "left" }: Props) {
+export function AccessibilityMenu({ onSearchClick, align = "left" }: Props) {
+  const { lang, setLang, t } = useLang();
+  const onLangChange = setLang;
   const [open, setOpen] = useState(false);
   const [settings, setSettings] = useState<Settings>(DEFAULT);
   const ref = useRef<HTMLDivElement>(null);
@@ -145,7 +147,7 @@ export function AccessibilityMenu({ lang, onLangChange, onSearchClick, align = "
         <div className={`absolute bottom-14 z-50 w-[310px] rounded-2xl bg-[#fff2e8] text-[#002f5e] border border-[#002f5e]/20 overflow-hidden ${align === "right" ? "right-0" : "left-0"}`}>
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-[#002f5e]/10">
-            <span className="text-[14px] font-odesa-semi">Меню доступності</span>
+            <span className="text-[14px] font-odesa-semi">{t("accessibility")}</span>
             <button type="button" onClick={() => setOpen(false)} className="rounded-full p-1 hover:bg-[#002f5e]/10 transition-colors">
               <X className="h-4 w-4" />
             </button>
@@ -154,7 +156,7 @@ export function AccessibilityMenu({ lang, onLangChange, onSearchClick, align = "
           {/* Lang switcher */}
           <div className="flex items-center gap-1 px-4 py-3 border-b border-[#002f5e]/10">
             <Globe className="h-4 w-4 mr-1 opacity-50" />
-            <span className="text-[12px] opacity-50 mr-2 font-odesa-regular">Мова:</span>
+            <span className="text-[12px] opacity-50 mr-2 font-odesa-regular">{t("language")}:</span>
             {(["uk", "en"] as const).map((l) => (
               <button key={l} type="button" onClick={() => onLangChange(l)}
                 className={`rounded-full px-3 py-1 text-[12px] transition-colors font-odesa-medium ${lang === l ? "bg-[#002f5e] text-[#fff2e8]" : "hover:bg-[#002f5e]/10"}`}>
@@ -166,7 +168,7 @@ export function AccessibilityMenu({ lang, onLangChange, onSearchClick, align = "
           {/* Font size */}
           <div className="flex items-center gap-1 px-4 py-3 border-b border-[#002f5e]/10">
             <Type className="h-4 w-4 mr-1 opacity-50" />
-            <span className="text-[12px] opacity-50 mr-2 font-odesa-regular">Текст:</span>
+            <span className="text-[12px] opacity-50 mr-2 font-odesa-regular">{t("fontSize")}:</span>
             {([["normal", "A"], ["large", "A+"], ["xlarge", "A++"]] as const).map(([size, label]) => (
               <button key={size} type="button" onClick={() => setSettings((s) => ({ ...s, fontSize: size }))}
                 className={`rounded-full px-3 py-1 text-[12px] transition-colors font-odesa-medium ${settings.fontSize === size ? "bg-[#002f5e] text-[#fff2e8]" : "hover:bg-[#002f5e]/10"}`}>
@@ -177,7 +179,7 @@ export function AccessibilityMenu({ lang, onLangChange, onSearchClick, align = "
 
           {/* Toggle buttons grid */}
           <div className="grid grid-cols-3 gap-2 p-3">
-            {TOGGLE_BUTTONS.map(({ key, label, Icon }) => (
+            {TOGGLE_BUTTONS.map(({ key, labelKey, Icon }) => (
               <button key={key} type="button" onClick={() => toggle(key)}
                 className={`flex flex-col items-center gap-1.5 rounded-xl p-2.5 text-center text-[11px] leading-tight transition-all font-odesa-regular border ${
                   settings[key]
@@ -185,7 +187,7 @@ export function AccessibilityMenu({ lang, onLangChange, onSearchClick, align = "
                     : "bg-white/60 text-[#002f5e] border-[#002f5e]/10 hover:bg-[#002f5e]/8"
                 }`}>
                 <Icon className="h-5 w-5 shrink-0" />
-                <span>{label}</span>
+                <span>{t(labelKey)}</span>
               </button>
             ))}
           </div>
@@ -195,7 +197,7 @@ export function AccessibilityMenu({ lang, onLangChange, onSearchClick, align = "
             <button type="button" onClick={reset}
               className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#002f5e] py-2.5 text-[12px] text-[#fff2e8] transition-opacity hover:opacity-80 font-odesa-medium">
               <RotateCcw className="h-4 w-4" />
-              Скинути налаштування
+              {t("reset")}
             </button>
           </div>
         </div>

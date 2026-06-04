@@ -4,6 +4,7 @@ import { AccessibilityMenu } from "@/components/AccessibilityMenu";
 import { fallbackContentCards } from "@/data/contentCardsFallback";
 import { usePageContentCards } from "@/hooks/usePageContentCards";
 import { useHierarchySnapshot } from "@/hooks/useHierarchySnapshot";
+import { useLang } from "@/lib/langContext";
 
 const footerColumns = [
   {
@@ -44,10 +45,10 @@ const socialLinks = [
 ];
 
 const SiteFooter = () => {
+  const { t } = useLang();
   const { data: globalCardsData } = usePageContentCards("global");
   const { data: hierarchy } = useHierarchySnapshot();
   const [query, setQuery] = useState("");
-  const [lang, setLang] = useState<"uk" | "en">("uk");
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   const globalCards = useMemo(() => {
@@ -124,7 +125,7 @@ const SiteFooter = () => {
             ref={searchInputRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Пошук"
+            placeholder={t("search")}
             className="h-16 w-full rounded-full border border-[#002f5e]/10 bg-[#9f1f47] pl-16 pr-6 text-[24px] text-[#fff2e8] placeholder:text-[#fff2e8]/70 outline-none transition-colors focus:border-[#002f5e]/40 focus:bg-[#8f1a40] font-odesa-medium"
           />
         </div>
@@ -142,7 +143,7 @@ const SiteFooter = () => {
 
       <div className="mx-auto max-w-[1200px] border-t border-[#002f5e]/20 pt-10">
         <div className="flex flex-col items-center text-center">
-          <h4 className="text-[30px] leading-none text-[#002f5e]/70 font-odesa-medium">Зв'язок</h4>
+          <h4 className="text-[30px] leading-none text-[#002f5e]/70 font-odesa-medium">{t("contact")}</h4>
           <div className="mt-4 flex items-center gap-2">
             {socialLinksData.map(({ label, href, Icon }) => (
               <a
@@ -170,8 +171,6 @@ const SiteFooter = () => {
       {/* Accessibility menu — bottom right */}
       <div className="mx-auto mt-8 max-w-[1200px] flex justify-end">
         <AccessibilityMenu
-          lang={lang}
-          onLangChange={setLang}
           align="right"
           onSearchClick={() => {
             searchInputRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });

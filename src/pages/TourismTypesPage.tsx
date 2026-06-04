@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useLang } from "@/lib/langContext";
 import { Link } from "react-router-dom";
 import { ChevronLeft, ArrowRight, MapPin } from "lucide-react";
 import SiteFooter from "@/components/SiteFooter";
@@ -45,6 +46,7 @@ const DEFAULT_IMAGES: Record<string, string> = {
 };
 
 export default function TourismTypesPage() {
+  const { t, tl } = useLang();
   const [activeType, setActiveType] = useState<string | null>(null);
   const { data: snapshot } = useHierarchySnapshot();
   const { data: cardsData } = usePageContentCards("tourism-types");
@@ -73,7 +75,7 @@ export default function TourismTypesPage() {
           <div className="rounded-b-[48px] bg-[#fff2e8] px-6 pb-4 pt-4 text-[#002f5e]">
             <div className="flex items-center justify-between gap-4 text-[14px] font-odesa-medium">
               <Link to="/" className="inline-flex items-center gap-1.5 transition-opacity hover:opacity-70">
-                <ChevronLeft className="h-4 w-4" /> На головну
+                <ChevronLeft className="h-4 w-4" /> {t("backHome")}
               </Link>
               <div className="flex items-center gap-3 text-[#002f5e]/65">
                 <span className="text-[15px] text-[#002f5e]/30">{star}</span>
@@ -82,22 +84,22 @@ export default function TourismTypesPage() {
                 <span>Одещина</span>
                 <span className="text-[15px] text-[#002f5e]/30">{star}</span>
               </div>
-              <Link to="/" className="transition-opacity hover:opacity-70">Головна</Link>
+              <Link to="/" className="transition-opacity hover:opacity-70">{t("home")}</Link>
             </div>
           </div>
         </div>
         <div className="relative z-10 mx-auto mt-16 max-w-[1400px] px-4 md:px-10">
           <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
             className="text-[12px] uppercase tracking-[0.08em] font-odesa-medium text-[#df9b3b]">
-            01 — напрямки
+            {t("types")}
           </motion.p>
           <motion.h1 initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
             className="mt-3 font-odesa-medium text-[56px] leading-[0.92] md:text-[100px]">
-            Види туризму
+            {t("typesTitle")}
           </motion.h1>
           <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8, delay: 0.2 }}
             className="mt-5 max-w-[560px] text-[18px] leading-[1.55] text-[#fff2e8]/65 font-odesa-regular">
-            Оберіть напрямок — і знайдіть місця, події та готелі Одещини що відповідають вашим інтересам
+            {t("typesDesc")}
           </motion.p>
         </div>
       </section>
@@ -199,7 +201,7 @@ export default function TourismTypesPage() {
                             </p>
                           )}
                           <div className="mt-3 inline-flex items-center gap-1.5 text-[13px] font-odesa-medium text-[#df9b3b]">
-                            Детальніше <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
+                            {t("details")} <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
                           </div>
                         </div>
                       </Link>

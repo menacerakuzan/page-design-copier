@@ -23,7 +23,9 @@ export type ContentCardEntity = {
   sectionKey: string;
   cardType: CardType;
   title: string;
+  titleEn?: string | null;
   subtitle: string | null;
+  subtitleEn?: string | null;
   imageUrl: string | null;
   href: string | null;
   cityId: string | null;
