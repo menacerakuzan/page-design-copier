@@ -74,4 +74,8 @@ export type TourismObject = {
   amenitiesEn?: string;
   tourismTypes?: string[];
   reelUrl?: string;
+  reelImageUrl?: string;
+  venueId?: string;
+  repertoire?: string;
+  heroFontSize?: string;
 };

@@ -8,6 +8,7 @@ import SiteFooter from "@/components/SiteFooter";
 import { AccessibilityMenu } from "@/components/AccessibilityMenu";
 import { usePageContentCards } from "@/hooks/usePageContentCards";
 import { useLang } from "@/lib/langContext";
+import RoutesOverlay from "@/components/RoutesOverlay";
 
 const navLeft = ["Туристичні об'єкти"];
 const navRight = ["Гіди", "Контакти"];
@@ -53,11 +54,14 @@ const Index = () => {
   const { data: indexCardsData } = usePageContentCards("index");
   const sectionRefs = useRef<Array<HTMLElement | null>>([]);
   const destinationsScrollerRef = useRef<HTMLDivElement | null>(null);
+  const interestingScrollerRef = useRef<HTMLDivElement | null>(null);
   const footerRef = useRef<HTMLElement | null>(null);
+  const heroVideoRef = useRef<HTMLVideoElement | null>(null);
 
   const scrollToFooter = () => footerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   const [activeAttraction, setActiveAttraction] = useState(0);
   const [eventsPage, setEventsPage] = useState(0);
+  const [routesOpen, setRoutesOpen] = useState(false);
 
   const liveCards = useMemo(
     () => (indexCardsData ?? []).filter((c) => c.pageKey === "index"),
@@ -128,11 +132,12 @@ const Index = () => {
     const sections = sectionRefs.current.filter(Boolean) as HTMLElement[];
     if (!sections.length) return;
 
-    const probe = window.scrollY + window.innerHeight * 0.4;
+    const viewportMid = window.innerHeight * 0.5;
     let currentIndex = 0;
 
     sections.forEach((section, idx) => {
-      if (section.offsetTop <= probe) currentIndex = idx;
+      const rect = section.getBoundingClientRect();
+      if (rect.top <= viewportMid) currentIndex = idx;
     });
 
     const targetIndex = Math.min(Math.max(currentIndex + direction, 0), sections.length - 1);
@@ -176,6 +181,7 @@ const Index = () => {
   };
 
   return (
+    <>
     <div className="bg-[#fff2e8]">
       <div className="fixed right-8 top-1/2 z-50 flex -translate-y-1/2 flex-col gap-4">
         <button
@@ -198,6 +204,7 @@ const Index = () => {
 
       <section ref={setSectionRef(0)} className="relative min-h-screen overflow-hidden text-[#fff2e8]">
         <video
+          ref={heroVideoRef}
           className="absolute inset-0 h-full w-full object-cover"
           autoPlay
           loop
@@ -222,7 +229,7 @@ const Index = () => {
                 <Link to="/districts" className="transition-opacity hover:opacity-75">Туристичні об'єкти</Link>
               </nav>
 
-              <h1 className="px-2 text-center text-[42px] leading-[0.95] tracking-[0.04em] font-odesa-medium font-odesa-ss02">
+              <h1 className="px-2 text-center text-[42px] leading-[0.95] font-odesa-medium font-odesa-ss02" style={{ letterSpacing: "0.04em" }}>
                 ОДЕЩИНА
               </h1>
 
@@ -278,15 +285,18 @@ const Index = () => {
             {t("tagline")}
           </motion.p>
 
-          <motion.button
+          <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.75, delay: 0.4 }}
-            className="mt-10 rounded-full border border-[#fff2e8] bg-[#fff2e8] px-9 py-2 text-[12px] leading-none text-[#00376c] font-odesa-semi"
-            type="button"
+            className="mt-10"
           >
-            {t("routes")}
-          </motion.button>
+            <button
+              onClick={() => setRoutesOpen(true)}
+              className="inline-block rounded-full border border-[#fff2e8] bg-[#fff2e8] px-9 py-2 text-[12px] leading-none text-[#00376c] font-odesa-semi transition-opacity hover:opacity-85">
+              {t("routes")}
+            </button>
+          </motion.div>
 
           <section className="mt-auto w-full pt-0">
             <div className="mx-auto flex max-w-[1060px] flex-col items-center gap-6 md:relative md:min-h-[120px] md:block">
@@ -465,12 +475,42 @@ const Index = () => {
       <section ref={setSectionRef(2)} className="relative z-10 py-5 text-[#fff2e8] h-screen overflow-y-hidden flex flex-col justify-start" style={{ background: "linear-gradient(160deg, transparent 0%, transparent 30%, rgba(0,0,0,0.04) 42%, rgba(0,0,0,0.04) 52%, rgba(0,0,0,0.12) 62%, rgba(0,0,0,0.12) 72%, rgba(0,0,0,0.28) 82%, rgba(0,0,0,0.28) 90%, rgba(0,0,0,0.48) 100%), #001a3d" }}>
           {/* Right-edge fade hint */}
           <div className="pointer-events-none absolute right-0 inset-y-0 w-72 z-10" aria-hidden="true" style={{ background: "linear-gradient(to left, #1c1a15aa 0%, #1c1a1577 30%, #1c1a1533 60%, transparent 100%)" }} />
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true, amount: 0.15 }}
-            transition={{ duration: 0.6 }}
-            className="overflow-x-auto [overflow-y:clip] pt-3 pb-2 pl-20 md:pl-24 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          <div
+            ref={interestingScrollerRef}
+            className="overflow-x-auto [overflow-y:clip] pt-3 pb-2 pl-20 md:pl-24 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden cursor-grab active:cursor-grabbing select-none"
+            onMouseDown={(e) => {
+              const el = e.currentTarget;
+              let x = e.pageX;
+              let velocity = 0;
+              let lastX = e.pageX;
+              let lastTime = Date.now();
+              let rafId: number;
+              const onMove = (ev: MouseEvent) => {
+                const dx = ev.pageX - x;
+                el.scrollLeft -= dx;
+                const now = Date.now();
+                const dt = now - lastTime || 1;
+                velocity = (ev.pageX - lastX) / dt;
+                lastX = ev.pageX;
+                lastTime = now;
+                x = ev.pageX;
+              };
+              const onUp = () => {
+                window.removeEventListener("mousemove", onMove);
+                window.removeEventListener("mouseup", onUp);
+                let v = velocity * 15;
+                const animate = () => {
+                  if (Math.abs(v) < 0.5) return;
+                  el.scrollLeft -= v;
+                  v *= 0.92;
+                  rafId = requestAnimationFrame(animate);
+                };
+                rafId = requestAnimationFrame(animate);
+                el.addEventListener("mousedown", () => cancelAnimationFrame(rafId), { once: true });
+              };
+              window.addEventListener("mousemove", onMove);
+              window.addEventListener("mouseup", onUp);
+            }}
           >
             {interestingCards.length === 0 ? (
               <p className="text-[#fff2e8]/30 text-[15px] font-odesa-regular py-8">
@@ -511,7 +551,7 @@ const Index = () => {
                       <div>
                         <h4 className={`leading-[0.93] font-odesa-medium ${textSizeClass}`}>{item.title}</h4>
                         {item.description && (
-                          <p className={`mt-4 leading-[1.65] text-[#fff2e8]/55 font-odesa-regular ${descSizeClass}`}>{item.description}</p>
+                          <p className={`mt-4 leading-[1.65] text-[#fff2e8]/55 font-odesa-regular ${descSizeClass}`}>{item.description.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim()}</p>
                         )}
                       </div>
                       {/* bottom decorative line */}
@@ -566,7 +606,7 @@ const Index = () => {
                 </div>
               );
             })()}
-          </motion.div>
+          </div>
       </section>
 
       <section ref={setSectionRef(3)} className="relative min-h-screen overflow-hidden bg-black text-[#fff2e8]">
@@ -631,7 +671,7 @@ const Index = () => {
               </h3>
               {safeTopAttractions[activeAttraction].description && (
                 <p className="mt-3 text-[13px] leading-[1.6] text-[#fff2e8]/75 md:text-[15px] font-odesa-regular">
-                  {safeTopAttractions[activeAttraction].description}
+                  {safeTopAttractions[activeAttraction].description.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim()}
                 </p>
               )}
               <div className="mt-5 flex items-center gap-3">
@@ -781,6 +821,9 @@ const Index = () => {
         </div>
       </div>
     </div>
+
+    <RoutesOverlay open={routesOpen} onClose={() => setRoutesOpen(false)} />
+    </>
   );
 };
 

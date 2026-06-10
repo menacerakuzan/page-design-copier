@@ -1,10 +1,12 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLang } from "@/lib/langContext";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowRight, ArrowUpRight, Calendar, ChevronLeft, ChevronRight,
-  Clock, Globe, MapPin, Phone, Tag, Ticket, BookOpen,
+  Clock, Globe, MapPin, Phone, Tag, Ticket, BookOpen, Volume2, VolumeX, X,
 } from "lucide-react";
+import { GalleryVideoCard } from "@/components/GalleryVideoCard";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { Link, useParams } from "react-router-dom";
 import SiteFooter from "@/components/SiteFooter";
 import { useHierarchySnapshot } from "@/hooks/useHierarchySnapshot";
@@ -73,6 +75,38 @@ const LABEL_SHORT: Record<string, string> = {
 
 type PageType = "event" | "hotel" | "restaurant" | "attraction";
 
+function parseRepertoire(text: string): { date: string; title: string; time: string }[] {
+  return text.split("\n").map(line => {
+    const parts = line.split("—").map(s => s.trim());
+    return { date: parts[0] ?? "", title: parts[1] ?? line.trim(), time: parts[2] ?? "" };
+  }).filter(r => r.title);
+}
+
+function RepertoireCards({ repertoire, accent }: { repertoire: string; accent: string }) {
+  const rows = parseRepertoire(repertoire);
+  if (!rows.length) return null;
+  return (
+    <div className="mt-8 w-full">
+      <h3 className="mb-4 font-odesa-medium text-[22px]" style={{ color: accent }}>Репертуар</h3>
+      <div className="flex flex-col gap-2">
+        {rows.map((r, i) => (
+          <div key={i} className="flex items-center gap-3 rounded-[14px] border border-[#002f5e]/10 bg-white/70 px-4 py-3">
+            {r.date && (
+              <span className="shrink-0 rounded-lg px-2 py-1 text-[12px] font-odesa-medium text-white" style={{ backgroundColor: accent }}>
+                {r.date}
+              </span>
+            )}
+            <span className="flex-1 font-odesa-medium text-[15px] text-[#002f5e]">{r.title}</span>
+            {r.time && (
+              <span className="shrink-0 text-[13px] font-odesa-regular text-[#002f5e]/50">{r.time}</span>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function applyFilter<T extends { id: string }>(items: T[], filter?: PageSection["filter"]): T[] {
   let result = items;
   if (filter?.entityIds?.length) result = result.filter(i => filter.entityIds!.includes(i.id));
@@ -86,12 +120,14 @@ const EntityDetail = ({ type }: { type: PageType }) => {
   const pageKey = `detail-${type}-${slug}`;
   const refs       = useRef<Record<string, HTMLElement | null>>({});
   const scrollRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const [reelMuted, setReelMuted] = useState(true);
+  const [reelImageOpen, setReelImageOpen] = useState(false);
   const { data: snapshot, isLoading } = useHierarchySnapshot();
   const { data: cardsData } = usePageContentCards(pageKey);
   const m = meta[type];
 
   const object = useMemo(
-    () => snapshot?.objects.find(o => o.slug === slug && o.type === type),
+    () => snapshot?.objects.find(o => o.slug === slug && o.type === type && o.published),
     [snapshot, slug, type],
   );
 
@@ -102,13 +138,25 @@ const EntityDetail = ({ type }: { type: PageType }) => {
     [cardsData, pageKey],
   );
 
+  // Gallery cards use a different pageKey: "{type}-{id}" (set by AdminPageEditor)
+  const galleryPageKey = object ? `${type}-${object.id}` : "";
+  const { data: galleryCardsData } = usePageContentCards(galleryPageKey);
+  const galleryCards = useMemo(
+    () => (galleryCardsData ?? []).filter(c => c.pageKey === galleryPageKey),
+    [galleryCardsData, galleryPageKey],
+  );
+
   const { config } = usePageConfig(type, object?.id ?? null);
   const { lang } = useLang();
   const tl = (uk?: string | null, en?: string | null) => (lang === "en" && en) ? en : (uk ?? "");
 
   useEffect(() => { window.scrollTo({ top: 0, behavior: "auto" }); }, [slug]);
 
-  if (isLoading) return null;
+  if (isLoading) return (
+    <div className="min-h-screen bg-[#001a3d] flex items-center justify-center">
+      <div className="h-12 w-12 rounded-full border-4 border-[#fff2e8]/20 border-t-[#fff2e8]/80 animate-spin" />
+    </div>
+  );
   if (!object) return <NotFound />;
 
   const city     = snapshot?.cities.find(c => c.id === object.cityId);
@@ -121,7 +169,9 @@ const EntityDetail = ({ type }: { type: PageType }) => {
 
   const heroImage   = heroCard?.imageUrl ?? object.imageUrl ?? "https://images.unsplash.com/photo-1467269204594-9661b134dd2b?auto=format&fit=crop&w=2400&q=80";
   const heroVideo   = (heroCard?.payload?.videoUrl as string | undefined) ?? object.videoUrl;
-  const description = String(overviewCard?.payload?.text ?? tl(object.description, object.descriptionEn) ?? `${tl(object.name, object.nameEn)} — унікальний об'єкт Одещини.`);
+  const unescapeHtml = (s: string) =>
+    s.includes("&lt;") ? s.replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&").replace(/&quot;/g, '"') : s;
+  const description = unescapeHtml(String(overviewCard?.payload?.text ?? tl(object.description, object.descriptionEn) ?? `${tl(object.name, object.nameEn)} — унікальний об'єкт Одещини.`));
   const address     = String(contactCard?.payload?.address ?? tl(object.address, object.addressEn) ?? tl(city?.name, city?.nameEn) ?? "Одещина");
   const phone       = String(contactCard?.payload?.phone ?? object.phone ?? "");
   const website     = contactCard?.href ?? object.website ?? "";
@@ -191,15 +241,49 @@ const EntityDetail = ({ type }: { type: PageType }) => {
                     style={{ color: `${textColor}e6` }} dangerouslySetInnerHTML={{ __html: description }} />
                   {(object.detailedInfo || object.detailedInfoEn) && (
                     <div className="mt-6 text-[17px] leading-[1.65] font-odesa-regular md:text-[20px] article-content"
-                      style={{ color: `${textColor}88` }} dangerouslySetInnerHTML={{ __html: tl(object.detailedInfo, object.detailedInfoEn) }} />
+                      style={{ color: `${textColor}88` }} dangerouslySetInnerHTML={{ __html: unescapeHtml(tl(object.detailedInfo, object.detailedInfoEn)) }} />
                   )}
-                  {object.reelUrl && (
+                  {(object.reelUrl || object.reelImageUrl) && (
                     <div className="mt-8 w-full max-w-[200px]">
-                      <div className="overflow-hidden rounded-[20px] shadow-xl" style={{ aspectRatio: "9/16" }}>
-                        <video src={object.reelUrl} autoPlay muted loop playsInline className="h-full w-full object-cover" />
+                      <div className="relative overflow-hidden rounded-[20px] shadow-xl" style={{ aspectRatio: "9/16" }}>
+                        {object.reelImageUrl ? (
+                          <img
+                            src={object.reelImageUrl}
+                            alt={object.name}
+                            onClick={() => setReelImageOpen(true)}
+                            className="h-full w-full object-cover cursor-zoom-in transition-transform duration-300 hover:scale-105"
+                          />
+                        ) : (
+                          <>
+                            <video src={object.reelUrl} autoPlay muted={reelMuted} loop playsInline className="h-full w-full object-cover" />
+                            <button
+                              type="button"
+                              onClick={() => setReelMuted((m) => !m)}
+                              className="absolute bottom-3 right-3 flex items-center justify-center rounded-full border border-white/30 bg-black/50 p-2 text-white backdrop-blur-sm transition-all hover:bg-black/70"
+                              aria-label={reelMuted ? "Увімкнути звук" : "Вимкнути звук"}
+                            >
+                              {reelMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+                            </button>
+                          </>
+                        )}
                       </div>
                     </div>
                   )}
+                  {object.venueId && (() => {
+                    const venue = snapshot.objects.find(o => o.id === object.venueId);
+                    if (!venue) return null;
+                    return (
+                      <div className="mt-6 flex items-center gap-2 text-[15px] font-odesa-regular" style={{ color: `${textColor}99` }}>
+                        <MapPin className="h-4 w-4 shrink-0" style={{ color: m.accent }} />
+                        <span>Локація:</span>
+                        <Link to={`${ROUTE[venue.type]}/${venue.slug}`}
+                          className="font-odesa-medium underline underline-offset-2 transition-opacity hover:opacity-70"
+                          style={{ color: m.accent }}>
+                          {tl(venue.name, venue.nameEn)}
+                        </Link>
+                      </div>
+                    );
+                  })()}
                   {tourismTypes.length > 0 && (
                     <div className="mt-8 flex flex-wrap gap-2">
                       {tourismTypes.map(t => (
@@ -253,11 +337,16 @@ const EntityDetail = ({ type }: { type: PageType }) => {
                         ))}
                       </div>
                       {mapUrl && (
-                        <a href={mapUrl} target="_blank" rel="noreferrer"
-                          className="mt-7 inline-flex items-center gap-2 rounded-full px-7 py-3 text-[15px] font-odesa-medium transition-opacity hover:opacity-90"
-                          style={{ backgroundColor: GOLD, color: NAVY }}>
-                          На карті <ArrowRight className="h-4 w-4" />
-                        </a>
+                        <div className="mt-7 flex flex-wrap gap-2">
+                          {mapUrl.split("\n").filter(Boolean).map((url, i) => (
+                            <a key={i} href={url} target="_blank" rel="noreferrer"
+                              className="inline-flex items-center gap-2 rounded-full px-7 py-3 text-[15px] font-odesa-medium transition-opacity hover:opacity-90"
+                              style={{ backgroundColor: GOLD, color: NAVY }}>
+                              <MapPin className="h-4 w-4" />
+                              {mapUrl.split("\n").filter(Boolean).length > 1 ? `Карта ${i + 1}` : "На карті"} <ArrowRight className="h-4 w-4" />
+                            </a>
+                          ))}
+                        </div>
                       )}
                     </div>
                     {city && (
@@ -334,7 +423,7 @@ const EntityDetail = ({ type }: { type: PageType }) => {
 
       // ── event_dates ────────────────────────────────────────────
       case "event_dates": {
-        if (!object.eventDates && infoCards.length === 0) return null;
+        if (!object.eventDates && infoCards.length === 0 && !object.repertoire) return null;
         const bg = section.bgColor ?? schedBg;
         return (
           <section key={section.id} ref={setRef("schedule")}
@@ -348,6 +437,26 @@ const EntityDetail = ({ type }: { type: PageType }) => {
                   <InfoTile key={card.id} icon={<Tag className="h-6 w-6" />} label={card.subtitle ?? ""} value={card.title} accent={m.accent} />
                 ))}
               </div>
+              {object.repertoire && (
+                <div className="mt-12">
+                  <h3 className="mb-5 font-odesa-medium text-[28px]" style={{ color: m.accent }}>Репертуар</h3>
+                  <div className="flex flex-col gap-2 max-w-[700px]">
+                    {parseRepertoire(object.repertoire).map((r, i) => (
+                      <div key={i} className="flex items-center gap-3 rounded-[14px] border border-white/15 bg-white/10 px-4 py-3 backdrop-blur-sm">
+                        {r.date && (
+                          <span className="shrink-0 rounded-lg px-2 py-1 text-[12px] font-odesa-medium text-white" style={{ backgroundColor: m.accent }}>
+                            {r.date}
+                          </span>
+                        )}
+                        <span className="flex-1 font-odesa-medium text-[15px] text-[#fff2e8]">{r.title}</span>
+                        {r.time && (
+                          <span className="shrink-0 text-[13px] font-odesa-regular text-[#fff2e8]/60">{r.time}</span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </section>
         );
@@ -431,19 +540,72 @@ const EntityDetail = ({ type }: { type: PageType }) => {
 
       // ── map ────────────────────────────────────────────────────
       case "map": {
-        const embedUrl = (section.payload?.embedUrl as string | undefined) ?? "";
-        if (!embedUrl) return null;
+        const rawUrl = (section.payload?.embedUrl as string | undefined) ?? "";
+        if (!rawUrl) return null;
+
+        // Extract lat/lng from any Google Maps URL format
+        const extractCoords = (url: string): [string, string] | null => {
+          // @lat,lng,zoom format
+          const at = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+          if (at) return [at[1], at[2]];
+          // ?q=lat,lng format
+          const q = url.match(/[?&]q=(-?\d+\.\d+),(-?\d+\.\d+)/);
+          if (q) return [q[1], q[2]];
+          // ll=lat,lng format
+          const ll = url.match(/[?&]ll=(-?\d+\.\d+),(-?\d+\.\d+)/);
+          if (ll) return [ll[1], ll[2]];
+          return null;
+        };
+
+        let embedUrl = rawUrl;
+        let isOsm = false;
+        let noCoords = false;
+
+        if (rawUrl.includes("google.com/maps") && !rawUrl.includes("/maps/embed")) {
+          const coords = extractCoords(rawUrl);
+          if (coords) {
+            const [lat, lng] = coords;
+            embedUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${+lng - 0.01},${+lat - 0.007},${+lng + 0.01},${+lat + 0.007}&layer=mapnik&marker=${lat},${lng}`;
+            isOsm = true;
+          } else {
+            noCoords = true;
+          }
+        }
+
         const bg = section.bgColor ?? BG;
         const titleColor = bg === BG || bg === "#fff2e8" ? NAVY : "#fff2e8";
         return (
           <section key={section.id} className="px-4 py-14 md:px-10" style={{ backgroundColor: bg }}>
             <div className="mx-auto max-w-[1400px]">
-              {section.title && (
-                <h2 className="mb-6 font-odesa-medium text-[40px] leading-none" style={{ color: titleColor }}>{section.title}</h2>
+              {section.title && <h2 className="mb-6 font-odesa-medium text-[40px] leading-none" style={{ color: titleColor }}>{section.title}</h2>}
+              {section.subtitle && <p className="mb-4 text-[17px] font-odesa-regular" style={{ color: `${titleColor}88` }}>{section.subtitle}</p>}
+              {noCoords ? (
+                <a href={rawUrl} target="_blank" rel="noreferrer"
+                  className="flex items-center justify-center gap-3 rounded-[28px] border-2 border-dashed border-[#fff2e8]/20 py-20 text-[18px] font-odesa-medium text-[#fff2e8]/70 transition hover:border-[#fff2e8]/40 hover:text-[#fff2e8]">
+                  <MapPin className="h-6 w-6" style={{ color: GOLD }} />
+                  Відкрити на карті →
+                </a>
+              ) : (
+                <div className="overflow-hidden rounded-[28px]" style={{ height: "480px" }}>
+                  <iframe
+                    src={embedUrl}
+                    title="Карта"
+                    loading="lazy"
+                    allow="fullscreen"
+                    referrerPolicy="no-referrer-when-downgrade"
+                    className="h-full w-full border-0"
+                  />
+                </div>
               )}
-              <div className="overflow-hidden rounded-[28px]" style={{ height: "480px" }}>
-                <iframe src={embedUrl} title="Карта" loading="lazy" className="h-full w-full border-0" />
-              </div>
+              {isOsm && (
+                <div className="mt-3 flex items-center justify-between">
+                  <p className="text-[12px] text-[#002f5e]/35">© OpenStreetMap contributors</p>
+                  <a href={rawUrl} target="_blank" rel="noreferrer"
+                    className="text-[12px] text-[#002f5e]/40 underline underline-offset-2 hover:text-[#002f5e]/70 transition-colors">
+                    Відкрити в Google Maps →
+                  </a>
+                </div>
+              )}
             </div>
           </section>
         );
@@ -457,7 +619,8 @@ const EntityDetail = ({ type }: { type: PageType }) => {
         return (
           <section key={section.id} className="px-4 py-14 md:px-10" style={{ backgroundColor: bg }}>
             <div className="mx-auto max-w-[1200px]">
-              {section.title && <h2 className="mb-6 font-odesa-medium text-[40px] leading-none text-[#fff2e8]">{section.title}</h2>}
+              {section.title && <h2 className="mb-2 font-odesa-medium text-[40px] leading-none text-[#fff2e8]">{section.title}</h2>}
+              {section.subtitle && <p className="mb-4 text-[17px] font-odesa-regular text-[#fff2e8]/55">{section.subtitle}</p>}
               <div className="overflow-hidden rounded-[28px]" style={{ aspectRatio: "16/9" }}>
                 <iframe src={videoUrl} title={section.title} allow="autoplay; encrypted-media" allowFullScreen
                   className="h-full w-full border-0" />
@@ -476,6 +639,8 @@ const EntityDetail = ({ type }: { type: PageType }) => {
         return (
           <section key={section.id} className="px-4 py-14 md:px-10" style={{ backgroundColor: bg }}>
             <div className="mx-auto max-w-[1400px]">
+              {section.title && <h2 className="mb-2 font-odesa-medium text-[40px] leading-none text-[#fff2e8]">{section.title}</h2>}
+              {section.subtitle && <p className="mb-6 text-[17px] font-odesa-regular text-[#fff2e8]/55">{section.subtitle}</p>}
               <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
                 {stats.map(({ val, lbl }, i) => (
                   <motion.div key={i} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }}
@@ -522,8 +687,9 @@ const EntityDetail = ({ type }: { type: PageType }) => {
             <div className="mx-auto max-w-[1400px]">
               <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.7 }}>
-                {section.title && <h2 className="mb-6 font-odesa-medium text-[40px] leading-none" style={{ color: textColor }}>{section.title}</h2>}
-                <p className="text-[20px] leading-[1.55] font-odesa-regular md:text-[26px]" style={{ color: `${textColor}cc` }}>{text}</p>
+                {section.title && <h2 className="mb-2 font-odesa-medium text-[40px] leading-none" style={{ color: textColor }}>{section.title}</h2>}
+                {section.subtitle && <p className="mb-4 text-[17px] font-odesa-regular" style={{ color: `${textColor}88` }}>{section.subtitle}</p>}
+                <div className="text-[20px] leading-[1.55] font-odesa-regular md:text-[26px] article-content" style={{ color: `${textColor}cc` }} dangerouslySetInnerHTML={{ __html: text }} />
               </motion.div>
             </div>
           </section>
@@ -540,8 +706,66 @@ const EntityDetail = ({ type }: { type: PageType }) => {
         if (!items.length) return null;
         const bg = section.bgColor ?? ({ attraction: "#001a3d", event: "#3d0820", hotel: "#062820", restaurant: "#2a1200" }[relType] ?? NAVY);
         return (
-          <RelatedSection key={section.id} sectionId={`rel-${relType}`} title={section.title}
+          <RelatedSection key={section.id} sectionId={`rel-${relType}`} title={section.title} subtitle={section.subtitle}
             type={relType} items={items} bg={bg} setRef={setRef} scroll={scroll} scrollRefs={scrollRefs} />
+        );
+      }
+
+      // ── gallery ────────────────────────────────────────────────
+      case "gallery": {
+        const sectionKey = `gallery-${section.id}`;
+        const items = galleryCards
+          .filter((c) => c.sectionKey === sectionKey)
+          .sort((a, b) => a.sortOrder - b.sortOrder);
+        if (!items.length) return null;
+        const bg = section.bgColor ?? m.bg;
+        const isDark = bg !== "#fff2e8" && bg !== "#ffffff" && bg !== "#f4f4f0" && bg !== "#ffdfc6";
+        const tc = isDark ? "#fff2e8" : "#002f5e";
+        const CARD_H = "calc((100vh - 56px - 20px) / 2)";
+        const cardW = (colSpan: number) =>
+          colSpan === 3 ? `calc(${CARD_H} * 3 + 40px)` : colSpan === 2 ? `calc(${CARD_H} * 2 + 20px)` : CARD_H;
+        return (
+          <section key={section.id} className="py-14" style={{ backgroundColor: bg }}>
+            <div className="mx-auto mb-6 max-w-[1400px] px-4 md:px-10">
+              {section.title && <h2 className="font-odesa-medium text-[44px] leading-none md:text-[64px]" style={{ color: tc }}>{section.title}</h2>}
+              {section.subtitle && <p className="mt-2 text-[18px] font-odesa-regular md:text-[22px]" style={{ color: `${tc}99` }}>{section.subtitle}</p>}
+            </div>
+            <div className="flex gap-5 overflow-x-auto px-4 pb-4 md:px-10 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {items.map((item) => {
+                const isVideo = !!item.payload?.videoUrl;
+                const colSpan = (item.payload?.colSpan as number) ?? 1;
+                const textSize = (item.payload?.textSize as string) ?? "md";
+                const textSizeCls = textSize === "lg" ? "text-[28px]" : textSize === "sm" ? "text-[16px]" : "text-[20px]";
+                const w = cardW(colSpan);
+                if (isVideo) {
+                  return (
+                    <GalleryVideoCard
+                      key={item.id}
+                      src={item.payload!.videoUrl as string}
+                      title={item.title || undefined}
+                      textSizeCls={textSizeCls}
+                      style={{ width: w, height: CARD_H }}
+                    />
+                  );
+                }
+                return (
+                  <div key={item.id} className="relative shrink-0 overflow-hidden rounded-[22px]" style={{ width: w, height: CARD_H, minHeight: 280 }}>
+                    {item.imageUrl ? (
+                      <img src={item.imageUrl} alt={item.title} className="h-full w-full object-cover" />
+                    ) : (
+                      <div className="h-full w-full bg-[#002f5e]/20" />
+                    )}
+                    {item.title && (
+                      <>
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
+                        <p className={`absolute bottom-5 left-5 right-5 font-odesa-medium leading-tight text-[#fff2e8] ${textSizeCls}`}>{item.title}</p>
+                      </>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </section>
         );
       }
 
@@ -585,6 +809,16 @@ const EntityDetail = ({ type }: { type: PageType }) => {
           </div>
         </div>
 
+        <div className="relative z-20 px-6 pt-4 md:px-14">
+          <Breadcrumbs light crumbs={[
+            { label: "Одещина", href: "/" },
+            { label: "Райони", href: "/districts" },
+            ...(district ? [{ label: district.name, href: `/raion/${district.slug}` }] : []),
+            ...(city ? [{ label: city.name, href: `/napryamky/${city.slug}` }] : []),
+            { label: tl(object.name, object.nameEn) },
+          ]} />
+        </div>
+
         <div className="relative z-10 flex min-h-[calc(100vh-80px)] flex-col justify-end px-6 pb-10 text-[#fff2e8] md:px-14 md:pb-14">
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.05 }}
             className="mb-4 flex flex-wrap items-center gap-2 text-[14px] font-odesa-regular text-[#fff2e8]/65">
@@ -594,7 +828,12 @@ const EntityDetail = ({ type }: { type: PageType }) => {
           </motion.div>
           <motion.h1 initial={{ opacity: 0, y: 28 }} animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.85, ease: [0.22, 1, 0.36, 1] }}
-            className="font-odesa-medium text-[58px] leading-[0.93] md:text-[100px] lg:text-[120px]">
+            className={`font-odesa-medium leading-[0.93] ${
+              object.heroFontSize === "sm" ? "text-[36px] md:text-[56px] lg:text-[72px]" :
+              object.heroFontSize === "md" ? "text-[46px] md:text-[76px] lg:text-[96px]" :
+              object.heroFontSize === "lg" ? "text-[58px] md:text-[100px] lg:text-[130px]" :
+              "text-[58px] md:text-[100px] lg:text-[120px]"
+            }`}>
             {tl(object.name, object.nameEn)}
           </motion.h1>
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.65, delay: 0.1 }} className="mt-5">
@@ -670,6 +909,43 @@ const EntityDetail = ({ type }: { type: PageType }) => {
       </section>
 
       <SiteFooter />
+
+      <AnimatePresence>
+        {reelImageOpen && object.reelImageUrl && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.25 }}
+              onClick={() => setReelImageOpen(false)}
+              className="fixed inset-0 z-[90] bg-black/85 backdrop-blur-sm cursor-zoom-out"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.88 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.88 }}
+              transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+              onClick={() => setReelImageOpen(false)}
+              className="fixed inset-0 z-[91] flex items-center justify-center p-4 cursor-zoom-out"
+            >
+              <img
+                src={object.reelImageUrl}
+                alt={object.name}
+                onClick={e => e.stopPropagation()}
+                className="max-h-[90vh] max-w-[90vw] rounded-[20px] object-contain shadow-2xl cursor-default"
+              />
+              <button
+                type="button"
+                onClick={() => setReelImageOpen(false)}
+                className="absolute right-5 top-5 flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur-sm transition hover:bg-white/30"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
@@ -706,9 +982,9 @@ const InfoTile = ({ icon, label, value, accent }: { icon: React.ReactNode; label
 
 /* ── RelatedSection ──────────────────────────────────────────────── */
 const RelatedSection = ({
-  sectionId, title, type, items, bg, setRef, scroll, scrollRefs,
+  sectionId, title, subtitle, type, items, bg, setRef, scroll, scrollRefs,
 }: {
-  sectionId: string; title: string; type: string; items: TourismObject[]; bg: string;
+  sectionId: string; title: string; subtitle?: string; type: string; items: TourismObject[]; bg: string;
   setRef: (id: string) => (el: HTMLElement | null) => void;
   scroll: (key: string, dir: 1 | -1) => void;
   scrollRefs: React.MutableRefObject<Record<string, HTMLDivElement | null>>;
@@ -719,7 +995,10 @@ const RelatedSection = ({
       <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.15 }} transition={{ duration: 0.7 }}
         className="mb-7 flex flex-wrap items-end justify-between gap-4">
-        <h2 className="font-odesa-medium text-[44px] leading-none text-[#fff2e8] md:text-[64px]">{title}</h2>
+        <div>
+          <h2 className="font-odesa-medium text-[44px] leading-none text-[#fff2e8] md:text-[64px]">{title}</h2>
+          {subtitle && <p className="mt-2 text-[17px] font-odesa-regular text-[#fff2e8]/55">{subtitle}</p>}
+        </div>
         <div className="flex items-center gap-2">
           <button type="button" onClick={() => scroll(sectionId, -1)}
             className="flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-white/10 transition-all hover:bg-white/20" aria-label="Назад">

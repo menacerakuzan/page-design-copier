@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
+import { loadHierarchySnapshot } from "@/lib/adminRepository";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { LangProvider } from "@/lib/langContext";
@@ -12,9 +13,25 @@ import TourismTypesPage from "./pages/TourismTypesPage";
 import InfoPage from "./pages/InfoPage";
 import DistrictsPage from "./pages/DistrictsPage";
 import Admin from "./pages/Admin";
+import RoutesPage from "./pages/RoutesPage";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000,
+      gcTime: 30 * 60 * 1000,
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
+
+// Prefetch hierarchy immediately so detail pages render without waiting
+void queryClient.prefetchQuery({
+  queryKey: ["hierarchy-snapshot"],
+  queryFn: () => loadHierarchySnapshot(),
+});
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -44,6 +61,7 @@ const App = () => (
           <Route path="/podiyi/:slug" element={<EntityDetail type="event" />} />
           <Route path="/restorany/:slug" element={<EntityDetail type="restaurant" />} />
           <Route path="/hoteli/:slug" element={<EntityDetail type="hotel" />} />
+          <Route path="/marshruty" element={<RoutesPage />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="*" element={<NotFound />} />
         </Routes>

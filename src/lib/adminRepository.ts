@@ -102,6 +102,10 @@ const mapDbObject = (row: any): TourismObject => ({
   amenitiesEn: row.amenities_en ?? undefined,
   tourismTypes: row.tourism_types ?? [],
   reelUrl: row.reel_url ?? undefined,
+  reelImageUrl: row.reel_image_url ?? undefined,
+  venueId: row.venue_id ?? undefined,
+  repertoire: row.repertoire ?? undefined,
+  heroFontSize: row.hero_font_size ?? undefined,
 });
 
 const mapDbDistrict = (row: any): District => ({
@@ -167,6 +171,10 @@ const toDbObject = (obj: TourismObject) => ({
   address_en: obj.addressEn ?? null,
   hours_en: obj.hoursEn ?? null,
   amenities_en: obj.amenitiesEn ?? null,
+  reel_image_url: obj.reelImageUrl ?? null,
+  venue_id: obj.venueId ?? null,
+  repertoire: obj.repertoire ?? null,
+  hero_font_size: obj.heroFontSize ?? null,
 });
 
 const mapDbChange = (row: any): AdminChangeLog => ({
@@ -475,6 +483,9 @@ export async function insertDistrict(district: District) {
     image_url: district.imageUrl ?? null,
     video_url: district.videoUrl ?? null,
     reel_url: district.reelUrl ?? null,
+    name_en: district.nameEn ?? null,
+    subtitle_en: district.subtitleEn ?? null,
+    description_en: district.descriptionEn ?? null,
   };
   const { error } = await supabase.from(tableNames.districts).upsert(dbDistrict);
   if (error) throw error;
@@ -502,6 +513,9 @@ export async function upsertDistrict(district: District) {
     image_url: district.imageUrl ?? null,
     video_url: district.videoUrl ?? null,
     reel_url: district.reelUrl ?? null,
+    name_en: district.nameEn ?? null,
+    subtitle_en: district.subtitleEn ?? null,
+    description_en: district.descriptionEn ?? null,
   };
   const { error } = await supabase.from(tableNames.districts).upsert(dbDistrict);
   if (error) throw error;
@@ -530,6 +544,9 @@ export async function insertCity(city: City) {
     video_url: city.videoUrl ?? null,
     reel_url: city.reelUrl ?? null,
     weather_city_name: city.weatherCityName ?? null,
+    name_en: city.nameEn ?? null,
+    subtitle_en: city.subtitleEn ?? null,
+    description_en: city.descriptionEn ?? null,
   };
   const { error } = await supabase.from(tableNames.cities).upsert(dbCity);
   if (error) throw error;
@@ -559,6 +576,9 @@ export async function upsertCity(city: City) {
     video_url: city.videoUrl ?? null,
     reel_url: city.reelUrl ?? null,
     weather_city_name: city.weatherCityName ?? null,
+    name_en: city.nameEn ?? null,
+    subtitle_en: city.subtitleEn ?? null,
+    description_en: city.descriptionEn ?? null,
   };
   const { error } = await supabase.from(tableNames.cities).upsert(dbCity);
   if (error) throw error;

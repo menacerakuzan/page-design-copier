@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   AlignLeft, BarChart2, BedDouble, BookOpen, Building2, Calendar,
   CalendarDays, Check, ChevronDown, ChevronUp, Clock, Eye, EyeOff,
   FileText, Globe, Image as ImageIcon, Landmark, Map, MapPin, Minus,
   Palette, Phone, PlayCircle, Plus, Quote, RotateCcw, Settings2,
-  Star, Ticket, Trash2, UtensilsCrossed, X,
+  Star, Ticket, Trash2, UtensilsCrossed, Upload, Video, X,
 } from "lucide-react";
 import { District, City, TourismObject, TourismObjectType } from "@/types/hierarchy";
 import {
@@ -12,6 +12,9 @@ import {
   SECTION_KIND_META, makeDefaultConfig,
 } from "@/types/pages";
 import { getOrCreatePageConfig, upsertPageConfig } from "@/lib/pageConfigRepository";
+import type { ContentCardEntity } from "@/types/cms";
+import { upsertContentCard, deleteContentCard } from "@/lib/adminRepository";
+import { supabase } from "@/lib/supabaseClient";
 
 // ─── icon map ─────────────────────────────────────────────────────────────────
 
@@ -52,6 +55,245 @@ const COLOR_PRESETS = [
 ];
 
 const uid = () => Math.random().toString(36).slice(2, 10);
+
+// ─── Gallery card editor ──────────────────────────────────────────────────────
+
+type GalleryItem = ContentCardEntity & { _uploading?: boolean };
+
+const COL_SPAN_OPTIONS = [
+  { value: 1, label: "1/3" },
+  { value: 2, label: "1/2" },
+  { value: 3, label: "Повна" },
+];
+const TEXT_SIZE_OPTIONS = [
+  { value: "sm", label: "A" },
+  { value: "md", label: "A+" },
+  { value: "lg", label: "A++" },
+];
+
+const GalleryEditor = ({
+  sectionId,
+  entityType,
+  entityId,
+  allCards,
+  onCardsChange,
+}: {
+  sectionId: string;
+  entityType: PageEntityType;
+  entityId: string;
+  allCards: ContentCardEntity[];
+  onCardsChange: (cards: ContentCardEntity[]) => void;
+}) => {
+  const sectionKey = `gallery-${sectionId}`;
+  const pageKey = `${entityType}-${entityId}`;
+  const items = allCards
+    .filter((c) => c.pageKey === pageKey && c.sectionKey === sectionKey)
+    .sort((a, b) => a.sortOrder - b.sortOrder);
+
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const uploadFile = async (file: File): Promise<string> => {
+    if (supabase) {
+      const ext = file.name.split(".").pop();
+      const path = `gallery/${Date.now()}-${uid()}.${ext}`;
+      const { error } = await supabase.storage.from("media").upload(path, file, { upsert: true });
+      if (error) throw error;
+      return supabase.storage.from("media").getPublicUrl(path).data.publicUrl;
+    }
+    return URL.createObjectURL(file);
+  };
+
+  const handleFileAdd = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    if (!files.length) return;
+    setUploading(true);
+    try {
+      let currentCards = [...allCards];
+      let currentOrder = items.length;
+      for (const file of files) {
+        const url = await uploadFile(file);
+        const isVideo = file.type.startsWith("video/");
+        currentOrder += 1;
+        const card: ContentCardEntity = {
+          id: uid(),
+          pageKey,
+          sectionKey,
+          cardType: isVideo ? "info" : "destination",
+          title: "",
+          subtitle: null,
+          imageUrl: isVideo ? null : url,
+          href: null,
+          cityId: null, districtId: null, regionId: null,
+          sortOrder: currentOrder,
+          published: true,
+          payload: isVideo ? { videoUrl: url, colSpan: 2, textSize: "md" } : { colSpan: 1, textSize: "md" },
+        };
+        await upsertContentCard(card);
+        currentCards = [...currentCards, card];
+        onCardsChange(currentCards);
+      }
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
+  };
+
+  const updateItem = async (id: string, patch: Partial<ContentCardEntity>) => {
+    const card = items.find((c) => c.id === id);
+    if (!card) return;
+    const updated = { ...card, ...patch };
+    await upsertContentCard(updated);
+    onCardsChange(allCards.map((c) => (c.id === id ? updated : c)));
+  };
+
+  const deleteItem = async (id: string) => {
+    if (!confirm("Видалити елемент галереї?")) return;
+    await deleteContentCard(id);
+    onCardsChange(allCards.filter((c) => c.id !== id));
+    if (editingId === id) setEditingId(null);
+  };
+
+  const inputCls = "w-full rounded-xl border border-[#002f5e]/15 bg-white px-3 py-2 text-[13px] text-[#002f5e] placeholder:text-[#002f5e]/30 focus:border-[#002f5e]/35 focus:outline-none";
+
+  return (
+    <div className="mt-4 flex flex-col gap-3">
+      <div className="flex items-center justify-between">
+        <p className="text-[12px] font-semibold uppercase tracking-wide text-[#002f5e]/55">
+          Елементи галереї ({items.length})
+        </p>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            disabled={uploading}
+            className="flex items-center gap-1.5 rounded-xl bg-[#002f5e] px-3 py-1.5 text-[12px] font-medium text-[#fff2e8] transition hover:bg-[#002f5e]/85 disabled:opacity-50"
+          >
+            {uploading
+              ? <span className="h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent" />
+              : <Upload className="h-3.5 w-3.5" />}
+            Додати
+          </button>
+          <input ref={fileRef} type="file" accept="image/*,video/*" multiple className="hidden" onChange={handleFileAdd} />
+        </div>
+      </div>
+
+      {items.length === 0 && (
+        <div
+          className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-[#002f5e]/20 py-10 text-[#002f5e]/35 transition hover:border-[#002f5e]/40"
+          onClick={() => fileRef.current?.click()}
+        >
+          <ImageIcon className="h-8 w-8 opacity-40" />
+          <p className="text-[13px]">Натисніть або перетягніть фото / відео</p>
+        </div>
+      )}
+
+      <div className="flex flex-col gap-2">
+        {items.map((item) => {
+          const isVideo = !!item.payload?.videoUrl;
+          const colSpan = (item.payload?.colSpan as number) ?? 1;
+          const textSize = (item.payload?.textSize as string) ?? "md";
+          const isEditing = editingId === item.id;
+
+          return (
+            <div key={item.id} className="overflow-hidden rounded-2xl border border-[#002f5e]/10 bg-white">
+              {/* preview row */}
+              <div
+                className="flex cursor-pointer items-center gap-3 px-3 py-2.5 transition hover:bg-[#002f5e]/3"
+                onClick={() => setEditingId(isEditing ? null : item.id)}
+              >
+                <div className="h-12 w-16 shrink-0 overflow-hidden rounded-xl bg-[#002f5e]/8">
+                  {isVideo ? (
+                    <div className="flex h-full items-center justify-center text-[#002f5e]/30">
+                      <Video className="h-5 w-5" />
+                    </div>
+                  ) : item.imageUrl ? (
+                    <img src={item.imageUrl} alt={item.title} className="h-full w-full object-cover" />
+                  ) : (
+                    <div className="flex h-full items-center justify-center text-[#002f5e]/30">
+                      <ImageIcon className="h-5 w-5" />
+                    </div>
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[13px] font-semibold text-[#002f5e]">{item.title || "(без назви)"}</p>
+                  <p className="text-[11px] text-[#002f5e]/40">
+                    {isVideo ? "Відео" : "Фото"} · {COL_SPAN_OPTIONS.find((o) => o.value === colSpan)?.label}
+                  </p>
+                </div>
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); void deleteItem(item.id); }}
+                    className="flex h-7 w-7 items-center justify-center rounded-lg text-[#9f1f47]/30 transition hover:bg-[#9f1f47]/8 hover:text-[#9f1f47]"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                  <ChevronDown className={`h-4 w-4 text-[#002f5e]/30 transition-transform ${isEditing ? "rotate-180" : ""}`} />
+                </div>
+              </div>
+
+              {/* inline editor */}
+              {isEditing && (
+                <div className="flex flex-col gap-3 border-t border-[#002f5e]/8 px-3 py-3">
+                  <div>
+                    <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-[#002f5e]/45">Підпис</label>
+                    <input
+                      value={item.title}
+                      onChange={(e) => void updateItem(item.id, { title: e.target.value })}
+                      className={inputCls}
+                      placeholder="Підпис картки"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-[#002f5e]/45">Ширина картки</label>
+                    <div className="flex gap-1.5">
+                      {COL_SPAN_OPTIONS.map((opt) => (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => void updateItem(item.id, { payload: { ...item.payload, colSpan: opt.value } })}
+                          className={`flex-1 rounded-xl py-2 text-[12px] font-medium transition ${colSpan === opt.value ? "bg-[#002f5e] text-[#fff2e8]" : "bg-[#002f5e]/8 text-[#002f5e]/60 hover:bg-[#002f5e]/15"}`}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-[#002f5e]/45">Розмір тексту</label>
+                    <div className="flex gap-1.5">
+                      {TEXT_SIZE_OPTIONS.map((opt) => (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => void updateItem(item.id, { payload: { ...item.payload, textSize: opt.value } })}
+                          className={`flex-1 rounded-xl py-2 text-[12px] font-medium transition ${textSize === opt.value ? "bg-[#002f5e] text-[#fff2e8]" : "bg-[#002f5e]/8 text-[#002f5e]/60 hover:bg-[#002f5e]/15"}`}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  {!isVideo && (
+                    <button
+                      type="button"
+                      onClick={() => fileRef.current?.click()}
+                      className="flex items-center justify-center gap-2 rounded-xl border border-[#002f5e]/15 py-2 text-[12px] text-[#002f5e]/50 transition hover:border-[#002f5e]/30 hover:text-[#002f5e]"
+                    >
+                      <Upload className="h-3.5 w-3.5" /> Замінити файл
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -244,15 +486,18 @@ const SectionRow = ({
 // ─── Section editor panel ──────────────────────────────────────────────────────
 
 const SectionEditor = ({
-  section, entityType, places, districts, cities, onChange, onClose,
+  section, entityType, entityId, places, districts, cities, onChange, onClose, allCards, onCardsChange,
 }: {
   section: PageSection;
   entityType: PageEntityType;
+  entityId: string;
   places: TourismObject[];
   districts: District[];
   cities: City[];
   onChange: (updated: PageSection) => void;
   onClose: () => void;
+  allCards: ContentCardEntity[];
+  onCardsChange: (cards: ContentCardEntity[]) => void;
 }) => {
   const upd = (patch: Partial<PageSection>) => onChange({ ...section, ...patch });
 
@@ -359,12 +604,6 @@ const SectionEditor = ({
             <input value={section.payload?.embedUrl ?? ""} onChange={(e) => upd({ payload: { ...section.payload, embedUrl: e.target.value } })} placeholder="https://maps.google.com/maps?q=...&output=embed" className={inputCls} />
           </div>
         )}
-        {section.kind === "video" && (
-          <div>
-            <label className="mb-1 block text-[12px] font-semibold uppercase tracking-wide text-[#002f5e]/55">URL відео</label>
-            <input value={section.payload?.videoUrl ?? ""} onChange={(e) => upd({ payload: { ...section.payload, videoUrl: e.target.value } })} placeholder="https://..." className={inputCls} />
-          </div>
-        )}
         {section.kind === "custom_text" && (
           <div>
             <label className="mb-1 block text-[12px] font-semibold uppercase tracking-wide text-[#002f5e]/55">Текст блоку</label>
@@ -401,7 +640,22 @@ const SectionEditor = ({
             <textarea rows={3} value={section.payload?.ticketInfo ?? ""} onChange={(e) => upd({ payload: { ...section.payload, ticketInfo: e.target.value } })} placeholder="Квитки можна придбати на ..." className="w-full resize-none rounded-xl border border-[#002f5e]/15 bg-white px-4 py-2.5 text-[14px] text-[#002f5e] placeholder:text-[#002f5e]/30 focus:border-[#002f5e]/35 focus:outline-none" />
           </div>
         )}
+        {section.kind === "video" && (
+          <div>
+            <label className="mb-1 block text-[12px] font-semibold uppercase tracking-wide text-[#002f5e]/55">URL або завантажити відео</label>
+            <input value={section.payload?.videoUrl ?? ""} onChange={(e) => upd({ payload: { ...section.payload, videoUrl: e.target.value } })} placeholder="https://..." className={inputCls} />
+          </div>
+        )}
       </div>
+      {section.kind === "gallery" && (
+        <GalleryEditor
+          sectionId={section.id}
+          entityType={entityType}
+          entityId={entityId}
+          allCards={allCards}
+          onCardsChange={onCardsChange}
+        />
+      )}
     </div>
   );
 };
@@ -564,28 +818,40 @@ const EntityListPanel = ({
 
 // ─── Main AdminPageEditor ─────────────────────────────────────────────────────
 
-const AdminPageEditor = ({ entityType, districts, cities, places, showToast }: Props) => {
-  const [selectedEntityId, setSelectedEntityId] = useState<string>("default");
+const AdminPageEditor = ({ entityType, districts, cities, places, showToast, allCards, onCardsChange }: Props & { allCards: ContentCardEntity[]; onCardsChange: (cards: ContentCardEntity[]) => void }) => {
+  const storageKey = `admin-page-editor-entity-${entityType}`;
+  const [selectedEntityId, setSelectedEntityId] = useState<string>(
+    () => sessionStorage.getItem(storageKey) ?? "default"
+  );
+
+  const selectEntity = (id: string) => {
+    sessionStorage.setItem(storageKey, id);
+    setSelectedEntityId(id);
+  };
   const [config, setConfig] = useState<PageConfig | null>(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
   const [addPanelOpen, setAddPanelOpen] = useState(false);
 
-  const loadConfig = useCallback(async (entityId: string) => {
+  // Stable ref so loadConfig doesn't re-create when parent re-renders
+  const showToastRef = useRef(showToast);
+  useEffect(() => { showToastRef.current = showToast; });
+
+  const loadConfig = useCallback(async (entityId: string, resetEditing = true) => {
     setLoading(true);
-    setEditingSectionId(null);
+    if (resetEditing) setEditingSectionId(null);
     try {
       const cfg = await getOrCreatePageConfig(entityType, entityId);
       setConfig(cfg);
     } catch (e: unknown) {
-      showToast((e as Error)?.message ?? "Помилка завантаження", false);
+      showToastRef.current((e as Error)?.message ?? "Помилка завантаження", false);
     } finally {
       setLoading(false);
     }
-  }, [entityType, showToast]);
+  }, [entityType]);
 
-  useEffect(() => { void loadConfig(selectedEntityId); }, [loadConfig, selectedEntityId]);
+  useEffect(() => { void loadConfig(selectedEntityId, true); }, [loadConfig, selectedEntityId]);
 
   const save = async (cfg: PageConfig) => {
     setSaving(true);
@@ -724,9 +990,10 @@ const AdminPageEditor = ({ entityType, districts, cities, places, showToast }: P
           <div className="flex-1 overflow-y-auto">
             {editingSection && config ? (
               <SectionEditor key={editingSection.id} section={editingSection}
-                entityType={entityType} places={places} districts={districts} cities={cities}
+                entityType={entityType} entityId={selectedEntityId} places={places} districts={districts} cities={cities}
                 onChange={(sec) => updateSection(sec)}
                 onClose={() => setEditingSectionId(null)}
+                allCards={allCards} onCardsChange={onCardsChange}
               />
             ) : (
               <div className="flex h-full flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-[#002f5e]/12 text-center text-[#002f5e]/35">
@@ -747,7 +1014,7 @@ const AdminPageEditor = ({ entityType, districts, cities, places, showToast }: P
           Налаштувань для
         </p>
         <EntityListPanel entityType={entityType} districts={districts} cities={cities}
-          places={places} selectedId={selectedEntityId} onSelect={setSelectedEntityId} />
+          places={places} selectedId={selectedEntityId} onSelect={selectEntity} />
       </div>
 
       {addPanelOpen && config && (

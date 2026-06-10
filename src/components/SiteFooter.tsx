@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { Facebook, Instagram, Search } from "lucide-react";
 import { AccessibilityMenu } from "@/components/AccessibilityMenu";
 import { fallbackContentCards } from "@/data/contentCardsFallback";
@@ -89,10 +90,9 @@ const SiteFooter = () => {
 
   const searchItems = useMemo(
     () => [
-      ...(hierarchy?.regions ?? []).map((x) => ({ label: x.name, meta: "Область", href: "#" })),
-      ...(hierarchy?.districts ?? []).map((x) => ({ label: x.name, meta: "Район", href: "#" })),
+      ...(hierarchy?.districts ?? []).map((x) => ({ label: x.name, meta: "Район", href: `/raion/${x.slug}` })),
       ...(hierarchy?.cities ?? []).map((x) => ({ label: x.name, meta: "Місто", href: `/napryamky/${x.slug}` })),
-      ...(hierarchy?.objects ?? []).map((x) => ({
+      ...(hierarchy?.objects ?? []).filter((x) => x.published).map((x) => ({
         label: x.name,
         meta: typeMeta(x.type),
         href:
@@ -102,7 +102,7 @@ const SiteFooter = () => {
               ? `/hoteli/${x.slug}`
               : x.type === "restaurant"
                 ? `/restorany/${x.slug}`
-                : "#",
+                : `/mistse/${x.slug}`,
       })),
     ],
     [hierarchy],
@@ -132,10 +132,10 @@ const SiteFooter = () => {
         {filtered.length > 0 ? (
           <div className="mt-3 overflow-hidden rounded-2xl border border-[#002f5e]/20 bg-[#fff2e8] shadow-[0_10px_30px_rgba(0,47,94,0.10)]">
             {filtered.map((item) => (
-              <a key={`${item.meta}-${item.label}`} href={item.href} className="flex items-center justify-between border-b border-[#002f5e]/10 px-4 py-3 transition-colors last:border-b-0 hover:bg-[#002f5e]/5">
+              <Link key={`${item.meta}-${item.label}`} to={item.href} onClick={() => setQuery("")} className="flex items-center justify-between border-b border-[#002f5e]/10 px-4 py-3 transition-colors last:border-b-0 hover:bg-[#002f5e]/5">
                 <span className="text-[18px] text-[#002f5e] font-odesa-medium">{item.label}</span>
                 <span className="rounded-full bg-[#002f5e]/10 px-3 py-1 text-[12px] text-[#002f5e]/80">{item.meta}</span>
-              </a>
+              </Link>
             ))}
           </div>
         ) : null}

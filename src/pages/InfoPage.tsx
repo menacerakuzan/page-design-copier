@@ -16,10 +16,13 @@ type Article = {
   content: string;
   publishedAt: string;
   videoUrl: string;
+  titleEn: string | null;
+  subtitleEn: string | null;
+  contentEn: string | null;
 };
 
 export default function InfoPage() {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const [activeArticle, setActiveArticle] = useState<Article | null>(null);
   const { data: cardsData } = usePageContentCards("articles");
 
@@ -35,6 +38,9 @@ export default function InfoPage() {
         content: String(c.payload?.content ?? ""),
         publishedAt: String(c.payload?.publishedAt ?? ""),
         videoUrl: String(c.payload?.videoUrl ?? ""),
+        titleEn: c.payload?.titleEn ? String(c.payload.titleEn) : null,
+        subtitleEn: c.payload?.subtitleEn ? String(c.payload.subtitleEn) : null,
+        contentEn: c.payload?.contentEn ? String(c.payload.contentEn) : null,
       }));
   }, [cardsData]);
 
@@ -103,9 +109,13 @@ export default function InfoPage() {
                         <Calendar className="h-3.5 w-3.5" /> {article.publishedAt}
                       </p>
                     )}
-                    <h3 className="font-odesa-medium text-[22px] leading-[1.1]">{article.title}</h3>
-                    {article.subtitle && (
-                      <p className="mt-2 text-[15px] leading-[1.5] text-[#002f5e]/60 font-odesa-regular line-clamp-2">{article.subtitle}</p>
+                    <h3 className="font-odesa-medium text-[22px] leading-[1.1]">
+                      {(lang === "en" && article.titleEn) ? article.titleEn : article.title}
+                    </h3>
+                    {((lang === "en" && article.subtitleEn) ? article.subtitleEn : article.subtitle) && (
+                      <p className="mt-2 text-[15px] leading-[1.5] text-[#002f5e]/60 font-odesa-regular line-clamp-2">
+                        {(lang === "en" && article.subtitleEn) ? article.subtitleEn : article.subtitle}
+                      </p>
                     )}
                     <div className="mt-4 inline-flex items-center gap-1.5 text-[14px] font-odesa-medium text-[#df9b3b]">
                       Читати <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -147,9 +157,13 @@ export default function InfoPage() {
                     <Calendar className="h-3.5 w-3.5" /> {activeArticle.publishedAt}
                   </p>
                 )}
-                <h1 className="font-odesa-medium text-[36px] leading-[1.05] md:text-[52px]">{activeArticle.title}</h1>
-                {activeArticle.subtitle && (
-                  <p className="mt-4 text-[20px] leading-[1.5] text-[#002f5e]/65 font-odesa-regular">{activeArticle.subtitle}</p>
+                <h1 className="font-odesa-medium text-[36px] leading-[1.05] md:text-[52px]">
+                  {(lang === "en" && activeArticle.titleEn) ? activeArticle.titleEn : activeArticle.title}
+                </h1>
+                {((lang === "en" && activeArticle.subtitleEn) ? activeArticle.subtitleEn : activeArticle.subtitle) && (
+                  <p className="mt-4 text-[20px] leading-[1.5] text-[#002f5e]/65 font-odesa-regular">
+                    {(lang === "en" && activeArticle.subtitleEn) ? activeArticle.subtitleEn : activeArticle.subtitle}
+                  </p>
                 )}
                 {activeArticle.videoUrl && (
                   <div className="my-8 overflow-hidden rounded-[20px]" style={{ aspectRatio: "16/9" }}>
@@ -157,9 +171,13 @@ export default function InfoPage() {
                       allow="autoplay; encrypted-media" allowFullScreen className="h-full w-full border-0" />
                   </div>
                 )}
-                {activeArticle.content && (
-                  <div className="article-content mt-8"
-                    dangerouslySetInnerHTML={{ __html: activeArticle.content }} />
+                {((lang === "en" && activeArticle.contentEn) ? activeArticle.contentEn : activeArticle.content) && (
+                  <div className="article-content mt-8 whitespace-pre-line leading-[1.7] text-[18px]">
+                    {(lang === "en" && activeArticle.contentEn)
+                      ? activeArticle.contentEn
+                      : <span dangerouslySetInnerHTML={{ __html: activeArticle.content }} />
+                    }
+                  </div>
                 )}
               </div>
             </motion.div>
