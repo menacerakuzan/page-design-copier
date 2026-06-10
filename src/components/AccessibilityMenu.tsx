@@ -70,6 +70,16 @@ function applySettings(s: Settings) {
     : "";
 }
 
+const STORAGE_KEY = "a11y-settings";
+
+function loadSettings(): Settings {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return { ...DEFAULT, ...JSON.parse(raw) };
+  } catch {}
+  return DEFAULT;
+}
+
 const TOGGLE_BUTTONS: { key: keyof Omit<Settings, "fontSize">; labelKey: TranslationKey; Icon: any }[] = [
   { key: "invertColors", labelKey: "invertColors", Icon: Eye },
   { key: "grayscale", labelKey: "grayscale", Icon: Contrast },
@@ -90,10 +100,13 @@ export function AccessibilityMenu({ onSearchClick, align = "left" }: Props) {
   const { lang, setLang, t } = useLang();
   const onLangChange = setLang;
   const [open, setOpen] = useState(false);
-  const [settings, setSettings] = useState<Settings>(DEFAULT);
+  const [settings, setSettings] = useState<Settings>(loadSettings);
   const ref = useRef<HTMLDivElement>(null);
 
-  useEffect(() => { applySettings(settings); }, [settings]);
+  useEffect(() => {
+    applySettings(settings);
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(settings)); } catch {}
+  }, [settings]);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {

@@ -1,15 +1,18 @@
-import { useMemo, useRef } from "react";
+import { useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { useLang } from "@/lib/langContext";
-import { ArrowRight, ChevronLeft, ChevronRight, Droplets, MapPin, Wind } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight, Droplets, MapPin, Wind, Volume2, VolumeX } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import SiteFooter from "@/components/SiteFooter";
 import { useHierarchySnapshot } from "@/hooks/useHierarchySnapshot";
 import { useWeather } from "@/hooks/useWeather";
 import { usePageConfig } from "@/hooks/usePageConfig";
+import { usePageContentCards } from "@/hooks/usePageContentCards";
 import { makeDefaultConfig, PageSection } from "@/types/pages";
 import NotFound from "@/pages/NotFound";
 import type { TourismObject } from "@/types/hierarchy";
+import { GalleryVideoCard } from "@/components/GalleryVideoCard";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 
 const NAVY = "#002f5e";
 const star = "✦";
@@ -73,20 +76,28 @@ const CityPage = () => {
   const { data: snapshot, isLoading } = useHierarchySnapshot();
   const refs       = useRef<Record<string, HTMLElement | null>>({});
   const scrollRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const [reelMuted, setReelMuted] = useState(true);
 
   const city = useMemo(
     () => snapshot?.cities.find((c) => c.slug === citySlug),
     [snapshot, citySlug],
   );
   const allObjects = useMemo(
-    () => (snapshot?.objects ?? []).filter((o) => o.cityId === city?.id),
+    () => (snapshot?.objects ?? []).filter((o) => o.cityId === city?.id && o.published),
     [snapshot, city],
   );
 
   const { data: weather } = useWeather(city?.weatherCityName || null);
   const { config } = usePageConfig("city", city?.id ?? null);
+  const pageKey = `city-${city?.id ?? ""}`;
+  const { data: cardsData } = usePageContentCards(pageKey);
+  const allCards = useMemo(() => (cardsData ?? []).filter(c => c.pageKey === pageKey), [cardsData, pageKey]);
 
-  if (isLoading) return null;
+  if (isLoading) return (
+    <div className="min-h-screen bg-[#001a3d] flex items-center justify-center">
+      <div className="h-12 w-12 rounded-full border-4 border-[#fff2e8]/20 border-t-[#fff2e8]/80 animate-spin" />
+    </div>
+  );
   if (!city) return <NotFound />;
 
   const district  = snapshot?.districts.find((d) => d.id === city.districtId);
@@ -136,8 +147,16 @@ const CityPage = () => {
                   <motion.div initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }}
                     viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.7 }}
                     className="w-full max-w-[320px] shrink-0 self-start mx-auto lg:mx-0">
-                    <div className="overflow-hidden rounded-[24px] shadow-xl" style={{ aspectRatio: "9/16" }}>
-                      <video src={city.reelUrl} autoPlay muted loop playsInline className="h-full w-full object-cover" />
+                    <div className="relative overflow-hidden rounded-[24px] shadow-xl" style={{ aspectRatio: "9/16" }}>
+                      <video src={city.reelUrl} autoPlay muted={reelMuted} loop playsInline className="h-full w-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => setReelMuted((m) => !m)}
+                        className="absolute bottom-3 right-3 flex items-center justify-center rounded-full border border-white/30 bg-black/50 p-2 text-white backdrop-blur-sm transition-all hover:bg-black/70"
+                        aria-label={reelMuted ? "Увімкнути звук" : "Вимкнути звук"}
+                      >
+                        {reelMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+                      </button>
                     </div>
                   </motion.div>
                 )}
@@ -146,11 +165,12 @@ const CityPage = () => {
                   <h2 className="font-odesa-medium text-[44px] leading-none text-[#002f5e] md:text-[68px]">
                     {section.title}
                   </h2>
+                  {section.subtitle && <p className="mt-3 text-[18px] font-odesa-regular text-[#002f5e]/60 md:text-[22px]">{section.subtitle}</p>}
                   <div className="mt-6 text-[20px] leading-[1.55] font-odesa-regular text-[#002f5e]/75 md:text-[26px] article-content"
-                    dangerouslySetInnerHTML={{ __html: city.description }} />
+                    dangerouslySetInnerHTML={{ __html: city.description.includes("&lt;") ? city.description.replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&amp;/g,"&") : city.description }} />
                   {city.detailedInfo && (
                     <div className="mt-6 text-[17px] leading-[1.65] font-odesa-regular text-[#002f5e]/55 md:text-[20px] article-content"
-                      dangerouslySetInnerHTML={{ __html: city.detailedInfo }} />
+                      dangerouslySetInnerHTML={{ __html: city.detailedInfo.includes("&lt;") ? city.detailedInfo.replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&amp;/g,"&") : city.detailedInfo }} />
                   )}
                 </motion.div>
               </div>
@@ -168,7 +188,7 @@ const CityPage = () => {
         if (!items.length) return null;
         const bg = section.bgColor ?? DEFAULT_BG[type];
         return (
-          <ObjectSection key={section.id} sectionId={type} title={section.title}
+          <ObjectSection key={section.id} sectionId={type} title={section.title} subtitle={section.subtitle}
             caption={SECTION_CAPTION[type]} type={type} items={items} bg={bg}
             setRef={setRef} scroll={scroll} scrollRefs={scrollRefs} />
         );
@@ -182,6 +202,8 @@ const CityPage = () => {
         return (
           <section key={section.id} className="px-4 py-14 md:px-10" style={{ backgroundColor: bg }}>
             <div className="mx-auto max-w-[1400px]">
+              {section.title && <h2 className="mb-2 font-odesa-medium text-[40px] leading-none text-[#fff2e8]">{section.title}</h2>}
+              {section.subtitle && <p className="mb-6 text-[17px] font-odesa-regular text-[#fff2e8]/55">{section.subtitle}</p>}
               <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
                 {stats.map(({ val, lbl }, i) => (
                   <motion.div key={i} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }}
@@ -224,7 +246,8 @@ const CityPage = () => {
             <div className="mx-auto max-w-[1400px]">
               <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.7 }}>
-                {section.title && <h2 className="mb-6 font-odesa-medium text-[40px] leading-none text-[#002f5e]">{section.title}</h2>}
+                {section.title && <h2 className="mb-2 font-odesa-medium text-[40px] leading-none text-[#002f5e]">{section.title}</h2>}
+              {section.subtitle && <p className="mb-4 text-[17px] font-odesa-regular text-[#002f5e]/55">{section.subtitle}</p>}
                 <p className="text-[20px] leading-[1.55] font-odesa-regular text-[#002f5e]/80 md:text-[26px]">{text}</p>
               </motion.div>
             </div>
@@ -239,7 +262,8 @@ const CityPage = () => {
         return (
           <section key={section.id} className="px-4 py-14 md:px-10" style={{ backgroundColor: bg }}>
             <div className="mx-auto max-w-[1200px]">
-              {section.title && <h2 className="mb-6 font-odesa-medium text-[40px] leading-none text-[#fff2e8]">{section.title}</h2>}
+              {section.title && <h2 className="mb-2 font-odesa-medium text-[40px] leading-none text-[#fff2e8]">{section.title}</h2>}
+              {section.subtitle && <p className="mb-4 text-[17px] font-odesa-regular text-[#fff2e8]/55">{section.subtitle}</p>}
               <div className="overflow-hidden rounded-[28px]" style={{ aspectRatio: "16/9" }}>
                 <iframe src={videoUrl} title={section.title} allow="autoplay; encrypted-media" allowFullScreen
                   className="h-full w-full border-0" />
@@ -256,10 +280,68 @@ const CityPage = () => {
         return (
           <section key={section.id} className="px-4 py-14 md:px-10" style={{ backgroundColor: bg }}>
             <div className="mx-auto max-w-[1400px]">
-              {section.title && <h2 className="mb-6 font-odesa-medium text-[40px] leading-none text-[#002f5e]">{section.title}</h2>}
+              {section.title && <h2 className="mb-2 font-odesa-medium text-[40px] leading-none text-[#002f5e]">{section.title}</h2>}
+              {section.subtitle && <p className="mb-4 text-[17px] font-odesa-regular text-[#002f5e]/55">{section.subtitle}</p>}
               <div className="overflow-hidden rounded-[28px]" style={{ height: "480px" }}>
                 <iframe src={embedUrl} title="Карта" loading="lazy" className="h-full w-full border-0" />
               </div>
+            </div>
+          </section>
+        );
+      }
+
+      case "gallery": {
+        const sectionKey = `gallery-${section.id}`;
+        const items = allCards
+          .filter((c) => c.sectionKey === sectionKey)
+          .sort((a, b) => a.sortOrder - b.sortOrder);
+        if (!items.length) return null;
+        const bg = section.bgColor ?? "#001a3d";
+        const isDark = bg !== "#fff2e8" && bg !== "#ffffff" && bg !== "#f4f4f0" && bg !== "#ffdfc6";
+        const textColor = isDark ? "#fff2e8" : "#002f5e";
+        const CARD_H = "calc((100vh - 56px - 20px) / 2)";
+        const cardW = (colSpan: number) =>
+          colSpan === 3 ? `calc(${CARD_H} * 3 + 40px)` : colSpan === 2 ? `calc(${CARD_H} * 2 + 20px)` : CARD_H;
+        return (
+          <section key={section.id} className="py-14" style={{ backgroundColor: bg }}>
+            <div className="mx-auto mb-6 max-w-[1400px] px-4 md:px-10">
+              {section.title && <h2 className="font-odesa-medium text-[44px] leading-none md:text-[64px]" style={{ color: textColor }}>{section.title}</h2>}
+              {section.subtitle && <p className="mt-2 text-[18px] font-odesa-regular md:text-[22px]" style={{ color: `${textColor}99` }}>{section.subtitle}</p>}
+            </div>
+            <div className="flex gap-5 overflow-x-auto px-4 pb-4 md:px-10 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {items.map((item) => {
+                const isVideo = !!item.payload?.videoUrl;
+                const colSpan = (item.payload?.colSpan as number) ?? 1;
+                const textSize = (item.payload?.textSize as string) ?? "md";
+                const textSizeCls = textSize === "lg" ? "text-[28px]" : textSize === "sm" ? "text-[16px]" : "text-[20px]";
+                const w = cardW(colSpan);
+                if (isVideo) {
+                  return (
+                    <GalleryVideoCard
+                      key={item.id}
+                      src={item.payload!.videoUrl as string}
+                      title={item.title || undefined}
+                      textSizeCls={textSizeCls}
+                      style={{ width: w, height: CARD_H }}
+                    />
+                  );
+                }
+                return (
+                  <div key={item.id} className="relative shrink-0 overflow-hidden rounded-[22px]" style={{ width: w, height: CARD_H, minHeight: 280 }}>
+                    {item.imageUrl ? (
+                      <img src={item.imageUrl} alt={item.title} className="h-full w-full object-cover" />
+                    ) : (
+                      <div className="h-full w-full bg-[#002f5e]/20" />
+                    )}
+                    {item.title && (
+                      <>
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
+                        <p className={`absolute bottom-5 left-5 right-5 font-odesa-medium leading-tight text-[#fff2e8] ${textSizeCls}`}>{item.title}</p>
+                      </>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </section>
         );
@@ -313,6 +395,15 @@ const CityPage = () => {
               </div>
             </div>
           </div>
+        </div>
+
+        <div className="relative z-20 px-6 pt-4 md:px-14">
+          <Breadcrumbs light crumbs={[
+            { label: "Одещина", href: "/" },
+            { label: "Райони", href: "/districts" },
+            ...(district ? [{ label: district.name, href: `/raion/${district.slug}` }] : []),
+            { label: city.name },
+          ]} />
         </div>
 
         <div className="relative z-10 flex min-h-[calc(100vh-80px)] flex-col justify-end px-6 pb-14 text-[#fff2e8] md:px-14 md:pb-15">
@@ -378,11 +469,12 @@ const CityPage = () => {
 // ─── Object section sub-component ────────────────────────────────────────────
 
 const ObjectSection = ({
-  sectionId, title, caption, type, items, bg,
+  sectionId, title, subtitle, caption, type, items, bg,
   setRef, scroll, scrollRefs,
 }: {
   sectionId: string;
   title: string;
+  subtitle?: string;
   caption: string;
   type: string;
   items: TourismObject[];
@@ -402,6 +494,7 @@ const ObjectSection = ({
         <div>
           <p className="text-[11px] uppercase tracking-[0.3em] font-odesa-medium text-[#fff2e8]/30">{caption}</p>
           <h2 className="mt-1 font-odesa-medium text-[44px] leading-none text-[#fff2e8] md:text-[64px]">{title}</h2>
+          {subtitle && <p className="mt-2 text-[17px] font-odesa-regular text-[#fff2e8]/55">{subtitle}</p>}
         </div>
         <div className="flex items-center gap-2">
           <button type="button" onClick={() => scroll(sectionId, -1)}

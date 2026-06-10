@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { CheckCircle2, MapPin, Building2, Landmark, Plus, Trash2, Settings2, AlertCircle, Upload, Link, LayoutDashboard, Calendar, UtensilsCrossed, BedDouble, ChevronRight, Palmtree, Newspaper, Pencil, X, LogOut } from "lucide-react";
+import { CheckCircle2, MapPin, Building2, Landmark, Plus, Trash2, Settings2, AlertCircle, Upload, Link, LayoutDashboard, Calendar, UtensilsCrossed, BedDouble, ChevronRight, Palmtree, Newspaper, Pencil, X, LogOut, Languages, Route } from "lucide-react";
+import { loadRoutes, upsertRoute, deleteRoute, type Route as RouteType } from "@/lib/routesRepository";
+import { translateFields } from "@/lib/translate";
 import AdminLoginGate from "@/components/AdminLoginGate";
 import BackButton from "@/components/BackButton";
 import { regions as seedRegions, districts as seedDistricts, cities as seedCities, tourismObjects as seedObjects } from "@/data/hierarchyMockData";
@@ -30,7 +32,7 @@ const uid = () => Math.random().toString(36).slice(2, 10);
 
 type AdminSection =
   | "districts" | "cities" | "places" | "constructor"
-  | "tourism-types" | "articles"
+  | "tourism-types" | "articles" | "routes"
   | "pages-district" | "pages-city" | "pages-place";
 
 type PlacePageType = TourismObjectType;
@@ -58,28 +60,32 @@ const PLACE_TYPES: { value: TourismObjectType; label: string; color: string }[] 
 type DistrictForm = {
   id: string; name: string; subtitle: string; description: string;
   detailedInfo: string; imageUrl: string; videoUrl: string; reelUrl: string; regionId: string;
+  nameEn: string; subtitleEn: string; descriptionEn: string;
 };
 
 type CityForm = {
   id: string; name: string; subtitle: string; description: string;
   detailedInfo: string; imageUrl: string; videoUrl: string; reelUrl: string; districtId: string;
   weatherCityName: string; settlementType: string;
+  nameEn: string; subtitleEn: string; descriptionEn: string;
 };
 
 type PlaceForm = {
   id: string; slug: string; name: string; subtitle: string; description: string;
-  detailedInfo: string; imageUrl: string; videoUrl: string; reelUrl: string;
+  detailedInfo: string; imageUrl: string; videoUrl: string; reelUrl: string; reelImageUrl: string;
   cityId: string; districtOnlyMode: boolean; type: TourismObjectType;
   mapUrl: string; address: string; phone: string; website: string;
   eventDates: string; hours: string; amenities: string;
   published: boolean; tourismTypes: string[];
   nameEn: string; subtitleEn: string; descriptionEn: string;
   detailedInfoEn: string; addressEn: string; hoursEn: string; amenitiesEn: string;
+  venueId: string; repertoire: string;
+  heroFontSize: string;
 };
 
-const emptyDistrict = (regionId: string): DistrictForm => ({ id: "", name: "", subtitle: "", description: "", detailedInfo: "", imageUrl: "", videoUrl: "", reelUrl: "", regionId });
-const emptyCity = (districtId: string): CityForm => ({ id: "", name: "", subtitle: "", description: "", detailedInfo: "", imageUrl: "", videoUrl: "", reelUrl: "", districtId, weatherCityName: "", settlementType: "місто" });
-const emptyPlace = (cityId: string): PlaceForm => ({ id: "", slug: "", name: "", subtitle: "", description: "", detailedInfo: "", imageUrl: "", videoUrl: "", reelUrl: "", cityId, districtOnlyMode: false, type: "attraction", mapUrl: "", address: "", phone: "", website: "", eventDates: "", hours: "", amenities: "", published: true, tourismTypes: [], nameEn: "", subtitleEn: "", descriptionEn: "", detailedInfoEn: "", addressEn: "", hoursEn: "", amenitiesEn: "" });
+const emptyDistrict = (regionId: string): DistrictForm => ({ id: "", name: "", subtitle: "", description: "", detailedInfo: "", imageUrl: "", videoUrl: "", reelUrl: "", regionId, nameEn: "", subtitleEn: "", descriptionEn: "" });
+const emptyCity = (districtId: string): CityForm => ({ id: "", name: "", subtitle: "", description: "", detailedInfo: "", imageUrl: "", videoUrl: "", reelUrl: "", districtId, weatherCityName: "", settlementType: "місто", nameEn: "", subtitleEn: "", descriptionEn: "" });
+const emptyPlace = (cityId: string): PlaceForm => ({ id: "", slug: "", name: "", subtitle: "", description: "", detailedInfo: "", imageUrl: "", videoUrl: "", reelUrl: "", reelImageUrl: "", cityId, districtOnlyMode: false, type: "attraction", mapUrl: "", address: "", phone: "", website: "", eventDates: "", hours: "", amenities: "", published: true, tourismTypes: [], nameEn: "", subtitleEn: "", descriptionEn: "", detailedInfoEn: "", addressEn: "", hoursEn: "", amenitiesEn: "", venueId: "", repertoire: "", heroFontSize: "" });
 
 // ─── sub-components ───────────────────────────────────────────────────────────
 
@@ -273,6 +279,42 @@ const MediaField = ({ label, value, onChange, accept, isVideo }: {
   );
 };
 
+const VenuePicker = ({ value, onChange, places }: { value: string; onChange: (v: string) => void; places: TourismObject[] }) => {
+  const [query, setQuery] = useState("");
+  const filtered = places.filter(p => p.type !== "event" && (!query || p.name.toLowerCase().includes(query.toLowerCase())));
+  const selected = places.find(p => p.id === value);
+  return (
+    <div className="flex flex-col gap-2">
+      {selected && (
+        <div className="flex items-center justify-between rounded-xl bg-[#002f5e]/6 px-3 py-2">
+          <span className="text-[13px] font-medium text-[#002f5e]">{selected.name}</span>
+          <button type="button" onClick={() => onChange("")} className="text-[#002f5e]/40 hover:text-[#9f1f47] transition text-[11px]">✕ зняти</button>
+        </div>
+      )}
+      <input
+        value={query}
+        onChange={e => setQuery(e.target.value)}
+        placeholder="Пошук закладу..."
+        className="w-full rounded-xl border border-[#002f5e]/15 bg-white px-3 py-2 text-[13px] text-[#002f5e] placeholder:text-[#002f5e]/30 focus:border-[#002f5e]/40 focus:outline-none"
+      />
+      {query && (
+        <div className="flex flex-col gap-1 max-h-48 overflow-y-auto rounded-xl border border-[#002f5e]/12 bg-white">
+          {filtered.length === 0 ? (
+            <p className="px-3 py-2 text-[13px] text-[#002f5e]/40">Нічого не знайдено</p>
+          ) : filtered.map(p => (
+            <button key={p.id} type="button"
+              onClick={() => { onChange(p.id); setQuery(""); }}
+              className={`flex items-center gap-2 px-3 py-2 text-left text-[13px] transition hover:bg-[#002f5e]/5 ${p.id === value ? "bg-[#002f5e]/8 font-medium" : "text-[#002f5e]"}`}>
+              <span className="truncate">{p.name}</span>
+              <span className="shrink-0 text-[11px] text-[#002f5e]/40">{PLACE_TYPES.find(t => t.value === p.type)?.label}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 const MediaGroup = ({ imageUrl, videoUrl, reelUrl, onImage, onVideo, onReel }: {
   imageUrl: string; videoUrl: string; reelUrl: string;
   onImage: (v: string) => void; onVideo: (v: string) => void; onReel: (v: string) => void;
@@ -283,6 +325,20 @@ const MediaGroup = ({ imageUrl, videoUrl, reelUrl, onImage, onVideo, onReel }: {
       <MediaField label="Відео / GIF (горизонтальне)" value={videoUrl} onChange={onVideo} accept="video/*,image/gif" isVideo={true} />
     </div>
     <MediaField label="Вертикальне відео / Reels (9:16)" value={reelUrl} onChange={onReel} accept="video/*" isVideo={true} />
+  </div>
+);
+
+const MediaGroupPlace = ({ imageUrl, videoUrl, reelUrl, reelImageUrl, onImage, onVideo, onReel, onReelImage }: {
+  imageUrl: string; videoUrl: string; reelUrl: string; reelImageUrl: string;
+  onImage: (v: string) => void; onVideo: (v: string) => void; onReel: (v: string) => void; onReelImage: (v: string) => void;
+}) => (
+  <div className="flex flex-col gap-4">
+    <div className="grid gap-4 sm:grid-cols-2">
+      <MediaField label="Картинка (горизонтальна)" value={imageUrl} onChange={onImage} accept="image/*" isVideo={false} />
+      <MediaField label="Відео / GIF (горизонтальне)" value={videoUrl} onChange={onVideo} accept="video/*,image/gif" isVideo={true} />
+    </div>
+    <MediaField label="Вертикальне відео / Reels (9:16)" value={reelUrl} onChange={onReel} accept="video/*" isVideo={true} />
+    <MediaField label="Фото для Reels (якщо замість відео)" value={reelImageUrl} onChange={onReelImage} accept="image/*" isVideo={false} />
   </div>
 );
 
@@ -327,8 +383,6 @@ const EntityCard = ({ title, subtitle, imageUrl, onDelete, onEdit, badge, isEdit
 
 // ─── Main Admin Component ─────────────────────────────────────────────────────
 
-let _jumpscareShown = false;
-
 const Admin = () => {
   const [section, setSection] = useState<AdminSection>("districts");
   const [placePageType, setPlacePageType] = useState<PlacePageType>("attraction");
@@ -336,6 +390,9 @@ const Admin = () => {
   const [districts, setDistricts] = useState<District[]>(hasSupabaseConfig ? [] : seedDistricts);
   const [cities, setCities] = useState<City[]>(hasSupabaseConfig ? [] : seedCities);
   const [places, setPlaces] = useState<TourismObject[]>(hasSupabaseConfig ? [] : seedObjects);
+  const [districtQuery, setDistrictQuery] = useState("");
+  const [cityQuery, setCityQuery] = useState("");
+  const [placeQuery, setPlaceQuery] = useState("");
   const [contentCards, setContentCards] = useState<ContentCardEntity[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -345,21 +402,61 @@ const Admin = () => {
   const defaultRegionId = regions[0]?.id ?? "";
   const [districtForm, setDistrictForm] = useState<DistrictForm>(emptyDistrict(defaultRegionId));
   const [editingDistrictId, setEditingDistrictId] = useState<string | null>(null);
+  const [districtTranslating, setDistrictTranslating] = useState(false);
+
+  const handleDistrictTranslate = async () => {
+    const fields: Record<string, string> = {};
+    if (districtForm.name.trim()) fields.nameEn = districtForm.name;
+    if (districtForm.subtitle.trim()) fields.subtitleEn = districtForm.subtitle;
+    if (districtForm.description.trim()) fields.descriptionEn = districtForm.description.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+    if (!Object.keys(fields).length) return;
+    setDistrictTranslating(true);
+    try {
+      const translated = await translateFields(fields);
+      setDistrictForm(p => ({ ...p, ...translated }));
+    } catch { /* silent */ } finally { setDistrictTranslating(false); }
+  };
 
   // City form
   const [cityForm, setCityForm] = useState<CityForm>(emptyCity(districts[0]?.id ?? ""));
   const [editingCityId, setEditingCityId] = useState<string | null>(null);
+  const [cityTranslating, setCityTranslating] = useState(false);
+
+  const handleCityTranslate = async () => {
+    const fields: Record<string, string> = {};
+    if (cityForm.name.trim()) fields.nameEn = cityForm.name;
+    if (cityForm.subtitle.trim()) fields.subtitleEn = cityForm.subtitle;
+    if (cityForm.description.trim()) fields.descriptionEn = cityForm.description.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+    if (!Object.keys(fields).length) return;
+    setCityTranslating(true);
+    try {
+      const translated = await translateFields(fields);
+      setCityForm(p => ({ ...p, ...translated }));
+    } catch { /* silent */ } finally { setCityTranslating(false); }
+  };
 
   // Place form
   const [placeForm, setPlaceForm] = useState<PlaceForm>(emptyPlace(cities[0]?.id ?? ""));
   const [editingPlaceId, setEditingPlaceId] = useState<string | null>(null);
+  const [placeTranslating, setPlaceTranslating] = useState(false);
 
-  const [jumpscareActive, setJumpscareActive] = useState(false);
-  const triggerJumpscare = () => {
-    if (_jumpscareShown) return;
-    _jumpscareShown = true;
-    setJumpscareActive(true);
-    setTimeout(() => setJumpscareActive(false), 3000);
+  const handlePlaceTranslate = async () => {
+    const fields: Record<string, string> = {};
+    if (placeForm.name.trim()) fields.nameEn = placeForm.name;
+    if (placeForm.subtitle.trim()) fields.subtitleEn = placeForm.subtitle;
+    if (placeForm.description.trim()) fields.descriptionEn = placeForm.description.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+    if (placeForm.detailedInfo.trim()) fields.detailedInfoEn = placeForm.detailedInfo.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+    if (placeForm.address.trim()) fields.addressEn = placeForm.address;
+    if (placeForm.hours.trim()) fields.hoursEn = placeForm.hours;
+    if (placeForm.amenities.trim()) fields.amenitiesEn = placeForm.amenities;
+    if (!Object.keys(fields).length) { showToast("Заповніть українські поля для перекладу", false); return; }
+    setPlaceTranslating(true);
+    try {
+      const translated = await translateFields(fields);
+      setPlaceForm(p => ({ ...p, ...translated }));
+      showToast("Перекладено успішно");
+    } catch { showToast("Помилка перекладу", false); }
+    finally { setPlaceTranslating(false); }
   };
 
   const showToast = (msg: string, ok = true) => {
@@ -410,6 +507,9 @@ const Admin = () => {
         imageUrl: districtForm.imageUrl || undefined,
         videoUrl: districtForm.videoUrl || undefined,
         reelUrl: districtForm.reelUrl || undefined,
+        nameEn: districtForm.nameEn || undefined,
+        subtitleEn: districtForm.subtitleEn || undefined,
+        descriptionEn: districtForm.descriptionEn || undefined,
       };
       await upsertDistrict(district);
       setDistricts(prev => editingDistrictId ? prev.map(d => d.id === id ? district : d) : [district, ...prev]);
@@ -425,7 +525,7 @@ const Admin = () => {
 
   const editDistrict = (d: District) => {
     setEditingDistrictId(d.id);
-    setDistrictForm({ id: d.id, name: d.name, subtitle: d.subtitle ?? "", description: d.description ?? "", detailedInfo: d.detailedInfo ?? "", imageUrl: d.imageUrl ?? "", videoUrl: d.videoUrl ?? "", reelUrl: d.reelUrl ?? "", regionId: d.regionId });
+    setDistrictForm({ id: d.id, name: d.name, subtitle: d.subtitle ?? "", description: d.description ?? "", detailedInfo: d.detailedInfo ?? "", imageUrl: d.imageUrl ?? "", videoUrl: d.videoUrl ?? "", reelUrl: d.reelUrl ?? "", regionId: d.regionId, nameEn: d.nameEn ?? "", subtitleEn: d.subtitleEn ?? "", descriptionEn: d.descriptionEn ?? "" });
   };
 
   const handleDeleteDistrict = async (id: string) => {
@@ -462,6 +562,9 @@ const Admin = () => {
         videoUrl: cityForm.videoUrl || undefined,
         reelUrl: cityForm.reelUrl || undefined,
         weatherCityName: cityForm.weatherCityName || undefined,
+        nameEn: cityForm.nameEn || undefined,
+        subtitleEn: cityForm.subtitleEn || undefined,
+        descriptionEn: cityForm.descriptionEn || undefined,
       };
       await upsertCity(city);
       setCities(prev => editingCityId ? prev.map(c => c.id === id ? city : c) : [city, ...prev]);
@@ -477,7 +580,7 @@ const Admin = () => {
 
   const editCity = (c: City) => {
     setEditingCityId(c.id);
-    setCityForm({ id: c.id, name: c.name, subtitle: c.subtitle ?? "", description: c.description ?? "", detailedInfo: c.detailedInfo ?? "", imageUrl: c.imageUrl ?? "", videoUrl: c.videoUrl ?? "", reelUrl: c.reelUrl ?? "", districtId: c.districtId, weatherCityName: c.weatherCityName ?? "", settlementType: c.settlementType ?? "місто" });
+    setCityForm({ id: c.id, name: c.name, subtitle: c.subtitle ?? "", description: c.description ?? "", detailedInfo: c.detailedInfo ?? "", imageUrl: c.imageUrl ?? "", videoUrl: c.videoUrl ?? "", reelUrl: c.reelUrl ?? "", districtId: c.districtId, weatherCityName: c.weatherCityName ?? "", settlementType: c.settlementType ?? "місто", nameEn: c.nameEn ?? "", subtitleEn: c.subtitleEn ?? "", descriptionEn: c.descriptionEn ?? "" });
   };
 
   const handleDeleteCity = async (id: string) => {
@@ -502,7 +605,8 @@ const Admin = () => {
       const city = placeForm.districtOnlyMode ? null : cities.find(c => c.id === placeForm.cityId) ?? null;
       const districtId = placeForm.districtOnlyMode
         ? placeForm.cityId
-        : (districts.find(d => d.id === city?.districtId)?.id ?? "");
+        : (city?.districtId ?? "");
+      if (!districtId) return showToast("Не вдалося визначити район для обраного населеного пункту", false);
       const place: TourismObject = {
         id, type: placeForm.type,
         cityId: placeForm.districtOnlyMode ? null : placeForm.cityId,
@@ -532,6 +636,10 @@ const Admin = () => {
         addressEn: placeForm.addressEn || undefined,
         hoursEn: placeForm.hoursEn || undefined,
         amenitiesEn: placeForm.amenitiesEn || undefined,
+        reelImageUrl: placeForm.reelImageUrl || undefined,
+        venueId: placeForm.venueId || undefined,
+        repertoire: placeForm.repertoire || undefined,
+        heroFontSize: placeForm.heroFontSize || undefined,
       };
       await upsertTourismObject(place);
       setPlaces(prev => editingPlaceId ? prev.map(p => p.id === id ? place : p) : [place, ...prev]);
@@ -548,7 +656,7 @@ const Admin = () => {
   const editPlace = (p: TourismObject) => {
     setEditingPlaceId(p.id);
     const isDistrictOnly = !p.cityId;
-    setPlaceForm({ id: p.id, slug: p.slug, name: p.name, subtitle: p.subtitle ?? "", description: p.description ?? "", detailedInfo: p.detailedInfo ?? "", imageUrl: p.imageUrl ?? "", videoUrl: p.videoUrl ?? "", reelUrl: p.reelUrl ?? "", cityId: isDistrictOnly ? p.districtId : (p.cityId ?? ""), districtOnlyMode: isDistrictOnly, type: p.type, mapUrl: p.mapUrl ?? "", address: p.address ?? "", phone: p.phone ?? "", website: p.website ?? "", eventDates: p.eventDates ?? "", hours: p.hours ?? "", amenities: p.amenities ?? "", published: p.published, tourismTypes: p.tourismTypes ?? [], nameEn: p.nameEn ?? "", subtitleEn: p.subtitleEn ?? "", descriptionEn: p.descriptionEn ?? "", detailedInfoEn: p.detailedInfoEn ?? "", addressEn: p.addressEn ?? "", hoursEn: p.hoursEn ?? "", amenitiesEn: p.amenitiesEn ?? "" });
+    setPlaceForm({ id: p.id, slug: p.slug, name: p.name, subtitle: p.subtitle ?? "", description: p.description ?? "", detailedInfo: p.detailedInfo ?? "", imageUrl: p.imageUrl ?? "", videoUrl: p.videoUrl ?? "", reelUrl: p.reelUrl ?? "", reelImageUrl: p.reelImageUrl ?? "", cityId: isDistrictOnly ? p.districtId : (p.cityId ?? ""), districtOnlyMode: isDistrictOnly, type: p.type, mapUrl: p.mapUrl ?? "", address: p.address ?? "", phone: p.phone ?? "", website: p.website ?? "", eventDates: p.eventDates ?? "", hours: p.hours ?? "", amenities: p.amenities ?? "", published: p.published, tourismTypes: p.tourismTypes ?? [], nameEn: p.nameEn ?? "", subtitleEn: p.subtitleEn ?? "", descriptionEn: p.descriptionEn ?? "", detailedInfoEn: p.detailedInfoEn ?? "", addressEn: p.addressEn ?? "", hoursEn: p.hoursEn ?? "", amenitiesEn: p.amenitiesEn ?? "", venueId: p.venueId ?? "", repertoire: p.repertoire ?? "", heroFontSize: p.heroFontSize ?? "" });
   };
 
   const handleDeletePlace = async (id: string) => {
@@ -585,18 +693,6 @@ const Admin = () => {
   return (
     <AdminLoginGate>
     <div className="min-h-screen bg-[#fff2e8] text-[#002f5e]">
-      {/* Jumpscare */}
-      {jumpscareActive && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 99999, background: "#000" }}>
-          <video
-            src="/fnaf-foxy.mp4"
-            autoPlay
-            style={{ width: "100vw", height: "100vh", objectFit: "cover", display: "block" }}
-            ref={el => { if (el) { el.volume = 1; el.currentTime = 0.6; void el.play(); } }}
-          />
-        </div>
-      )}
-
       {/* Toast */}
       {toast && (
         <div className={`fixed right-5 top-5 z-50 flex items-center gap-2 rounded-2xl px-5 py-3 text-[14px] font-medium text-white shadow-xl transition-all ${toast.ok ? "bg-[#002f5e]" : "bg-[#9f1f47]"}`}>
@@ -718,6 +814,7 @@ const Admin = () => {
                 {[
                   { id: "tourism-types" as AdminSection, label: "Види туризму", icon: <Palmtree className="h-4 w-4" /> },
                   { id: "articles" as AdminSection, label: "Статті", icon: <Newspaper className="h-4 w-4" /> },
+                  { id: "routes" as AdminSection, label: "Маршрути", icon: <Route className="h-4 w-4" /> },
                 ].map(item => (
                   <button key={item.id} type="button" onClick={() => setSection(item.id)}
                     className={`flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-[14px] font-medium transition ${
@@ -739,7 +836,7 @@ const Admin = () => {
           </aside>
 
           {/* Main content */}
-          <main className="flex flex-1 gap-6 overflow-auto p-6">
+          <main className="flex flex-1 gap-6 overflow-y-auto p-6 [&>*]:min-w-0">
 
             {/* ── DISTRICTS ── */}
             {section === "districts" && (
@@ -782,6 +879,18 @@ const Admin = () => {
                         imageUrl={districtForm.imageUrl} videoUrl={districtForm.videoUrl} reelUrl={districtForm.reelUrl}
                         onImage={v => setDistrictForm(p => ({ ...p, imageUrl: v }))} onVideo={v => setDistrictForm(p => ({ ...p, videoUrl: v }))} onReel={v => setDistrictForm(p => ({ ...p, reelUrl: v }))}
                       />
+                      <div className="rounded-xl border border-[#002f5e]/15 bg-[#002f5e]/3 p-4 flex flex-col gap-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[13px] font-semibold text-[#002f5e]/50 uppercase tracking-wide">🇬🇧 English version</span>
+                          <button type="button" onClick={() => void handleDistrictTranslate()} disabled={districtTranslating}
+                            className="flex items-center gap-2 rounded-xl border border-[#002f5e]/20 bg-white px-3 py-1.5 text-[12px] font-medium text-[#002f5e] transition hover:bg-[#002f5e]/8 disabled:opacity-50">
+                            {districtTranslating ? <><span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-[#002f5e]/40 border-t-[#002f5e]" /> Перекладаємо...</> : <><Languages className="h-3.5 w-3.5" /> Перекласти автоматично</>}
+                          </button>
+                        </div>
+                        <FieldGroup label="Name (EN)"><Input value={districtForm.nameEn} onChange={v => setDistrictForm(p => ({ ...p, nameEn: v }))} placeholder="e.g. Bilhorod-Dnistrovskyi district" /></FieldGroup>
+                        <FieldGroup label="Subtitle (EN)"><Input value={districtForm.subtitleEn} onChange={v => setDistrictForm(p => ({ ...p, subtitleEn: v }))} placeholder="Short subtitle in English" /></FieldGroup>
+                        <FieldGroup label="Description (EN)"><Input value={districtForm.descriptionEn} onChange={v => setDistrictForm(p => ({ ...p, descriptionEn: v }))} placeholder="Description in English" /></FieldGroup>
+                      </div>
                       <div className="flex items-center justify-between pt-2">
                         <SaveBtn saving={saving} label={editingDistrictId ? "Оновити район" : "Створити район"} />
                       </div>
@@ -790,18 +899,26 @@ const Admin = () => {
                 </section>
 
                 {/* List */}
-                <section className="w-[300px] shrink-0">
-                  <h3 className="mb-4 text-[16px] font-semibold text-[#002f5e]/70">
-                    Всі райони <span className="text-[#002f5e]/40">({districts.length})</span>
-                  </h3>
+                <section className="w-[300px] shrink-0 flex flex-col gap-3 sticky top-0 self-start">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-[16px] font-semibold text-[#002f5e]/70">
+                      Райони <span className="text-[#002f5e]/40">({districts.length})</span>
+                    </h3>
+                  </div>
+                  <input
+                    value={districtQuery}
+                    onChange={e => setDistrictQuery(e.target.value)}
+                    placeholder="Пошук районів..."
+                    className="w-full rounded-xl border border-[#002f5e]/15 bg-white px-3 py-2 text-[13px] text-[#002f5e] placeholder:text-[#002f5e]/30 focus:border-[#002f5e]/30 focus:outline-none"
+                  />
                   {districts.length === 0 ? (
                     <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-[#002f5e]/20 py-16 text-center">
                       <Plus className="h-8 w-8 text-[#002f5e]/25" />
                       <p className="text-[14px] text-[#002f5e]/45">Ще немає районів. Створіть перший!</p>
                     </div>
                   ) : (
-                    <div className="flex flex-col gap-2">
-                      {districts.map(d => (
+                    <div className="flex flex-col gap-2 overflow-y-auto max-h-[calc(100vh-280px)]">
+                      {districts.filter(d => !districtQuery || d.name.toLowerCase().includes(districtQuery.toLowerCase())).map(d => (
                         <EntityCard
                           key={d.id}
                           title={d.name}
@@ -871,6 +988,18 @@ const Admin = () => {
                       <FieldGroup label={<>WeatherName <span className="normal-case text-[11px] text-[#002f5e]/40 font-normal">(необов&apos;язково — англ. назва для OpenWeather, напр. &ldquo;Odessa&rdquo;)</span></>}>
                         <Input value={cityForm.weatherCityName} onChange={v => setCityForm(p => ({ ...p, weatherCityName: v }))} placeholder="напр. Odessa, Bolhrad..." />
                       </FieldGroup>
+                      <div className="rounded-xl border border-[#002f5e]/15 bg-[#002f5e]/3 p-4 flex flex-col gap-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[13px] font-semibold text-[#002f5e]/50 uppercase tracking-wide">🇬🇧 English version</span>
+                          <button type="button" onClick={() => void handleCityTranslate()} disabled={cityTranslating}
+                            className="flex items-center gap-2 rounded-xl border border-[#002f5e]/20 bg-white px-3 py-1.5 text-[12px] font-medium text-[#002f5e] transition hover:bg-[#002f5e]/8 disabled:opacity-50">
+                            {cityTranslating ? <><span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-[#002f5e]/40 border-t-[#002f5e]" /> Перекладаємо...</> : <><Languages className="h-3.5 w-3.5" /> Перекласти автоматично</>}
+                          </button>
+                        </div>
+                        <FieldGroup label="Name (EN)"><Input value={cityForm.nameEn} onChange={v => setCityForm(p => ({ ...p, nameEn: v }))} placeholder="e.g. Odesa" /></FieldGroup>
+                        <FieldGroup label="Subtitle (EN)"><Input value={cityForm.subtitleEn} onChange={v => setCityForm(p => ({ ...p, subtitleEn: v }))} placeholder="Short subtitle in English" /></FieldGroup>
+                        <FieldGroup label="Description (EN)"><Input value={cityForm.descriptionEn} onChange={v => setCityForm(p => ({ ...p, descriptionEn: v }))} placeholder="Description in English" /></FieldGroup>
+                      </div>
                       <div className="flex items-center justify-between pt-2">
                         <SaveBtn saving={saving} label={editingCityId ? "Оновити" : "Створити"} />
                       </div>
@@ -878,18 +1007,26 @@ const Admin = () => {
                   </div>
                 </section>
 
-                <section className="w-[300px] shrink-0">
-                  <h3 className="mb-4 text-[16px] font-semibold text-[#002f5e]/70">
-                    Всі населені пункти <span className="text-[#002f5e]/40">({cities.length})</span>
-                  </h3>
+                <section className="w-[300px] shrink-0 flex flex-col gap-3 sticky top-0 self-start">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-[16px] font-semibold text-[#002f5e]/70">
+                      Нас. пункти <span className="text-[#002f5e]/40">({cities.length})</span>
+                    </h3>
+                  </div>
+                  <input
+                    value={cityQuery}
+                    onChange={e => setCityQuery(e.target.value)}
+                    placeholder="Пошук міст і сіл..."
+                    className="w-full rounded-xl border border-[#002f5e]/15 bg-white px-3 py-2 text-[13px] text-[#002f5e] placeholder:text-[#002f5e]/30 focus:border-[#002f5e]/30 focus:outline-none"
+                  />
                   {cities.length === 0 ? (
                     <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-[#002f5e]/20 py-16 text-center">
                       <Plus className="h-8 w-8 text-[#002f5e]/25" />
                       <p className="text-[14px] text-[#002f5e]/45">Ще немає населених пунктів. Спочатку створіть район!</p>
                     </div>
                   ) : (
-                    <div className="flex flex-col gap-2">
-                      {cities.map(c => {
+                    <div className="flex flex-col gap-2 overflow-y-auto max-h-[calc(100vh-280px)]">
+                      {cities.filter(c => !cityQuery || c.name.toLowerCase().includes(cityQuery.toLowerCase())).map(c => {
                         const dist = districts.find(d => d.id === c.districtId);
                         return (
                           <EntityCard
@@ -981,14 +1118,25 @@ const Admin = () => {
                         )}
                       </div>
 
-                      <FieldGroup label="Назва *">
-                        <Input value={placeForm.name} onChange={v => setPlaceForm(p => ({ ...p, name: v }))} onFocus={triggerJumpscare} placeholder={
+                      <div>
+                        <Label>Назва *</Label>
+                        <Input value={placeForm.name} onChange={v => setPlaceForm(p => ({ ...p, name: v }))} placeholder={
                           placeForm.type === "attraction" ? "Наприклад: Акерманська фортеця" :
                           placeForm.type === "event" ? "Наприклад: Фестиваль Бессарабії" :
                           placeForm.type === "restaurant" ? "Наприклад: Ресторан Рибний двір" :
                           "Наприклад: Готель Золота підкова"
                         } />
-                      </FieldGroup>
+                        <div className="mt-2 flex items-center gap-1.5">
+                          <span className="text-[11px] text-[#002f5e]/40 font-medium">Розмір назви на сторінці:</span>
+                          {([["", "Авто"], ["sm", "Малий"], ["md", "Середній"], ["lg", "Великий"]] as const).map(([val, label]) => (
+                            <button key={val} type="button"
+                              onClick={() => setPlaceForm(p => ({ ...p, heroFontSize: val }))}
+                              className={`rounded-lg px-2.5 py-1 text-[11px] font-medium transition ${placeForm.heroFontSize === val ? "bg-[#002f5e] text-white" : "border border-[#002f5e]/15 text-[#002f5e]/50 hover:border-[#002f5e]/30 hover:text-[#002f5e]"}`}>
+                              {label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
                       <FieldGroup label="Підзаголовок">
                         <Input value={placeForm.subtitle} onChange={v => setPlaceForm(p => ({ ...p, subtitle: v }))} placeholder="Короткий підзаголовок" />
                       </FieldGroup>
@@ -1001,7 +1149,20 @@ const Admin = () => {
 
                       {/* English version */}
                       <div className="rounded-xl border border-[#002f5e]/15 bg-[#002f5e]/3 p-4 flex flex-col gap-3">
-                        <span className="text-[13px] font-semibold text-[#002f5e]/50 uppercase tracking-wide">🇬🇧 English version</span>
+                        <div className="flex items-center justify-between">
+                          <span className="text-[13px] font-semibold text-[#002f5e]/50 uppercase tracking-wide">🇬🇧 English version</span>
+                          <button
+                            type="button"
+                            onClick={() => void handlePlaceTranslate()}
+                            disabled={placeTranslating}
+                            className="flex items-center gap-2 rounded-xl border border-[#002f5e]/20 bg-white px-3 py-1.5 text-[12px] font-medium text-[#002f5e] transition hover:bg-[#002f5e]/8 disabled:opacity-50"
+                          >
+                            {placeTranslating
+                              ? <><span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-[#002f5e]/40 border-t-[#002f5e]" /> Перекладаємо...</>
+                              : <><Languages className="h-3.5 w-3.5" /> Перекласти автоматично</>
+                            }
+                          </button>
+                        </div>
                         <FieldGroup label="Name (EN)">
                           <Input value={placeForm.nameEn} onChange={v => setPlaceForm(p => ({ ...p, nameEn: v }))} placeholder="e.g. Akkerman Fortress" />
                         </FieldGroup>
@@ -1032,15 +1193,33 @@ const Admin = () => {
 
                       {/* Type-specific fields */}
                       {(placeForm.type === "attraction" || placeForm.type === "event" || placeForm.type === "hotel" || placeForm.type === "restaurant") && (
-                        <FieldGroup label="Місцезнаходження (посилання на карту)">
-                          <Input value={placeForm.mapUrl} onChange={v => setPlaceForm(p => ({ ...p, mapUrl: v }))} placeholder="https://maps.google.com/..." />
-                        </FieldGroup>
+                        <MultiField label="Посилання на карту" value={placeForm.mapUrl} onChange={v => setPlaceForm(p => ({ ...p, mapUrl: v }))} placeholder="https://maps.google.com/..." />
                       )}
 
                       {placeForm.type === "event" && (
-                        <FieldGroup label="Дати проведення">
-                          <Input value={placeForm.eventDates} onChange={v => setPlaceForm(p => ({ ...p, eventDates: v }))} placeholder="Наприклад: 24.04 – 03.05.2026" />
-                        </FieldGroup>
+                        <>
+                          <FieldGroup label="Дати проведення">
+                            <Input value={placeForm.eventDates} onChange={v => setPlaceForm(p => ({ ...p, eventDates: v }))} placeholder="Наприклад: 24.04 – 03.05.2026" />
+                          </FieldGroup>
+                          <FieldGroup label="Прив'язати до закладу (необов'язково)">
+                            <VenuePicker
+                              value={placeForm.venueId}
+                              onChange={v => setPlaceForm(p => ({ ...p, venueId: v }))}
+                              places={places}
+                            />
+                          </FieldGroup>
+                          <div>
+                            <Label>Репертуар (місячний розклад)</Label>
+                            <p className="mb-1 text-[11px] text-[#002f5e]/40">Формат: дата — назва — час, кожна вистава з нового рядка</p>
+                            <textarea
+                              value={placeForm.repertoire}
+                              onChange={e => setPlaceForm(p => ({ ...p, repertoire: e.target.value }))}
+                              placeholder={"01.07 — Наталка Полтавка — 18:00\n05.07 — Лісова пісня — 19:30"}
+                              rows={6}
+                              className="w-full rounded-xl border border-[#002f5e]/15 bg-white px-4 py-2.5 text-[13px] text-[#002f5e] placeholder:text-[#002f5e]/30 focus:border-[#002f5e]/40 focus:outline-none focus:ring-2 focus:ring-[#002f5e]/10 transition font-mono"
+                            />
+                          </div>
+                        </>
                       )}
 
                       {(placeForm.type === "restaurant" || placeForm.type === "hotel" || placeForm.type === "attraction") && (
@@ -1058,9 +1237,9 @@ const Admin = () => {
                         </>
                       )}
 
-                      <MediaGroup
-                        imageUrl={placeForm.imageUrl} videoUrl={placeForm.videoUrl} reelUrl={placeForm.reelUrl}
-                        onImage={v => setPlaceForm(p => ({ ...p, imageUrl: v }))} onVideo={v => setPlaceForm(p => ({ ...p, videoUrl: v }))} onReel={v => setPlaceForm(p => ({ ...p, reelUrl: v }))}
+                      <MediaGroupPlace
+                        imageUrl={placeForm.imageUrl} videoUrl={placeForm.videoUrl} reelUrl={placeForm.reelUrl} reelImageUrl={placeForm.reelImageUrl}
+                        onImage={v => setPlaceForm(p => ({ ...p, imageUrl: v }))} onVideo={v => setPlaceForm(p => ({ ...p, videoUrl: v }))} onReel={v => setPlaceForm(p => ({ ...p, reelUrl: v }))} onReelImage={v => setPlaceForm(p => ({ ...p, reelImageUrl: v }))}
                       />
 
                       {/* Тип туризму */}
@@ -1104,18 +1283,26 @@ const Admin = () => {
                   </div>
                 </section>
 
-                <section className="w-[300px] shrink-0">
-                  <h3 className="mb-4 text-[16px] font-semibold text-[#002f5e]/70">
-                    Всі місця <span className="text-[#002f5e]/40">({places.length})</span>
-                  </h3>
+                <section className="w-[300px] shrink-0 flex flex-col gap-3 sticky top-0 self-start">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-[16px] font-semibold text-[#002f5e]/70">
+                      Всі місця <span className="text-[#002f5e]/40">({places.length})</span>
+                    </h3>
+                  </div>
+                  <input
+                    value={placeQuery}
+                    onChange={e => setPlaceQuery(e.target.value)}
+                    placeholder="Пошук місць..."
+                    className="w-full rounded-xl border border-[#002f5e]/15 bg-white px-3 py-2 text-[13px] text-[#002f5e] placeholder:text-[#002f5e]/30 focus:border-[#002f5e]/30 focus:outline-none"
+                  />
                   {places.length === 0 ? (
                     <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-[#002f5e]/20 py-16 text-center">
                       <Plus className="h-8 w-8 text-[#002f5e]/25" />
                       <p className="text-[14px] text-[#002f5e]/45">Ще немає місць. Спочатку створіть місто!</p>
                     </div>
                   ) : (
-                    <div className="flex flex-col gap-2">
-                      {places.map(p => {
+                    <div className="flex flex-col gap-2 overflow-y-auto max-h-[calc(100vh-280px)]">
+                      {places.filter(p => !placeQuery || p.name.toLowerCase().includes(placeQuery.toLowerCase())).map(p => {
                         const typeInfo = PLACE_TYPES.find(t => t.value === p.type);
                         const city = cities.find(c => c.id === p.cityId);
                         return (
@@ -1169,6 +1356,8 @@ const Admin = () => {
                     cities={cities}
                     places={places}
                     showToast={showToast}
+                    allCards={contentCards}
+                    onCardsChange={setContentCards}
                   />
                 </div>
               </div>
@@ -1193,6 +1382,8 @@ const Admin = () => {
                     cities={cities}
                     places={places}
                     showToast={showToast}
+                    allCards={contentCards}
+                    onCardsChange={setContentCards}
                   />
                 </div>
               </div>
@@ -1239,6 +1430,8 @@ const Admin = () => {
                     cities={cities}
                     places={places.filter(p => p.type === placePageType)}
                     showToast={showToast}
+                    allCards={contentCards}
+                    onCardsChange={setContentCards}
                   />
                 </div>
               </div>
@@ -1252,6 +1445,10 @@ const Admin = () => {
             {/* ── ARTICLES ── */}
             {section === "articles" && (
               <ArticlesAdmin showToast={showToast} />
+            )}
+
+            {section === "routes" && (
+              <RoutesAdmin showToast={showToast} />
             )}
 
           </main>
@@ -1363,11 +1560,13 @@ const TourismTypesAdmin = ({ showToast }: { showToast: (msg: string, ok?: boolea
 type ArticleForm = {
   id: string; title: string; subtitle: string; imageUrl: string;
   videoUrl: string; content: string; publishedAt: string; published: boolean;
+  titleEn: string; subtitleEn: string; contentEn: string;
 };
 
 const emptyArticle = (): ArticleForm => ({
   id: "", title: "", subtitle: "", imageUrl: "", videoUrl: "",
   content: "", publishedAt: new Date().toLocaleDateString("uk-UA"), published: true,
+  titleEn: "", subtitleEn: "", contentEn: "",
 });
 
 const ArticlesAdmin = ({ showToast }: { showToast: (msg: string, ok?: boolean) => void }) => {
@@ -1375,6 +1574,37 @@ const ArticlesAdmin = ({ showToast }: { showToast: (msg: string, ok?: boolean) =
   const [form, setForm] = useState<ArticleForm>(emptyArticle());
   const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [translating, setTranslating] = useState(false);
+
+  const handleTranslate = async () => {
+    if (!form.title.trim() && !form.subtitle.trim() && !form.content.trim()) {
+      showToast("Заповніть українські поля для перекладу", false);
+      return;
+    }
+    setTranslating(true);
+    try {
+      const fieldsToTranslate: Record<string, string> = {};
+      if (form.title.trim()) fieldsToTranslate.titleEn = form.title;
+      if (form.subtitle.trim()) fieldsToTranslate.subtitleEn = form.subtitle;
+      if (form.content.trim()) {
+        // strip html tags for translation, then wrap back
+        const plain = form.content.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+        if (plain) fieldsToTranslate.contentEn = plain;
+      }
+      const translated = await translateFields(fieldsToTranslate);
+      setForm(p => ({
+        ...p,
+        titleEn: translated.titleEn ?? p.titleEn,
+        subtitleEn: translated.subtitleEn ?? p.subtitleEn,
+        contentEn: translated.contentEn ?? p.contentEn,
+      }));
+      showToast("Перекладено успішно");
+    } catch {
+      showToast("Помилка перекладу", false);
+    } finally {
+      setTranslating(false);
+    }
+  };
 
   const load = async () => {
     const cards = await loadPublishedContentCards("articles");
@@ -1395,7 +1625,10 @@ const ArticlesAdmin = ({ showToast }: { showToast: (msg: string, ok?: boolean) =
         cityId: null, districtId: null, regionId: null,
         sortOrder: editingId ? (articles.find(a => a.id === id)?.sortOrder ?? articles.length) : articles.length,
         published: form.published,
-        payload: { content: form.content, publishedAt: form.publishedAt, videoUrl: form.videoUrl },
+        payload: {
+          content: form.content, publishedAt: form.publishedAt, videoUrl: form.videoUrl,
+          titleEn: form.titleEn || null, subtitleEn: form.subtitleEn || null, contentEn: form.contentEn || null,
+        },
       };
       await upsertContentCard(card);
       setArticles(prev => editingId ? prev.map(a => a.id === id ? card : a) : [card, ...prev]);
@@ -1413,6 +1646,9 @@ const ArticlesAdmin = ({ showToast }: { showToast: (msg: string, ok?: boolean) =
       content: String(card.payload?.content ?? ""),
       publishedAt: String(card.payload?.publishedAt ?? ""),
       published: card.published,
+      titleEn: String(card.payload?.titleEn ?? ""),
+      subtitleEn: String(card.payload?.subtitleEn ?? ""),
+      contentEn: String(card.payload?.contentEn ?? ""),
     });
   };
 
@@ -1482,6 +1718,46 @@ const ArticlesAdmin = ({ showToast }: { showToast: (msg: string, ok?: boolean) =
               <span className="mb-1 block text-[13px] font-medium text-[#002f5e]/70 uppercase tracking-wide">Текст статті</span>
               <RichTextEditor value={form.content} onChange={v => setForm(p => ({ ...p, content: v }))} />
             </div>
+
+            {/* ── English version ─────────────────────────────────── */}
+            <div className="rounded-xl border border-[#002f5e]/12 bg-[#002f5e]/3 p-4 flex flex-col gap-3">
+              <div className="flex items-center justify-between">
+                <span className="flex items-center gap-2 text-[13px] font-semibold text-[#002f5e]/60 uppercase tracking-wide">
+                  🇬🇧 English version
+                </span>
+                <button
+                  type="button"
+                  onClick={() => void handleTranslate()}
+                  disabled={translating}
+                  className="flex items-center gap-2 rounded-xl border border-[#002f5e]/20 bg-white px-3 py-1.5 text-[12px] font-medium text-[#002f5e] transition hover:bg-[#002f5e]/8 disabled:opacity-50"
+                >
+                  {translating
+                    ? <><span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-[#002f5e]/40 border-t-[#002f5e]" /> Перекладаємо...</>
+                    : <><Languages className="h-3.5 w-3.5" /> Перекласти автоматично</>
+                  }
+                </button>
+              </div>
+              <div>
+                <span className="mb-1 block text-[12px] font-medium text-[#002f5e]/50 uppercase tracking-wide">Title (EN)</span>
+                <input value={form.titleEn} onChange={e => setForm(p => ({ ...p, titleEn: e.target.value }))}
+                  placeholder="Article title in English"
+                  className="w-full rounded-xl border border-[#002f5e]/15 bg-white px-4 py-2.5 text-[14px] text-[#002f5e] focus:border-[#002f5e]/40 focus:outline-none focus:ring-2 focus:ring-[#002f5e]/10 transition" />
+              </div>
+              <div>
+                <span className="mb-1 block text-[12px] font-medium text-[#002f5e]/50 uppercase tracking-wide">Subtitle (EN)</span>
+                <input value={form.subtitleEn} onChange={e => setForm(p => ({ ...p, subtitleEn: e.target.value }))}
+                  placeholder="Short description in English"
+                  className="w-full rounded-xl border border-[#002f5e]/15 bg-white px-4 py-2.5 text-[14px] text-[#002f5e] focus:border-[#002f5e]/40 focus:outline-none focus:ring-2 focus:ring-[#002f5e]/10 transition" />
+              </div>
+              <div>
+                <span className="mb-1 block text-[12px] font-medium text-[#002f5e]/50 uppercase tracking-wide">Content (EN)</span>
+                <textarea value={form.contentEn} onChange={e => setForm(p => ({ ...p, contentEn: e.target.value }))}
+                  placeholder="Article text in English..."
+                  rows={5}
+                  className="w-full rounded-xl border border-[#002f5e]/15 bg-white px-4 py-2.5 text-[14px] text-[#002f5e] focus:border-[#002f5e]/40 focus:outline-none focus:ring-2 focus:ring-[#002f5e]/10 transition resize-none" />
+              </div>
+            </div>
+
             <div className="flex items-center gap-3 rounded-xl bg-[#002f5e]/5 px-4 py-3">
               <input type="checkbox" id="art-published" checked={form.published}
                 onChange={e => setForm(p => ({ ...p, published: e.target.checked }))}
@@ -1529,6 +1805,380 @@ const ArticlesAdmin = ({ showToast }: { showToast: (msg: string, ok?: boolean) =
               </div>
             ))}
           </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// ─── Routes Admin ─────────────────────────────────────────────────────────────
+
+type RouteForm = {
+  id: string; name: string; nameEn: string; description: string; descriptionEn: string;
+  content: string; contentEn: string;
+  imageUrl: string; videoUrl: string; mapUrl: string; mapUrl2: string;
+  links: string; objectIds: string[];
+  waypointObjectIds: (string | null)[];
+  duration: string; distance: string;
+  published: boolean; sortOrder: number;
+};
+
+const emptyRouteForm = (): RouteForm => ({
+  id: "", name: "", nameEn: "", description: "", descriptionEn: "",
+  content: "", contentEn: "",
+  imageUrl: "", videoUrl: "", mapUrl: "", mapUrl2: "",
+  links: "", objectIds: [], waypointObjectIds: [],
+  duration: "", distance: "",
+  published: true, sortOrder: 0,
+});
+
+const RoutesAdmin = ({ showToast }: { showToast: (msg: string, ok?: boolean) => void }) => {
+  const [routes, setRoutes] = useState<RouteType[]>([]);
+  const [allObjects, setAllObjects] = useState<TourismObject[]>([]);
+  const [form, setForm] = useState<RouteForm | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [translating, setTranslating] = useState(false);
+  const [objSearch, setObjSearch] = useState("");
+
+  const handleTranslate = async () => {
+    if (!form) return;
+    setTranslating(true);
+    try {
+      const fields: Record<string, string> = {};
+      if (form.name) fields.nameEn = form.name;
+      if (form.description) fields.descriptionEn = form.description;
+      const result = await translateFields(fields);
+      setForm(f => f && ({ ...f, ...result }));
+    } catch { showToast("Помилка перекладу", false); }
+    finally { setTranslating(false); }
+  };
+
+  useEffect(() => {
+    loadRoutes().then(setRoutes);
+    loadHierarchySnapshot().then(snap => {
+      if (snap) setAllObjects(snap.objects);
+    });
+  }, []);
+
+  const handleSave = async () => {
+    if (!form || !form.name.trim()) return;
+    setSaving(true);
+    try {
+      const id = form.id || Math.random().toString(36).slice(2, 10);
+      const route: RouteType = {
+        id, name: form.name, nameEn: form.nameEn || undefined,
+        description: form.description || undefined, descriptionEn: form.descriptionEn || undefined,
+        content: form.content || undefined, contentEn: form.contentEn || undefined,
+        imageUrl: form.imageUrl || undefined, videoUrl: form.videoUrl || undefined,
+        mapUrl: form.mapUrl || undefined, mapUrl2: form.mapUrl2 || undefined,
+        links: form.links || undefined, objectIds: form.objectIds,
+        waypointObjectIds: form.waypointObjectIds,
+        duration: form.duration || undefined, distance: form.distance || undefined,
+        published: form.published, sortOrder: form.sortOrder,
+      };
+      await upsertRoute(route);
+      setRoutes(prev => {
+        const idx = prev.findIndex(r => r.id === id);
+        return idx >= 0 ? prev.map(r => r.id === id ? route : r) : [...prev, route];
+      });
+      setForm(null);
+      showToast("Маршрут збережено");
+    } catch { showToast("Помилка збереження", false); }
+    finally { setSaving(false); }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Видалити маршрут?")) return;
+    try {
+      await deleteRoute(id);
+      setRoutes(prev => prev.filter(r => r.id !== id));
+      showToast("Видалено");
+    } catch { showToast("Помилка", false); }
+  };
+
+  const openEdit = (route: RouteType) => setForm({
+    id: route.id, name: route.name, nameEn: route.nameEn ?? "",
+    description: route.description ?? "", descriptionEn: route.descriptionEn ?? "",
+    content: route.content ?? "", contentEn: route.contentEn ?? "",
+    imageUrl: route.imageUrl ?? "", videoUrl: route.videoUrl ?? "",
+    mapUrl: route.mapUrl ?? "", mapUrl2: route.mapUrl2 ?? "",
+    links: route.links ?? "", objectIds: route.objectIds ?? [],
+    waypointObjectIds: route.waypointObjectIds ?? [],
+    duration: route.duration ?? "", distance: route.distance ?? "",
+    published: route.published, sortOrder: route.sortOrder,
+  });
+
+  const toggleObject = (id: string) => {
+    setForm(f => {
+      if (!f) return f;
+      const ids = f.objectIds.includes(id) ? f.objectIds.filter(x => x !== id) : [...f.objectIds, id];
+      return { ...f, objectIds: ids };
+    });
+  };
+
+  const filteredObjects = allObjects.filter(o =>
+    o.name.toLowerCase().includes(objSearch.toLowerCase()) ||
+    o.subtitle?.toLowerCase().includes(objSearch.toLowerCase())
+  ).slice(0, 40);
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="font-odesa-medium text-[22px] text-[#002f5e]">Маршрути</h2>
+        <button onClick={() => setForm(emptyRouteForm())}
+          className="flex items-center gap-2 rounded-xl bg-[#002f5e] px-4 py-2 text-[13px] font-medium text-[#fff2e8] transition hover:opacity-85">
+          <Plus className="h-4 w-4" /> Додати маршрут
+        </button>
+      </div>
+
+      {form && (
+        <div className="rounded-[20px] border border-[#002f5e]/10 bg-white p-6 shadow-sm space-y-4">
+          <div className="flex items-center justify-between">
+            <p className="font-odesa-medium text-[16px] text-[#002f5e]">{form.id ? "Редагування" : "Новий маршрут"}</p>
+            <div className="flex items-center gap-2">
+              <button onClick={handleTranslate} disabled={translating}
+                className="flex items-center gap-1.5 rounded-lg border border-[#002f5e]/15 px-3 py-1.5 text-[12px] text-[#002f5e]/60 transition hover:border-[#002f5e]/30 hover:text-[#002f5e] disabled:opacity-40">
+                <Languages className="h-3.5 w-3.5" />
+                {translating ? "Переклад..." : "Перекласти EN"}
+              </button>
+              <button onClick={() => setForm(null)} className="text-[#002f5e]/40 hover:text-[#002f5e]"><X className="h-5 w-5" /></button>
+            </div>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <FieldGroup label="Назва (UA)">
+              <Input value={form.name} onChange={v => setForm(f => f && ({ ...f, name: v }))} placeholder="Дорога вина..." />
+            </FieldGroup>
+            <FieldGroup label="Назва (EN)">
+              <Input value={form.nameEn} onChange={v => setForm(f => f && ({ ...f, nameEn: v }))} placeholder="Wine road..." />
+            </FieldGroup>
+          </div>
+
+          <FieldGroup label="Короткий опис (UA)">
+            <Textarea rows={3} value={form.description} onChange={v => setForm(f => f && ({ ...f, description: v }))} placeholder="Короткий опис для картки маршруту..." />
+          </FieldGroup>
+          <FieldGroup label="Короткий опис (EN)">
+            <Textarea rows={3} value={form.descriptionEn} onChange={v => setForm(f => f && ({ ...f, descriptionEn: v }))} placeholder="Short description..." />
+          </FieldGroup>
+
+          <FieldGroup label="Повний текст (UA)">
+            <RichTextEditor value={form.content} onChange={v => setForm(f => f && ({ ...f, content: v }))} />
+          </FieldGroup>
+          <FieldGroup label="Повний текст (EN)">
+            <RichTextEditor value={form.contentEn} onChange={v => setForm(f => f && ({ ...f, contentEn: v }))} />
+          </FieldGroup>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <FieldGroup label="Тривалість">
+              <Input value={form.duration} onChange={v => setForm(f => f && ({ ...f, duration: v }))} placeholder="2 дні" />
+            </FieldGroup>
+            <FieldGroup label="Відстань">
+              <Input value={form.distance} onChange={v => setForm(f => f && ({ ...f, distance: v }))} placeholder="396 км" />
+            </FieldGroup>
+          </div>
+
+          <MediaField label="Зображення" value={form.imageUrl} onChange={v => setForm(f => f && ({ ...f, imageUrl: v }))} accept="image/*" isVideo={false} />
+          <MediaField label="Відео" value={form.videoUrl} onChange={v => setForm(f => f && ({ ...f, videoUrl: v }))} accept="video/*" isVideo={true} />
+
+          <FieldGroup label="Посилання на маршрут (Google Maps)">
+            <Input value={form.mapUrl} onChange={v => setForm(f => f && ({ ...f, mapUrl: v }))} placeholder="https://maps.app.goo.gl/..." />
+          </FieldGroup>
+          <FieldGroup label="Альтернативне посилання на карту">
+            <Input value={form.mapUrl2} onChange={v => setForm(f => f && ({ ...f, mapUrl2: v }))} placeholder="https://www.google.com/maps/dir/..." />
+          </FieldGroup>
+
+          <FieldGroup label={<>Корисні посилання <span className="normal-case font-normal text-[11px] text-[#002f5e]/40">— кожне з нового рядка: Назва|URL або просто URL</span></>}>
+            <Textarea rows={4} value={form.links}
+              onChange={v => setForm(f => f && ({ ...f, links: v }))}
+              placeholder={"Музей виноробства|https://example.com\nhttps://maps.google.com/..."} />
+          </FieldGroup>
+
+          {/* Unified object picker — waypoints + free attach */}
+          {(() => {
+            const coords = (() => {
+              const pairs: [number,number][] = [];
+              const regex = /!1d(-?\d+\.\d+)!2d(-?\d+\.\d+)/g;
+              let m; while ((m = regex.exec(form.mapUrl)) !== null) pairs.push([parseFloat(m[1]), parseFloat(m[2])]);
+              return pairs;
+            })();
+            const hasWaypoints = coords.length > 0;
+
+            // Всі прикріплені objectIds = union waypointObjectIds (non-null) + objectIds
+            const waypointIds = form.waypointObjectIds.filter(Boolean) as string[];
+            const freeIds = form.objectIds.filter(id => !waypointIds.includes(id));
+
+            const setWaypoint = (i: number, id: string | null) => setForm(f => {
+              if (!f) return f;
+              const wp = [...f.waypointObjectIds];
+              const prev = wp[i];
+              wp[i] = id;
+              // також синхронізуємо objectIds
+              let oids = [...f.objectIds];
+              if (prev && !wp.includes(prev)) oids = oids.filter(x => x !== prev);
+              if (id && !oids.includes(id)) oids.push(id);
+              return { ...f, waypointObjectIds: wp, objectIds: oids };
+            });
+
+            const [wpSearch, setWpSearch] = [objSearch, setObjSearch];
+            const searchResults = allObjects.filter(o =>
+              o.name.toLowerCase().includes(wpSearch.toLowerCase()) ||
+              o.subtitle?.toLowerCase().includes(wpSearch.toLowerCase())
+            ).slice(0, 40);
+
+            return (
+              <div className="space-y-3">
+                <Label>Об'єкти маршруту</Label>
+
+                {/* Waypoint rows якщо є координати */}
+                {hasWaypoints && (
+                  <div className="space-y-2 rounded-xl border border-[#002f5e]/10 bg-[#002f5e]/3 p-3">
+                    <p className="text-[11px] text-[#002f5e]/40 uppercase tracking-wide">По точках маршруту ({coords.length})</p>
+                    {coords.map((_, i) => {
+                      const selId = form.waypointObjectIds[i] ?? "";
+                      const selObj = allObjects.find(o => o.id === selId);
+                      const [search, setSearch] = [
+                        (form as any)[`_wpSearch${i}`] ?? "",
+                        (v: string) => setForm(f => f && ({ ...f, [`_wpSearch${i}`]: v } as any)),
+                      ];
+                      const results = allObjects.filter(o =>
+                        o.name.toLowerCase().includes(search.toLowerCase())
+                      ).slice(0, 20);
+                      return (
+                        <div key={i} className="flex items-start gap-2">
+                          <span className="mt-2 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white"
+                            style={{ backgroundColor: i === 0 ? "#9f1f47" : i === coords.length-1 ? "#002f5e" : "#df9b3b" }}>
+                            {i === 0 ? "A" : i === coords.length-1 ? "B" : i}
+                          </span>
+                          <div className="flex-1 min-w-0">
+                            {selObj ? (
+                              <div className="flex items-center gap-2 rounded-xl border border-[#002f5e]/15 bg-white px-3 py-2">
+                                {selObj.imageUrl && <img src={selObj.imageUrl} className="h-7 w-10 shrink-0 rounded-lg object-cover" />}
+                                <span className="flex-1 truncate text-[13px] text-[#002f5e]">{selObj.name}</span>
+                                <button onClick={() => setWaypoint(i, null)} className="text-[#002f5e]/30 hover:text-[#9f1f47]"><X className="h-3.5 w-3.5" /></button>
+                              </div>
+                            ) : (
+                              <div className="relative">
+                                <input value={search} onChange={e => setSearch(e.target.value)}
+                                  placeholder="Пошук об'єкта..."
+                                  className="w-full rounded-xl border border-[#002f5e]/15 bg-white px-3 py-2 text-[13px] text-[#002f5e] placeholder:text-[#002f5e]/30 focus:outline-none" />
+                                {search && (
+                                  <div className="absolute left-0 right-0 top-full z-10 mt-1 max-h-[160px] overflow-y-auto rounded-xl border border-[#002f5e]/10 bg-white shadow-lg">
+                                    {results.length === 0
+                                      ? <p className="px-3 py-2 text-[12px] text-[#002f5e]/40">Нічого не знайдено</p>
+                                      : results.map(o => (
+                                        <button key={o.id} onClick={() => { setWaypoint(i, o.id); setSearch(""); }}
+                                          className="flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-[#002f5e]/5">
+                                          {o.imageUrl && <img src={o.imageUrl} className="h-7 w-10 shrink-0 rounded-lg object-cover" />}
+                                          <div className="min-w-0">
+                                            <p className="truncate text-[12px] font-medium text-[#002f5e]">{o.name}</p>
+                                            <p className="text-[10px] text-[#002f5e]/40">{o.type}</p>
+                                          </div>
+                                        </button>
+                                      ))
+                                    }
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Вільні об'єкти (не прив'язані до точок) */}
+                <div>
+                  {freeIds.length > 0 && (
+                    <div className="mb-2 flex flex-wrap gap-1.5">
+                      {freeIds.map(id => {
+                        const obj = allObjects.find(o => o.id === id);
+                        return obj ? (
+                          <span key={id} className="flex items-center gap-1 rounded-full bg-[#002f5e]/8 px-2.5 py-0.5 text-[12px] text-[#002f5e]">
+                            {obj.name}
+                            <button onClick={() => toggleObject(id)} className="ml-0.5 text-[#002f5e]/40 hover:text-[#9f1f47]"><X className="h-3 w-3" /></button>
+                          </span>
+                        ) : null;
+                      })}
+                    </div>
+                  )}
+                  <Input value={wpSearch} onChange={setWpSearch} placeholder="+ Додати об'єкт (без прив'язки до точки)..." />
+                  {wpSearch && (
+                    <div className="mt-1 max-h-[180px] overflow-y-auto rounded-xl border border-[#002f5e]/10 bg-white shadow-lg">
+                      {searchResults.length === 0
+                        ? <p className="px-4 py-3 text-[13px] text-[#002f5e]/40">Нічого не знайдено</p>
+                        : searchResults.map(obj => (
+                          <button key={obj.id} onClick={() => { toggleObject(obj.id); setObjSearch(""); }}
+                            className={`flex w-full items-center gap-3 px-4 py-2.5 text-left transition hover:bg-[#002f5e]/5 ${form.objectIds.includes(obj.id) ? "bg-[#002f5e]/8" : ""}`}>
+                            {obj.imageUrl && <img src={obj.imageUrl} className="h-8 w-11 shrink-0 rounded-lg object-cover" />}
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate text-[13px] font-medium text-[#002f5e]">{obj.name}</p>
+                              <p className="truncate text-[11px] text-[#002f5e]/40">{obj.type}</p>
+                            </div>
+                            {form.objectIds.includes(obj.id) && <CheckCircle2 className="h-4 w-4 shrink-0 text-green-600" />}
+                          </button>
+                        ))
+                      }
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
+
+          <div className="flex items-center gap-4">
+            <label className="flex cursor-pointer items-center gap-2 text-[13px] text-[#002f5e]/70">
+              <input type="checkbox" checked={form.published}
+                onChange={e => setForm(f => f && ({ ...f, published: e.target.checked }))}
+                className="h-4 w-4 rounded" />
+              Опубліковано
+            </label>
+            <div className="flex items-center gap-2">
+              <Label>Порядок</Label>
+              <input type="number" value={form.sortOrder}
+                onChange={e => setForm(f => f && ({ ...f, sortOrder: Number(e.target.value) }))}
+                className="w-20 rounded-xl border border-[#002f5e]/15 px-3 py-2 text-[13px] text-[#002f5e]" />
+            </div>
+          </div>
+
+          <button onClick={handleSave}
+            disabled={saving}
+            className="w-full rounded-xl bg-[#002f5e] py-3 text-[14px] font-medium text-[#fff2e8] transition hover:opacity-85 disabled:opacity-50">
+            {saving ? "Збереження..." : "Зберегти"}
+          </button>
+        </div>
+      )}
+
+      <div className="space-y-3">
+        {routes.map(route => (
+          <div key={route.id} className="flex items-center gap-4 rounded-[16px] border border-[#002f5e]/8 bg-white p-4">
+            {route.imageUrl && (
+              <img src={route.imageUrl} alt={route.name} className="h-14 w-20 rounded-[10px] object-cover shrink-0" />
+            )}
+            <div className="flex-1 min-w-0">
+              <p className="font-odesa-medium text-[15px] text-[#002f5e] truncate">{route.name}</p>
+              <p className="text-[12px] text-[#002f5e]/50 truncate">{[route.duration, route.distance].filter(Boolean).join(" · ")}</p>
+              {(route.objectIds?.length ?? 0) > 0 && (
+                <p className="text-[11px] text-[#002f5e]/30">{route.objectIds!.length} об'єктів</p>
+              )}
+            </div>
+            <div className="flex items-center gap-1 shrink-0">
+              <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-medium ${route.published ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>
+                {route.published ? "Опубл." : "Чернетка"}
+              </span>
+              <button onClick={() => openEdit(route)}
+                className="ml-2 flex h-8 w-8 items-center justify-center rounded-lg text-[#002f5e]/40 hover:bg-[#002f5e]/8 hover:text-[#002f5e]">
+                <Pencil className="h-4 w-4" />
+              </button>
+              <button onClick={() => handleDelete(route.id)}
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-[#9f1f47]/40 hover:bg-[#9f1f47]/8 hover:text-[#9f1f47]">
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        ))}
+        {routes.length === 0 && !form && (
+          <p className="py-12 text-center text-[14px] text-[#002f5e]/40">Маршрутів ще немає</p>
         )}
       </div>
     </div>
