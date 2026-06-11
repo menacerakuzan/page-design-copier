@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ArrowRight } from "lucide-react";
+import { X, ArrowRight, Maximize2, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { TourismObject } from "@/types/hierarchy";
 
@@ -26,23 +26,55 @@ export function extractCoords(url: string): [number, number][] {
   return pairs;
 }
 
-const WINE  = "#9f1f47";
-const GOLD  = "#df9b3b";
-const NAVY  = "#002f5e";
+// ── Палітра ─────────────────────────────────────────────────────────────────
+const WINE = "#9f1f47";
+const GOLD = "#e0a542";
+const GOLD_SOFT = "#f4c878";
+const NAVY = "#002f5e";
 const CREAM = "#fff2e8";
 
 const objectTypeSlug: Record<string, string> = {
   attraction: "mistse", event: "podiyi", restaurant: "restorany", hotel: "hoteli",
 };
 
+const typeLabel = (t: string) =>
+  t === "attraction" ? "Місце" : t === "event" ? "Подія" : t === "restaurant" ? "Ресторан" : "Готель";
+
+const lineFeature = (coords: [number, number][]): GeoJSON.Feature => ({
+  type: "Feature",
+  properties: {},
+  geometry: { type: "LineString", coordinates: coords },
+});
+
+// Будуємо маршрут по дорогах через публічний OSRM (без ключа).
+// Повертає геометрію вздовж доріг або null (тоді лишаються прямі лінії).
+async function fetchRoadRoute(coords: [number, number][]): Promise<[number, number][] | null> {
+  if (coords.length < 2) return null;
+  const path = coords.map(c => `${c[0]},${c[1]}`).join(";");
+  const url = `https://router.project-osrm.org/route/v1/driving/${path}?overview=full&geometries=geojson`;
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const json = await res.json();
+    const geom = json?.routes?.[0]?.geometry?.coordinates;
+    return Array.isArray(geom) && geom.length > 1 ? (geom as [number, number][]) : null;
+  } catch {
+    return null;
+  }
+}
+
 export default function RouteMap({ mapUrl, waypoints = [] }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [activeObj, setActiveObj] = useState<TourismObject | null>(null);
+  const [routing, setRouting] = useState(true);
 
   useEffect(() => {
     if (!containerRef.current) return;
     const coords = extractCoords(mapUrl);
     if (coords.length === 0) return;
+
+    let cancelled = false;
+    setRouting(true);
 
     const lngs = coords.map(c => c[0]);
     const lats = coords.map(c => c[1]);
@@ -57,116 +89,138 @@ export default function RouteMap({ mapUrl, waypoints = [] }: Props) {
       attributionControl: false,
     });
 
-    map.on("load", () => {
-      map.addSource("route", {
-        type: "geojson",
-        data: {
-          type: "Feature",
-          properties: {},
-          geometry: { type: "LineString", coordinates: coords },
-        },
-      });
+    const fitTo = (pts: [number, number][], maxZoom: number) => {
+      const bounds = new maplibregl.LngLatBounds();
+      pts.forEach(c => bounds.extend(c));
+      map.fitBounds(bounds, { padding: 70, maxZoom });
+    };
+
+    map.on("load", async () => {
+      // Початково — прямі лінії (миттєво), потім підмінюємо на дороги.
+      map.addSource("route", { type: "geojson", data: lineFeature(coords) });
 
       map.addLayer({
-        id: "route-shadow",
+        id: "route-casing",
         type: "line",
         source: "route",
         layout: { "line-join": "round", "line-cap": "round" },
-        paint: { "line-color": "#000", "line-width": 7, "line-opacity": 0.12, "line-blur": 4 },
+        paint: { "line-color": CREAM, "line-width": 9, "line-opacity": 0.9 },
       });
       map.addLayer({
         id: "route-line",
         type: "line",
         source: "route",
         layout: { "line-join": "round", "line-cap": "round" },
-        paint: { "line-color": WINE, "line-width": 4.5, "line-opacity": 0.95 },
-      });
-      map.addLayer({
-        id: "route-dash",
-        type: "line",
-        source: "route",
-        layout: { "line-join": "round", "line-cap": "butt" },
-        paint: { "line-color": GOLD, "line-width": 1.5, "line-dasharray": [3, 6], "line-opacity": 0.7 },
+        paint: { "line-color": WINE, "line-width": 5 },
       });
 
+      // ── Маркери на оригінальних точках ────────────────────────────────────
       coords.forEach((coord, i) => {
         const isFirst = i === 0;
-        const isLast  = i === coords.length - 1;
-        const wp  = waypoints.find(w => w.coordIndex === i);
+        const isLast = i === coords.length - 1;
+        const wp = waypoints.find(w => w.coordIndex === i);
         const obj = wp?.object;
 
         const el = document.createElement("div");
+        el.className = "rm-marker";
 
         if (obj?.imageUrl) {
-          el.style.cssText = `
-            width:44px;height:44px;border-radius:50%;
-            border:3px solid ${GOLD};
-            box-shadow:0 3px 12px rgba(0,0,0,0.4);
-            overflow:hidden;cursor:pointer;background:${NAVY};
-            transition:transform 0.15s;
-          `;
-          el.style.transition = "box-shadow 0.15s";
-          el.onmouseenter = () => { el.style.boxShadow = `0 4px 16px rgba(0,0,0,0.5), 0 0 0 3px ${GOLD}`; };
-          el.onmouseleave = () => { el.style.boxShadow = `0 3px 12px rgba(0,0,0,0.4)`; };
-          const img = document.createElement("img");
-          img.src = obj.imageUrl;
-          img.style.cssText = "width:100%;height:100%;object-fit:cover;display:block;";
-          el.appendChild(img);
+          el.innerHTML = `
+            <div class="rm-photo">
+              <img src="${obj.imageUrl}" alt="" />
+              <span class="rm-num">${isFirst ? "A" : isLast ? "B" : i}</span>
+            </div>`;
         } else {
-          el.style.cssText = `
-            width:${isFirst || isLast ? 30 : 22}px;
-            height:${isFirst || isLast ? 30 : 22}px;
-            border-radius:50%;
-            background:${isFirst ? WINE : isLast ? NAVY : GOLD};
-            border:3px solid ${CREAM};
-            box-shadow:0 2px 8px rgba(0,0,0,0.35);
-            display:flex;align-items:center;justify-content:center;
-            font-size:11px;font-weight:700;color:${CREAM};
-            cursor:${obj ? "pointer" : "default"};
-            font-family:sans-serif;
-          `;
-          if (obj) {
-            el.onmouseenter = () => { el.style.boxShadow = `0 4px 16px rgba(0,0,0,0.5), 0 0 0 3px ${GOLD}`; };
-            el.onmouseleave = () => { el.style.boxShadow = `0 2px 8px rgba(0,0,0,0.35)`; };
-          }
-          el.textContent = isFirst ? "A" : isLast ? "B" : String(i);
+          const bg = isFirst ? WINE : isLast ? NAVY : GOLD;
+          el.innerHTML = `
+            <div class="rm-dot ${isFirst || isLast ? "rm-dot-lg" : ""}" style="background:${bg}">
+              ${isFirst ? "A" : isLast ? "B" : i}
+            </div>`;
         }
 
         if (obj) {
-          el.addEventListener("click", (e) => {
+          el.style.cursor = "pointer";
+          el.addEventListener("click", e => {
             e.stopPropagation();
-            setActiveObj(prev => prev?.id === obj.id ? null : obj);
+            setActiveObj(prev => (prev?.id === obj.id ? null : obj));
           });
         }
 
         new maplibregl.Marker({ element: el, anchor: "center" }).setLngLat(coord).addTo(map);
       });
 
-      // Клік по карті — закриває картку
       map.on("click", () => setActiveObj(null));
+      fitTo(coords, 11);
 
-      const bounds = new maplibregl.LngLatBounds();
-      coords.forEach(c => bounds.extend(c));
-      map.fitBounds(bounds, { padding: 60, maxZoom: 11 });
+      // ── Маршрут по дорогах ────────────────────────────────────────────────
+      const road = await fetchRoadRoute(coords);
+      if (cancelled) return;
+      setRouting(false);
+      const src = map.getSource("route") as maplibregl.GeoJSONSource | undefined;
+      if (road && src) {
+        src.setData(lineFeature(road));
+        fitTo(road, 14);
+      }
     });
 
     const onFsChange = () => map.resize();
     document.addEventListener("fullscreenchange", onFsChange);
 
     return () => {
+      cancelled = true;
       document.removeEventListener("fullscreenchange", onFsChange);
       map.remove();
     };
   }, [mapUrl, waypoints]);
 
   return (
-    <div className="route-map-wrap relative overflow-hidden rounded-[18px]"
-      style={{ border: `1px solid rgba(255,242,232,0.15)` }}>
+    <div
+      className="route-map-wrap relative overflow-hidden rounded-[20px]"
+      style={{ border: `1px solid ${CREAM}1f`, boxShadow: "0 18px 50px -22px rgba(0,0,0,0.7)" }}
+    >
       <style>{`
         .route-map-wrap:fullscreen { border-radius: 0; }
         .route-map-wrap:fullscreen .route-map-canvas { height: 100vh !important; }
+        .rm-marker { will-change: transform; }
+        .rm-photo {
+          position: relative; width: 46px; height: 46px; border-radius: 50%;
+          border: 3px solid ${GOLD}; overflow: hidden; background: ${NAVY};
+          box-shadow: 0 4px 14px rgba(0,0,0,0.45); transition: transform .18s ease, box-shadow .18s ease;
+        }
+        .rm-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .rm-marker:hover .rm-photo { transform: scale(1.12); box-shadow: 0 6px 20px rgba(0,0,0,0.55), 0 0 0 4px ${GOLD}66; }
+        .rm-num {
+          position: absolute; right: -3px; bottom: -3px; min-width: 18px; height: 18px;
+          padding: 0 4px; border-radius: 9px; background: ${GOLD}; color: ${NAVY};
+          font: 700 11px/18px sans-serif; text-align: center; border: 2px solid ${CREAM};
+        }
+        .rm-dot {
+          width: 24px; height: 24px; border-radius: 50%; border: 3px solid ${CREAM};
+          box-shadow: 0 3px 10px rgba(0,0,0,0.4); display: flex; align-items: center;
+          justify-content: center; font: 700 11px/1 sans-serif; color: ${CREAM};
+          transition: transform .18s ease;
+        }
+        .rm-dot-lg { width: 32px; height: 32px; font-size: 13px; }
+        .rm-marker:hover .rm-dot { transform: scale(1.18); }
       `}</style>
+
       <div ref={containerRef} className="route-map-canvas" style={{ height: 460, width: "100%" }} />
+
+      {/* Індикатор побудови маршруту по дорогах */}
+      <AnimatePresence>
+        {routing && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            className="absolute left-3 top-3 flex items-center gap-2 rounded-full px-3 py-1.5 text-[12px] font-odesa-medium"
+            style={{ backgroundColor: "rgba(0,47,94,0.88)", color: CREAM, backdropFilter: "blur(6px)", zIndex: 10 }}
+          >
+            <Loader2 className="h-3.5 w-3.5 animate-spin" style={{ color: GOLD_SOFT }} />
+            Будуємо маршрут…
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Кнопка повного екрану */}
       <button
@@ -176,13 +230,10 @@ export default function RouteMap({ mapUrl, waypoints = [] }: Props) {
           if (!document.fullscreenElement) el.requestFullscreen();
           else document.exitFullscreen();
         }}
-        className="absolute bottom-3 right-3 flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-odesa-medium transition-opacity hover:opacity-80"
-        style={{ backgroundColor: "rgba(0,47,94,0.85)", color: CREAM, backdropFilter: "blur(6px)", zIndex: 10 }}
+        className="absolute bottom-3 right-3 flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-odesa-medium transition-transform hover:scale-105"
+        style={{ backgroundColor: "rgba(0,47,94,0.88)", color: CREAM, backdropFilter: "blur(6px)", zIndex: 10 }}
       >
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-          <polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/>
-          <line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/>
-        </svg>
+        <Maximize2 className="h-3.5 w-3.5" />
         На весь екран
       </button>
 
@@ -195,47 +246,39 @@ export default function RouteMap({ mapUrl, waypoints = [] }: Props) {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 40 }}
             transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-            className="absolute right-3 top-3 w-[240px] overflow-hidden rounded-[18px] shadow-2xl"
-            style={{ backgroundColor: NAVY, border: `1px solid rgba(255,242,232,0.15)`, zIndex: 20 }}
+            className="absolute right-3 top-3 w-[244px] overflow-hidden rounded-[18px]"
+            style={{ backgroundColor: NAVY, border: `1px solid ${CREAM}26`, zIndex: 20, boxShadow: "0 20px 50px -16px rgba(0,0,0,0.8)" }}
           >
-            {/* Закрити */}
             <button
               onClick={() => setActiveObj(null)}
               className="absolute right-2.5 top-2.5 flex h-6 w-6 items-center justify-center rounded-full transition-opacity hover:opacity-70"
-              style={{ backgroundColor: "rgba(255,242,232,0.15)", zIndex: 1 }}
+              style={{ backgroundColor: "rgba(0,0,0,0.35)", backdropFilter: "blur(4px)", zIndex: 1 }}
             >
               <X className="h-3.5 w-3.5" style={{ color: CREAM }} />
             </button>
 
-            {/* Фото */}
             {activeObj.imageUrl && (
-              <div className="h-[130px] overflow-hidden">
-                <img src={activeObj.imageUrl} alt={activeObj.name}
-                  className="h-full w-full object-cover" />
-                <div className="absolute inset-x-0 top-0 h-[130px]"
-                  style={{ background: "linear-gradient(180deg, transparent 50%, rgba(0,47,94,0.9) 100%)" }} />
+              <div className="relative h-[132px] overflow-hidden">
+                <img src={activeObj.imageUrl} alt={activeObj.name} className="h-full w-full object-cover" />
+                <div className="absolute inset-0" style={{ background: `linear-gradient(180deg, transparent 45%, ${NAVY} 100%)` }} />
               </div>
             )}
 
             <div className="p-4">
-              {/* Тип */}
-              <p className="mb-1 text-[10px] uppercase font-odesa-medium"
-                style={{ color: GOLD }}>
-                {activeObj.type === "attraction" ? "Місце" :
-                 activeObj.type === "event" ? "Подія" :
-                 activeObj.type === "restaurant" ? "Ресторан" : "Готель"}
+              <p className="mb-1 text-[10px] uppercase tracking-wider font-odesa-medium" style={{ color: GOLD_SOFT }}>
+                {typeLabel(activeObj.type)}
               </p>
-              <p className="font-odesa-medium text-[15px] leading-[1.2]"
-                style={{ color: CREAM }}>{activeObj.name}</p>
+              <p className="font-odesa-medium text-[15px] leading-[1.2]" style={{ color: CREAM }}>{activeObj.name}</p>
               {activeObj.subtitle && (
-                <p className="mt-1 text-[12px] font-odesa-regular line-clamp-2"
-                  style={{ color: `${CREAM}65` }}>{activeObj.subtitle}</p>
+                <p className="mt-1 text-[12px] font-odesa-regular line-clamp-2" style={{ color: `${CREAM}65` }}>
+                  {activeObj.subtitle}
+                </p>
               )}
 
               <Link
                 to={`/${objectTypeSlug[activeObj.type] ?? "mistse"}/${activeObj.slug}`}
-                className="mt-3 flex items-center justify-center gap-1.5 rounded-[10px] py-2.5 text-[12px] font-odesa-medium transition-opacity hover:opacity-85"
-                style={{ backgroundColor: GOLD, color: NAVY }}
+                className="mt-3 flex items-center justify-center gap-1.5 rounded-[12px] py-2.5 text-[12px] font-odesa-medium transition-transform hover:scale-[1.02]"
+                style={{ background: `linear-gradient(135deg, ${GOLD_SOFT}, ${GOLD})`, color: NAVY }}
               >
                 Детальніше <ArrowRight className="h-3.5 w-3.5" />
               </Link>
