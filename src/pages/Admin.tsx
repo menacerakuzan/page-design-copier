@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { CheckCircle2, MapPin, Building2, Landmark, Plus, Trash2, Settings2, AlertCircle, Upload, Link, LayoutDashboard, Calendar, UtensilsCrossed, BedDouble, ChevronRight, Palmtree, Newspaper, Pencil, X, LogOut, Languages, Route } from "lucide-react";
-import { loadRoutes, upsertRoute, deleteRoute, type Route as RouteType } from "@/lib/routesRepository";
-import { translateFields } from "@/lib/translate";
+import { loadRoutes, upsertRoute, deleteRoute, type Route as RouteType, ROUTE_TAG_OPTIONS, loadRouteTagOrder, saveRouteTagOrder } from "@/lib/routesRepository";
+import { translateFields, translateHtml } from "@/lib/translate";
 import AdminLoginGate from "@/components/AdminLoginGate";
 import BackButton from "@/components/BackButton";
 import { regions as seedRegions, districts as seedDistricts, cities as seedCities, tourismObjects as seedObjects } from "@/data/hierarchyMockData";
@@ -188,34 +188,92 @@ const SaveBtn = ({ saving, label = "Зберегти" }: { saving: boolean; labe
 // ─── MediaGroup ───────────────────────────────────────────────────────────────
 type MediaMode = "url" | "upload";
 
+const CHUNK_SIZE = 8 * 1024 * 1024; // 8MB per chunk
+
+async function uploadChunked(
+  file: File,
+  bucket: string,
+  filePath: string,
+  baseUrl: string,
+): Promise<void> {
+  const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+  const uploadId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  const headers = { "Content-Type": "application/octet-stream" };
+
+  for (let i = 0; i < totalChunks; i++) {
+    const start = i * CHUNK_SIZE;
+    const chunk = file.slice(start, Math.min(start + CHUNK_SIZE, file.size));
+    const res = await fetch(`${baseUrl}/storage/v1/chunk/${bucket}/${uploadId}/${i}`, {
+      method: "POST", headers, body: chunk,
+    });
+    if (!res.ok) throw new Error(`Chunk ${i + 1}/${totalChunks} failed: ${res.status}`);
+  }
+
+  const res = await fetch(`${baseUrl}/storage/v1/chunk-complete/${bucket}/${uploadId}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ filename: filePath, totalChunks }),
+  });
+  if (!res.ok) throw new Error(`Assembly failed: ${res.status}`);
+}
+
 const MediaField = ({ label, value, onChange, accept, isVideo }: {
   label: string; value: string; onChange: (v: string) => void;
   accept: string; isVideo: boolean;
 }) => {
   const [mode, setMode] = useState<MediaMode>("url");
   const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState(0);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (!supabase) {
-      // local mode: use object URL for preview only
       onChange(URL.createObjectURL(file));
       return;
     }
     setUploading(true);
+    setProgress(0);
     try {
       const ext = file.name.split(".").pop();
-      const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-      const { error } = await supabase.storage.from("media").upload(path, file, { upsert: true });
-      if (error) throw error;
-      const { data } = supabase.storage.from("media").getPublicUrl(path);
-      onChange(data.publicUrl);
+      const filePath = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      const baseUrl = (import.meta.env.VITE_SUPABASE_URL as string).replace(/\/rest\/v1\/?$/, "");
+
+      if (file.size > 50 * 1024 * 1024) {
+        // Великий файл — chunk upload з прогресом
+        const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+        const uploadId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        for (let i = 0; i < totalChunks; i++) {
+          const start = i * CHUNK_SIZE;
+          const chunk = file.slice(start, Math.min(start + CHUNK_SIZE, file.size));
+          const res = await fetch(`${baseUrl}/storage/v1/chunk/media/${uploadId}/${i}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/octet-stream" },
+            body: chunk,
+          });
+          if (!res.ok) throw new Error(`Частина ${i + 1}/${totalChunks} не завантажилась`);
+          setProgress(Math.round(((i + 1) / totalChunks) * 100));
+        }
+        const res = await fetch(`${baseUrl}/storage/v1/chunk-complete/media/${uploadId}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ filename: filePath, totalChunks }),
+        });
+        if (!res.ok) throw new Error("Помилка збирання файлу");
+        onChange(`${baseUrl}/storage/v1/object/public/media/${filePath}`);
+      } else {
+        // Малий файл — звичайний upload
+        const { error } = await supabase.storage.from("media").upload(filePath, file, { upsert: true });
+        if (error) throw error;
+        const { data } = supabase.storage.from("media").getPublicUrl(filePath);
+        onChange(data.publicUrl);
+      }
     } catch (err: any) {
       alert(err?.message ?? "Помилка завантаження файлу");
     } finally {
       setUploading(false);
+      setProgress(0);
       e.target.value = "";
     }
   };
@@ -243,11 +301,21 @@ const MediaField = ({ label, value, onChange, accept, isVideo }: {
         <Input value={value} onChange={onChange} placeholder="https://..." />
       ) : (
         <div
-          onClick={() => fileRef.current?.click()}
-          className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-[#002f5e]/20 bg-white py-3 text-[13px] text-[#002f5e]/50 transition hover:border-[#002f5e]/35 hover:text-[#002f5e]/70"
+          onClick={() => !uploading && fileRef.current?.click()}
+          className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-[#002f5e]/20 bg-white py-3 text-[13px] text-[#002f5e]/50 transition hover:border-[#002f5e]/35 hover:text-[#002f5e]/70"
         >
           {uploading ? (
-            <><span className="h-4 w-4 animate-spin rounded-full border-2 border-[#002f5e]/40 border-t-[#002f5e]" /> Завантаження...</>
+            <>
+              <div className="flex items-center gap-2">
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-[#002f5e]/40 border-t-[#002f5e]" />
+                {progress > 0 ? `${progress}%` : "Завантаження..."}
+              </div>
+              {progress > 0 && (
+                <div className="h-1.5 w-48 overflow-hidden rounded-full bg-[#002f5e]/10">
+                  <div className="h-full rounded-full bg-[#002f5e] transition-all" style={{ width: `${progress}%` }} />
+                </div>
+              )}
+            </>
           ) : (
             <><Upload className="h-4 w-4" /> Обрати файл</>
           )}
@@ -1557,17 +1625,123 @@ const TourismTypesAdmin = ({ showToast }: { showToast: (msg: string, ok?: boolea
 };
 
 // ─── Articles Admin ───────────────────────────────────────────────────────────
+type ArticleVideo = {
+  id: string;
+  url: string;
+  afterParagraph: number; // 0 = before text, N = after Nth paragraph
+};
+
 type ArticleForm = {
   id: string; title: string; subtitle: string; imageUrl: string;
-  videoUrl: string; content: string; publishedAt: string; published: boolean;
+  videos: ArticleVideo[]; content: string; publishedAt: string; published: boolean;
   titleEn: string; subtitleEn: string; contentEn: string;
 };
 
 const emptyArticle = (): ArticleForm => ({
-  id: "", title: "", subtitle: "", imageUrl: "", videoUrl: "",
+  id: "", title: "", subtitle: "", imageUrl: "", videos: [],
   content: "", publishedAt: new Date().toLocaleDateString("uk-UA"), published: true,
   titleEn: "", subtitleEn: "", contentEn: "",
 });
+
+const VideoListEditor = ({
+  videos,
+  onChange,
+}: {
+  videos: ArticleVideo[];
+  onChange: (v: ArticleVideo[]) => void;
+}) => {
+  const add = () => onChange([...videos, { id: `v${Date.now()}`, url: "", afterParagraph: 0 }]);
+  const remove = (id: string) => onChange(videos.filter(v => v.id !== id));
+  const update = (id: string, patch: Partial<ArticleVideo>) =>
+    onChange(videos.map(v => (v.id === id ? { ...v, ...patch } : v)));
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="flex items-center justify-between">
+        <span className="text-[13px] font-medium text-[#002f5e]/70 uppercase tracking-wide">
+          Відео{videos.length > 0 && (
+            <span className="ml-1.5 rounded-full bg-[#002f5e]/10 px-2 py-0.5 text-[11px] font-semibold">{videos.length}</span>
+          )}
+        </span>
+        <button
+          type="button"
+          onClick={add}
+          className="flex items-center gap-1.5 rounded-xl border border-[#002f5e]/20 px-3 py-1.5 text-[12px] font-medium text-[#002f5e] hover:bg-[#002f5e]/8 transition"
+        >
+          <Plus className="h-3.5 w-3.5" /> Додати відео
+        </button>
+      </div>
+
+      {videos.length === 0 && (
+        <div className="rounded-xl border border-dashed border-[#002f5e]/15 py-6 text-center">
+          <p className="text-[13px] text-[#002f5e]/35">Відео не додані</p>
+          <p className="mt-0.5 text-[11px] text-[#002f5e]/25">Натисніть «Додати відео», щоб вставити відео в статтю</p>
+        </div>
+      )}
+
+      {videos.map((video, idx) => (
+        <div key={video.id} className="rounded-xl border border-[#002f5e]/12 bg-[#002f5e]/3 p-4">
+          <div className="mb-3 flex items-center justify-between">
+            <span className="flex items-center gap-2 text-[13px] font-semibold text-[#002f5e]/70">
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#002f5e]/10 text-[11px] font-bold text-[#002f5e]">
+                {idx + 1}
+              </span>
+              Відео {idx + 1}
+            </span>
+            <button
+              type="button"
+              onClick={() => remove(video.id)}
+              className="flex h-7 w-7 items-center justify-center rounded-lg text-[#9f1f47]/50 hover:bg-[#9f1f47]/10 hover:text-[#9f1f47] transition"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
+
+          <MediaField
+            label="Джерело відео"
+            value={video.url}
+            onChange={url => update(video.id, { url })}
+            accept="video/*"
+            isVideo={true}
+          />
+
+          <div className="mt-3 flex flex-wrap items-center gap-3 rounded-lg border border-[#002f5e]/10 bg-white/60 px-3 py-2.5">
+            <span className="text-[12px] font-medium text-[#002f5e]/55">Позиція в статті:</span>
+            <label className="flex cursor-pointer items-center gap-1.5">
+              <input
+                type="radio"
+                name={`pos-${video.id}`}
+                checked={video.afterParagraph === 0}
+                onChange={() => update(video.id, { afterParagraph: 0 })}
+                className="accent-[#002f5e]"
+              />
+              <span className="text-[12px] text-[#002f5e]/70">Перед текстом</span>
+            </label>
+            <label className="flex cursor-pointer items-center gap-1.5">
+              <input
+                type="radio"
+                name={`pos-${video.id}`}
+                checked={video.afterParagraph > 0}
+                onChange={() => update(video.id, { afterParagraph: video.afterParagraph > 0 ? video.afterParagraph : 1 })}
+                className="accent-[#002f5e]"
+              />
+              <span className="text-[12px] text-[#002f5e]/70">Після параграфа №</span>
+            </label>
+            {video.afterParagraph > 0 && (
+              <input
+                type="number"
+                min={1}
+                value={video.afterParagraph}
+                onChange={e => update(video.id, { afterParagraph: Math.max(1, parseInt(e.target.value) || 1) })}
+                className="w-16 rounded-lg border border-[#002f5e]/15 bg-white px-2 py-1 text-center text-[13px] font-medium text-[#002f5e] focus:border-[#002f5e]/35 focus:outline-none"
+              />
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
 
 const ArticlesAdmin = ({ showToast }: { showToast: (msg: string, ok?: boolean) => void }) => {
   const [articles, setArticles] = useState<ContentCardEntity[]>([]);
@@ -1626,7 +1800,9 @@ const ArticlesAdmin = ({ showToast }: { showToast: (msg: string, ok?: boolean) =
         sortOrder: editingId ? (articles.find(a => a.id === id)?.sortOrder ?? articles.length) : articles.length,
         published: form.published,
         payload: {
-          content: form.content, publishedAt: form.publishedAt, videoUrl: form.videoUrl,
+          content: form.content, publishedAt: form.publishedAt,
+          videos: form.videos,
+          videoUrl: form.videos[0]?.url ?? "", // backward compat
           titleEn: form.titleEn || null, subtitleEn: form.subtitleEn || null, contentEn: form.contentEn || null,
         },
       };
@@ -1640,9 +1816,15 @@ const ArticlesAdmin = ({ showToast }: { showToast: (msg: string, ok?: boolean) =
 
   const startEdit = (card: ContentCardEntity) => {
     setEditingId(card.id);
+    const legacyVideoUrl = String(card.payload?.videoUrl ?? "");
+    const loadedVideos: ArticleVideo[] = Array.isArray(card.payload?.videos)
+      ? (card.payload.videos as ArticleVideo[])
+      : legacyVideoUrl
+        ? [{ id: `v${Date.now()}`, url: legacyVideoUrl, afterParagraph: 0 }]
+        : [];
     setForm({
       id: card.id, title: card.title, subtitle: card.subtitle ?? "",
-      imageUrl: card.imageUrl ?? "", videoUrl: String(card.payload?.videoUrl ?? ""),
+      imageUrl: card.imageUrl ?? "", videos: loadedVideos,
       content: String(card.payload?.content ?? ""),
       publishedAt: String(card.payload?.publishedAt ?? ""),
       published: card.published,
@@ -1693,20 +1875,18 @@ const ArticlesAdmin = ({ showToast }: { showToast: (msg: string, ok?: boolean) =
                 placeholder="Короткий опис статті"
                 className="w-full rounded-xl border border-[#002f5e]/15 bg-white px-4 py-2.5 text-[14px] text-[#002f5e] focus:border-[#002f5e]/40 focus:outline-none focus:ring-2 focus:ring-[#002f5e]/10 transition" />
             </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <span className="mb-1 block text-[13px] font-medium text-[#002f5e]/70 uppercase tracking-wide">Головне фото (URL)</span>
-                <input value={form.imageUrl} onChange={e => setForm(p => ({ ...p, imageUrl: e.target.value }))}
-                  placeholder="https://..."
-                  className="w-full rounded-xl border border-[#002f5e]/15 bg-white px-4 py-2.5 text-[14px] text-[#002f5e] focus:border-[#002f5e]/40 focus:outline-none focus:ring-2 focus:ring-[#002f5e]/10 transition" />
-                {form.imageUrl && <img src={form.imageUrl} alt="" className="mt-2 h-24 w-full rounded-lg object-cover" onError={e => (e.currentTarget.style.display = "none")} />}
-              </div>
-              <div>
-                <span className="mb-1 block text-[13px] font-medium text-[#002f5e]/70 uppercase tracking-wide">Відео (embed URL)</span>
-                <input value={form.videoUrl} onChange={e => setForm(p => ({ ...p, videoUrl: e.target.value }))}
-                  placeholder="https://www.youtube.com/embed/..."
-                  className="w-full rounded-xl border border-[#002f5e]/15 bg-white px-4 py-2.5 text-[14px] text-[#002f5e] focus:border-[#002f5e]/40 focus:outline-none focus:ring-2 focus:ring-[#002f5e]/10 transition" />
-              </div>
+            <div>
+              <span className="mb-1 block text-[13px] font-medium text-[#002f5e]/70 uppercase tracking-wide">Головне фото (URL)</span>
+              <input value={form.imageUrl} onChange={e => setForm(p => ({ ...p, imageUrl: e.target.value }))}
+                placeholder="https://..."
+                className="w-full rounded-xl border border-[#002f5e]/15 bg-white px-4 py-2.5 text-[14px] text-[#002f5e] focus:border-[#002f5e]/40 focus:outline-none focus:ring-2 focus:ring-[#002f5e]/10 transition" />
+              {form.imageUrl && <img src={form.imageUrl} alt="" className="mt-2 h-24 w-full rounded-lg object-cover" onError={e => (e.currentTarget.style.display = "none")} />}
+            </div>
+            <div className="rounded-xl border border-[#002f5e]/10 bg-[#002f5e]/2 p-4">
+              <VideoListEditor
+                videos={form.videos}
+                onChange={v => setForm(p => ({ ...p, videos: v }))}
+              />
             </div>
             <div>
               <span className="mb-1 block text-[13px] font-medium text-[#002f5e]/70 uppercase tracking-wide">Дата публікації</span>
@@ -1820,6 +2000,7 @@ type RouteForm = {
   links: string; objectIds: string[];
   waypointObjectIds: (string | null)[];
   duration: string; distance: string;
+  tags: string[];
   published: boolean; sortOrder: number;
 };
 
@@ -1828,7 +2009,7 @@ const emptyRouteForm = (): RouteForm => ({
   content: "", contentEn: "",
   imageUrl: "", videoUrl: "", mapUrl: "", mapUrl2: "",
   links: "", objectIds: [], waypointObjectIds: [],
-  duration: "", distance: "",
+  duration: "", distance: "", tags: [],
   published: true, sortOrder: 0,
 });
 
@@ -1840,6 +2021,30 @@ const RoutesAdmin = ({ showToast }: { showToast: (msg: string, ok?: boolean) => 
   const [translating, setTranslating] = useState(false);
   const [objSearch, setObjSearch] = useState("");
 
+  // ── Порядок фільтрів ──────────────────────────────────────
+  const [tagOrder, setTagOrder] = useState<string[]>(() => ROUTE_TAG_OPTIONS.map(t => t.id));
+  const [tagOrderDirty, setTagOrderDirty] = useState(false);
+  const [tagOrderSaving, setTagOrderSaving] = useState(false);
+
+  const moveTag = (idx: number, dir: -1 | 1) => {
+    const next = [...tagOrder];
+    const target = idx + dir;
+    if (target < 0 || target >= next.length) return;
+    [next[idx], next[target]] = [next[target], next[idx]];
+    setTagOrder(next);
+    setTagOrderDirty(true);
+  };
+
+  const saveTagOrder = async () => {
+    setTagOrderSaving(true);
+    try {
+      await saveRouteTagOrder(tagOrder);
+      showToast("Порядок фільтрів збережено ✓");
+      setTagOrderDirty(false);
+    } catch { showToast("Помилка збереження", false); }
+    finally { setTagOrderSaving(false); }
+  };
+
   const handleTranslate = async () => {
     if (!form) return;
     setTranslating(true);
@@ -1847,8 +2052,11 @@ const RoutesAdmin = ({ showToast }: { showToast: (msg: string, ok?: boolean) => 
       const fields: Record<string, string> = {};
       if (form.name) fields.nameEn = form.name;
       if (form.description) fields.descriptionEn = form.description;
-      const result = await translateFields(fields);
-      setForm(f => f && ({ ...f, ...result }));
+      const [textResult, contentEn] = await Promise.all([
+        translateFields(fields),
+        form.content ? translateHtml(form.content) : Promise.resolve(""),
+      ]);
+      setForm(f => f && ({ ...f, ...textResult, ...(contentEn ? { contentEn } : {}) }));
     } catch { showToast("Помилка перекладу", false); }
     finally { setTranslating(false); }
   };
@@ -1857,6 +2065,13 @@ const RoutesAdmin = ({ showToast }: { showToast: (msg: string, ok?: boolean) => 
     loadRoutes().then(setRoutes);
     loadHierarchySnapshot().then(snap => {
       if (snap) setAllObjects(snap.objects);
+    });
+    loadRouteTagOrder().then(order => {
+      if (order.length > 0) {
+        // Merge: saved order first, then any new tags not yet in the saved order
+        const newTags = ROUTE_TAG_OPTIONS.map(t => t.id).filter(id => !order.includes(id));
+        setTagOrder([...order.filter(id => ROUTE_TAG_OPTIONS.some(t => t.id === id)), ...newTags]);
+      }
     });
   }, []);
 
@@ -1874,6 +2089,7 @@ const RoutesAdmin = ({ showToast }: { showToast: (msg: string, ok?: boolean) => 
         links: form.links || undefined, objectIds: form.objectIds,
         waypointObjectIds: form.waypointObjectIds,
         duration: form.duration || undefined, distance: form.distance || undefined,
+        tags: form.tags,
         published: form.published, sortOrder: form.sortOrder,
       };
       await upsertRoute(route);
@@ -1905,6 +2121,7 @@ const RoutesAdmin = ({ showToast }: { showToast: (msg: string, ok?: boolean) => 
     links: route.links ?? "", objectIds: route.objectIds ?? [],
     waypointObjectIds: route.waypointObjectIds ?? [],
     duration: route.duration ?? "", distance: route.distance ?? "",
+    tags: route.tags ?? [],
     published: route.published, sortOrder: route.sortOrder,
   });
 
@@ -1975,6 +2192,40 @@ const RoutesAdmin = ({ showToast }: { showToast: (msg: string, ok?: boolean) => 
             <FieldGroup label="Відстань">
               <Input value={form.distance} onChange={v => setForm(f => f && ({ ...f, distance: v }))} placeholder="396 км" />
             </FieldGroup>
+          </div>
+
+          {/* ── Теги / фільтри ─────────────────────────────── */}
+          <div className="rounded-xl border border-[#002f5e]/10 bg-[#002f5e]/2 p-4">
+            <span className="mb-3 block text-[12px] font-semibold uppercase tracking-wide text-[#002f5e]/55">
+              Категорії маршруту
+            </span>
+            <div className="flex flex-wrap gap-2">
+              {ROUTE_TAG_OPTIONS.map(tag => {
+                const active = form.tags.includes(tag.id);
+                return (
+                  <button
+                    key={tag.id}
+                    type="button"
+                    onClick={() => setForm(f => f && ({
+                      ...f,
+                      tags: active ? f.tags.filter(t => t !== tag.id) : [...f.tags, tag.id],
+                    }))}
+                    className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[13px] font-medium transition ${
+                      active
+                        ? "border-[#002f5e] bg-[#002f5e] text-[#fff2e8]"
+                        : "border-[#002f5e]/20 bg-white text-[#002f5e]/60 hover:border-[#002f5e]/40 hover:text-[#002f5e]"
+                    }`}
+                  >
+                    <span>{tag.emoji}</span> {tag.label}
+                  </button>
+                );
+              })}
+            </div>
+            {form.tags.length > 0 && (
+              <p className="mt-2 text-[11px] text-[#002f5e]/40">
+                Обрано: {form.tags.map(t => ROUTE_TAG_OPTIONS.find(o => o.id === t)?.label).filter(Boolean).join(", ")}
+              </p>
+            )}
           </div>
 
           <MediaField label="Зображення" value={form.imageUrl} onChange={v => setForm(f => f && ({ ...f, imageUrl: v }))} accept="image/*" isVideo={false} />
@@ -2180,6 +2431,55 @@ const RoutesAdmin = ({ showToast }: { showToast: (msg: string, ok?: boolean) => 
         {routes.length === 0 && !form && (
           <p className="py-12 text-center text-[14px] text-[#002f5e]/40">Маршрутів ще немає</p>
         )}
+      </div>
+
+      {/* ── Порядок фільтрів ──────────────────────────────────── */}
+      <div className="rounded-[20px] border border-[#002f5e]/10 bg-white p-6 shadow-sm">
+        <div className="mb-4 flex items-center justify-between">
+          <div>
+            <p className="font-odesa-medium text-[16px] text-[#002f5e]">Порядок фільтрів</p>
+            <p className="mt-0.5 text-[12px] text-[#002f5e]/45">Визначає послідовність відображення кнопок-фільтрів у розділі «Маршрути»</p>
+          </div>
+          {tagOrderDirty && (
+            <button onClick={() => void saveTagOrder()} disabled={tagOrderSaving}
+              className="flex items-center gap-2 rounded-xl bg-[#17a358] px-4 py-2 text-[13px] font-medium text-white transition hover:opacity-85 disabled:opacity-60">
+              {tagOrderSaving
+                ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                : <CheckCircle2 className="h-4 w-4" />}
+              {tagOrderSaving ? "Зберігається..." : "Зберегти порядок"}
+            </button>
+          )}
+        </div>
+        <div className="flex flex-col gap-2">
+          {tagOrder.map((tagId, idx) => {
+            const meta = ROUTE_TAG_OPTIONS.find(t => t.id === tagId);
+            if (!meta) return null;
+            const usedCount = routes.filter(r => r.tags?.includes(tagId)).length;
+            return (
+              <div key={tagId}
+                className="flex items-center gap-3 rounded-xl border border-[#002f5e]/8 bg-[#002f5e]/2 px-4 py-2.5">
+                <span className="w-6 text-center text-[13px] font-semibold text-[#002f5e]/30">{idx + 1}</span>
+                <span className="text-[18px]">{meta.emoji}</span>
+                <span className="flex-1 text-[14px] font-medium text-[#002f5e]">{meta.label}</span>
+                {usedCount > 0 && (
+                  <span className="rounded-full bg-[#002f5e]/8 px-2.5 py-0.5 text-[11px] font-medium text-[#002f5e]/50">
+                    {usedCount} маршрут{usedCount === 1 ? "" : usedCount < 5 ? "и" : "ів"}
+                  </span>
+                )}
+                <div className="flex flex-col">
+                  <button type="button" onClick={() => moveTag(idx, -1)} disabled={idx === 0}
+                    className="rounded p-0.5 text-[#002f5e]/30 transition hover:text-[#002f5e] disabled:opacity-20">
+                    <ChevronRight className="h-3.5 w-3.5 -rotate-90" />
+                  </button>
+                  <button type="button" onClick={() => moveTag(idx, 1)} disabled={idx === tagOrder.length - 1}
+                    className="rounded p-0.5 text-[#002f5e]/30 transition hover:text-[#002f5e] disabled:opacity-20">
+                    <ChevronRight className="h-3.5 w-3.5 rotate-90" />
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

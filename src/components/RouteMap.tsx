@@ -204,7 +204,7 @@ export default function RouteMap({ mapUrl, waypoints = [] }: Props) {
         .rm-marker:hover .rm-dot { transform: scale(1.18); }
       `}</style>
 
-      <div ref={containerRef} className="route-map-canvas" style={{ height: 460, width: "100%" }} />
+      <div ref={containerRef} className="route-map-canvas h-[320px] w-full md:h-[460px]" />
 
       {/* Індикатор побудови маршруту по дорогах */}
       <AnimatePresence>

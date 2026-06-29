@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import { ChevronLeft, X, Calendar, ArrowRight } from "lucide-react";
@@ -8,6 +8,12 @@ import { usePageContentCards } from "@/hooks/usePageContentCards";
 
 const star = "✦";
 
+type ArticleVideo = {
+  id: string;
+  url: string;
+  afterParagraph: number;
+};
+
 type Article = {
   id: string;
   title: string;
@@ -15,11 +21,66 @@ type Article = {
   imageUrl: string | null;
   content: string;
   publishedAt: string;
-  videoUrl: string;
+  videos: ArticleVideo[];
   titleEn: string | null;
   subtitleEn: string | null;
   contentEn: string | null;
 };
+
+function VideoEmbed({ url, title }: { url: string; title?: string }) {
+  const isEmbed = /youtube\.com|youtu\.be|vimeo\.com|\/embed\//i.test(url);
+  if (isEmbed) {
+    return (
+      <iframe
+        src={url}
+        title={title ?? "video"}
+        allow="autoplay; encrypted-media"
+        allowFullScreen
+        className="h-full w-full border-0"
+      />
+    );
+  }
+  return <video src={url} controls className="h-full w-full object-contain" />;
+}
+
+function renderContentWithVideos(content: string, videos: ArticleVideo[]): React.ReactNode {
+  const visible = videos.filter(v => v.url);
+  if (!visible.length) {
+    return <span dangerouslySetInnerHTML={{ __html: content }} />;
+  }
+
+  const sorted = [...visible].sort((a, b) => a.afterParagraph - b.afterParagraph);
+
+  // Split HTML into paragraph chunks, keeping closing </p> tag with each chunk
+  const parts = content
+    .split(/(<\/p>)/i)
+    .reduce<string[]>((acc, tok, i, arr) => {
+      if (tok.toLowerCase() === "</p>" && acc.length > 0) {
+        acc[acc.length - 1] += tok;
+      } else if (tok) {
+        acc.push(tok);
+      }
+      return acc;
+    }, []);
+
+  const videoBlock = (v: ArticleVideo) => (
+    <div key={v.id} className="my-8 overflow-hidden rounded-[20px]" style={{ aspectRatio: "16/9" }}>
+      <VideoEmbed url={v.url} />
+    </div>
+  );
+
+  const nodes: React.ReactNode[] = [];
+
+  // Videos before text (afterParagraph === 0)
+  sorted.filter(v => v.afterParagraph === 0).forEach(v => nodes.push(videoBlock(v)));
+
+  parts.forEach((part, idx) => {
+    nodes.push(<span key={`p${idx}`} dangerouslySetInnerHTML={{ __html: part }} />);
+    sorted.filter(v => v.afterParagraph === idx + 1).forEach(v => nodes.push(videoBlock(v)));
+  });
+
+  return <>{nodes}</>;
+}
 
 export default function InfoPage() {
   const { t, lang } = useLang();
@@ -37,7 +98,11 @@ export default function InfoPage() {
         imageUrl: c.imageUrl,
         content: String(c.payload?.content ?? ""),
         publishedAt: String(c.payload?.publishedAt ?? ""),
-        videoUrl: String(c.payload?.videoUrl ?? ""),
+        videos: (() => {
+          if (Array.isArray(c.payload?.videos)) return c.payload.videos as ArticleVideo[];
+          const url = String(c.payload?.videoUrl ?? "");
+          return url ? [{ id: "legacy", url, afterParagraph: 0 }] : [];
+        })(),
         titleEn: c.payload?.titleEn ? String(c.payload.titleEn) : null,
         subtitleEn: c.payload?.subtitleEn ? String(c.payload.subtitleEn) : null,
         contentEn: c.payload?.contentEn ? String(c.payload.contentEn) : null,
@@ -165,17 +230,11 @@ export default function InfoPage() {
                     {(lang === "en" && activeArticle.subtitleEn) ? activeArticle.subtitleEn : activeArticle.subtitle}
                   </p>
                 )}
-                {activeArticle.videoUrl && (
-                  <div className="my-8 overflow-hidden rounded-[20px]" style={{ aspectRatio: "16/9" }}>
-                    <iframe src={activeArticle.videoUrl} title={activeArticle.title}
-                      allow="autoplay; encrypted-media" allowFullScreen className="h-full w-full border-0" />
-                  </div>
-                )}
                 {((lang === "en" && activeArticle.contentEn) ? activeArticle.contentEn : activeArticle.content) && (
                   <div className="article-content mt-8 whitespace-pre-line leading-[1.7] text-[18px]">
                     {(lang === "en" && activeArticle.contentEn)
                       ? activeArticle.contentEn
-                      : <span dangerouslySetInnerHTML={{ __html: activeArticle.content }} />
+                      : renderContentWithVideos(activeArticle.content, activeArticle.videos)
                     }
                   </div>
                 )}

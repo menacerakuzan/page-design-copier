@@ -1,9 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { MapPin, Clock, Navigation, ArrowRight, X, ChevronLeft } from "lucide-react";
-import { loadRoutes, type Route } from "@/lib/routesRepository";
+import { MapPin, Clock, Navigation, ArrowRight, X, ChevronLeft, SlidersHorizontal } from "lucide-react";
+import { loadRoutes, type Route, ROUTE_TAG_OPTIONS, loadRouteTagOrder } from "@/lib/routesRepository";
 import { useLang } from "@/lib/langContext";
 import { AccessibilityMenu } from "@/components/AccessibilityMenu";
 import SiteFooter from "@/components/SiteFooter";
@@ -71,6 +71,20 @@ const RouteCard = ({ route, idx, onClick }: { route: Route; idx: number; onClick
               )}
             </div>
           )}
+          {route.tags && route.tags.length > 0 && (
+            <div className="mb-3 flex flex-wrap gap-1.5">
+              {route.tags.map(tagId => {
+                const meta = ROUTE_TAG_OPTIONS.find(t => t.id === tagId);
+                if (!meta) return null;
+                return (
+                  <span key={tagId} className="flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-odesa-medium"
+                    style={{ backgroundColor: "rgba(201,151,58,0.15)", color: GOLD }}>
+                    {meta.emoji} {meta.label}
+                  </span>
+                );
+              })}
+            </div>
+          )}
           <h3 className="font-odesa-medium text-[22px] leading-[1.1]" style={{ color: CREAM }}>
             {name}
           </h3>
@@ -115,7 +129,7 @@ const RouteModal = ({ route, onClose }: { route: Route; onClose: () => void }) =
         onClick={e => e.stopPropagation()}
       >
         {route.imageUrl && (
-          <div className="relative h-[280px] shrink-0">
+          <div className="relative h-[200px] shrink-0 sm:h-[280px]">
             <img src={route.imageUrl} alt={name} className="h-full w-full object-cover" />
             <div className="absolute inset-0"
               style={{ background: "linear-gradient(180deg, transparent 50%, rgba(0,18,47,0.9) 100%)" }} />
@@ -148,6 +162,20 @@ const RouteModal = ({ route, onClose }: { route: Route; onClose: () => void }) =
             </div>
           )}
 
+          {route.tags && route.tags.length > 0 && (
+            <div className="mb-4 flex flex-wrap gap-2">
+              {route.tags.map(tagId => {
+                const meta = ROUTE_TAG_OPTIONS.find(t => t.id === tagId);
+                if (!meta) return null;
+                return (
+                  <span key={tagId} className="flex items-center gap-1.5 rounded-full px-3 py-1 text-[12px] font-odesa-medium"
+                    style={{ backgroundColor: "rgba(201,151,58,0.12)", color: GOLD }}>
+                    {meta.emoji} {meta.label}
+                  </span>
+                );
+              })}
+            </div>
+          )}
           <h2 className="font-odesa-medium text-[28px] leading-[1.05]" style={{ color: CREAM }}>
             {name}
           </h2>
@@ -193,6 +221,32 @@ const RoutesPage = () => {
     queryFn: () => loadRoutes(true),
   });
   const [selected, setSelected] = useState<Route | null>(null);
+  const [activeTag, setActiveTag] = useState<string | null>(null);
+  const [tagOrder, setTagOrder] = useState<string[]>([]);
+
+  useEffect(() => {
+    loadRouteTagOrder().then(order => { if (order.length > 0) setTagOrder(order); });
+  }, []);
+
+  // Collect tags that actually exist in loaded routes, sorted by saved order
+  const availableTags = useMemo(() => {
+    const used = new Set(routes.flatMap(r => r.tags ?? []));
+    const all = ROUTE_TAG_OPTIONS.filter(t => used.has(t.id));
+    if (!tagOrder.length) return all;
+    return [...all].sort((a, b) => {
+      const ai = tagOrder.indexOf(a.id);
+      const bi = tagOrder.indexOf(b.id);
+      if (ai === -1 && bi === -1) return 0;
+      if (ai === -1) return 1;
+      if (bi === -1) return -1;
+      return ai - bi;
+    });
+  }, [routes, tagOrder]);
+
+  const filtered = useMemo(() => {
+    if (!activeTag) return routes;
+    return routes.filter(r => r.tags?.includes(activeTag));
+  }, [routes, activeTag]);
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#001224" }}>
@@ -230,6 +284,51 @@ const RoutesPage = () => {
         </div>
       </motion.div>
 
+      {/* Filters */}
+      {availableTags.length > 0 && (
+        <div className="px-4 pb-8 md:px-10">
+          <div className="mx-auto max-w-[1400px]">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="flex items-center gap-1.5 text-[12px] font-odesa-medium mr-1"
+                style={{ color: `${CREAM}40` }}>
+                <SlidersHorizontal className="h-3.5 w-3.5" /> Фільтр:
+              </span>
+              <button
+                onClick={() => setActiveTag(null)}
+                className="rounded-full border px-4 py-1.5 text-[13px] font-odesa-medium transition-all duration-200"
+                style={{
+                  borderColor: activeTag === null ? GOLD : `${CREAM}20`,
+                  backgroundColor: activeTag === null ? GOLD : "transparent",
+                  color: activeTag === null ? "#001224" : `${CREAM}65`,
+                }}
+              >
+                Всі ({routes.length})
+              </button>
+              {availableTags.map(tag => {
+                const count = routes.filter(r => r.tags?.includes(tag.id)).length;
+                const isActive = activeTag === tag.id;
+                return (
+                  <motion.button
+                    key={tag.id}
+                    onClick={() => setActiveTag(isActive ? null : tag.id)}
+                    whileTap={{ scale: 0.95 }}
+                    className="flex items-center gap-1.5 rounded-full border px-4 py-1.5 text-[13px] font-odesa-medium transition-all duration-200"
+                    style={{
+                      borderColor: isActive ? GOLD : `${CREAM}20`,
+                      backgroundColor: isActive ? GOLD : "transparent",
+                      color: isActive ? "#001224" : `${CREAM}65`,
+                    }}
+                  >
+                    {tag.emoji} {tag.label}
+                    <span className="ml-0.5 text-[11px] opacity-60">({count})</span>
+                  </motion.button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Grid */}
       <div className="px-4 pb-20 md:px-10">
         <div className="mx-auto max-w-[1400px]">
@@ -242,12 +341,35 @@ const RoutesPage = () => {
             <div className="py-24 text-center text-[17px] font-odesa-regular" style={{ color: `${CREAM}40` }}>
               Маршрути незабаром з'являться
             </div>
+          ) : filtered.length === 0 ? (
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+              className="py-24 text-center"
+            >
+              <p className="text-[17px] font-odesa-regular" style={{ color: `${CREAM}40` }}>
+                Маршрутів з цією категорією поки немає
+              </p>
+              <button onClick={() => setActiveTag(null)}
+                className="mt-4 rounded-full border px-5 py-2 text-[13px] font-odesa-medium transition hover:opacity-80"
+                style={{ borderColor: `${CREAM}25`, color: `${CREAM}65` }}>
+                Показати всі
+              </button>
+            </motion.div>
           ) : (
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {routes.map((route, idx) => (
-                <RouteCard key={route.id} route={route} idx={idx} onClick={() => setSelected(route)} />
-              ))}
-            </div>
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={activeTag ?? "all"}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
+              >
+                {filtered.map((route, idx) => (
+                  <RouteCard key={route.id} route={route} idx={idx} onClick={() => setSelected(route)} />
+                ))}
+              </motion.div>
+            </AnimatePresence>
           )}
         </div>
       </div>

@@ -50,6 +50,9 @@ export default function TourismTypesPage() {
   const [activeType, setActiveType] = useState<string | null>(null);
   const { data: snapshot } = useHierarchySnapshot();
   const { data: cardsData } = usePageContentCards("tourism-types");
+  // Рендеримо сітку лише коли обидві черги готові — щоб картки змонтувались і
+  // анімувались рівно один раз (без повторного «осідання» даних).
+  const ready = !!snapshot && !!cardsData;
 
   const typeImages = useMemo(() => {
     const cards = (cardsData ?? []).filter(c => c.pageKey === "tourism-types");
@@ -107,6 +110,11 @@ export default function TourismTypesPage() {
       {/* Type grid */}
       <section className="px-4 py-16 md:px-10">
         <div className="mx-auto max-w-[1400px]">
+          {!ready ? (
+            <div className="flex items-center justify-center py-32">
+              <span className="h-8 w-8 animate-spin rounded-full border-2 border-[#002f5e] border-t-transparent" />
+            </div>
+          ) : (
           <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
             {TOURISM_TYPES.map((type, idx) => {
               const img = typeImages[type] ?? DEFAULT_IMAGES[type] ?? "";
@@ -146,6 +154,7 @@ export default function TourismTypesPage() {
               );
             })}
           </div>
+          )}
         </div>
       </section>
 

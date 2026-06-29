@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLang } from "@/lib/langContext";
 import { Link } from "react-router-dom";
-import { ChevronLeft, ArrowRight, MapPin, ChevronRight, X } from "lucide-react";
+import { ChevronLeft, ArrowRight, ArrowUpRight, MapPin, ChevronRight, X } from "lucide-react";
 import SiteFooter from "@/components/SiteFooter";
 import { useHierarchySnapshot } from "@/hooks/useHierarchySnapshot";
 import type { District, City, TourismObject } from "@/types/hierarchy";
@@ -37,6 +37,15 @@ const TYPE_BG: Record<string, string> = {
   restaurant: "#2a1200",
 };
 
+// українська плюралізація: pluralUk(5, "пункт", "пункти", "пунктів")
+function pluralUk(n: number, one: string, few: string, many: string) {
+  const mod10 = n % 10;
+  const mod100 = n % 100;
+  if (mod10 === 1 && mod100 !== 11) return one;
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return few;
+  return many;
+}
+
 export default function DistrictsPage() {
   const { lang } = useLang();
   const t = (uk?: string | null, en?: string | null) => (lang === "en" && en) ? en : (uk ?? "");
@@ -45,7 +54,9 @@ export default function DistrictsPage() {
   const [activeCity, setActiveCity] = useState<City | null>(null);
   const [activeType, setActiveType] = useState<string | null>(null);
 
-  const districts = useMemo(() => snapshot?.districts ?? [], [snapshot]);
+  const districts = useMemo(() =>
+    [...(snapshot?.districts ?? [])].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0) || a.name.localeCompare(b.name)),
+    [snapshot]);
   const allCities = useMemo(() => snapshot?.cities ?? [], [snapshot]);
   const allObjects = useMemo(() => (snapshot?.objects ?? []).filter(o => o.published), [snapshot]);
 
@@ -53,6 +64,18 @@ export default function DistrictsPage() {
     activeDistrict ? allCities.filter(c => c.districtId === activeDistrict.id) : [],
     [activeDistrict, allCities]
   );
+
+  const cityCountByDistrict = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const c of allCities) counts[c.districtId] = (counts[c.districtId] ?? 0) + 1;
+    return counts;
+  }, [allCities]);
+
+  const objectCountByCity = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const o of allObjects) if (o.cityId) counts[o.cityId] = (counts[o.cityId] ?? 0) + 1;
+    return counts;
+  }, [allObjects]);
 
   const cityObjects = useMemo(() => {
     if (!activeCity) return [];
@@ -136,17 +159,17 @@ export default function DistrictsPage() {
             )}
           </motion.div>
 
-          <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
+          <motion.p initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.22 }}
             className="text-[12px] uppercase tracking-[0.08em] font-odesa-medium text-[#df9b3b]">
             {activeCity ? (activeCity.settlementType ?? "місто") : activeDistrict ? t("оберіть населений пункт", "select a settlement") : t("оберіть район", "select a district")}
           </motion.p>
           <motion.h1 key={activeCity?.id ?? activeDistrict?.id ?? "root"}
-            initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}
+            initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}
             className="mt-3 font-odesa-medium text-[56px] leading-[0.92] md:text-[100px]">
             {activeCity ? t(activeCity.name, activeCity.nameEn) : activeDistrict ? t(activeDistrict.name, activeDistrict.nameEn) : t("Райони", "Districts")}
           </motion.h1>
           {!activeDistrict && (
-            <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8, delay: 0.2 }}
+            <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3, delay: 0.1 }}
               className="mt-5 max-w-[560px] text-[18px] leading-[1.55] text-[#fff2e8]/65 font-odesa-regular">
               {t("Досліджуйте райони Одеської області — оберіть район, населений пункт і знайдіть найкращі місця", "Explore the districts of Odesa region — select a district, settlement and find the best places")}
             </motion.p>
@@ -157,12 +180,15 @@ export default function DistrictsPage() {
       <section className="px-4 py-16 md:px-10">
         <div className="mx-auto max-w-[1400px]">
 
-          {/* ── Рівень 1: Райони ── */}
-          <AnimatePresence mode="wait">
+          {/* ── Рівень 1: Райони ──
+              initial={false}: на першому відкритті сторінки контейнер не
+              програє власну анімацію входу — анімуються лише картки (один прохід,
+              без ефекту «подвійного завантаження»). Перемикання рівнів анімується. */}
+          <AnimatePresence mode="wait" initial={false}>
             {!activeDistrict && (
               <motion.div key="districts"
-                initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.4 }}>
+                initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.2 }}>
                 {isLoading ? (
                   <div className="flex items-center justify-center py-32">
                     <span className="h-8 w-8 animate-spin rounded-full border-2 border-[#002f5e] border-t-transparent" />
@@ -171,23 +197,30 @@ export default function DistrictsPage() {
                   <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
                     {districts.map((d, idx) => (
                       <motion.button key={d.id} type="button" onClick={() => selectDistrict(d)}
-                        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.5, delay: idx * 0.06 }}
-                        className="group relative overflow-hidden rounded-[28px] text-left transition-transform duration-300 hover:-translate-y-1"
+                        initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.22, delay: idx * 0.03 }}
+                        className="group relative overflow-hidden rounded-[28px] text-left transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_28px_50px_-22px_rgba(0,47,94,0.45)]"
                         style={{ aspectRatio: "16/9" }}>
                         {d.imageUrl ? (
-                          <img src={d.imageUrl} alt={d.name} className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                          <img src={d.imageUrl} alt={d.name} className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
                         ) : (
                           <div className="absolute inset-0 bg-[#002f5e]" />
                         )}
                         <div className="absolute inset-0"
-                          style={{ background: "linear-gradient(160deg, transparent 0%, transparent 30%, rgba(0,0,0,0.04) 42%, rgba(0,0,0,0.04) 52%, rgba(0,0,0,0.18) 65%, rgba(0,0,0,0.6) 100%)" }} />
-                        <div className="absolute bottom-0 left-0 right-0 p-5">
+                          style={{ background: "linear-gradient(160deg, transparent 0%, transparent 30%, rgba(0,0,0,0.04) 42%, rgba(0,0,0,0.04) 52%, rgba(0,0,0,0.18) 65%, rgba(0,0,0,0.65) 100%)" }} />
+                        {(cityCountByDistrict[d.id] ?? 0) > 0 && (
+                          <span className="absolute right-4 top-4 flex items-center gap-1.5 rounded-full bg-black/30 px-3 py-1.5 text-[12px] leading-none font-odesa-medium text-[#fff2e8] backdrop-blur-md">
+                            <MapPin className="h-3 w-3 text-[#df9b3b]" />
+                            {cityCountByDistrict[d.id]} {pluralUk(cityCountByDistrict[d.id], "пункт", "пункти", "пунктів")}
+                          </span>
+                        )}
+                        <span className="absolute bottom-5 right-5 flex h-11 w-11 translate-y-2 items-center justify-center rounded-full bg-[#df9b3b] text-[#002f5e] opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
+                          <ArrowUpRight className="h-5 w-5" />
+                        </span>
+                        <div className="absolute bottom-0 left-0 right-16 p-5">
                           <p className="font-odesa-medium text-[26px] leading-[1.05] text-[#fff2e8]">{t(d.name, d.nameEn)}</p>
                           {d.subtitle && <p className="mt-1 text-[14px] font-odesa-regular text-[#fff2e8]/60">{t(d.subtitle, d.subtitleEn)}</p>}
-                          <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/12 px-4 py-1.5 text-[13px] font-odesa-medium text-[#fff2e8]">
-                            {t("Переглянути", "View")} <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
-                          </div>
+                          <div className="mt-3 h-[3px] w-9 rounded-full bg-[#df9b3b] transition-all duration-500 group-hover:w-20" />
                         </div>
                       </motion.button>
                     ))}
@@ -199,8 +232,8 @@ export default function DistrictsPage() {
             {/* ── Рівень 2: Населені пункти ── */}
             {activeDistrict && !activeCity && (
               <motion.div key="cities"
-                initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.4 }}>
+                initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.2 }}>
                 <button type="button" onClick={goBack}
                   className="mb-8 inline-flex items-center gap-2 rounded-full border border-[#002f5e]/20 px-5 py-2 text-[14px] font-odesa-medium text-[#002f5e]/60 transition hover:border-[#002f5e]/40 hover:text-[#002f5e]">
                   <ChevronLeft className="h-4 w-4" /> Всі райони
@@ -214,17 +247,22 @@ export default function DistrictsPage() {
                   <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                     {districtCities.map((c, idx) => (
                       <motion.button key={c.id} type="button" onClick={() => selectCity(c)}
-                        initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.45, delay: idx * 0.05 }}
-                        className="group relative overflow-hidden rounded-[22px] text-left transition-transform duration-300 hover:-translate-y-1"
+                        initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.2, delay: idx * 0.025 }}
+                        className="group relative overflow-hidden rounded-[22px] text-left transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_24px_44px_-20px_rgba(0,47,94,0.5)]"
                         style={{ aspectRatio: "3/4" }}>
                         {c.imageUrl ? (
-                          <img src={c.imageUrl} alt={c.name} className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                          <img src={c.imageUrl} alt={c.name} className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" />
                         ) : (
                           <div className="absolute inset-0 bg-[#002f5e]/80" />
                         )}
                         <div className="absolute inset-0"
-                          style={{ background: "linear-gradient(180deg, transparent 40%, rgba(0,0,0,0.7) 100%)" }} />
+                          style={{ background: "linear-gradient(180deg, transparent 40%, rgba(0,0,0,0.72) 100%)" }} />
+                        {(objectCountByCity[c.id] ?? 0) > 0 && (
+                          <span className="absolute right-3 top-3 rounded-full bg-black/30 px-2.5 py-1 text-[11px] leading-none font-odesa-medium text-[#fff2e8] backdrop-blur-md">
+                            {objectCountByCity[c.id]} {pluralUk(objectCountByCity[c.id], "об'єкт", "об'єкти", "об'єктів")}
+                          </span>
+                        )}
                         <div className="absolute bottom-0 left-0 right-0 p-4">
                           {c.settlementType && (
                             <p className="text-[11px] uppercase tracking-widest font-odesa-medium text-[#df9b3b] mb-1">{c.settlementType}</p>
@@ -324,23 +362,29 @@ const ObjectCard = ({ obj, idx }: { obj: TourismObject; idx: number }) => (
   <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.4, delay: idx * 0.04 }}>
     <Link to={`${ROUTE[obj.type]}/${obj.slug}`}
-      className="group block overflow-hidden rounded-[22px] border border-[#002f5e]/8 bg-white transition-transform duration-300 hover:-translate-y-1">
+      className="group block h-full overflow-hidden rounded-[22px] border border-[#002f5e]/8 bg-white transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_24px_44px_-20px_rgba(0,47,94,0.35)]">
       <div className="relative h-[200px] overflow-hidden">
         <img src={obj.imageUrl ?? "https://images.unsplash.com/photo-1552083375-1447ce886485?auto=format&fit=crop&w=800&q=80"}
-          alt={obj.name} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+          alt={obj.name} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/25 to-transparent" />
         <span className="absolute left-3 top-3 rounded-full px-3 py-1 text-[11px] font-odesa-medium uppercase tracking-wide text-white backdrop-blur-sm"
           style={{ backgroundColor: `${TYPE_COLOR[obj.type]}cc` }}>
           {TYPE_LABEL[obj.type]}
         </span>
       </div>
-      <div className="p-4">
+      <div className="relative p-4">
+        <div className="absolute left-0 top-5 h-[24px] w-[3px] rounded-r-full transition-all duration-300 group-hover:h-[34px]"
+          style={{ backgroundColor: TYPE_COLOR[obj.type] }} />
         <p className="font-odesa-medium text-[18px] leading-[1.1]">{obj.name}</p>
+        {obj.subtitle && (
+          <p className="mt-1 text-[13px] text-[#002f5e]/55 font-odesa-regular line-clamp-1">{obj.subtitle}</p>
+        )}
         {obj.address && (
           <p className="mt-1.5 flex items-center gap-1.5 text-[13px] text-[#002f5e]/50 font-odesa-regular">
-            <MapPin className="h-3.5 w-3.5" /> {obj.address.split("\n")[0]}
+            <MapPin className="h-3.5 w-3.5 shrink-0" style={{ color: TYPE_COLOR[obj.type] }} /> {obj.address.split("\n")[0]}
           </p>
         )}
-        <div className="mt-3 inline-flex items-center gap-1.5 text-[13px] font-odesa-medium text-[#df9b3b]">
+        <div className="mt-3 inline-flex items-center gap-1.5 text-[13px] font-odesa-medium" style={{ color: TYPE_COLOR[obj.type] }}>
           Детальніше <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
         </div>
       </div>

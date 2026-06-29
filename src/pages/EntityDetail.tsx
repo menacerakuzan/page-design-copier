@@ -2,8 +2,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useLang } from "@/lib/langContext";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  ArrowRight, ArrowUpRight, Calendar, ChevronLeft, ChevronRight,
-  Clock, Globe, MapPin, Phone, Tag, Ticket, BookOpen, Volume2, VolumeX, X,
+  ArrowRight, ArrowUpRight, Calendar, Check, ChevronLeft, ChevronRight,
+  Clock, Globe, MapPin, Navigation, Phone, Share2, Tag, Ticket, BookOpen, Volume2, VolumeX, X, Maximize2,
 } from "lucide-react";
 import { GalleryVideoCard } from "@/components/GalleryVideoCard";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
@@ -15,6 +15,7 @@ import { usePageConfig } from "@/hooks/usePageConfig";
 import { makeDefaultConfig, PageSection } from "@/types/pages";
 import NotFound from "@/pages/NotFound";
 import type { TourismObject } from "@/types/hierarchy";
+import { getObjectCoords, haversineKm } from "@/lib/geo";
 
 /* ── palette ─────────────────────────────────────────────────────── */
 const BG   = "#fff2e8";
@@ -122,6 +123,9 @@ const EntityDetail = ({ type }: { type: PageType }) => {
   const scrollRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const [reelMuted, setReelMuted] = useState(true);
   const [reelImageOpen, setReelImageOpen] = useState(false);
+  const [reelVideoOpen, setReelVideoOpen] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
+  const [activeTab, setActiveTab] = useState("about");
   const { data: snapshot, isLoading } = useHierarchySnapshot();
   const { data: cardsData } = usePageContentCards(pageKey);
   const m = meta[type];
@@ -131,7 +135,7 @@ const EntityDetail = ({ type }: { type: PageType }) => {
     [snapshot, slug, type],
   );
 
-  const allObjects = useMemo(() => snapshot?.objects ?? [], [snapshot]);
+  const allObjects = useMemo(() => (snapshot?.objects ?? []).filter(o => o.published), [snapshot]);
 
   const cards = useMemo(
     () => (cardsData ?? []).filter(c => c.pageKey === pageKey),
@@ -151,6 +155,27 @@ const EntityDetail = ({ type }: { type: PageType }) => {
   const tl = (uk?: string | null, en?: string | null) => (lang === "en" && en) ? en : (uk ?? "");
 
   useEffect(() => { window.scrollTo({ top: 0, behavior: "auto" }); }, [slug]);
+
+  // Scroll-spy: підсвічуємо активну вкладку липкої навігації
+  useEffect(() => {
+    if (!object) return;
+    const ids = ["about", "schedule", "contacts"];
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          const id = ids.find((k) => refs.current[k] === entry.target);
+          if (id) setActiveTab(id);
+        }
+      },
+      { rootMargin: "-35% 0px -55% 0px" },
+    );
+    ids.forEach((id) => {
+      const el = refs.current[id];
+      if (el) observer.observe(el);
+    });
+    return () => observer.disconnect();
+  }, [object, config]);
 
   if (isLoading) return (
     <div className="min-h-screen bg-[#001a3d] flex items-center justify-center">
@@ -203,11 +228,45 @@ const EntityDetail = ({ type }: { type: PageType }) => {
   // about section bg
   const aboutBg = findSection("description")?.bgColor ?? BG;
 
-  // related objects helper
+  // related objects helper — geo-aware, 30 km radius max
+  const GEO_RADIUS_KM = 30;
   const relatedByType = (relType: string, filter?: PageSection["filter"]) => {
-    const inCity = allObjects.filter(o => o.type === relType && o.cityId === object.cityId && o.id !== object.id);
-    const inDist = allObjects.filter(o => o.type === relType && o.districtId === object.districtId && o.id !== object.id);
-    return applyFilter(inCity.length > 0 ? inCity : inDist, filter);
+    // admin-curated list: respect as-is
+    if (filter?.entityIds?.length) return applyFilter(allObjects, filter);
+
+    const candidates = allObjects.filter(o => o.type === relType && o.id !== object.id && o.published);
+    const originCoords = getObjectCoords(object);
+
+    if (originCoords) {
+      // prefer geo: keep only objects within radius, sort by distance
+      const withDist = candidates
+        .map(o => ({ o, dist: (() => { const c = getObjectCoords(o); return c ? haversineKm(originCoords, c) : null; })() }))
+        .filter((x): x is { o: TourismObject; dist: number } => x.dist !== null && x.dist <= GEO_RADIUS_KM)
+        .sort((a, b) => a.dist - b.dist);
+
+      if (withDist.length > 0) return applyFilter(withDist.map(x => x.o), filter);
+    }
+
+    // fallback: same city only (explicit truthy check avoids undefined === undefined)
+    if (object.cityId) {
+      const inCity = candidates.filter(o => o.cityId === object.cityId);
+      if (inCity.length > 0) return applyFilter(inCity, filter);
+    }
+
+    return [];
+  };
+
+  const handleShare = async () => {
+    const url = window.location.href;
+    const title = tl(object.name, object.nameEn);
+    if (navigator.share) {
+      try { await navigator.share({ title, url }); return; } catch { /* користувач скасував */ }
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    } catch { /* буфер недоступний */ }
   };
 
   const setRef   = (id: string) => (el: HTMLElement | null) => { refs.current[id] = el; };
@@ -255,22 +314,37 @@ const EntityDetail = ({ type }: { type: PageType }) => {
                           />
                         ) : (
                           <>
-                            <video src={object.reelUrl} autoPlay muted={reelMuted} loop playsInline className="h-full w-full object-cover" />
-                            <button
-                              type="button"
-                              onClick={() => setReelMuted((m) => !m)}
-                              className="absolute bottom-3 right-3 flex items-center justify-center rounded-full border border-white/30 bg-black/50 p-2 text-white backdrop-blur-sm transition-all hover:bg-black/70"
-                              aria-label={reelMuted ? "Увімкнути звук" : "Вимкнути звук"}
-                            >
-                              {reelMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-                            </button>
+                            <video
+                              src={object.reelUrl}
+                              autoPlay muted={reelMuted} loop playsInline
+                              onClick={() => setReelVideoOpen(true)}
+                              className="h-full w-full object-cover cursor-zoom-in"
+                            />
+                            <div className="absolute bottom-3 right-3 flex items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() => setReelMuted((m) => !m)}
+                                className="flex items-center justify-center rounded-full border border-white/30 bg-black/50 p-2 text-white backdrop-blur-sm transition-all hover:bg-black/70"
+                                aria-label={reelMuted ? "Увімкнути звук" : "Вимкнути звук"}
+                              >
+                                {reelMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setReelVideoOpen(true)}
+                                className="flex items-center justify-center rounded-full border border-white/30 bg-black/50 p-2 text-white backdrop-blur-sm transition-all hover:bg-black/70"
+                                aria-label="На весь екран"
+                              >
+                                <Maximize2 className="h-4 w-4" />
+                              </button>
+                            </div>
                           </>
                         )}
                       </div>
                     </div>
                   )}
                   {object.venueId && (() => {
-                    const venue = snapshot.objects.find(o => o.id === object.venueId);
+                    const venue = snapshot.objects.find(o => o.id === object.venueId && o.published);
                     if (!venue) return null;
                     return (
                       <div className="mt-6 flex items-center gap-2 text-[15px] font-odesa-regular" style={{ color: `${textColor}99` }}>
@@ -297,7 +371,7 @@ const EntityDetail = ({ type }: { type: PageType }) => {
                   <motion.aside ref={setRef("contacts")}
                     initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.65, delay: 0.1 }}
-                    className="scroll-mt-[52px] space-y-4 lg:sticky lg:top-[64px] lg:self-start">
+                    className="order-first scroll-mt-[52px] space-y-4 lg:order-none lg:sticky lg:top-[64px] lg:self-start">
                     <div className="rounded-[28px] border p-7"
                       style={{ backgroundColor: NAVY, color: BG, borderColor: `${m.accent}35`, boxShadow: `0 4px 30px ${m.accent}20` }}>
                       <p className="font-odesa-medium text-[26px] leading-[1.05]">{tl(object.name, object.nameEn)}</p>
@@ -348,6 +422,26 @@ const EntityDetail = ({ type }: { type: PageType }) => {
                           ))}
                         </div>
                       )}
+                      <div className="mt-4 flex flex-wrap gap-2 border-t border-white/10 pt-4">
+                        {address && (
+                          <a
+                            href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address.split("\n")[0])}`}
+                            target="_blank" rel="noreferrer"
+                            className="inline-flex items-center gap-2 rounded-full border border-[#fff2e8]/25 px-5 py-2.5 text-[13px] font-odesa-medium text-[#fff2e8] transition-colors hover:bg-white/10"
+                          >
+                            <Navigation className="h-4 w-4" style={{ color: GOLD }} /> Прокласти маршрут
+                          </a>
+                        )}
+                        <button
+                          type="button"
+                          onClick={handleShare}
+                          className="inline-flex items-center gap-2 rounded-full border border-[#fff2e8]/25 px-5 py-2.5 text-[13px] font-odesa-medium text-[#fff2e8] transition-colors hover:bg-white/10"
+                        >
+                          {linkCopied
+                            ? <><Check className="h-4 w-4 text-emerald-400" /> Скопійовано!</>
+                            : <><Share2 className="h-4 w-4" style={{ color: GOLD }} /> Поділитися</>}
+                        </button>
+                      </div>
                     </div>
                     {city && (
                       <Link to={`/napryamky/${city.slug}`}
@@ -586,7 +680,7 @@ const EntityDetail = ({ type }: { type: PageType }) => {
                   Відкрити на карті →
                 </a>
               ) : (
-                <div className="overflow-hidden rounded-[28px]" style={{ height: "480px" }}>
+                <div className="h-[320px] overflow-hidden rounded-[28px] md:h-[480px]">
                   <iframe
                     src={embedUrl}
                     title="Карта"
@@ -795,16 +889,16 @@ const EntityDetail = ({ type }: { type: PageType }) => {
         <div className="relative z-20 mx-auto w-full max-w-[1180px] px-4 pt-0 md:px-5">
           <div className="rounded-b-[48px] bg-[#fff2e8] px-6 pb-4 pt-4 text-[#002f5e]">
             <div className="flex items-center justify-between gap-4 font-odesa-medium text-[14px]">
-              <Link to={backTo} className="flex items-center gap-2 transition-opacity hover:opacity-70">
-                <ChevronLeft className="h-4 w-4" /> Назад
+              <Link to={backTo} className="flex min-w-0 items-center gap-2 transition-opacity hover:opacity-70">
+                <ChevronLeft className="h-4 w-4 shrink-0" /> <span className="truncate">Назад</span>
               </Link>
-              <div className="flex items-center gap-3">
+              <div className="hidden items-center gap-3 sm:flex">
                 <span className="text-[15px] text-[#002f5e]/40">{star}</span>
                 <span>{m.label}</span>
                 <span className="text-[15px] text-[#002f5e]/40">{star}</span>
                 <span>{city?.name ?? district?.name ?? "Одещина"}</span>
               </div>
-              <Link to="/" className="transition-opacity hover:opacity-70">Головна</Link>
+              <Link to="/" className="shrink-0 transition-opacity hover:opacity-70">Головна</Link>
             </div>
           </div>
         </div>
@@ -819,7 +913,7 @@ const EntityDetail = ({ type }: { type: PageType }) => {
           ]} />
         </div>
 
-        <div className="relative z-10 flex min-h-[calc(100vh-80px)] flex-col justify-end px-6 pb-10 text-[#fff2e8] md:px-14 md:pb-14">
+        <div className="relative z-10 flex min-h-[calc(100vh-80px)] flex-col justify-end px-6 pb-24 text-[#fff2e8] md:px-14 md:pb-14">
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.05 }}
             className="mb-4 flex flex-wrap items-center gap-2 text-[14px] font-odesa-regular text-[#fff2e8]/65">
             {city && <Link to={`/napryamky/${city.slug}`} className="hover:text-[#fff2e8]">{city.name}</Link>}
@@ -828,11 +922,11 @@ const EntityDetail = ({ type }: { type: PageType }) => {
           </motion.div>
           <motion.h1 initial={{ opacity: 0, y: 28 }} animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.85, ease: [0.22, 1, 0.36, 1] }}
-            className={`font-odesa-medium leading-[0.93] ${
-              object.heroFontSize === "sm" ? "text-[36px] md:text-[56px] lg:text-[72px]" :
-              object.heroFontSize === "md" ? "text-[46px] md:text-[76px] lg:text-[96px]" :
-              object.heroFontSize === "lg" ? "text-[58px] md:text-[100px] lg:text-[130px]" :
-              "text-[58px] md:text-[100px] lg:text-[120px]"
+            className={`font-odesa-medium leading-[0.95] [hyphens:auto] [overflow-wrap:anywhere] md:leading-[0.93] ${
+              object.heroFontSize === "sm" ? "text-[30px] xs:text-[36px] md:text-[56px] lg:text-[72px]" :
+              object.heroFontSize === "md" ? "text-[34px] xs:text-[44px] md:text-[76px] lg:text-[96px]" :
+              object.heroFontSize === "lg" ? "text-[38px] xs:text-[50px] md:text-[100px] lg:text-[130px]" :
+              "text-[38px] xs:text-[50px] md:text-[100px] lg:text-[120px]"
             }`}>
             {tl(object.name, object.nameEn)}
           </motion.h1>
@@ -886,8 +980,14 @@ const EntityDetail = ({ type }: { type: PageType }) => {
           <div className="flex min-w-max items-center gap-8 font-odesa-medium text-[14px] text-[#fff2e8] md:gap-10 md:text-[18px]">
             <span className="text-[13px] text-[#fff2e8]/50">{star}</span>
             {tabs[type].map(tab => (
-              <button key={tab.id} type="button" onClick={() => goTo(tab.id)}
-                className="whitespace-nowrap opacity-80 transition-all hover:opacity-100">{tab.label}</button>
+              <button key={tab.id} type="button" onClick={() => { setActiveTab(tab.id); goTo(tab.id); }}
+                className={`relative whitespace-nowrap pb-1 transition-all ${activeTab === tab.id ? "opacity-100" : "opacity-60 hover:opacity-100"}`}>
+                {tab.label}
+                <span
+                  className={`absolute bottom-0 left-0 h-[2px] rounded-full transition-all duration-300 ${activeTab === tab.id ? "w-full" : "w-0"}`}
+                  style={{ backgroundColor: m.accent }}
+                />
+              </button>
             ))}
           </div>
         </div>
@@ -944,6 +1044,40 @@ const EntityDetail = ({ type }: { type: PageType }) => {
               </button>
             </motion.div>
           </>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {reelVideoOpen && object.reelUrl && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            onClick={() => setReelVideoOpen(false)}
+            className="fixed inset-0 z-[90] flex items-center justify-center p-4"
+            style={{ backgroundColor: "rgba(0,10,30,0.85)", backdropFilter: "blur(8px)" }}
+          >
+            <motion.video
+              src={object.reelUrl}
+              autoPlay loop playsInline controls
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.92 }}
+              transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+              onClick={e => e.stopPropagation()}
+              className="max-h-[90vh] w-auto rounded-[20px] object-contain shadow-2xl"
+              style={{ aspectRatio: "9 / 16" }}
+            />
+            <button
+              type="button"
+              onClick={() => setReelVideoOpen(false)}
+              className="absolute right-5 top-5 flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur-sm transition hover:bg-white/30"
+              aria-label="Закрити"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>
@@ -1016,24 +1150,35 @@ const RelatedSection = ({
               initial={{ opacity: 0, x: 24 }} whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true, amount: 0.1 }} transition={{ duration: 0.55, delay: idx * 0.08 }}>
               <Link to={`${ROUTE[obj.type]}/${obj.slug}`}
-                className="group block h-full w-[270px] overflow-hidden rounded-[26px] transition-transform duration-300 hover:-translate-y-2 md:w-[310px]">
-                <div className="relative h-full w-full">
+                className="group block h-full w-[270px] overflow-hidden rounded-[26px] transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_28px_50px_-22px_rgba(0,0,0,0.65)] md:w-[310px]">
+                <div className="relative h-full w-full overflow-hidden rounded-[26px]">
                   <img src={obj.imageUrl ?? "https://images.unsplash.com/photo-1552083375-1447ce886485?auto=format&fit=crop&w=800&q=80"}
-                    alt={obj.name} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                  <div className="absolute inset-0" style={{ background: `linear-gradient(180deg, transparent 35%, ${bg}ee 100%)` }} />
+                    alt={obj.name} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                  <div className="absolute inset-0" style={{ background: `linear-gradient(180deg, transparent 30%, ${bg}f5 100%)` }} />
                   <div className="absolute left-4 top-4">
                     <span className="rounded-full px-3 py-1.5 text-[10px] uppercase tracking-widest font-odesa-medium text-[#fff2e8] backdrop-blur-md"
                       style={{ backgroundColor: `${BADGE_COLOR[obj.type]}cc` }}>
                       {LABEL_SHORT[obj.type]}
                     </span>
                   </div>
-                  <div className="absolute bottom-0 left-0 right-0 p-3">
-                    <div className="rounded-[18px] bg-black/30 px-4 py-4 backdrop-blur-md" style={{ border: "1px solid rgba(255,242,232,0.2)" }}>
-                      <p className="font-odesa-medium text-[20px] leading-[1.1] text-[#fff2e8]">{obj.name}</p>
-                      {obj.subtitle && <p className="mt-1 text-[12px] font-odesa-regular text-[#fff2e8]/60 line-clamp-1">{obj.subtitle}</p>}
-                      <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/12 px-4 py-1.5 text-[11px] font-odesa-medium text-[#fff2e8]">
+                  <span className="absolute right-4 top-4 rounded-full bg-black/25 px-2.5 py-1 text-[12px] leading-none font-odesa-medium text-[#fff2e8]/85 backdrop-blur-md">
+                    {String(idx + 1).padStart(2, "0")}
+                  </span>
+                  {/* нижня панель: адреса й кнопка розкриваються при наведенні */}
+                  <div className="absolute bottom-0 left-0 right-0 p-5">
+                    <div className="h-[3px] w-9 rounded-full transition-all duration-500 group-hover:w-16" style={{ backgroundColor: BADGE_COLOR[obj.type] }} />
+                    <p className="mt-3 font-odesa-medium text-[21px] leading-[1.08] text-[#fff2e8] drop-shadow-md">{obj.name}</p>
+                    {obj.subtitle && <p className="mt-1 text-[12px] font-odesa-regular text-[#fff2e8]/65 line-clamp-1">{obj.subtitle}</p>}
+                    <div className="max-h-0 overflow-hidden opacity-0 transition-all duration-500 group-hover:max-h-[110px] group-hover:opacity-100">
+                      {obj.address && (
+                        <p className="mt-2.5 flex items-center gap-1.5 text-[11px] font-odesa-regular text-[#fff2e8]/55">
+                          <MapPin className="h-3 w-3 shrink-0" /> {obj.address}
+                        </p>
+                      )}
+                      <span className="mt-3 inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-[11px] font-odesa-medium text-[#001022]"
+                        style={{ backgroundColor: BADGE_COLOR[obj.type] }}>
                         Детальніше <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-1" />
-                      </div>
+                      </span>
                     </div>
                   </div>
                 </div>

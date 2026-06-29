@@ -138,6 +138,88 @@
   .font-odesa-ss02 {
     font-feature-settings: "ss02" 1;
   }
+
+  /* ── Mobile-first хелпери ─────────────────────────────────────────── */
+  /* Safe-area (notch / home-indicator) */
+  .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+  .pt-safe { padding-top: env(safe-area-inset-top); }
+  .mb-safe { margin-bottom: env(safe-area-inset-bottom); }
+  /* Висота нижньої таб-навігації + safe-area, щоб контент не перекривався */
+  .pb-tabbar { padding-bottom: calc(64px + env(safe-area-inset-bottom)); }
+
+  /* Єдиний адаптивний контейнер замість розсипу max-w-[…] + px-4 md:px-10 */
+  .container-edge {
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+    max-width: 1400px;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  @media (min-width: 640px) {
+    .container-edge { padding-left: 1.5rem; padding-right: 1.5rem; }
+  }
+  @media (min-width: 1024px) {
+    .container-edge { padding-left: 2.5rem; padding-right: 2.5rem; }
+  }
+
+  /* Адаптивна типографіка через clamp() */
+  .h-hero { font-size: clamp(2.25rem, 9vw, 6.5rem); line-height: 0.98; }
+  .h-section { font-size: clamp(1.75rem, 6vw, 3.25rem); line-height: 1.02; }
+  .h-card { font-size: clamp(1.05rem, 4.5vw, 1.5rem); line-height: 1.1; }
+
+  /* Тач-таргет ≥ 44px (WCAG) */
+  .tap { min-height: 44px; min-width: 44px; }
+
+  /* Нативний горизонтальний snap-скрол для мобільних каруселей */
+  .snap-x-mobile {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-padding-left: 1rem;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .snap-x-mobile::-webkit-scrollbar { display: none; }
+  .snap-x-mobile > * { scroll-snap-align: start; flex-shrink: 0; }
+
+  /* Прибрати горизонтальний оверфлоу глобально (safety net на мобільних) */
+  .no-x-overflow { overflow-x: clip; }
+}
+
+/* ── Декоративні анімації ──────────────────────────────────────────── */
+@keyframes float-y {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+@keyframes spin-slow {
+  to { transform: rotate(360deg); }
+}
+@keyframes dash-flow {
+  to { stroke-dashoffset: -240; }
+}
+@keyframes progress-grow {
+  from { width: 0%; }
+  to { width: 100%; }
+}
+
+.animate-float-y { animation: float-y 7s ease-in-out infinite; }
+.animate-float-y-slow { animation: float-y 10s ease-in-out 1.4s infinite; }
+.animate-spin-slower { animation: spin-slow 48s linear infinite; }
+.dash-flow {
+  stroke-dasharray: 10 14;
+  animation: dash-flow 9s linear infinite;
+}
+.animate-progress-grow { animation: progress-grow 6.5s linear forwards; }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-float-y,
+  .animate-float-y-slow,
+  .animate-spin-slower,
+  .dash-flow,
+  .animate-progress-grow {
+    animation: none;
+  }
 }
 
 /* Article rich-text content */
