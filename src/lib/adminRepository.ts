@@ -122,6 +122,7 @@ const mapDbDistrict = (row: any): District => ({
   imageUrl: row.image_url ?? undefined,
   videoUrl: row.video_url ?? undefined,
   reelUrl: row.reel_url ?? undefined,
+  sortOrder: row.sort_order ?? 0,
 });
 
 const mapDbCity = (row: any): City => ({
@@ -140,6 +141,7 @@ const mapDbCity = (row: any): City => ({
   videoUrl: row.video_url ?? undefined,
   reelUrl: row.reel_url ?? undefined,
   weatherCityName: row.weather_city_name ?? undefined,
+  sortOrder: row.sort_order ?? 0,
 });
 
 const toDbObject = (obj: TourismObject) => ({
@@ -237,8 +239,8 @@ export async function loadHierarchySnapshot(): Promise<Snapshot> {
 
   const [regionsRes, districtsRes, citiesRes, objectsRes, contentCardsRes] = await Promise.all([
     supabase.from(tableNames.regions).select("*").order("name"),
-    supabase.from(tableNames.districts).select("*").order("name"),
-    supabase.from(tableNames.cities).select("*").order("name"),
+    supabase.from(tableNames.districts).select("*").order("sort_order").order("name"),
+    supabase.from(tableNames.cities).select("*").order("sort_order").order("name"),
     supabase.from(tableNames.objects).select("*").order("name"),
     supabase.from(tableNames.contentCards).select("*").order("sort_order").order("title"),
   ]);
@@ -516,6 +518,7 @@ export async function upsertDistrict(district: District) {
     name_en: district.nameEn ?? null,
     subtitle_en: district.subtitleEn ?? null,
     description_en: district.descriptionEn ?? null,
+    sort_order: district.sortOrder ?? 0,
   };
   const { error } = await supabase.from(tableNames.districts).upsert(dbDistrict);
   if (error) throw error;
@@ -527,6 +530,24 @@ export async function upsertDistrict(district: District) {
     afterData: dbDistrict,
   });
   return district;
+}
+
+export async function updateDistrictSortOrders(orders: { id: string; sortOrder: number }[]) {
+  if (!hasSupabaseConfig || !supabase) return;
+  await Promise.all(
+    orders.map(({ id, sortOrder }) =>
+      supabase!.from(tableNames.districts).update({ sort_order: sortOrder }).eq("id", id)
+    )
+  );
+}
+
+export async function updateCitySortOrders(orders: { id: string; sortOrder: number }[]) {
+  if (!hasSupabaseConfig || !supabase) return;
+  await Promise.all(
+    orders.map(({ id, sortOrder }) =>
+      supabase!.from(tableNames.cities).update({ sort_order: sortOrder }).eq("id", id)
+    )
+  );
 }
 
 export async function insertCity(city: City) {

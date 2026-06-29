@@ -64,7 +64,8 @@ const BADGE_COLOR: Record<string, string> = {
 function applyFilter<T extends { id: string }>(items: T[], filter?: PageSection["filter"]): T[] {
   let result = items;
   if (filter?.entityIds?.length) {
-    result = result.filter((i) => filter.entityIds!.includes(i.id));
+    const idMap = new Map(items.map(i => [i.id, i]));
+    result = filter.entityIds.map(id => idMap.get(id)).filter(Boolean) as T[];
   }
   if (filter?.limit) result = result.slice(0, filter.limit);
   return result;
@@ -207,7 +208,7 @@ const CityPage = () => {
               <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
                 {stats.map(({ val, lbl }, i) => (
                   <motion.div key={i} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.5, delay: i * 0.06 }}
+                    viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.22, delay: i * 0.03 }}
                     className="rounded-[24px] border border-white/10 bg-white/8 p-6 backdrop-blur-sm">
                     <p className="font-odesa-medium text-[40px] leading-none text-[#fff2e8]">{val}</p>
                     <p className="mt-2 text-[13px] font-odesa-regular uppercase tracking-widest text-[#fff2e8]/55">{lbl}</p>
@@ -299,7 +300,7 @@ const CityPage = () => {
         const bg = section.bgColor ?? "#001a3d";
         const isDark = bg !== "#fff2e8" && bg !== "#ffffff" && bg !== "#f4f4f0" && bg !== "#ffdfc6";
         const textColor = isDark ? "#fff2e8" : "#002f5e";
-        const CARD_H = "calc((100vh - 56px - 20px) / 2)";
+        const CARD_H = "min(calc((100vh - 56px - 20px) / 2), 72vw)";
         const cardW = (colSpan: number) =>
           colSpan === 3 ? `calc(${CARD_H} * 3 + 40px)` : colSpan === 2 ? `calc(${CARD_H} * 2 + 20px)` : CARD_H;
         return (
@@ -372,25 +373,25 @@ const CityPage = () => {
         <div className="relative z-20 mx-auto w-full max-w-[1180px] px-4 pt-0 md:px-5">
           <div className="rounded-b-[48px] bg-[#fff2e8] px-6 pb-4 pt-4 text-[#002f5e]">
             <div className="flex items-center justify-between gap-4 text-[14px] font-odesa-medium">
-              <div className="w-[160px]">
+              <div className="min-w-0 flex-1 sm:w-[160px] sm:flex-none">
                 {district ? (
-                  <Link to={`/raion/${district.slug}`} className="inline-flex items-center gap-1.5 transition-opacity hover:opacity-70">
-                    <ChevronLeft className="h-4 w-4" /> {district.name}
+                  <Link to={`/raion/${district.slug}`} className="inline-flex max-w-full items-center gap-1.5 transition-opacity hover:opacity-70">
+                    <ChevronLeft className="h-4 w-4 shrink-0" /> <span className="truncate">{district.name}</span>
                   </Link>
                 ) : (
-                  <Link to="/" className="inline-flex items-center gap-1.5 transition-opacity hover:opacity-70">
-                    <ChevronLeft className="h-4 w-4" /> {t("backHome")}
+                  <Link to="/" className="inline-flex max-w-full items-center gap-1.5 transition-opacity hover:opacity-70">
+                    <ChevronLeft className="h-4 w-4 shrink-0" /> <span className="truncate">{t("backHome")}</span>
                   </Link>
                 )}
               </div>
-              <div className="flex items-center gap-3 text-[#002f5e]/65">
+              <div className="hidden items-center gap-3 text-[#002f5e]/65 sm:flex">
                 <span className="text-[15px] text-[#002f5e]/30">{star}</span>
                 <span>{city.settlementType ?? t("city")}</span>
                 <span className="text-[15px] text-[#002f5e]/30">{star}</span>
                 <span>Одещина</span>
                 <span className="text-[15px] text-[#002f5e]/30">{star}</span>
               </div>
-              <div className="flex w-[160px] justify-end pr-2">
+              <div className="flex shrink-0 justify-end pr-2 sm:w-[160px]">
                 <Link to="/" className="transition-opacity hover:opacity-70">{t("home")}</Link>
               </div>
             </div>
@@ -406,12 +407,12 @@ const CityPage = () => {
           ]} />
         </div>
 
-        <div className="relative z-10 flex min-h-[calc(100vh-80px)] flex-col justify-end px-6 pb-14 text-[#fff2e8] md:px-14 md:pb-15">
+        <div className="relative z-10 flex min-h-[calc(100vh-80px)] flex-col justify-end px-6 pb-24 text-[#fff2e8] md:px-14 md:pb-15">
           {/* weather widget — above the title */}
           {weather && (
             <motion.div
               initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.65, delay: 0.3 }}
+              transition={{ duration: 0.28, delay: 0.1 }}
               className="mb-7 inline-flex items-center gap-4 self-start rounded-full border border-white/25 bg-white/12 px-5 py-3 backdrop-blur-md shadow-lg"
             >
               <img src={`https://openweathermap.org/img/wn/${weather.icon}.png`} alt={weather.description} className="h-8 w-8" />
@@ -426,18 +427,18 @@ const CityPage = () => {
             </motion.div>
           )}
 
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="mb-5">
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.28 }} className="mb-5">
             <span className="inline-block rounded-full border border-white/25 bg-white/10 px-5 py-2 text-[12px] uppercase tracking-[0.2em] font-odesa-medium text-[#fff2e8] backdrop-blur-md">
               {city.settlementType ?? "Місто"}
             </span>
           </motion.div>
           <motion.h1 initial={{ opacity: 0, y: 32 }} animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
-            className="font-odesa-medium text-[54px] leading-[0.92] md:text-[100px] lg:text-[118px]">
+            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+            className="font-odesa-medium text-[40px] leading-[0.95] [overflow-wrap:anywhere] xs:text-[48px] md:text-[100px] md:leading-[0.92] lg:text-[118px]">
             {city.name}
           </motion.h1>
           {city.subtitle && (
-            <motion.p initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.14 }}
+            <motion.p initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.28, delay: 0.06 }}
               className="mt-4 text-[17px] font-odesa-regular text-[#fff2e8]/75 md:text-[24px]">
               {city.subtitle}
             </motion.p>
@@ -506,36 +507,42 @@ const ObjectSection = ({
         </div>
       </motion.div>
       <div ref={(el) => { scrollRefs.current[sectionId] = el; }}
-        className="flex-1 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-        <div className="flex h-full gap-5 pb-2 pt-3" style={{ width: "max-content" }}>
+        className="flex-1 snap-x snap-mandatory scroll-px-4 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+        <div className="flex h-full gap-4 pb-2 pt-3 md:gap-5" style={{ width: "max-content" }}>
           {items.map((obj, idx) => (
-            <motion.div key={obj.id} className="h-full"
+            <motion.div key={obj.id} className="h-full snap-start"
               initial={{ opacity: 0, x: 24 }} whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true, amount: 0.1 }} transition={{ duration: 0.55, delay: idx * 0.08 }}>
+              viewport={{ once: true, amount: 0.1 }} transition={{ duration: 0.22, delay: idx * 0.03 }}>
               <Link to={`${ROUTE[obj.type]}/${obj.slug}`}
-                className="group block h-full w-[270px] overflow-hidden rounded-[26px] transition-transform duration-300 hover:-translate-y-2 md:w-[310px]">
-                <div className="relative h-full w-full">
+                className="group block h-full w-[270px] overflow-hidden rounded-[26px] transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_28px_50px_-22px_rgba(0,0,0,0.65)] md:w-[310px]">
+                <div className="relative h-full w-full overflow-hidden rounded-[26px]">
                   <img src={obj.imageUrl ?? "https://images.unsplash.com/photo-1552083375-1447ce886485?auto=format&fit=crop&w=800&q=80"}
-                    alt={obj.name} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                  <div className="absolute inset-0" style={{ background: `linear-gradient(180deg, transparent 35%, ${bg}ee 100%)` }} />
+                    alt={obj.name} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                  <div className="absolute inset-0" style={{ background: `linear-gradient(180deg, transparent 30%, ${bg}f5 100%)` }} />
                   <div className="absolute left-4 top-4">
                     <span className="rounded-full px-3 py-1.5 text-[10px] uppercase tracking-widest font-odesa-medium text-[#fff2e8] backdrop-blur-md"
                       style={{ backgroundColor: `${BADGE_COLOR[obj.type]}cc`, boxShadow: `0 0 12px ${BADGE_COLOR[obj.type]}55` }}>
                       {LABEL_SHORT[obj.type]}
                     </span>
                   </div>
-                  <div className="absolute bottom-0 left-0 right-0 p-3">
-                    <div className="rounded-[18px] bg-black/30 px-4 py-4 backdrop-blur-md" style={{ border: "1px solid rgba(255,242,232,0.2)" }}>
-                      <p className="font-odesa-medium text-[20px] leading-[1.1] text-[#fff2e8]">{obj.name}</p>
-                      {obj.subtitle && <p className="mt-1 text-[12px] font-odesa-regular text-[#fff2e8]/60 line-clamp-1">{obj.subtitle}</p>}
+                  <span className="absolute right-4 top-4 rounded-full bg-black/25 px-2.5 py-1 text-[12px] leading-none font-odesa-medium text-[#fff2e8]/85 backdrop-blur-md">
+                    {String(idx + 1).padStart(2, "0")}
+                  </span>
+                  {/* нижня панель: адреса й кнопка розкриваються при наведенні */}
+                  <div className="absolute bottom-0 left-0 right-0 p-5">
+                    <div className="h-[3px] w-9 rounded-full transition-all duration-500 group-hover:w-16" style={{ backgroundColor: BADGE_COLOR[obj.type] }} />
+                    <p className="mt-3 font-odesa-medium text-[21px] leading-[1.08] text-[#fff2e8] drop-shadow-md">{obj.name}</p>
+                    {obj.subtitle && <p className="mt-1 text-[12px] font-odesa-regular text-[#fff2e8]/65 line-clamp-1">{obj.subtitle}</p>}
+                    <div className="max-h-0 overflow-hidden opacity-0 transition-all duration-500 group-hover:max-h-[110px] group-hover:opacity-100">
                       {obj.address && (
-                        <p className="mt-2 flex items-center gap-1.5 text-[11px] font-odesa-regular text-[#fff2e8]/45">
-                          <MapPin className="h-3 w-3" /> {obj.address}
+                        <p className="mt-2.5 flex items-center gap-1.5 text-[11px] font-odesa-regular text-[#fff2e8]/55">
+                          <MapPin className="h-3 w-3 shrink-0" /> {obj.address}
                         </p>
                       )}
-                      <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/12 px-4 py-1.5 text-[11px] font-odesa-medium text-[#fff2e8]">
+                      <span className="mt-3 inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-[11px] font-odesa-medium text-[#001022]"
+                        style={{ backgroundColor: BADGE_COLOR[obj.type] }}>
                         {t("details")} <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-1" />
-                      </div>
+                      </span>
                     </div>
                   </div>
                 </div>

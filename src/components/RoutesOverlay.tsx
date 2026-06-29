@@ -1,10 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
-import { X, MapPin, Clock, Navigation, ArrowRight, ExternalLink, Globe, Route as RouteIcon } from "lucide-react";
+import { useEffect, useState, useMemo } from "react";
+import { X, MapPin, Clock, Navigation, ArrowRight, ExternalLink, Globe, Route as RouteIcon, ChevronLeft } from "lucide-react";
 import RouteMap from "@/components/RouteMap";
 import { Link } from "react-router-dom";
-import { loadRoutes, type Route } from "@/lib/routesRepository";
+import { loadRoutes, type Route, ROUTE_TAG_OPTIONS, loadRouteTagOrder } from "@/lib/routesRepository";
 import { useHierarchySnapshot } from "@/hooks/useHierarchySnapshot";
 import { useLang } from "@/lib/langContext";
 import { TourismObject } from "@/types/hierarchy";
@@ -42,6 +42,14 @@ const objectTypeSlug: Record<string, string> = {
 
 const typeLabel = (t: string) =>
   t === "attraction" ? "Місце" : t === "event" ? "Подія" : t === "restaurant" ? "Ресторан" : "Готель";
+
+const stopsWord = (n: number) => {
+  const mod10 = n % 10;
+  const mod100 = n % 100;
+  if (mod10 === 1 && mod100 !== 11) return "зупинка";
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return "зупинки";
+  return "зупинок";
+};
 
 // ── Заголовок секції ────────────────────────────────────────────────────────
 const SectionTitle = ({ children }: { children: React.ReactNode }) => (
@@ -180,13 +188,13 @@ const RouteDetail = ({ route }: { route: Route }) => {
     >
       {/* Hero image */}
       {route.imageUrl && (
-        <div className="relative z-10 h-[300px] shrink-0 overflow-hidden">
+        <div className="relative z-10 h-[220px] shrink-0 overflow-hidden sm:h-[300px]">
           <img src={route.imageUrl} alt={name} className="h-full w-full object-cover" />
           <div className="absolute inset-0"
             style={{ background: `linear-gradient(180deg, rgba(0,20,38,0.15) 0%, transparent 35%, ${INK} 100%)` }} />
 
-          <div className="absolute bottom-0 left-0 right-0 px-8 pb-7">
-            <div className="mb-3 flex flex-wrap gap-2">
+          <div className="absolute bottom-0 left-0 right-0 px-5 pb-5 sm:px-8 sm:pb-7">
+            <div className="mb-2 flex flex-wrap gap-1.5 sm:mb-3 sm:gap-2">
               {route.duration && (
                 <span className="flex items-center gap-1.5 rounded-full px-3 py-1 text-[12px] font-odesa-medium"
                   style={{ backgroundColor: "rgba(0,0,0,0.4)", color: CREAM, backdropFilter: "blur(8px)", border: `1px solid ${CREAM}1a` }}>
@@ -200,12 +208,12 @@ const RouteDetail = ({ route }: { route: Route }) => {
                 </span>
               )}
             </div>
-            <h2 className="font-odesa-medium text-[42px] leading-[0.98]" style={{ color: CREAM }}>{name}</h2>
+            <h2 className="font-odesa-medium text-[30px] leading-[0.98] sm:text-[42px]" style={{ color: CREAM }}>{name}</h2>
           </div>
         </div>
       )}
 
-      <div className="relative flex-1 px-8 py-8" style={{ background: route.imageUrl ? "transparent" : PANEL_BG }}>
+      <div className="relative flex-1 px-5 py-6 sm:px-8 sm:py-8" style={{ background: route.imageUrl ? "transparent" : PANEL_BG }}>
         <div className="pointer-events-none absolute inset-0"
           style={{
             backgroundImage: "url(/routepage.svg)",
@@ -232,7 +240,7 @@ const RouteDetail = ({ route }: { route: Route }) => {
                   </span>
                 )}
               </div>
-              <h2 className="font-odesa-medium text-[42px] leading-[0.98]" style={{ color: CREAM }}>{name}</h2>
+              <h2 className="font-odesa-medium text-[30px] leading-[0.98] sm:text-[42px]" style={{ color: CREAM }}>{name}</h2>
             </div>
           )}
 
@@ -364,10 +372,30 @@ const RouteCard = ({ route, idx, selected, onClick }: {
                 {route.distance}
               </span>
             )}
+            {(route.objectIds?.length ?? 0) > 0 && (
+              <span className="rounded-full px-2 py-0.5 text-[10px] font-odesa-medium"
+                style={{ backgroundColor: `${WINE}14`, color: WINE }}>
+                {route.objectIds!.length} {stopsWord(route.objectIds!.length)}
+              </span>
+            )}
           </div>
           <p className="font-odesa-medium text-[15px] leading-[1.15]" style={{ color: NAVY }}>{name}</p>
           {desc && (
             <p className="mt-1 text-[12px] font-odesa-regular line-clamp-2" style={{ color: `${NAVY}60` }}>{desc}</p>
+          )}
+          {route.tags && route.tags.length > 0 && (
+            <div className="mt-1.5 flex flex-wrap gap-1">
+              {route.tags.map(tagId => {
+                const meta = ROUTE_TAG_OPTIONS.find(t => t.id === tagId);
+                if (!meta) return null;
+                return (
+                  <span key={tagId} className="rounded-full px-2 py-0.5 text-[10px] font-odesa-medium"
+                    style={{ backgroundColor: `${GOLD}18`, color: "#a9701f" }}>
+                    {meta.emoji} {meta.label}
+                  </span>
+                );
+              })}
+            </div>
           )}
         </div>
         <ArrowRight className="h-4 w-4 shrink-0 self-center transition-transform group-hover:translate-x-0.5"
@@ -387,6 +415,46 @@ const RoutesOverlay = ({ open, onClose }: Props) => {
     enabled: open,
   });
   const [selected, setSelected] = useState<Route | null>(null);
+  const [activeTag, setActiveTag] = useState<string | null>(null);
+  const [tagOrder, setTagOrder] = useState<string[]>([]);
+
+  useEffect(() => {
+    loadRouteTagOrder().then(order => {
+      if (order.length > 0) setTagOrder(order);
+    });
+  }, []);
+
+  const availableTags = useMemo(() => {
+    const used = new Set(routes.flatMap(r => r.tags ?? []));
+    const allAvailable = ROUTE_TAG_OPTIONS.filter(t => used.has(t.id));
+    if (!tagOrder.length) return allAvailable;
+    // Sort by saved order, tags not in order go to the end
+    return [...allAvailable].sort((a, b) => {
+      const ai = tagOrder.indexOf(a.id);
+      const bi = tagOrder.indexOf(b.id);
+      if (ai === -1 && bi === -1) return 0;
+      if (ai === -1) return 1;
+      if (bi === -1) return -1;
+      return ai - bi;
+    });
+  }, [routes, tagOrder]);
+
+  const filteredRoutes = useMemo(() => {
+    if (!activeTag) return routes;
+    return routes.filter(r => r.tags?.includes(activeTag));
+  }, [routes, activeTag]);
+
+  // Escape: спершу закриває деталі, потім весь оверлей
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      if (selected) setSelected(null);
+      else onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, selected, onClose]);
 
   return (
     <AnimatePresence>
@@ -403,7 +471,7 @@ const RoutesOverlay = ({ open, onClose }: Props) => {
             onClick={onClose}
           />
 
-          {/* Детальна панель — ліворуч, темна */}
+          {/* Детальна панель — ліворуч, темна. z-[52] щоб бути поверх сайдбару (z-50) на мобілі */}
           <AnimatePresence>
             {selected && (
               <motion.div
@@ -412,21 +480,31 @@ const RoutesOverlay = ({ open, onClose }: Props) => {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -40 }}
                 transition={{ duration: 0.38, ease: [0.22, 1, 0.36, 1] }}
-                className="fixed top-0 z-50 h-full overflow-hidden shadow-2xl"
-                style={{ left: 0, right: 380 }}
+                className="fixed left-0 right-0 top-0 z-[52] h-full overflow-hidden shadow-2xl sm:right-[380px]"
               >
+                {/* мобільна кнопка «назад до списку» */}
+                <button
+                  type="button"
+                  onClick={() => setSelected(null)}
+                  className="absolute left-4 top-4 z-20 flex items-center gap-2 rounded-full px-4 py-2.5 text-[13px] font-odesa-medium sm:hidden"
+                  style={{ backgroundColor: "rgba(0,0,0,0.55)", color: CREAM, backdropFilter: "blur(8px)" }}
+                  aria-label="До списку маршрутів"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  Маршрути
+                </button>
                 <RouteDetail route={selected} />
               </motion.div>
             )}
           </AnimatePresence>
 
-          {/* Сайдбар — праворуч, світлий */}
+          {/* Сайдбар — праворуч, світлий. На мобілі прихований коли відкрита детальна панель */}
           <motion.div
             initial={{ x: "100%" }}
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ duration: 0.38, ease: [0.22, 1, 0.36, 1] }}
-            className="fixed right-0 top-0 z-50 flex h-full w-[380px] flex-col overflow-hidden shadow-2xl"
+            className="fixed right-0 top-0 z-50 flex h-full w-full flex-col overflow-hidden shadow-2xl sm:w-[380px]"
             style={{ backgroundColor: CREAM }}
           >
             <div className="flex shrink-0 items-center justify-between px-5 py-5"
@@ -448,6 +526,42 @@ const RoutesOverlay = ({ open, onClose }: Props) => {
               </button>
             </div>
 
+            {/* Filter chips */}
+            {availableTags.length > 0 && (
+              <div className="shrink-0 px-3 pb-2 pt-1" style={{ borderBottom: `1px solid ${NAVY}0e` }}>
+                <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+                  <button
+                    onClick={() => setActiveTag(null)}
+                    className="shrink-0 rounded-full px-3.5 py-1.5 text-[12px] font-odesa-medium transition-all"
+                    style={{
+                      backgroundColor: activeTag === null ? GOLD : `${NAVY}0d`,
+                      color: activeTag === null ? NAVY : `${NAVY}60`,
+                      border: `1px solid ${activeTag === null ? GOLD : `${NAVY}14`}`,
+                    }}
+                  >
+                    Всі
+                  </button>
+                  {availableTags.map(tag => {
+                    const isActive = activeTag === tag.id;
+                    return (
+                      <button
+                        key={tag.id}
+                        onClick={() => setActiveTag(isActive ? null : tag.id)}
+                        className="shrink-0 flex items-center gap-1 rounded-full px-3.5 py-1.5 text-[12px] font-odesa-medium transition-all"
+                        style={{
+                          backgroundColor: isActive ? GOLD : `${NAVY}0d`,
+                          color: isActive ? NAVY : `${NAVY}60`,
+                          border: `1px solid ${isActive ? GOLD : `${NAVY}14`}`,
+                        }}
+                      >
+                        {tag.emoji} {tag.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             <div className="flex-1 overflow-y-auto p-3">
               {isLoading ? (
                 <div className="flex justify-center py-16">
@@ -458,9 +572,26 @@ const RoutesOverlay = ({ open, onClose }: Props) => {
                 <p className="py-16 text-center text-[14px] font-odesa-regular" style={{ color: `${NAVY}40` }}>
                   Маршрути незабаром з'являться
                 </p>
+              ) : filteredRoutes.length === 0 ? (
+                <div className="py-12 text-center">
+                  <p className="text-[14px] font-odesa-regular" style={{ color: `${NAVY}40` }}>
+                    Немає маршрутів у цій категорії
+                  </p>
+                  <button onClick={() => setActiveTag(null)}
+                    className="mt-3 rounded-full px-4 py-1.5 text-[12px] font-odesa-medium transition hover:opacity-80"
+                    style={{ backgroundColor: `${NAVY}0d`, color: `${NAVY}60` }}>
+                    Показати всі
+                  </button>
+                </div>
               ) : (
                 <div className="space-y-2.5">
-                  {routes.map((route, idx) => (
+                  {!selected && (
+                    <p className="px-2 pb-1 pt-1 text-[12px] font-odesa-regular" style={{ color: `${NAVY}45` }}>
+                      <span className="sm:hidden">Оберіть маршрут — деталі відкриються тут</span>
+                      <span className="hidden sm:inline">Оберіть маршрут — деталі, зупинки та карта відкриються поруч</span>
+                    </p>
+                  )}
+                  {filteredRoutes.map((route, idx) => (
                     <RouteCard
                       key={route.id}
                       route={route}

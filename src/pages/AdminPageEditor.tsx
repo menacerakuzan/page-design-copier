@@ -2,8 +2,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   AlignLeft, BarChart2, BedDouble, BookOpen, Building2, Calendar,
   CalendarDays, Check, ChevronDown, ChevronUp, Clock, Eye, EyeOff,
-  FileText, Globe, Image as ImageIcon, Landmark, Map, MapPin, Minus,
-  Palette, Phone, PlayCircle, Plus, Quote, RotateCcw, Settings2,
+  FileText, Globe, GripVertical, Image as ImageIcon, Landmark, Map, MapPin, Minus,
+  Palette, Phone, PlayCircle, Plus, Quote, RotateCcw, Save, Settings2,
   Star, Ticket, Trash2, UtensilsCrossed, Upload, Video, X,
 } from "lucide-react";
 import { District, City, TourismObject, TourismObjectType } from "@/types/hierarchy";
@@ -12,6 +12,7 @@ import {
   SECTION_KIND_META, makeDefaultConfig,
 } from "@/types/pages";
 import { getOrCreatePageConfig, upsertPageConfig } from "@/lib/pageConfigRepository";
+import { updateDistrictSortOrders, updateCitySortOrders } from "@/lib/adminRepository";
 import type { ContentCardEntity } from "@/types/cms";
 import { upsertContentCard, deleteContentCard } from "@/lib/adminRepository";
 import { supabase } from "@/lib/supabaseClient";
@@ -483,6 +484,174 @@ const SectionRow = ({
   </div>
 );
 
+// ─── Object order editor (Constructor-style) ─────────────────────────────────
+
+const ObjectOrderEditor = ({
+  entities,
+  selectedIds,
+  onChangeIds,
+}: {
+  entities: { id: string; name: string; imageUrl?: string; badge?: string; badgeColor?: string }[];
+  selectedIds: string[];
+  onChangeIds: (ids: string[]) => void;
+}) => {
+  const [search, setSearch] = useState("");
+
+  if (entities.length === 0) return null;
+
+  const hasCustomOrder = selectedIds.length > 0;
+  const visibleIds = selectedIds.filter(id => entities.some(e => e.id === id));
+  const hiddenIds = entities.map(e => e.id).filter(id => !visibleIds.includes(id));
+  const displayList = hasCustomOrder ? [...visibleIds, ...hiddenIds] : entities.map(e => e.id);
+
+  const filtered = search.trim()
+    ? displayList.filter(id => entities.find(e => e.id === id)?.name.toLowerCase().includes(search.toLowerCase()))
+    : displayList;
+
+  const moveUp = (visIdx: number) => {
+    if (visIdx <= 0) return;
+    const next = [...visibleIds];
+    [next[visIdx], next[visIdx - 1]] = [next[visIdx - 1], next[visIdx]];
+    onChangeIds(next);
+  };
+
+  const moveDown = (visIdx: number) => {
+    if (visIdx >= visibleIds.length - 1) return;
+    const next = [...visibleIds];
+    [next[visIdx], next[visIdx + 1]] = [next[visIdx + 1], next[visIdx]];
+    onChangeIds(next);
+  };
+
+  const toggleVisible = (id: string) => {
+    if (visibleIds.includes(id)) {
+      onChangeIds(visibleIds.filter(x => x !== id));
+    } else {
+      onChangeIds([...visibleIds, id]);
+    }
+  };
+
+  const enableAll = () => onChangeIds(entities.map(e => e.id));
+  const resetAll = () => onChangeIds([]);
+
+  return (
+    <div className="mt-1">
+      <div className="mb-3 flex items-center justify-between">
+        <label className="text-[12px] font-semibold uppercase tracking-wide text-[#002f5e]/55">
+          Порядок та видимість
+        </label>
+        <div className="flex gap-3">
+          {!hasCustomOrder ? (
+            <button type="button" onClick={enableAll}
+              className="rounded-lg border border-[#002f5e]/15 px-3 py-1 text-[12px] text-[#002f5e]/60 transition hover:border-[#002f5e]/30 hover:text-[#002f5e]">
+              Задати порядок
+            </button>
+          ) : (
+            <button type="button" onClick={resetAll}
+              className="rounded-lg border border-[#9f1f47]/20 px-3 py-1 text-[12px] text-[#9f1f47]/60 transition hover:border-[#9f1f47]/40 hover:text-[#9f1f47]">
+              Скинути
+            </button>
+          )}
+        </div>
+      </div>
+
+      {!hasCustomOrder ? (
+        <div className="flex items-center justify-center rounded-2xl border border-dashed border-[#002f5e]/15 py-8 text-center">
+          <div>
+            <GripVertical className="mx-auto mb-2 h-6 w-6 text-[#002f5e]/20" />
+            <p className="text-[13px] text-[#002f5e]/45">Об'єкти відображаються у порядку за замовчуванням</p>
+            <p className="mt-1 text-[11px] text-[#002f5e]/30">Натисніть «Задати порядок» щоб керувати послідовністю</p>
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className="mb-3 flex items-center gap-2 rounded-xl border border-[#002f5e]/10 bg-[#002f5e]/3 px-3 py-2 text-[12px] text-[#002f5e]/50">
+            <span>Видимо: <strong className="text-[#002f5e]">{visibleIds.length}</strong> з {entities.length}</span>
+          </div>
+
+          <input
+            type="text"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Пошук..."
+            className="mb-2 w-full rounded-xl border border-[#002f5e]/12 bg-white px-3 py-2 text-[13px] text-[#002f5e] placeholder:text-[#002f5e]/30 focus:border-[#002f5e]/30 focus:outline-none"
+          />
+
+          <div className="flex flex-col gap-2 max-h-[420px] overflow-y-auto pr-0.5">
+            {filtered.map((id) => {
+              const ent = entities.find(e => e.id === id);
+              if (!ent) return null;
+              const isVis = visibleIds.includes(id);
+              const visIdx = visibleIds.indexOf(id);
+              return (
+                <div key={id} className={`flex items-center gap-3 rounded-2xl border p-3 transition ${
+                  isVis ? "border-[#002f5e]/12 bg-white/80" : "border-[#002f5e]/8 bg-white/30 opacity-55"
+                }`}>
+                  {/* Thumb */}
+                  <div className="h-11 w-14 shrink-0 overflow-hidden rounded-xl bg-[#002f5e]/8">
+                    {ent.imageUrl
+                      ? <img src={ent.imageUrl} alt="" className="h-full w-full object-cover" />
+                      : <div className="flex h-full w-full items-center justify-center text-[#002f5e]/20"><ImageIcon className="h-5 w-5" /></div>
+                    }
+                  </div>
+                  {/* Info */}
+                  <div className="min-w-0 flex-1">
+                    <p className={`truncate text-[13px] font-semibold ${isVis ? "text-[#002f5e]" : "text-[#002f5e]/40"}`}>{ent.name}</p>
+                    {ent.badge && (
+                      <span className="mt-0.5 inline-block rounded-full px-2 py-0.5 text-[10px] font-medium text-white" style={{ backgroundColor: ent.badgeColor ?? "#002f5e" }}>
+                        {ent.badge}
+                      </span>
+                    )}
+                    {isVis && <p className="text-[11px] text-[#002f5e]/35">Позиція: {visIdx + 1}</p>}
+                  </div>
+                  {/* Controls */}
+                  <div className="flex shrink-0 items-center gap-1">
+                    {isVis && (
+                      <>
+                        <input
+                          type="number"
+                          min={1}
+                          max={visibleIds.length}
+                          value={visIdx + 1}
+                          onChange={e => {
+                            const pos = Math.max(1, Math.min(visibleIds.length, parseInt(e.target.value) || 1)) - 1;
+                            if (pos === visIdx) return;
+                            const next = [...visibleIds];
+                            next.splice(visIdx, 1);
+                            next.splice(pos, 0, id);
+                            onChangeIds(next);
+                          }}
+                          className="w-10 rounded-lg border border-[#002f5e]/15 bg-white px-1 py-1 text-center text-[12px] font-semibold text-[#002f5e] focus:border-[#002f5e]/35 focus:outline-none"
+                        />
+                        <button type="button" onClick={() => moveUp(visIdx)} disabled={visIdx === 0}
+                          className="flex h-7 w-7 items-center justify-center rounded-lg border border-[#002f5e]/10 text-[#002f5e]/40 transition hover:border-[#002f5e]/25 hover:text-[#002f5e] disabled:opacity-20">
+                          <ChevronUp className="h-3.5 w-3.5" />
+                        </button>
+                        <button type="button" onClick={() => moveDown(visIdx)} disabled={visIdx === visibleIds.length - 1}
+                          className="flex h-7 w-7 items-center justify-center rounded-lg border border-[#002f5e]/10 text-[#002f5e]/40 transition hover:border-[#002f5e]/25 hover:text-[#002f5e] disabled:opacity-20">
+                          <ChevronDown className="h-3.5 w-3.5" />
+                        </button>
+                      </>
+                    )}
+                    <button type="button" onClick={() => toggleVisible(id)}
+                      title={isVis ? "Приховати" : "Показати"}
+                      className={`flex h-7 w-7 items-center justify-center rounded-lg border transition ${
+                        isVis
+                          ? "border-[#002f5e]/15 text-[#002f5e]/50 hover:border-[#002f5e]/30 hover:text-[#002f5e]"
+                          : "border-[#002f5e]/10 text-[#002f5e]/25 hover:border-[#002f5e]/20 hover:text-[#002f5e]/60"
+                      }`}>
+                      {isVis ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
 // ─── Section editor panel ──────────────────────────────────────────────────────
 
 const SectionEditor = ({
@@ -501,16 +670,26 @@ const SectionEditor = ({
 }) => {
   const upd = (patch: Partial<PageSection>) => onChange({ ...section, ...patch });
 
-  const relevantEntities: { id: string; name: string; badge?: string; badgeColor?: string }[] = (() => {
-    if (section.kind === "cities_list")       return cities.map((c) => ({ id: c.id, name: c.name }));
-    if (section.kind === "places_attraction") return places.filter((p) => p.type === "attraction").map((p) => ({ id: p.id, name: p.name, badge: "Об'єкт",  badgeColor: "#002f5e" }));
-    if (section.kind === "places_event")      return places.filter((p) => p.type === "event").map((p) => ({ id: p.id, name: p.name, badge: "Подія",   badgeColor: "#9f1f47" }));
-    if (section.kind === "places_restaurant") return places.filter((p) => p.type === "restaurant").map((p) => ({ id: p.id, name: p.name, badge: "Ресторан", badgeColor: "#eea846" }));
-    if (section.kind === "places_hotel")      return places.filter((p) => p.type === "hotel").map((p) => ({ id: p.id, name: p.name, badge: "Готель",  badgeColor: "#17a358" }));
-    if (section.kind === "related_events")         return places.filter((p) => p.type === "event").map((p) => ({ id: p.id, name: p.name }));
-    if (section.kind === "related_attractions")    return places.filter((p) => p.type === "attraction").map((p) => ({ id: p.id, name: p.name }));
-    if (section.kind === "related_restaurants")    return places.filter((p) => p.type === "restaurant").map((p) => ({ id: p.id, name: p.name }));
-    if (section.kind === "related_hotels")         return places.filter((p) => p.type === "hotel").map((p) => ({ id: p.id, name: p.name }));
+  // Filter places by district/city context
+  const scopedPlaces = (() => {
+    if (entityId === "default") return places;
+    if (entityType === "district") return places.filter(p => p.districtId === entityId);
+    if (entityType === "city")     return places.filter(p => p.cityId === entityId);
+    return places;
+  })();
+
+  const relevantEntities: { id: string; name: string; imageUrl?: string; badge?: string; badgeColor?: string }[] = (() => {
+    const byType = (type: string, badge: string, color: string) =>
+      scopedPlaces.filter(p => p.type === type).map(p => ({ id: p.id, name: p.name, imageUrl: p.imageUrl, badge, badgeColor: color }));
+    if (section.kind === "cities_list")       return (entityId === "default" ? cities : cities.filter(c => c.districtId === entityId)).map(c => ({ id: c.id, name: c.name }));
+    if (section.kind === "places_attraction") return byType("attraction", "Об'єкт",  "#002f5e");
+    if (section.kind === "places_event")      return byType("event",      "Подія",   "#9f1f47");
+    if (section.kind === "places_restaurant") return byType("restaurant", "Ресторан","#eea846");
+    if (section.kind === "places_hotel")      return byType("hotel",      "Готель",  "#17a358");
+    if (section.kind === "related_events")         return byType("event",      "Подія",   "#9f1f47");
+    if (section.kind === "related_attractions")    return byType("attraction", "Об'єкт",  "#002f5e");
+    if (section.kind === "related_restaurants")    return byType("restaurant", "Ресторан","#eea846");
+    if (section.kind === "related_hotels")         return byType("hotel",      "Готель",  "#17a358");
     return [];
   })();
 
@@ -563,30 +742,11 @@ const SectionEditor = ({
           </span>
         </label>
 
-        {isListSection && relevantEntities.length > 0 && (
-          <div>
-            <div className="mb-2 flex items-center justify-between">
-              <label className="text-[12px] font-semibold uppercase tracking-wide text-[#002f5e]/55">Фільтр — показувати тільки обрані</label>
-              {selectedIds.length > 0 && (
-                <button type="button" onClick={() => upd({ filter: { ...section.filter, entityIds: [] } })} className="text-[11px] text-[#9f1f47]/70 hover:text-[#9f1f47]">Скинути</button>
-              )}
-            </div>
-            <p className="mb-2 text-[11px] text-[#002f5e]/45">
-              {selectedIds.length === 0 ? "Показуються всі пов'язані об'єкти" : `Обрано: ${selectedIds.length} з ${relevantEntities.length}`}
-            </p>
-            <div className="max-h-48 overflow-y-auto rounded-xl border border-[#002f5e]/12 bg-[#002f5e]/3 p-2">
-              {relevantEntities.map((ent) => (
-                <label key={ent.id} className="flex cursor-pointer items-center gap-2.5 rounded-lg px-2 py-1.5 transition hover:bg-[#002f5e]/5">
-                  <input type="checkbox" checked={selectedIds.includes(ent.id)} onChange={() => toggleEntityId(ent.id)} className="h-4 w-4 rounded accent-[#002f5e]" />
-                  <span className="flex-1 text-[13px] text-[#002f5e]">{ent.name}</span>
-                  {ent.badge && (
-                    <span className="rounded-full px-2 py-0.5 text-[10px] font-medium text-white" style={{ backgroundColor: ent.badgeColor ?? "#002f5e" }}>{ent.badge}</span>
-                  )}
-                </label>
-              ))}
-            </div>
-          </div>
-        )}
+        {isListSection && <ObjectOrderEditor
+          entities={relevantEntities}
+          selectedIds={selectedIds}
+          onChangeIds={(ids) => upd({ filter: { ...section.filter, entityIds: ids } })}
+        />}
 
         {isListSection && (
           <div>
@@ -816,6 +976,192 @@ const EntityListPanel = ({
   );
 };
 
+// ─── District card order panel ────────────────────────────────────────────────
+
+const DistrictOrderPanel = ({ districts, showToast, selectedId, onSelect }: {
+  districts: District[];
+  showToast: (msg: string, ok?: boolean) => void;
+  selectedId: string;
+  onSelect: (id: string) => void;
+}) => {
+  const [ordered, setOrdered] = useState<District[]>(() =>
+    [...districts].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0) || a.name.localeCompare(b.name))
+  );
+  const [saving, setSaving] = useState(false);
+  const [dirty, setDirty] = useState(false);
+
+  useEffect(() => {
+    setOrdered([...districts].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0) || a.name.localeCompare(b.name)));
+    setDirty(false);
+  }, [districts]);
+
+  const move = (idx: number, dir: -1 | 1) => {
+    const next = [...ordered];
+    const target = idx + dir;
+    if (target < 0 || target >= next.length) return;
+    [next[idx], next[target]] = [next[target], next[idx]];
+    setOrdered(next);
+    setDirty(true);
+  };
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      await updateDistrictSortOrders(ordered.map((d, i) => ({ id: d.id, sortOrder: i })));
+      showToast("Порядок збережено ✓");
+      setDirty(false);
+    } catch {
+      showToast("Помилка збереження", false);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="mb-3 rounded-2xl border border-[#002f5e]/10 bg-white/70 p-3">
+      <div className="mb-2 flex items-center justify-between">
+        <p className="text-[10px] font-semibold uppercase tracking-widest text-[#002f5e]/40">Порядок карток</p>
+        {dirty && (
+          <button type="button" onClick={save} disabled={saving}
+            className="flex items-center gap-1 rounded-lg bg-[#002f5e] px-2.5 py-1 text-[11px] font-medium text-white transition hover:bg-[#002f5e]/85 disabled:opacity-60">
+            {saving
+              ? <span className="h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent" />
+              : <Save className="h-3 w-3" />}
+            {saving ? "..." : "Зберегти"}
+          </button>
+        )}
+      </div>
+      <div className="flex flex-col gap-1 max-h-[320px] overflow-y-auto">
+        {ordered.map((d, idx) => {
+          const isActive = selectedId === d.id;
+          return (
+          <div key={d.id}
+            className={`flex items-center gap-2 rounded-xl border px-2 py-1.5 transition cursor-pointer ${
+              isActive
+                ? "border-[#002f5e]/30 bg-[#002f5e] text-[#fff2e8]"
+                : "border-[#002f5e]/8 bg-[#fff2e8]/60 hover:bg-[#002f5e]/5"
+            }`}
+            onClick={() => onSelect(d.id)}>
+            <GripVertical className={`h-3.5 w-3.5 shrink-0 ${isActive ? "text-white/30" : "text-[#002f5e]/20"}`} />
+            <span className={`w-5 shrink-0 text-center text-[11px] font-semibold ${isActive ? "text-white/50" : "text-[#002f5e]/35"}`}>{idx + 1}</span>
+            {d.imageUrl && (
+              <img src={d.imageUrl} alt={d.name} className="h-7 w-10 shrink-0 rounded-md object-cover" />
+            )}
+            <span className={`flex-1 truncate text-[12px] font-medium ${isActive ? "text-white" : "text-[#002f5e]"}`}>{d.name}</span>
+            <div className="flex flex-col" onClick={e => e.stopPropagation()}>
+              <button type="button" onClick={() => move(idx, -1)} disabled={idx === 0}
+                className={`rounded p-0.5 transition disabled:opacity-20 ${isActive ? "text-white/50 hover:text-white" : "text-[#002f5e]/30 hover:text-[#002f5e]"}`}>
+                <ChevronUp className="h-3 w-3" />
+              </button>
+              <button type="button" onClick={() => move(idx, 1)} disabled={idx === ordered.length - 1}
+                className={`rounded p-0.5 transition disabled:opacity-20 ${isActive ? "text-white/50 hover:text-white" : "text-[#002f5e]/30 hover:text-[#002f5e]"}`}>
+                <ChevronDown className="h-3 w-3" />
+              </button>
+            </div>
+          </div>
+        );})}
+      </div>
+    </div>
+  );
+};
+
+// ─── CityOrderPanel ──────────────────────────────────────────────────────────
+
+const CityOrderPanel = ({ cities, districts, showToast, selectedId, onSelect }: {
+  cities: City[];
+  districts: District[];
+  showToast: (msg: string, ok?: boolean) => void;
+  selectedId: string;
+  onSelect: (id: string) => void;
+}) => {
+  const [ordered, setOrdered] = useState<City[]>(() =>
+    [...cities].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0) || a.name.localeCompare(b.name))
+  );
+  const [saving, setSaving] = useState(false);
+  const [dirty, setDirty] = useState(false);
+
+  useEffect(() => {
+    setOrdered([...cities].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0) || a.name.localeCompare(b.name)));
+    setDirty(false);
+  }, [cities]);
+
+  const move = (idx: number, dir: -1 | 1) => {
+    const next = [...ordered];
+    const target = idx + dir;
+    if (target < 0 || target >= next.length) return;
+    [next[idx], next[target]] = [next[target], next[idx]];
+    setOrdered(next);
+    setDirty(true);
+  };
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      await updateCitySortOrders(ordered.map((c, i) => ({ id: c.id, sortOrder: i })));
+      showToast("Порядок міст збережено ✓");
+      setDirty(false);
+    } catch {
+      showToast("Помилка збереження", false);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="mb-3 rounded-2xl border border-[#002f5e]/10 bg-white/70 p-3">
+      <div className="mb-2 flex items-center justify-between">
+        <p className="text-[10px] font-semibold uppercase tracking-widest text-[#002f5e]/40">Порядок міст</p>
+        {dirty && (
+          <button type="button" onClick={save} disabled={saving}
+            className="flex items-center gap-1 rounded-lg bg-[#002f5e] px-2.5 py-1 text-[11px] font-medium text-white transition hover:bg-[#002f5e]/85 disabled:opacity-60">
+            {saving
+              ? <span className="h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent" />
+              : <Save className="h-3 w-3" />}
+            {saving ? "..." : "Зберегти"}
+          </button>
+        )}
+      </div>
+      <div className="flex flex-col gap-1 max-h-[360px] overflow-y-auto">
+        {ordered.map((city, idx) => {
+          const isActive = selectedId === city.id;
+          const districtName = districts.find(d => d.id === city.districtId)?.name;
+          return (
+            <div key={city.id}
+              className={`flex items-center gap-2 rounded-xl border px-2 py-1.5 transition cursor-pointer ${
+                isActive
+                  ? "border-[#002f5e]/30 bg-[#002f5e] text-[#fff2e8]"
+                  : "border-[#002f5e]/8 bg-[#fff2e8]/60 hover:bg-[#002f5e]/5"
+              }`}
+              onClick={() => onSelect(city.id)}>
+              <GripVertical className={`h-3.5 w-3.5 shrink-0 ${isActive ? "text-white/30" : "text-[#002f5e]/20"}`} />
+              <span className={`w-5 shrink-0 text-center text-[11px] font-semibold ${isActive ? "text-white/50" : "text-[#002f5e]/35"}`}>{idx + 1}</span>
+              {city.imageUrl && (
+                <img src={city.imageUrl} alt={city.name} className="h-7 w-10 shrink-0 rounded-md object-cover" />
+              )}
+              <div className="flex-1 min-w-0">
+                <span className={`block truncate text-[12px] font-medium ${isActive ? "text-white" : "text-[#002f5e]"}`}>{city.name}</span>
+                {districtName && (
+                  <span className={`block truncate text-[10px] ${isActive ? "text-white/50" : "text-[#002f5e]/35"}`}>{districtName}</span>
+                )}
+              </div>
+              <div className="flex flex-col" onClick={e => e.stopPropagation()}>
+                <button type="button" onClick={() => move(idx, -1)} disabled={idx === 0}
+                  className={`rounded p-0.5 transition disabled:opacity-20 ${isActive ? "text-white/50 hover:text-white" : "text-[#002f5e]/30 hover:text-[#002f5e]"}`}>
+                  <ChevronUp className="h-3 w-3" />
+                </button>
+                <button type="button" onClick={() => move(idx, 1)} disabled={idx === ordered.length - 1}
+                  className={`rounded p-0.5 transition disabled:opacity-20 ${isActive ? "text-white/50 hover:text-white" : "text-[#002f5e]/30 hover:text-[#002f5e]"}`}>
+                  <ChevronDown className="h-3 w-3" />
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
 // ─── Main AdminPageEditor ─────────────────────────────────────────────────────
 
 const AdminPageEditor = ({ entityType, districts, cities, places, showToast, allCards, onCardsChange }: Props & { allCards: ContentCardEntity[]; onCardsChange: (cards: ContentCardEntity[]) => void }) => {
@@ -1008,8 +1354,16 @@ const AdminPageEditor = ({ entityType, districts, cities, places, showToast, all
         </div>
       </div>
 
-      {/* ── RIGHT: entity list ─────────────────────────────────── */}
-      <div className="w-[270px] shrink-0 overflow-hidden rounded-2xl border border-[#002f5e]/10 bg-[#fff2e8]/60 p-3">
+      {/* ── RIGHT: order + entity list ─────────────────────────── */}
+      <div className="w-[270px] shrink-0 overflow-y-auto overflow-x-hidden rounded-2xl border border-[#002f5e]/10 bg-[#fff2e8]/60 p-3">
+        {entityType === "district" && (
+          <DistrictOrderPanel districts={districts} showToast={showToast}
+            selectedId={selectedEntityId} onSelect={selectEntity} />
+        )}
+        {entityType === "city" && (
+          <CityOrderPanel cities={cities} districts={districts} showToast={showToast}
+            selectedId={selectedEntityId} onSelect={selectEntity} />
+        )}
         <p className="mb-3 px-1 text-[10px] font-semibold uppercase tracking-widest text-[#002f5e]/35">
           Налаштувань для
         </p>
