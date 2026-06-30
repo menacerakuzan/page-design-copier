@@ -450,13 +450,6 @@ export async function rollbackChange(logId: string) {
   });
 }
 
-export async function syncContentCardsFromFallback() {
-  if (!hasSupabaseConfig || !supabase) return;
-  const rows = fallbackContentCards.map(toDbCard);
-  const { error } = await supabase.from(tableNames.contentCards).upsert(rows);
-  if (error) throw error;
-}
-
 export async function insertRegion(region: Region) {
   if (!hasSupabaseConfig || !supabase) return region;
   const dbRegion = { id: region.id, name: region.name, slug: region.slug };

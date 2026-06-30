@@ -9,6 +9,7 @@ import { useWeather } from "@/hooks/useWeather";
 import { usePageConfig } from "@/hooks/usePageConfig";
 import { usePageContentCards } from "@/hooks/usePageContentCards";
 import { makeDefaultConfig, PageSection } from "@/types/pages";
+import { applyFilter } from "@/lib/pageSections";
 import NotFound from "@/pages/NotFound";
 import type { TourismObject } from "@/types/hierarchy";
 import { GalleryVideoCard } from "@/components/GalleryVideoCard";
@@ -60,16 +61,6 @@ const BADGE_COLOR: Record<string, string> = {
 };
 
 // ─── filter helper ────────────────────────────────────────────────────────────
-
-function applyFilter<T extends { id: string }>(items: T[], filter?: PageSection["filter"]): T[] {
-  let result = items;
-  if (filter?.entityIds?.length) {
-    const idMap = new Map(items.map(i => [i.id, i]));
-    result = filter.entityIds.map(id => idMap.get(id)).filter(Boolean) as T[];
-  }
-  if (filter?.limit) result = result.slice(0, filter.limit);
-  return result;
-}
 
 const CityPage = () => {
   const { t, tl } = useLang();

@@ -16,6 +16,7 @@ import { updateDistrictSortOrders, updateCitySortOrders } from "@/lib/adminRepos
 import type { ContentCardEntity } from "@/types/cms";
 import { upsertContentCard, deleteContentCard } from "@/lib/adminRepository";
 import { supabase } from "@/lib/supabaseClient";
+import { uid } from "@/lib/id";
 
 // ─── icon map ─────────────────────────────────────────────────────────────────
 
@@ -54,8 +55,6 @@ const COLOR_PRESETS = [
   { label: "Білий",          value: "#ffffff" },
   { label: "Сірий",          value: "#f4f4f0" },
 ];
-
-const uid = () => Math.random().toString(36).slice(2, 10);
 
 // ─── Gallery card editor ──────────────────────────────────────────────────────
 

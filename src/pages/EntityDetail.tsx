@@ -13,6 +13,7 @@ import { useHierarchySnapshot } from "@/hooks/useHierarchySnapshot";
 import { usePageContentCards } from "@/hooks/usePageContentCards";
 import { usePageConfig } from "@/hooks/usePageConfig";
 import { makeDefaultConfig, PageSection } from "@/types/pages";
+import { applyFilter } from "@/lib/pageSections";
 import NotFound from "@/pages/NotFound";
 import type { TourismObject } from "@/types/hierarchy";
 import { getObjectCoords, haversineKm } from "@/lib/geo";
@@ -106,13 +107,6 @@ function RepertoireCards({ repertoire, accent }: { repertoire: string; accent: s
       </div>
     </div>
   );
-}
-
-function applyFilter<T extends { id: string }>(items: T[], filter?: PageSection["filter"]): T[] {
-  let result = items;
-  if (filter?.entityIds?.length) result = result.filter(i => filter.entityIds!.includes(i.id));
-  if (filter?.limit) result = result.slice(0, filter.limit);
-  return result;
 }
 
 const EntityDetail = ({ type }: { type: PageType }) => {
