@@ -1,11 +1,4 @@
-import {
-  cities as seedCities,
-  districts as seedDistricts,
-  regions as seedRegions,
-  tourismObjects as seedObjects,
-} from "@/data/hierarchyMockData";
-import { fallbackContentCards } from "@/data/contentCardsFallback";
-import { supabase, hasSupabaseConfig } from "@/lib/supabaseClient";
+import { supabase } from "@/lib/supabaseClient";
 import { env } from "@/env";
 import { AdminChangeLog, ContentCardEntity } from "@/types/cms";
 import { City, District, Region, TourismObject } from "@/types/hierarchy";
@@ -26,12 +19,6 @@ const tableNames = {
   contentCards: "content_cards",
   changeLogs: "admin_change_logs",
 } as const;
-
-const isTableMissingError = (error: any) => {
-  const code = error?.code ?? "";
-  const message = String(error?.message ?? "").toLowerCase();
-  return code === "42P01" || message.includes("does not exist");
-};
 
 const normalizePayload = (payload: any): Record<string, any> => {
   if (payload && typeof payload === "object" && !Array.isArray(payload)) return payload;
@@ -211,7 +198,6 @@ async function appendChangeLog(entry: {
   beforeData: Record<string, any> | null;
   afterData: Record<string, any> | null;
 }) {
-  if (!hasSupabaseConfig || !supabase) return;
   const actorEmail = await getActorEmail();
   const { error } = await supabase.from(tableNames.changeLogs).insert({
     entity_type: entry.entityType,
@@ -221,22 +207,10 @@ async function appendChangeLog(entry: {
     after_data: entry.afterData,
     actor_email: actorEmail,
   });
-  if (error && !isTableMissingError(error)) {
-    throw error;
-  }
+  if (error) throw error;
 }
 
 export async function loadHierarchySnapshot(): Promise<Snapshot> {
-  if (!hasSupabaseConfig || !supabase) {
-    return {
-      regions: seedRegions,
-      districts: seedDistricts,
-      cities: seedCities,
-      objects: seedObjects,
-      contentCards: fallbackContentCards,
-    };
-  }
-
   const [regionsRes, districtsRes, citiesRes, objectsRes, contentCardsRes] = await Promise.all([
     supabase.from(tableNames.regions).select("*").order("name"),
     supabase.from(tableNames.districts).select("*").order("sort_order").order("name"),
@@ -249,7 +223,7 @@ export async function loadHierarchySnapshot(): Promise<Snapshot> {
   if (districtsRes.error) throw districtsRes.error;
   if (citiesRes.error) throw citiesRes.error;
   if (objectsRes.error) throw objectsRes.error;
-  if (contentCardsRes.error && !isTableMissingError(contentCardsRes.error)) throw contentCardsRes.error;
+  if (contentCardsRes.error) throw contentCardsRes.error;
 
   return {
     regions: (regionsRes.data ?? []).map((row: any) => ({
@@ -260,19 +234,11 @@ export async function loadHierarchySnapshot(): Promise<Snapshot> {
     districts: (districtsRes.data ?? []).map(mapDbDistrict) as District[],
     cities: (citiesRes.data ?? []).map(mapDbCity) as City[],
     objects: (objectsRes.data ?? []).map(mapDbObject) as TourismObject[],
-    contentCards: contentCardsRes.error
-      ? fallbackContentCards
-      : (contentCardsRes.data ?? []).map(mapDbCard),
+    contentCards: (contentCardsRes.data ?? []).map(mapDbCard),
   };
 }
 
 export async function loadPublishedContentCards(pageKey: string) {
-  if (!hasSupabaseConfig || !supabase) {
-    return fallbackContentCards
-      .filter((card) => card.pageKey === pageKey && card.published)
-      .sort((a, b) => a.sortOrder - b.sortOrder || a.title.localeCompare(b.title));
-  }
-
   const { data, error } = await supabase
     .from(tableNames.contentCards)
     .select("*")
@@ -280,19 +246,11 @@ export async function loadPublishedContentCards(pageKey: string) {
     .eq("published", true)
     .order("sort_order")
     .order("title");
-  if (error) {
-    if (isTableMissingError(error)) {
-      return fallbackContentCards
-        .filter((card) => card.pageKey === pageKey && card.published)
-        .sort((a, b) => a.sortOrder - b.sortOrder || a.title.localeCompare(b.title));
-    }
-    throw error;
-  }
+  if (error) throw error;
   return (data ?? []).map(mapDbCard);
 }
 
 export async function upsertTourismObject(obj: TourismObject) {
-  if (!hasSupabaseConfig || !supabase) return obj;
   const { data: beforeData, error: beforeError } = await supabase
     .from(tableNames.objects)
     .select("*")
@@ -315,7 +273,6 @@ export async function upsertTourismObject(obj: TourismObject) {
 }
 
 export async function insertTourismObject(obj: TourismObject) {
-  if (!hasSupabaseConfig || !supabase) return obj;
   const dbObj = toDbObject(obj);
   const { error } = await supabase.from(tableNames.objects).insert(dbObj);
   if (error) throw error;
@@ -330,7 +287,6 @@ export async function insertTourismObject(obj: TourismObject) {
 }
 
 export async function deleteTourismObject(id: string) {
-  if (!hasSupabaseConfig || !supabase) return;
   const { data: beforeData, error: beforeError } = await supabase
     .from(tableNames.objects)
     .select("*")
@@ -350,7 +306,6 @@ export async function deleteTourismObject(id: string) {
 }
 
 export async function upsertContentCard(card: ContentCardEntity) {
-  if (!hasSupabaseConfig || !supabase) return card;
   const { data: beforeData, error: beforeError } = await supabase
     .from(tableNames.contentCards)
     .select("*")
@@ -372,7 +327,6 @@ export async function upsertContentCard(card: ContentCardEntity) {
 }
 
 export async function insertContentCard(card: ContentCardEntity) {
-  if (!hasSupabaseConfig || !supabase) return card;
   const dbCard = toDbCard(card);
   const { error } = await supabase.from(tableNames.contentCards).insert(dbCard);
   if (error) throw error;
@@ -387,7 +341,6 @@ export async function insertContentCard(card: ContentCardEntity) {
 }
 
 export async function deleteContentCard(id: string) {
-  if (!hasSupabaseConfig || !supabase) return;
   const { data: beforeData, error: beforeError } = await supabase
     .from(tableNames.contentCards)
     .select("*")
@@ -407,21 +360,16 @@ export async function deleteContentCard(id: string) {
 }
 
 export async function loadChangeLogs(limit = 80) {
-  if (!hasSupabaseConfig || !supabase) return [] as AdminChangeLog[];
   const { data, error } = await supabase
     .from(tableNames.changeLogs)
     .select("*")
     .order("created_at", { ascending: false })
     .limit(limit);
-  if (error) {
-    if (isTableMissingError(error)) return [] as AdminChangeLog[];
-    throw error;
-  }
+  if (error) throw error;
   return (data ?? []).map(mapDbChange);
 }
 
 export async function rollbackChange(logId: string) {
-  if (!hasSupabaseConfig || !supabase) return;
   const { data: logRow, error: logError } = await supabase
     .from(tableNames.changeLogs)
     .select("*")
@@ -451,7 +399,6 @@ export async function rollbackChange(logId: string) {
 }
 
 export async function insertRegion(region: Region) {
-  if (!hasSupabaseConfig || !supabase) return region;
   const dbRegion = { id: region.id, name: region.name, slug: region.slug };
   const { error } = await supabase.from(tableNames.regions).insert(dbRegion);
   if (error) throw error;
@@ -466,7 +413,6 @@ export async function insertRegion(region: Region) {
 }
 
 export async function insertDistrict(district: District) {
-  if (!hasSupabaseConfig || !supabase) return district;
   const dbDistrict = {
     id: district.id,
     region_id: district.regionId,
@@ -495,7 +441,6 @@ export async function insertDistrict(district: District) {
 }
 
 export async function upsertDistrict(district: District) {
-  if (!hasSupabaseConfig || !supabase) return district;
   const { data: beforeData } = await supabase.from(tableNames.districts).select("*").eq("id", district.id).maybeSingle();
   const dbDistrict = {
     id: district.id,
@@ -526,25 +471,22 @@ export async function upsertDistrict(district: District) {
 }
 
 export async function updateDistrictSortOrders(orders: { id: string; sortOrder: number }[]) {
-  if (!hasSupabaseConfig || !supabase) return;
   await Promise.all(
     orders.map(({ id, sortOrder }) =>
-      supabase!.from(tableNames.districts).update({ sort_order: sortOrder }).eq("id", id)
+      supabase.from(tableNames.districts).update({ sort_order: sortOrder }).eq("id", id)
     )
   );
 }
 
 export async function updateCitySortOrders(orders: { id: string; sortOrder: number }[]) {
-  if (!hasSupabaseConfig || !supabase) return;
   await Promise.all(
     orders.map(({ id, sortOrder }) =>
-      supabase!.from(tableNames.cities).update({ sort_order: sortOrder }).eq("id", id)
+      supabase.from(tableNames.cities).update({ sort_order: sortOrder }).eq("id", id)
     )
   );
 }
 
 export async function insertCity(city: City) {
-  if (!hasSupabaseConfig || !supabase) return city;
   const dbCity = {
     id: city.id,
     district_id: city.districtId,
@@ -575,7 +517,6 @@ export async function insertCity(city: City) {
 }
 
 export async function upsertCity(city: City) {
-  if (!hasSupabaseConfig || !supabase) return city;
   const { data: beforeData } = await supabase.from(tableNames.cities).select("*").eq("id", city.id).maybeSingle();
   const dbCity = {
     id: city.id,
@@ -607,7 +548,6 @@ export async function upsertCity(city: City) {
 }
 
 export async function deleteRegion(id: string) {
-  if (!hasSupabaseConfig || !supabase) return;
   const { data: beforeData, error: beforeError } = await supabase
     .from(tableNames.regions)
     .select("*")
@@ -626,7 +566,6 @@ export async function deleteRegion(id: string) {
 }
 
 export async function deleteDistrict(id: string) {
-  if (!hasSupabaseConfig || !supabase) return;
   const { data: beforeData, error: beforeError } = await supabase
     .from(tableNames.districts)
     .select("*")
@@ -645,7 +584,6 @@ export async function deleteDistrict(id: string) {
 }
 
 export async function deleteCity(id: string) {
-  if (!hasSupabaseConfig || !supabase) return;
   const { data: beforeData, error: beforeError } = await supabase
     .from(tableNames.cities)
     .select("*")

@@ -4,10 +4,8 @@ import { loadRoutes, upsertRoute, deleteRoute, type Route as RouteType, ROUTE_TA
 import { translateFields, translateHtml } from "@/lib/translate";
 import AdminLoginGate from "@/components/AdminLoginGate";
 import BackButton from "@/components/BackButton";
-import { regions as seedRegions, districts as seedDistricts, cities as seedCities, tourismObjects as seedObjects } from "@/data/hierarchyMockData";
 import { District, City, Region, TourismObject, TourismObjectType } from "@/types/hierarchy";
 import { ContentCardEntity } from "@/types/cms";
-import { hasSupabaseConfig, supabase } from "@/lib/supabaseClient";
 import { loadHierarchySnapshot, upsertDistrict, upsertCity, upsertTourismObject, deleteDistrict, deleteCity, deleteTourismObject, upsertContentCard, deleteContentCard, loadPublishedContentCards } from "@/lib/adminRepository";
 import AdminConstructor from "./AdminConstructor";
 import AdminPageEditor from "./AdminPageEditor";
@@ -378,10 +376,10 @@ const EntityCard = ({ title, subtitle, imageUrl, onDelete, onEdit, badge, isEdit
 const Admin = () => {
   const [section, setSection] = useState<AdminSection>("districts");
   const [placePageType, setPlacePageType] = useState<PlacePageType>("attraction");
-  const [regions, setRegions] = useState<Region[]>(hasSupabaseConfig ? [] : seedRegions);
-  const [districts, setDistricts] = useState<District[]>(hasSupabaseConfig ? [] : seedDistricts);
-  const [cities, setCities] = useState<City[]>(hasSupabaseConfig ? [] : seedCities);
-  const [places, setPlaces] = useState<TourismObject[]>(hasSupabaseConfig ? [] : seedObjects);
+  const [regions, setRegions] = useState<Region[]>([]);
+  const [districts, setDistricts] = useState<District[]>([]);
+  const [cities, setCities] = useState<City[]>([]);
+  const [places, setPlaces] = useState<TourismObject[]>([]);
   const [districtQuery, setDistrictQuery] = useState("");
   const [cityQuery, setCityQuery] = useState("");
   const [placeQuery, setPlaceQuery] = useState("");
@@ -706,9 +704,9 @@ const Admin = () => {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <span className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-medium ${hasSupabaseConfig ? "bg-[#002f5e]/10 text-[#002f5e]" : "bg-amber-100 text-amber-700"}`}>
+              <span className="flex items-center gap-1.5 rounded-full bg-[#002f5e]/10 px-3 py-1.5 text-[12px] font-medium text-[#002f5e]">
                 <Settings2 className="h-3.5 w-3.5" />
-                {hasSupabaseConfig ? "Supabase" : "Local mode"}
+                База даних
               </span>
               <button
                 type="button"
@@ -818,12 +816,6 @@ const Admin = () => {
                   </button>
                 ))}
               </nav>
-
-              {!hasSupabaseConfig && (
-                <div className="mt-3 rounded-xl bg-amber-50 p-3 text-[11px] text-amber-700 leading-relaxed">
-                  <strong>Local mode:</strong> зміни не зберігаються в базу даних. Додайте <code>VITE_SUPABASE_URL</code> та <code>VITE_SUPABASE_ANON_KEY</code>.
-                </div>
-              )}
             </div>
           </aside>
 

@@ -1,39 +1,20 @@
 /**
- * Repository for PageConfig — section layout configurations for entity pages.
- * Uses Supabase when configured; falls back to localStorage for local mode.
+ * Repository for PageConfig — section-layout configurations for entity pages,
+ * persisted in the `page_configs` table via PostgREST.
  */
 
-import { supabase, hasSupabaseConfig } from "@/lib/supabaseClient";
+import { supabase } from "@/lib/supabaseClient";
 import { PageConfig, PageEntityType, makeDefaultConfig } from "@/types/pages";
-
-const LOCAL_KEY = "page_configs_v1";
-
-// ─── Local storage helpers ────────────────────────────────────────────────────
-
-const readLocal = (): PageConfig[] => {
-  try {
-    return JSON.parse(localStorage.getItem(LOCAL_KEY) ?? "[]") as PageConfig[];
-  } catch {
-    return [];
-  }
-};
-
-const writeLocal = (configs: PageConfig[]) => {
-  localStorage.setItem(LOCAL_KEY, JSON.stringify(configs));
-};
 
 // ─── Load all configs ─────────────────────────────────────────────────────────
 
 export const loadPageConfigs = async (): Promise<PageConfig[]> => {
-  if (hasSupabaseConfig && supabase) {
-    const { data, error } = await supabase
-      .from("page_configs")
-      .select("*")
-      .order("updated_at", { ascending: false });
-    if (error) throw error;
-    return (data ?? []).map(rowToConfig);
-  }
-  return readLocal();
+  const { data, error } = await supabase
+    .from("page_configs")
+    .select("*")
+    .order("updated_at", { ascending: false });
+  if (error) throw error;
+  return (data ?? []).map(rowToConfig);
 };
 
 // ─── Get or create config ─────────────────────────────────────────────────────
@@ -54,28 +35,17 @@ export const getOrCreatePageConfig = async (
 
 export const upsertPageConfig = async (config: PageConfig): Promise<void> => {
   const updated: PageConfig = { ...config, updatedAt: new Date().toISOString() };
-
-  if (hasSupabaseConfig && supabase) {
-    const { error } = await supabase
-      .from("page_configs")
-      .upsert(configToRow(updated), { onConflict: "entity_type,entity_id" });
-    if (error) throw error;
-    return;
-  }
-
-  const all = readLocal();
-  const idx = all.findIndex(c => c.entityType === updated.entityType && c.entityId === updated.entityId);
-  if (idx >= 0) all[idx] = updated;
-  else all.push(updated);
-  writeLocal(all);
+  const { error } = await supabase
+    .from("page_configs")
+    .upsert(configToRow(updated), { onConflict: "entity_type,entity_id" });
+  if (error) throw error;
 };
 
 // ─── Get config for frontend display (no auto-create) ────────────────────────
 
 /**
- * Get page config for displaying on the frontend.
- * Falls back to the "default" template for that entity type, then to
- * the hardcoded defaults — does NOT write anything to the database.
+ * Get page config for displaying on the frontend. Falls back to the "default"
+ * template for that entity type, then to the hardcoded defaults — does NOT write.
  */
 export const getPageConfigForDisplay = async (
   entityType: PageEntityType,
@@ -92,17 +62,12 @@ export const getPageConfigForDisplay = async (
 // ─── Delete config ────────────────────────────────────────────────────────────
 
 export const deletePageConfig = async (entityType: PageEntityType, entityId: string): Promise<void> => {
-  if (hasSupabaseConfig && supabase) {
-    const { error } = await supabase
-      .from("page_configs")
-      .delete()
-      .eq("entity_type", entityType)
-      .eq("entity_id", entityId);
-    if (error) throw error;
-    return;
-  }
-  const all = readLocal().filter(c => !(c.entityType === entityType && c.entityId === entityId));
-  writeLocal(all);
+  const { error } = await supabase
+    .from("page_configs")
+    .delete()
+    .eq("entity_type", entityType)
+    .eq("entity_id", entityId);
+  if (error) throw error;
 };
 
 // ─── Row ↔ Config mappers ─────────────────────────────────────────────────────
