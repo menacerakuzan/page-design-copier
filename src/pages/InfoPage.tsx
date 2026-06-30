@@ -5,14 +5,9 @@ import { ChevronLeft, X, Calendar, ArrowRight } from "lucide-react";
 import SiteFooter from "@/components/SiteFooter";
 import { useLang } from "@/lib/langContext";
 import { usePageContentCards } from "@/hooks/usePageContentCards";
+import type { ArticleVideo } from "@/types/article";
 
 const star = "✦";
-
-type ArticleVideo = {
-  id: string;
-  url: string;
-  afterParagraph: number;
-};
 
 type Article = {
   id: string;

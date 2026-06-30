@@ -5,12 +5,7 @@ import { translateFields } from "@/lib/translate";
 import RichTextEditor from "@/components/RichTextEditor";
 import { MediaField } from "@/components/admin/fields";
 import { ContentCardEntity } from "@/types/cms";
-
-type ArticleVideo = {
-  id: string;
-  url: string;
-  afterParagraph: number; // 0 = before text, N = after Nth paragraph
-};
+import type { ArticleVideo } from "@/types/article";
 
 type ArticleForm = {
   id: string; title: string; subtitle: string; imageUrl: string;
