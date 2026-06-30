@@ -299,7 +299,7 @@ const EntityDetail = ({ type }: { type: PageType }) => {
                     <div className="mt-8 w-full max-w-[200px]">
                       <div className="relative overflow-hidden rounded-[20px] shadow-xl" style={{ aspectRatio: "9/16" }}>
                         {object.reelImageUrl ? (
-                          <img
+                          <img loading="lazy" decoding="async"
                             src={object.reelImageUrl}
                             alt={object.name}
                             onClick={() => setReelImageOpen(true)}
@@ -838,7 +838,7 @@ const EntityDetail = ({ type }: { type: PageType }) => {
                 return (
                   <div key={item.id} className="relative shrink-0 overflow-hidden rounded-[22px]" style={{ width: w, height: CARD_H, minHeight: 280 }}>
                     {item.imageUrl ? (
-                      <img src={item.imageUrl} alt={item.title} className="h-full w-full object-cover" />
+                      <img loading="lazy" decoding="async" src={item.imageUrl} alt={item.title} className="h-full w-full object-cover" />
                     ) : (
                       <div className="h-full w-full bg-[#002f5e]/20" />
                     )}
@@ -875,7 +875,7 @@ const EntityDetail = ({ type }: { type: PageType }) => {
             <source src={heroVideo} type="video/mp4" />
           </video>
         ) : (
-          <img src={heroImage} alt={tl(object.name, object.nameEn)} className="absolute inset-0 h-full w-full object-cover" />
+          <img loading="lazy" decoding="async" src={heroImage} alt={tl(object.name, object.nameEn)} className="absolute inset-0 h-full w-full object-cover" />
         )}
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,12,33,0.28)_0%,rgba(0,12,33,0.0)_40%,rgba(0,12,33,0.85)_100%)]" />
 
@@ -991,7 +991,7 @@ const EntityDetail = ({ type }: { type: PageType }) => {
 
       {/* ══════════════════  FULL-BLEED IMAGE STRIP  ════════════════════ */}
       <section className="relative h-[50vh] min-h-[320px] overflow-hidden md:h-[60vh]">
-        <img src={heroImage} alt={tl(object.name, object.nameEn)} className="h-full w-full object-cover" />
+        <img loading="lazy" decoding="async" src={heroImage} alt={tl(object.name, object.nameEn)} className="h-full w-full object-cover" />
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,12,33,0.0)_0%,rgba(0,12,33,0.55)_100%)]" />
         <div className="absolute bottom-0 left-0 right-0 px-6 pb-10 text-[#fff2e8] md:px-14">
           <p className="text-[12px] uppercase tracking-[0.25em] font-odesa-medium text-[#fff2e8]/55">
@@ -1022,7 +1022,7 @@ const EntityDetail = ({ type }: { type: PageType }) => {
               onClick={() => setReelImageOpen(false)}
               className="fixed inset-0 z-[91] flex items-center justify-center p-4 cursor-zoom-out"
             >
-              <img
+              <img loading="lazy" decoding="async"
                 src={object.reelImageUrl}
                 alt={object.name}
                 onClick={e => e.stopPropagation()}
@@ -1145,7 +1145,7 @@ const RelatedSection = ({
               <Link to={`${ROUTE[obj.type]}/${obj.slug}`}
                 className="group block h-full w-[270px] overflow-hidden rounded-[26px] transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_28px_50px_-22px_rgba(0,0,0,0.65)] md:w-[310px]">
                 <div className="relative h-full w-full overflow-hidden rounded-[26px]">
-                  <img src={obj.imageUrl ?? "https://images.unsplash.com/photo-1552083375-1447ce886485?auto=format&fit=crop&w=800&q=80"}
+                  <img loading="lazy" decoding="async" src={obj.imageUrl ?? "https://images.unsplash.com/photo-1552083375-1447ce886485?auto=format&fit=crop&w=800&q=80"}
                     alt={obj.name} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" />
                   <div className="absolute inset-0" style={{ background: `linear-gradient(180deg, transparent 30%, ${bg}f5 100%)` }} />
                   <div className="absolute left-4 top-4">

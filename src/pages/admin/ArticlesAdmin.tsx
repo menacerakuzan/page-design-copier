@@ -261,7 +261,7 @@ export const ArticlesAdmin = ({ showToast }: { showToast: (msg: string, ok?: boo
               <input value={form.imageUrl} onChange={e => setForm(p => ({ ...p, imageUrl: e.target.value }))}
                 placeholder="https://..."
                 className="w-full rounded-xl border border-[#002f5e]/15 bg-white px-4 py-2.5 text-[14px] text-[#002f5e] focus:border-[#002f5e]/40 focus:outline-none focus:ring-2 focus:ring-[#002f5e]/10 transition" />
-              {form.imageUrl && <img src={form.imageUrl} alt="" className="mt-2 h-24 w-full rounded-lg object-cover" onError={e => (e.currentTarget.style.display = "none")} />}
+              {form.imageUrl && <img loading="lazy" decoding="async" src={form.imageUrl} alt="" className="mt-2 h-24 w-full rounded-lg object-cover" onError={e => (e.currentTarget.style.display = "none")} />}
             </div>
             <div className="rounded-xl border border-[#002f5e]/10 bg-[#002f5e]/2 p-4">
               <VideoListEditor
@@ -348,7 +348,7 @@ export const ArticlesAdmin = ({ showToast }: { showToast: (msg: string, ok?: boo
           <div className="flex flex-col gap-2">
             {articles.map(a => (
               <div key={a.id} className="group flex items-start gap-3 rounded-2xl border border-[#002f5e]/10 bg-white/70 p-3">
-                {a.imageUrl && <img src={a.imageUrl} alt="" className="h-12 w-12 shrink-0 rounded-xl object-cover" />}
+                {a.imageUrl && <img loading="lazy" decoding="async" src={a.imageUrl} alt="" className="h-12 w-12 shrink-0 rounded-xl object-cover" />}
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[13px] font-semibold text-[#002f5e]">{a.title}</p>
                   <p className="text-[11px] text-[#002f5e]/40">{String(a.payload?.publishedAt ?? "")}</p>

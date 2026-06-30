@@ -201,7 +201,7 @@ export default function DistrictsPage() {
                         className="group relative overflow-hidden rounded-[28px] text-left transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_28px_50px_-22px_rgba(0,47,94,0.45)]"
                         style={{ aspectRatio: "16/9" }}>
                         {d.imageUrl ? (
-                          <img src={d.imageUrl} alt={d.name} className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                          <img loading="lazy" decoding="async" src={d.imageUrl} alt={d.name} className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
                         ) : (
                           <div className="absolute inset-0 bg-[#002f5e]" />
                         )}
@@ -251,7 +251,7 @@ export default function DistrictsPage() {
                         className="group relative overflow-hidden rounded-[22px] text-left transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_24px_44px_-20px_rgba(0,47,94,0.5)]"
                         style={{ aspectRatio: "3/4" }}>
                         {c.imageUrl ? (
-                          <img src={c.imageUrl} alt={c.name} className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                          <img loading="lazy" decoding="async" src={c.imageUrl} alt={c.name} className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" />
                         ) : (
                           <div className="absolute inset-0 bg-[#002f5e]/80" />
                         )}
@@ -363,7 +363,7 @@ const ObjectCard = ({ obj, idx }: { obj: TourismObject; idx: number }) => (
     <Link to={`${ROUTE[obj.type]}/${obj.slug}`}
       className="group block h-full overflow-hidden rounded-[22px] border border-[#002f5e]/8 bg-white transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_24px_44px_-20px_rgba(0,47,94,0.35)]">
       <div className="relative h-[200px] overflow-hidden">
-        <img src={obj.imageUrl ?? "https://images.unsplash.com/photo-1552083375-1447ce886485?auto=format&fit=crop&w=800&q=80"}
+        <img loading="lazy" decoding="async" src={obj.imageUrl ?? "https://images.unsplash.com/photo-1552083375-1447ce886485?auto=format&fit=crop&w=800&q=80"}
           alt={obj.name} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/25 to-transparent" />
         <span className="absolute left-3 top-3 rounded-full px-3 py-1 text-[11px] font-odesa-medium uppercase tracking-wide text-white backdrop-blur-sm"

@@ -164,7 +164,7 @@ export default function InfoPage() {
                   className="group cursor-pointer overflow-hidden rounded-[24px] border border-[#002f5e]/8 bg-white transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
                   {article.imageUrl && (
                     <div className="relative h-[220px] overflow-hidden">
-                      <img src={article.imageUrl} alt={article.title}
+                      <img loading="lazy" decoding="async" src={article.imageUrl} alt={article.title}
                         className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
                     </div>
                   )}
@@ -214,7 +214,7 @@ export default function InfoPage() {
               <div className="px-6 pb-16 pt-8 md:px-10">
                 {activeArticle.imageUrl && (
                   <div className="mb-8 overflow-hidden rounded-[20px]" style={{ aspectRatio: "16/9" }}>
-                    <img src={activeArticle.imageUrl} alt={activeArticle.title} className="h-full w-full object-cover" />
+                    <img loading="lazy" decoding="async" src={activeArticle.imageUrl} alt={activeArticle.title} className="h-full w-full object-cover" />
                   </div>
                 )}
                 {activeArticle.publishedAt && (

@@ -320,7 +320,7 @@ export const RoutesAdmin = ({ showToast }: { showToast: (msg: string, ok?: boole
                           <div className="flex-1 min-w-0">
                             {selObj ? (
                               <div className="flex items-center gap-2 rounded-xl border border-[#002f5e]/15 bg-white px-3 py-2">
-                                {selObj.imageUrl && <img src={selObj.imageUrl} className="h-7 w-10 shrink-0 rounded-lg object-cover" />}
+                                {selObj.imageUrl && <img loading="lazy" decoding="async" src={selObj.imageUrl} className="h-7 w-10 shrink-0 rounded-lg object-cover" />}
                                 <span className="flex-1 truncate text-[13px] text-[#002f5e]">{selObj.name}</span>
                                 <button onClick={() => setWaypoint(i, null)} className="text-[#002f5e]/30 hover:text-[#9f1f47]"><X className="h-3.5 w-3.5" /></button>
                               </div>
@@ -336,7 +336,7 @@ export const RoutesAdmin = ({ showToast }: { showToast: (msg: string, ok?: boole
                                       : results.map(o => (
                                         <button key={o.id} onClick={() => { setWaypoint(i, o.id); setSearch(""); }}
                                           className="flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-[#002f5e]/5">
-                                          {o.imageUrl && <img src={o.imageUrl} className="h-7 w-10 shrink-0 rounded-lg object-cover" />}
+                                          {o.imageUrl && <img loading="lazy" decoding="async" src={o.imageUrl} className="h-7 w-10 shrink-0 rounded-lg object-cover" />}
                                           <div className="min-w-0">
                                             <p className="truncate text-[12px] font-medium text-[#002f5e]">{o.name}</p>
                                             <p className="text-[10px] text-[#002f5e]/40">{o.type}</p>
@@ -378,7 +378,7 @@ export const RoutesAdmin = ({ showToast }: { showToast: (msg: string, ok?: boole
                         : searchResults.map(obj => (
                           <button key={obj.id} onClick={() => { toggleObject(obj.id); setObjSearch(""); }}
                             className={`flex w-full items-center gap-3 px-4 py-2.5 text-left transition hover:bg-[#002f5e]/5 ${form.objectIds.includes(obj.id) ? "bg-[#002f5e]/8" : ""}`}>
-                            {obj.imageUrl && <img src={obj.imageUrl} className="h-8 w-11 shrink-0 rounded-lg object-cover" />}
+                            {obj.imageUrl && <img loading="lazy" decoding="async" src={obj.imageUrl} className="h-8 w-11 shrink-0 rounded-lg object-cover" />}
                             <div className="min-w-0 flex-1">
                               <p className="truncate text-[13px] font-medium text-[#002f5e]">{obj.name}</p>
                               <p className="truncate text-[11px] text-[#002f5e]/40">{obj.type}</p>
@@ -421,7 +421,7 @@ export const RoutesAdmin = ({ showToast }: { showToast: (msg: string, ok?: boole
         {routes.map(route => (
           <div key={route.id} className="flex items-center gap-4 rounded-[16px] border border-[#002f5e]/8 bg-white p-4">
             {route.imageUrl && (
-              <img src={route.imageUrl} alt={route.name} className="h-14 w-20 rounded-[10px] object-cover shrink-0" />
+              <img loading="lazy" decoding="async" src={route.imageUrl} alt={route.name} className="h-14 w-20 rounded-[10px] object-cover shrink-0" />
             )}
             <div className="flex-1 min-w-0">
               <p className="font-odesa-medium text-[15px] text-[#002f5e] truncate">{route.name}</p>
