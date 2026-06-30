@@ -6,6 +6,7 @@ import {
 } from "@/data/hierarchyMockData";
 import { fallbackContentCards } from "@/data/contentCardsFallback";
 import { supabase, hasSupabaseConfig } from "@/lib/supabaseClient";
+import { env } from "@/env";
 import { AdminChangeLog, ContentCardEntity } from "@/types/cms";
 import { City, District, Region, TourismObject } from "@/types/hierarchy";
 
@@ -198,10 +199,9 @@ const entityTableMap: Record<string, string> = {
   city: tableNames.cities,
 };
 
-async function getActorEmail() {
-  if (!supabase) return null;
-  const { data } = await supabase.auth.getUser();
-  return data.user?.email ?? null;
+function getActorEmail() {
+  // Admin auth is client-side (env), so the actor is the configured admin email.
+  return env.VITE_ADMIN_EMAIL || null;
 }
 
 async function appendChangeLog(entry: {

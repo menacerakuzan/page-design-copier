@@ -1,16 +1,14 @@
-import { createClient } from "@supabase/supabase-js";
+import { createPostgrestClient } from "@/data/postgrest";
 
-const rawUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-const supabaseUrl = rawUrl?.replace(/\/rest\/v1\/?$/, "");
+/**
+ * The data-layer client. Historically a `@supabase/supabase-js` instance; now a
+ * hand-written PostgREST client (the backend is self-hosted PostgREST, not
+ * Supabase cloud). The `supabase` export name is kept so repositories calling
+ * `supabase.from(...)` are unchanged. `env.ts` validates configuration at load,
+ * so `hasSupabaseConfig` is always true (the old offline-fallback paths are dead
+ * and being removed alongside this).
+ */
+export const supabase = createPostgrestClient();
 
-export const hasSupabaseConfig = Boolean(supabaseUrl && supabaseAnonKey);
-
-export const supabase = hasSupabaseConfig
-  ? createClient(supabaseUrl as string, supabaseAnonKey as string, {
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-      },
-    })
-  : null;
+/** @deprecated configuration is now validated in env.ts and always present. */
+export const hasSupabaseConfig = true;

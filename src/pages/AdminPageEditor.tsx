@@ -15,8 +15,8 @@ import { getOrCreatePageConfig, upsertPageConfig } from "@/lib/pageConfigReposit
 import { updateDistrictSortOrders, updateCitySortOrders } from "@/lib/adminRepository";
 import type { ContentCardEntity } from "@/types/cms";
 import { upsertContentCard, deleteContentCard } from "@/lib/adminRepository";
-import { supabase } from "@/lib/supabaseClient";
 import { uid } from "@/lib/id";
+import { uploadMedia } from "@/data/storage";
 
 // ─── icon map ─────────────────────────────────────────────────────────────────
 
@@ -94,16 +94,7 @@ const GalleryEditor = ({
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const uploadFile = async (file: File): Promise<string> => {
-    if (supabase) {
-      const ext = file.name.split(".").pop();
-      const path = `gallery/${Date.now()}-${uid()}.${ext}`;
-      const { error } = await supabase.storage.from("media").upload(path, file, { upsert: true });
-      if (error) throw error;
-      return supabase.storage.from("media").getPublicUrl(path).data.publicUrl;
-    }
-    return URL.createObjectURL(file);
-  };
+  const uploadFile = (file: File): Promise<string> => uploadMedia(file);
 
   const handleFileAdd = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []);
