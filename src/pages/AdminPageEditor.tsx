@@ -156,6 +156,22 @@ const GalleryEditor = ({
     if (editingId === id) setEditingId(null);
   };
 
+  // Чернетки авто-наповнення: published=false (не видно на сайті, видно тут).
+  const draftCount = items.filter((c) => !c.published).length;
+
+  const publishAllDrafts = async () => {
+    const drafts = items.filter((c) => !c.published);
+    if (!drafts.length) return;
+    if (!confirm(`Опублікувати ${drafts.length} фото? Вони з'являться на сайті.`)) return;
+    let next = allCards;
+    for (const d of drafts) {
+      const updated = { ...d, published: true };
+      await upsertContentCard(updated);
+      next = next.map((c) => (c.id === d.id ? updated : c));
+    }
+    onCardsChange(next);
+  };
+
   const inputCls = "w-full rounded-xl border border-[#002f5e]/15 bg-white px-3 py-2 text-[13px] text-[#002f5e] placeholder:text-[#002f5e]/30 focus:border-[#002f5e]/35 focus:outline-none";
 
   return (
@@ -163,8 +179,23 @@ const GalleryEditor = ({
       <div className="flex items-center justify-between">
         <p className="text-[12px] font-semibold uppercase tracking-wide text-[#002f5e]/55">
           Елементи галереї ({items.length})
+          {draftCount > 0 && (
+            <span className="ml-2 rounded-full bg-[#df9b3b]/20 px-2 py-0.5 text-[11px] font-semibold normal-case tracking-normal text-[#9a6611]">
+              {draftCount} на підтвердженні
+            </span>
+          )}
         </p>
         <div className="flex items-center gap-2">
+          {draftCount > 0 && (
+            <button
+              type="button"
+              onClick={() => void publishAllDrafts()}
+              className="flex items-center gap-1.5 rounded-xl bg-[#2f9f5f] px-3 py-1.5 text-[12px] font-medium text-white transition hover:bg-[#2f9f5f]/85"
+            >
+              <Check className="h-3.5 w-3.5" />
+              Опублікувати всі ({draftCount})
+            </button>
+          )}
           <button
             type="button"
             onClick={() => fileRef.current?.click()}
@@ -218,12 +249,27 @@ const GalleryEditor = ({
                   )}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-[13px] font-semibold text-[#002f5e]">{item.title || "(без назви)"}</p>
+                  <p className="flex items-center gap-1.5 truncate text-[13px] font-semibold text-[#002f5e]">
+                    {!item.published && (
+                      <span className="shrink-0 rounded bg-[#df9b3b]/20 px-1.5 py-0.5 text-[10px] font-semibold text-[#9a6611]">чернетка</span>
+                    )}
+                    <span className="truncate">{item.title || "(без назви)"}</span>
+                  </p>
                   <p className="text-[11px] text-[#002f5e]/40">
                     {isVideo ? "Відео" : "Фото"} · {COL_SPAN_OPTIONS.find((o) => o.value === colSpan)?.label}
                   </p>
                 </div>
                 <div className="flex items-center gap-1">
+                  {!item.published && (
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); void updateItem(item.id, { published: true }); }}
+                      title="Підтвердити й опублікувати"
+                      className="flex h-7 w-7 items-center justify-center rounded-lg text-[#2f9f5f] transition hover:bg-[#2f9f5f]/12"
+                    >
+                      <Check className="h-4 w-4" />
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={(e) => { e.stopPropagation(); void deleteItem(item.id); }}
