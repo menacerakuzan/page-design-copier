@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import { Facebook, Instagram, Mail, Search } from "lucide-react";
 import { WaveLines } from "@/components/decor";
 import { AccessibilityMenu } from "@/components/AccessibilityMenu";
-import { fallbackContentCards } from "@/data/contentCardsFallback";
 import { usePageContentCards } from "@/hooks/usePageContentCards";
 import { useHierarchySnapshot } from "@/hooks/useHierarchySnapshot";
 import { useLang } from "@/lib/langContext";
@@ -31,11 +30,10 @@ const SiteFooter = () => {
   const [query, setQuery] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  const globalCards = useMemo(() => {
-    const live = (globalCardsData ?? []).filter((card) => card.pageKey === "global");
-    if (live.length) return live;
-    return fallbackContentCards.filter((card) => card.pageKey === "global" && card.published);
-  }, [globalCardsData]);
+  const globalCards = useMemo(
+    () => (globalCardsData ?? []).filter((card) => card.pageKey === "global"),
+    [globalCardsData],
+  );
 
   const socialLinksData = useMemo(() => {
     const socialCards = globalCards.filter((c) => c.sectionKey === "footer-social");
