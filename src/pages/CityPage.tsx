@@ -321,7 +321,7 @@ const CityPage = () => {
                 return (
                   <div key={item.id} className="relative shrink-0 overflow-hidden rounded-[22px]" style={{ width: w, height: CARD_H, minHeight: 280 }}>
                     {item.imageUrl ? (
-                      <img src={item.imageUrl} alt={item.title} className="h-full w-full object-cover" />
+                      <img loading="lazy" decoding="async" src={item.imageUrl} alt={item.title} className="h-full w-full object-cover" />
                     ) : (
                       <div className="h-full w-full bg-[#002f5e]/20" />
                     )}
@@ -356,7 +356,7 @@ const CityPage = () => {
           <video src={heroVideo} autoPlay muted loop playsInline
             className="absolute inset-0 h-full w-full object-cover" />
         ) : (
-          <img src={heroImage} alt={city.name} className="absolute inset-0 h-full w-full object-cover" />
+          <img loading="lazy" decoding="async" src={heroImage} alt={city.name} className="absolute inset-0 h-full w-full object-cover" />
         )}
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,12,33,0.28)_0%,rgba(0,12,33,0.0)_38%,rgba(0,12,33,0.9)_100%)]" />
 
@@ -406,7 +406,7 @@ const CityPage = () => {
               transition={{ duration: 0.28, delay: 0.1 }}
               className="mb-7 inline-flex items-center gap-4 self-start rounded-full border border-white/25 bg-white/12 px-5 py-3 backdrop-blur-md shadow-lg"
             >
-              <img src={`https://openweathermap.org/img/wn/${weather.icon}.png`} alt={weather.description} className="h-8 w-8" />
+              <img loading="lazy" decoding="async" src={`https://openweathermap.org/img/wn/${weather.icon}.png`} alt={weather.description} className="h-8 w-8" />
               <span className="text-[30px] font-odesa-medium leading-none">{Math.round(weather.temp)}°</span>
               <div className="h-5 w-px bg-white/20" />
               <div className="flex flex-col gap-0.5 text-[13px] font-odesa-regular text-[#fff2e8]/80">
@@ -507,7 +507,7 @@ const ObjectSection = ({
               <Link to={`${ROUTE[obj.type]}/${obj.slug}`}
                 className="group block h-full w-[270px] overflow-hidden rounded-[26px] transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_28px_50px_-22px_rgba(0,0,0,0.65)] md:w-[310px]">
                 <div className="relative h-full w-full overflow-hidden rounded-[26px]">
-                  <img src={obj.imageUrl ?? "https://images.unsplash.com/photo-1552083375-1447ce886485?auto=format&fit=crop&w=800&q=80"}
+                  <img loading="lazy" decoding="async" src={obj.imageUrl ?? "https://images.unsplash.com/photo-1552083375-1447ce886485?auto=format&fit=crop&w=800&q=80"}
                     alt={obj.name} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" />
                   <div className="absolute inset-0" style={{ background: `linear-gradient(180deg, transparent 30%, ${bg}f5 100%)` }} />
                   <div className="absolute left-4 top-4">

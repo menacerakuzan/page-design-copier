@@ -231,7 +231,7 @@ const GalleryEditor = ({
                       <Video className="h-5 w-5" />
                     </div>
                   ) : item.imageUrl ? (
-                    <img src={item.imageUrl} alt={item.title} className="h-full w-full object-cover" />
+                    <img loading="lazy" decoding="async" src={item.imageUrl} alt={item.title} className="h-full w-full object-cover" />
                   ) : (
                     <div className="flex h-full items-center justify-center text-[#002f5e]/30">
                       <ImageIcon className="h-5 w-5" />
@@ -625,7 +625,7 @@ const ObjectOrderEditor = ({
                   {/* Thumb */}
                   <div className="h-11 w-14 shrink-0 overflow-hidden rounded-xl bg-[#002f5e]/8">
                     {ent.imageUrl
-                      ? <img src={ent.imageUrl} alt="" className="h-full w-full object-cover" />
+                      ? <img loading="lazy" decoding="async" src={ent.imageUrl} alt="" className="h-full w-full object-cover" />
                       : <div className="flex h-full w-full items-center justify-center text-[#002f5e]/20"><ImageIcon className="h-5 w-5" /></div>
                     }
                   </div>
@@ -988,7 +988,7 @@ const EntityListPanel = ({
                   : "border-[#002f5e]/10 bg-white/70 hover:border-[#002f5e]/25 hover:bg-white"
               }`}>
               {item.imageUrl ? (
-                <img src={item.imageUrl} alt={item.name} className="h-12 w-12 shrink-0 rounded-xl object-cover" />
+                <img loading="lazy" decoding="async" src={item.imageUrl} alt={item.name} className="h-12 w-12 shrink-0 rounded-xl object-cover" />
               ) : (
                 <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#002f5e]/8">
                   <MapPin className="h-5 w-5 text-[#002f5e]/30" />
@@ -1081,7 +1081,7 @@ const DistrictOrderPanel = ({ districts, showToast, selectedId, onSelect }: {
             <GripVertical className={`h-3.5 w-3.5 shrink-0 ${isActive ? "text-white/30" : "text-[#002f5e]/20"}`} />
             <span className={`w-5 shrink-0 text-center text-[11px] font-semibold ${isActive ? "text-white/50" : "text-[#002f5e]/35"}`}>{idx + 1}</span>
             {d.imageUrl && (
-              <img src={d.imageUrl} alt={d.name} className="h-7 w-10 shrink-0 rounded-md object-cover" />
+              <img loading="lazy" decoding="async" src={d.imageUrl} alt={d.name} className="h-7 w-10 shrink-0 rounded-md object-cover" />
             )}
             <span className={`flex-1 truncate text-[12px] font-medium ${isActive ? "text-white" : "text-[#002f5e]"}`}>{d.name}</span>
             <div className="flex flex-col" onClick={e => e.stopPropagation()}>
@@ -1172,7 +1172,7 @@ const CityOrderPanel = ({ cities, districts, showToast, selectedId, onSelect }: 
               <GripVertical className={`h-3.5 w-3.5 shrink-0 ${isActive ? "text-white/30" : "text-[#002f5e]/20"}`} />
               <span className={`w-5 shrink-0 text-center text-[11px] font-semibold ${isActive ? "text-white/50" : "text-[#002f5e]/35"}`}>{idx + 1}</span>
               {city.imageUrl && (
-                <img src={city.imageUrl} alt={city.name} className="h-7 w-10 shrink-0 rounded-md object-cover" />
+                <img loading="lazy" decoding="async" src={city.imageUrl} alt={city.name} className="h-7 w-10 shrink-0 rounded-md object-cover" />
               )}
               <div className="flex-1 min-w-0">
                 <span className={`block truncate text-[12px] font-medium ${isActive ? "text-white" : "text-[#002f5e]"}`}>{city.name}</span>

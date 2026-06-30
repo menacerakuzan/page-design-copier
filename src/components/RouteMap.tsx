@@ -127,7 +127,7 @@ export default function RouteMap({ mapUrl, waypoints = [] }: Props) {
         if (obj?.imageUrl) {
           el.innerHTML = `
             <div class="rm-photo">
-              <img src="${obj.imageUrl}" alt="" />
+              <img loading="lazy" decoding="async" src="${obj.imageUrl}" alt="" />
               <span class="rm-num">${isFirst ? "A" : isLast ? "B" : i}</span>
             </div>`;
         } else {
@@ -259,7 +259,7 @@ export default function RouteMap({ mapUrl, waypoints = [] }: Props) {
 
             {activeObj.imageUrl && (
               <div className="relative h-[132px] overflow-hidden">
-                <img src={activeObj.imageUrl} alt={activeObj.name} className="h-full w-full object-cover" />
+                <img loading="lazy" decoding="async" src={activeObj.imageUrl} alt={activeObj.name} className="h-full w-full object-cover" />
                 <div className="absolute inset-0" style={{ background: `linear-gradient(180deg, transparent 45%, ${NAVY} 100%)` }} />
               </div>
             )}

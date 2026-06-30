@@ -178,7 +178,7 @@ export const MediaField = ({ label, value, onChange, accept, isVideo }: {
         isVideo ? (
           <div className="relative mt-2 h-32 w-full overflow-hidden rounded-lg bg-[#002f5e]/5">
             {value.match(/\.(gif)$/i) ? (
-              <img src={value} alt="gif" className="h-full w-full object-cover" />
+              <img loading="lazy" decoding="async" src={value} alt="gif" className="h-full w-full object-cover" />
             ) : (
               <video src={value} className="h-full w-full object-cover" muted loop autoPlay playsInline />
             )}
@@ -188,7 +188,7 @@ export const MediaField = ({ label, value, onChange, accept, isVideo }: {
           </div>
         ) : (
           <div className="relative mt-2">
-            <img src={value} alt="" className="h-32 w-full rounded-lg object-cover opacity-90" onError={e => (e.currentTarget.style.display = "none")} />
+            <img loading="lazy" decoding="async" src={value} alt="" className="h-32 w-full rounded-lg object-cover opacity-90" onError={e => (e.currentTarget.style.display = "none")} />
             <button type="button" onClick={() => onChange("")}
               className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white transition hover:bg-[#9f1f47]"
               title="Видалити">✕</button>
@@ -275,7 +275,7 @@ export const EntityCard = ({ title, subtitle, imageUrl, onDelete, onEdit, badge,
     }`}
   >
     {imageUrl ? (
-      <img src={imageUrl} alt="" className="h-12 w-12 flex-shrink-0 rounded-xl object-cover" onError={e => (e.currentTarget.style.display = "none")} />
+      <img loading="lazy" decoding="async" src={imageUrl} alt="" className="h-12 w-12 flex-shrink-0 rounded-xl object-cover" onError={e => (e.currentTarget.style.display = "none")} />
     ) : (
       <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-[#002f5e]/8">
         {icon ?? <Landmark className="h-5 w-5 text-[#002f5e]/40" />}

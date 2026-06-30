@@ -30,7 +30,7 @@ const RouteCard = ({ route, idx, onClick }: { route: Route; idx: number; onClick
         style={{ background: NAVY }}>
         {route.imageUrl && (
           <div className="relative h-[260px] overflow-hidden">
-            <img src={route.imageUrl} alt={name}
+            <img loading="lazy" decoding="async" src={route.imageUrl} alt={name}
               className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
             <div className="absolute inset-0"
               style={{ background: "linear-gradient(180deg, transparent 40%, rgba(0,18,47,0.85) 100%)" }} />
@@ -130,7 +130,7 @@ const RouteModal = ({ route, onClose }: { route: Route; onClose: () => void }) =
       >
         {route.imageUrl && (
           <div className="relative h-[200px] shrink-0 sm:h-[280px]">
-            <img src={route.imageUrl} alt={name} className="h-full w-full object-cover" />
+            <img loading="lazy" decoding="async" src={route.imageUrl} alt={name} className="h-full w-full object-cover" />
             <div className="absolute inset-0"
               style={{ background: "linear-gradient(180deg, transparent 50%, rgba(0,18,47,0.9) 100%)" }} />
           </div>

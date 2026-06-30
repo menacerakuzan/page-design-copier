@@ -62,7 +62,7 @@ export const TourismTypesAdmin = ({ showToast }: { showToast: (msg: string, ok?:
             <div className="relative h-[140px] bg-[#002f5e]/5 cursor-pointer"
               onClick={() => fileRefs.current[typeName]?.click()}>
               {typeImages[typeName] ? (
-                <img src={typeImages[typeName]} alt={typeName} className="h-full w-full object-cover" />
+                <img loading="lazy" decoding="async" src={typeImages[typeName]} alt={typeName} className="h-full w-full object-cover" />
               ) : (
                 <div className="flex h-full flex-col items-center justify-center gap-2 text-[#002f5e]/30">
                   <Upload className="h-6 w-6" />

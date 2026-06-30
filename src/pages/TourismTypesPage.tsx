@@ -132,7 +132,7 @@ export default function TourismTypesPage() {
                   style={{ aspectRatio: "4/3" }}
                 >
                   {img ? (
-                    <img src={img} alt={type} className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                    <img loading="lazy" decoding="async" src={img} alt={type} className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
                   ) : (
                     <div className="absolute inset-0 bg-[#002f5e]" />
                   )}
@@ -196,7 +196,7 @@ export default function TourismTypesPage() {
                       <Link to={`${ROUTE[obj.type]}/${obj.slug}`}
                         className="group block overflow-hidden rounded-[22px] border border-[#002f5e]/8 bg-white transition-transform duration-300 hover:-translate-y-1">
                         <div className="relative h-[200px] overflow-hidden">
-                          <img src={obj.imageUrl ?? "https://images.unsplash.com/photo-1552083375-1447ce886485?auto=format&fit=crop&w=800&q=80"}
+                          <img loading="lazy" decoding="async" src={obj.imageUrl ?? "https://images.unsplash.com/photo-1552083375-1447ce886485?auto=format&fit=crop&w=800&q=80"}
                             alt={obj.name} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
                           <span className="absolute left-3 top-3 rounded-full bg-[#002f5e]/80 px-3 py-1 text-[11px] font-odesa-medium uppercase tracking-wide text-[#fff2e8] backdrop-blur-sm">
                             {TYPE_LABEL[obj.type]}

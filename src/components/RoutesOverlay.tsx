@@ -74,7 +74,7 @@ const StopCard = ({ obj }: { obj: TourismObject }) => (
   >
     {obj.imageUrl ? (
       <div className="relative h-[60px] w-[80px] shrink-0 overflow-hidden rounded-[13px]">
-        <img src={obj.imageUrl} alt={obj.name}
+        <img loading="lazy" decoding="async" src={obj.imageUrl} alt={obj.name}
           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" />
       </div>
     ) : (
@@ -189,7 +189,7 @@ const RouteDetail = ({ route }: { route: Route }) => {
       {/* Hero image */}
       {route.imageUrl && (
         <div className="relative z-10 h-[220px] shrink-0 overflow-hidden sm:h-[300px]">
-          <img src={route.imageUrl} alt={name} className="h-full w-full object-cover" />
+          <img loading="lazy" decoding="async" src={route.imageUrl} alt={name} className="h-full w-full object-cover" />
           <div className="absolute inset-0"
             style={{ background: `linear-gradient(180deg, rgba(0,20,38,0.15) 0%, transparent 35%, ${INK} 100%)` }} />
 
@@ -355,7 +355,7 @@ const RouteCard = ({ route, idx, selected, onClick }: {
     >
       <div className="flex gap-3 p-3">
         {route.imageUrl && (
-          <img src={route.imageUrl} alt={name}
+          <img loading="lazy" decoding="async" src={route.imageUrl} alt={name}
             className="h-16 w-20 shrink-0 rounded-[12px] object-cover" />
         )}
         <div className="min-w-0 flex-1 py-0.5">

@@ -81,7 +81,7 @@ const SectionTab = ({
 const CardThumb = ({ imageUrl, size = "sm" }: { imageUrl?: string | null; size?: "sm" | "md" }) => {
   const dim = size === "sm" ? "h-12 w-12" : "h-16 w-20";
   return imageUrl ? (
-    <img
+    <img loading="lazy" decoding="async"
       src={imageUrl}
       alt=""
       className={`${dim} shrink-0 rounded-xl object-cover`}
@@ -159,7 +159,7 @@ const PickerSheet = ({
                   className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-left transition hover:bg-[#002f5e]/6"
                 >
                   {item.imageUrl ? (
-                    <img src={item.imageUrl} alt="" className="h-10 w-10 shrink-0 rounded-lg object-cover" onError={e => (e.currentTarget.style.display = "none")} />
+                    <img loading="lazy" decoding="async" src={item.imageUrl} alt="" className="h-10 w-10 shrink-0 rounded-lg object-cover" onError={e => (e.currentTarget.style.display = "none")} />
                   ) : (
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#002f5e]/8">
                       <ImageIcon className="h-4 w-4 text-[#002f5e]/30" />

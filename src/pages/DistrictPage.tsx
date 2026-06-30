@@ -374,7 +374,7 @@ const DistrictPage = () => {
                 return (
                   <div key={item.id} className="relative shrink-0 overflow-hidden rounded-[22px]" style={{ width: w, height: CARD_H, minHeight: 280 }}>
                     {item.imageUrl ? (
-                      <img src={item.imageUrl} alt={item.title} className="h-full w-full object-cover" />
+                      <img loading="lazy" decoding="async" src={item.imageUrl} alt={item.title} className="h-full w-full object-cover" />
                     ) : (
                       <div className="h-full w-full bg-[#002f5e]/20" />
                     )}
@@ -409,7 +409,7 @@ const DistrictPage = () => {
           <video src={heroVideo} autoPlay muted loop playsInline
             className="absolute inset-0 h-full w-full object-cover" />
         ) : (
-          <img src={heroImage} alt={district.name} className="absolute inset-0 h-full w-full object-cover" />
+          <img loading="lazy" decoding="async" src={heroImage} alt={district.name} className="absolute inset-0 h-full w-full object-cover" />
         )}
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,12,33,0.28)_0%,rgba(0,12,33,0.0)_38%,rgba(0,12,33,0.9)_100%)]" />
 
@@ -492,7 +492,7 @@ const CityCard = ({ city, idx }: { city: City; idx: number }) => (
     <Link to={`/napryamky/${city.slug}`}
       className="group block h-full w-[280px] overflow-hidden rounded-[28px] transition-transform duration-300 hover:-translate-y-2 md:w-[340px]">
       <div className="relative h-full w-full">
-        <img src={city.imageUrl ?? "https://images.unsplash.com/photo-1508193638397-1c4234db14d8?auto=format&fit=crop&w=800&q=80"}
+        <img loading="lazy" decoding="async" src={city.imageUrl ?? "https://images.unsplash.com/photo-1508193638397-1c4234db14d8?auto=format&fit=crop&w=800&q=80"}
           alt={city.name} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,5,20,0.08)_0%,transparent_30%,rgba(0,5,20,0.85)_100%)]" />
         <div className="absolute bottom-0 left-0 right-0 p-3">
@@ -558,7 +558,7 @@ const ObjectSection = ({
               <Link to={`${ROUTE[obj.type]}/${obj.slug}`}
                 className="group block h-full w-[270px] overflow-hidden rounded-[26px] transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_28px_50px_-22px_rgba(0,0,0,0.65)] md:w-[310px]">
                 <div className="relative h-full w-full overflow-hidden rounded-[26px]">
-                  <img src={obj.imageUrl ?? "https://images.unsplash.com/photo-1552083375-1447ce886485?auto=format&fit=crop&w=800&q=80"}
+                  <img loading="lazy" decoding="async" src={obj.imageUrl ?? "https://images.unsplash.com/photo-1552083375-1447ce886485?auto=format&fit=crop&w=800&q=80"}
                     alt={obj.name} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" />
                   <div className="absolute inset-0" style={{ background: `linear-gradient(180deg, transparent 30%, ${bg}f5 100%)` }} />
                   <div className="absolute left-4 top-4">
