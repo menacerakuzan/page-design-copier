@@ -14,6 +14,7 @@ import AdminPageEditor from "./AdminPageEditor";
 import RichTextEditor from "@/components/RichTextEditor";
 import { slugify } from "@/lib/slug";
 import { uid } from "@/lib/id";
+import { uploadMedia } from "@/data/storage";
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
@@ -175,35 +176,6 @@ const SaveBtn = ({ saving, label = "Зберегти" }: { saving: boolean; labe
 // ─── MediaGroup ───────────────────────────────────────────────────────────────
 type MediaMode = "url" | "upload";
 
-const CHUNK_SIZE = 8 * 1024 * 1024; // 8MB per chunk
-
-async function uploadChunked(
-  file: File,
-  bucket: string,
-  filePath: string,
-  baseUrl: string,
-): Promise<void> {
-  const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
-  const uploadId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-  const headers = { "Content-Type": "application/octet-stream" };
-
-  for (let i = 0; i < totalChunks; i++) {
-    const start = i * CHUNK_SIZE;
-    const chunk = file.slice(start, Math.min(start + CHUNK_SIZE, file.size));
-    const res = await fetch(`${baseUrl}/storage/v1/chunk/${bucket}/${uploadId}/${i}`, {
-      method: "POST", headers, body: chunk,
-    });
-    if (!res.ok) throw new Error(`Chunk ${i + 1}/${totalChunks} failed: ${res.status}`);
-  }
-
-  const res = await fetch(`${baseUrl}/storage/v1/chunk-complete/${bucket}/${uploadId}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ filename: filePath, totalChunks }),
-  });
-  if (!res.ok) throw new Error(`Assembly failed: ${res.status}`);
-}
-
 const MediaField = ({ label, value, onChange, accept, isVideo }: {
   label: string; value: string; onChange: (v: string) => void;
   accept: string; isVideo: boolean;
@@ -216,46 +188,11 @@ const MediaField = ({ label, value, onChange, accept, isVideo }: {
   const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (!supabase) {
-      onChange(URL.createObjectURL(file));
-      return;
-    }
     setUploading(true);
     setProgress(0);
     try {
-      const ext = file.name.split(".").pop();
-      const filePath = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-      const baseUrl = (import.meta.env.VITE_SUPABASE_URL as string).replace(/\/rest\/v1\/?$/, "");
-
-      if (file.size > 50 * 1024 * 1024) {
-        // Великий файл — chunk upload з прогресом
-        const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
-        const uploadId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-        for (let i = 0; i < totalChunks; i++) {
-          const start = i * CHUNK_SIZE;
-          const chunk = file.slice(start, Math.min(start + CHUNK_SIZE, file.size));
-          const res = await fetch(`${baseUrl}/storage/v1/chunk/media/${uploadId}/${i}`, {
-            method: "POST",
-            headers: { "Content-Type": "application/octet-stream" },
-            body: chunk,
-          });
-          if (!res.ok) throw new Error(`Частина ${i + 1}/${totalChunks} не завантажилась`);
-          setProgress(Math.round(((i + 1) / totalChunks) * 100));
-        }
-        const res = await fetch(`${baseUrl}/storage/v1/chunk-complete/media/${uploadId}`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ filename: filePath, totalChunks }),
-        });
-        if (!res.ok) throw new Error("Помилка збирання файлу");
-        onChange(`${baseUrl}/storage/v1/object/public/media/${filePath}`);
-      } else {
-        // Малий файл — звичайний upload
-        const { error } = await supabase.storage.from("media").upload(filePath, file, { upsert: true });
-        if (error) throw error;
-        const { data } = supabase.storage.from("media").getPublicUrl(filePath);
-        onChange(data.publicUrl);
-      }
+      const url = await uploadMedia(file, setProgress);
+      onChange(url);
     } catch (err: any) {
       alert(err?.message ?? "Помилка завантаження файлу");
     } finally {
@@ -1538,16 +1475,7 @@ const TourismTypesAdmin = ({ showToast }: { showToast: (msg: string, ok?: boolea
     const file = e.target.files?.[0]; if (!file) return;
     setSaving(typeName);
     try {
-      let url = "";
-      if (supabase) {
-        const ext = file.name.split(".").pop();
-        const path = `tourism-types/${Date.now()}.${ext}`;
-        const { error } = await supabase.storage.from("media").upload(path, file, { upsert: true });
-        if (error) throw error;
-        url = supabase.storage.from("media").getPublicUrl(path).data.publicUrl;
-      } else {
-        url = URL.createObjectURL(file);
-      }
+      const url = await uploadMedia(file);
       setTypeImages(prev => ({ ...prev, [typeName]: url }));
       const card: ContentCardEntity = {
         id: `tourism-type-${typeName.toLowerCase().replace(/\s+/g, "-")}`,
