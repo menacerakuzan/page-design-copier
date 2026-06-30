@@ -1,3 +1,5 @@
+import { uid } from "@/lib/id";
+
 // ─── Page section configuration ──────────────────────────────────────────────
 
 export type PageEntityType =
@@ -106,8 +108,6 @@ export type PageConfig = {
 };
 
 // ─── Default section templates ──────────────────────────────────────────────────
-
-const uid = () => Math.random().toString(36).slice(2, 10);
 
 export const DEFAULT_SECTIONS: Record<PageEntityType, Omit<PageSection, "id">[]> = {
   district: [

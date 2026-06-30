@@ -8,6 +8,7 @@ import {
 import { ContentCardEntity } from "@/types/cms";
 import { District, City, TourismObject } from "@/types/hierarchy";
 import { upsertContentCard, deleteContentCard } from "@/lib/adminRepository";
+import { uid } from "@/lib/id";
 
 // ─── types ────────────────────────────────────────────────────────────────────
 
@@ -23,8 +24,6 @@ interface Props {
 }
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
-
-const uid = () => Math.random().toString(36).slice(2, 10);
 
 const PAGE_KEY = "index";
 
