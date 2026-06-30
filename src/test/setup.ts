@@ -1,4 +1,29 @@
 import "@testing-library/jest-dom";
+import { afterAll, afterEach, beforeAll } from "vitest";
+import { server } from "./msw/server";
+import { resetMsw } from "./msw/handlers";
+
+// Mock Service Worker — intercepts PostgREST/storage HTTP for the whole suite.
+beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
+afterEach(() => {
+  server.resetHandlers();
+  resetMsw();
+});
+afterAll(() => server.close());
+
+// jsdom lacks these browser APIs that framer-motion / UI components touch.
+class MockObserver {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+  takeRecords() {
+    return [];
+  }
+}
+(globalThis as any).IntersectionObserver ??= MockObserver;
+(globalThis as any).ResizeObserver ??= MockObserver;
+// jsdom defines scrollTo as a throwing stub — replace it with a no-op.
+(window as any).scrollTo = () => {};
 
 Object.defineProperty(window, "matchMedia", {
   writable: true,
