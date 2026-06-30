@@ -1,7 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { loadHierarchySnapshot, loadPublishedContentCards } from "@/lib/adminRepository";
+import { loadHierarchySnapshot, loadPublishedContentCards, upsertTourismObject, upsertDistrict } from "@/lib/adminRepository";
 import { tableData, capturedRequests } from "@/test/msw/handlers";
 import { regionRow, districtRow, cityRow, objectRow, contentCardRow } from "@/test/fixtures";
+import type { TourismObject, District } from "@/types/hierarchy";
 
 /**
  * Characterization tests for the read path. They pin the current snake_case →
@@ -90,5 +91,39 @@ describe("loadPublishedContentCards", () => {
     const req = capturedRequests.find((r) => r.table === "content_cards");
     expect(req?.search).toContain("page_key=eq.index");
     expect(req?.search).toContain("published=eq.true");
+  });
+});
+
+describe("write path", () => {
+  it("upsertTourismObject posts snake_case columns and writes a change log", async () => {
+    tableData.tourism_objects = []; // nothing existing -> action "create"
+    tableData.admin_change_logs = [];
+    const obj = {
+      id: "obj-9", districtId: "dist-1", cityId: "city-1", type: "attraction",
+      name: "Новий", nameEn: "New", slug: "novyi", published: true, tourismTypes: [],
+    } as TourismObject;
+
+    await upsertTourismObject(obj);
+
+    const post = capturedRequests.find((r) => r.table === "tourism_objects" && r.method === "POST");
+    expect(post?.body).toMatchObject({
+      id: "obj-9", name: "Новий", name_en: "New",
+      district_id: "dist-1", city_id: "city-1", published: true,
+    });
+    const log = capturedRequests.find((r) => r.table === "admin_change_logs" && r.method === "POST");
+    expect(log?.body).toMatchObject({ entity_type: "tourism_object", entity_id: "obj-9", action: "create" });
+  });
+
+  it("upsertDistrict posts snake_case columns", async () => {
+    tableData.districts = [];
+    tableData.admin_change_logs = [];
+    const d = { id: "dist-9", regionId: "reg-1", name: "Район", nameEn: "District", slug: "raion" } as District;
+
+    await upsertDistrict(d);
+
+    const post = capturedRequests.find((r) => r.table === "districts" && r.method === "POST");
+    expect(post?.body).toMatchObject({
+      id: "dist-9", region_id: "reg-1", name: "Район", name_en: "District", slug: "raion",
+    });
   });
 });
