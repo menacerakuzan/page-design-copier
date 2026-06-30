@@ -13,9 +13,9 @@ const CREAM = "#fff2e8";
 const GOLD = "#c9973a";
 
 const RouteCard = ({ route, idx, onClick }: { route: Route; idx: number; onClick: () => void }) => {
-  const { lang } = useLang();
-  const name = lang === "en" && route.nameEn ? route.nameEn : route.name;
-  const desc = lang === "en" && route.descriptionEn ? route.descriptionEn : route.description;
+  const { tl } = useLang();
+  const name = tl(route.name, route.nameEn);
+  const desc = tl(route.description, route.descriptionEn);
 
   return (
     <motion.div
@@ -105,9 +105,9 @@ const RouteCard = ({ route, idx, onClick }: { route: Route; idx: number; onClick
 };
 
 const RouteModal = ({ route, onClose }: { route: Route; onClose: () => void }) => {
-  const { lang } = useLang();
-  const name = lang === "en" && route.nameEn ? route.nameEn : route.name;
-  const desc = lang === "en" && route.descriptionEn ? route.descriptionEn : route.description;
+  const { tl } = useLang();
+  const name = tl(route.name, route.nameEn);
+  const desc = tl(route.description, route.descriptionEn);
 
   return (
     <motion.div

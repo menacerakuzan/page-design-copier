@@ -147,10 +147,10 @@ const RouteTimeline = ({ stops }: { stops: TourismObject[] }) => (
 
 // ── Детальна панель (ліва, темна) ────────────────────────────────────────────
 const RouteDetail = ({ route }: { route: Route }) => {
-  const { lang } = useLang();
+  const { tl } = useLang();
   const { data: snapshot } = useHierarchySnapshot();
-  const name = lang === "en" && route.nameEn ? route.nameEn : route.name;
-  const content = lang === "en" && route.contentEn ? route.contentEn : route.content;
+  const name = tl(route.name, route.nameEn);
+  const content = tl(route.content, route.contentEn);
 
   const linkedObjects = (route.objectIds ?? [])
     .map(id => snapshot?.objects.find(o => o.id === id && o.published))
@@ -336,9 +336,9 @@ const RouteDetail = ({ route }: { route: Route }) => {
 const RouteCard = ({ route, idx, selected, onClick }: {
   route: Route; idx: number; selected: boolean; onClick: () => void;
 }) => {
-  const { lang } = useLang();
-  const name = lang === "en" && route.nameEn ? route.nameEn : route.name;
-  const desc = lang === "en" && route.descriptionEn ? route.descriptionEn : route.description;
+  const { tl } = useLang();
+  const name = tl(route.name, route.nameEn);
+  const desc = tl(route.description, route.descriptionEn);
 
   return (
     <motion.button

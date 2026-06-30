@@ -145,8 +145,7 @@ const EntityDetail = ({ type }: { type: PageType }) => {
   );
 
   const { config } = usePageConfig(type, object?.id ?? null);
-  const { lang } = useLang();
-  const tl = (uk?: string | null, en?: string | null) => (lang === "en" && en) ? en : (uk ?? "");
+  const { tl } = useLang();
 
   useEffect(() => { window.scrollTo({ top: 0, behavior: "auto" }); }, [slug]);
 

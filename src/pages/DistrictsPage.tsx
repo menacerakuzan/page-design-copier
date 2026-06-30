@@ -47,8 +47,7 @@ function pluralUk(n: number, one: string, few: string, many: string) {
 }
 
 export default function DistrictsPage() {
-  const { lang } = useLang();
-  const t = (uk?: string | null, en?: string | null) => (lang === "en" && en) ? en : (uk ?? "");
+  const { tl } = useLang();
   const { data: snapshot, isLoading } = useHierarchySnapshot();
   const [activeDistrict, setActiveDistrict] = useState<District | null>(null);
   const [activeCity, setActiveCity] = useState<City | null>(null);
@@ -161,17 +160,17 @@ export default function DistrictsPage() {
 
           <motion.p initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.22 }}
             className="text-[12px] uppercase tracking-[0.08em] font-odesa-medium text-[#df9b3b]">
-            {activeCity ? (activeCity.settlementType ?? "місто") : activeDistrict ? t("оберіть населений пункт", "select a settlement") : t("оберіть район", "select a district")}
+            {activeCity ? (activeCity.settlementType ?? "місто") : activeDistrict ? tl("оберіть населений пункт", "select a settlement") : tl("оберіть район", "select a district")}
           </motion.p>
           <motion.h1 key={activeCity?.id ?? activeDistrict?.id ?? "root"}
             initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}
             className="mt-3 font-odesa-medium text-[56px] leading-[0.92] md:text-[100px]">
-            {activeCity ? t(activeCity.name, activeCity.nameEn) : activeDistrict ? t(activeDistrict.name, activeDistrict.nameEn) : t("Райони", "Districts")}
+            {activeCity ? tl(activeCity.name, activeCity.nameEn) : activeDistrict ? tl(activeDistrict.name, activeDistrict.nameEn) : tl("Райони", "Districts")}
           </motion.h1>
           {!activeDistrict && (
             <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3, delay: 0.1 }}
               className="mt-5 max-w-[560px] text-[18px] leading-[1.55] text-[#fff2e8]/65 font-odesa-regular">
-              {t("Досліджуйте райони Одеської області — оберіть район, населений пункт і знайдіть найкращі місця", "Explore the districts of Odesa region — select a district, settlement and find the best places")}
+              {tl("Досліджуйте райони Одеської області — оберіть район, населений пункт і знайдіть найкращі місця", "Explore the districts of Odesa region — select a district, settlement and find the best places")}
             </motion.p>
           )}
         </div>
@@ -218,8 +217,8 @@ export default function DistrictsPage() {
                           <ArrowUpRight className="h-5 w-5" />
                         </span>
                         <div className="absolute bottom-0 left-0 right-16 p-5">
-                          <p className="font-odesa-medium text-[26px] leading-[1.05] text-[#fff2e8]">{t(d.name, d.nameEn)}</p>
-                          {d.subtitle && <p className="mt-1 text-[14px] font-odesa-regular text-[#fff2e8]/60">{t(d.subtitle, d.subtitleEn)}</p>}
+                          <p className="font-odesa-medium text-[26px] leading-[1.05] text-[#fff2e8]">{tl(d.name, d.nameEn)}</p>
+                          {d.subtitle && <p className="mt-1 text-[14px] font-odesa-regular text-[#fff2e8]/60">{tl(d.subtitle, d.subtitleEn)}</p>}
                           <div className="mt-3 h-[3px] w-9 rounded-full bg-[#df9b3b] transition-all duration-500 group-hover:w-20" />
                         </div>
                       </motion.button>

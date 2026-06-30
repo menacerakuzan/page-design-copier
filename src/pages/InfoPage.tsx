@@ -83,7 +83,7 @@ function renderContentWithVideos(content: string, videos: ArticleVideo[]): React
 }
 
 export default function InfoPage() {
-  const { t, lang } = useLang();
+  const { t, lang, tl } = useLang();
   const [activeArticle, setActiveArticle] = useState<Article | null>(null);
   const { data: cardsData } = usePageContentCards("articles");
 
@@ -175,11 +175,11 @@ export default function InfoPage() {
                       </p>
                     )}
                     <h3 className="font-odesa-medium text-[22px] leading-[1.1]">
-                      {(lang === "en" && article.titleEn) ? article.titleEn : article.title}
+                      {tl(article.title, article.titleEn)}
                     </h3>
-                    {((lang === "en" && article.subtitleEn) ? article.subtitleEn : article.subtitle) && (
+                    {tl(article.subtitle, article.subtitleEn) && (
                       <p className="mt-2 text-[15px] leading-[1.5] text-[#002f5e]/60 font-odesa-regular line-clamp-2">
-                        {(lang === "en" && article.subtitleEn) ? article.subtitleEn : article.subtitle}
+                        {tl(article.subtitle, article.subtitleEn)}
                       </p>
                     )}
                     <div className="mt-4 inline-flex items-center gap-1.5 text-[14px] font-odesa-medium text-[#df9b3b]">
@@ -223,11 +223,11 @@ export default function InfoPage() {
                   </p>
                 )}
                 <h1 className="font-odesa-medium text-[36px] leading-[1.05] md:text-[52px]">
-                  {(lang === "en" && activeArticle.titleEn) ? activeArticle.titleEn : activeArticle.title}
+                  {tl(activeArticle.title, activeArticle.titleEn)}
                 </h1>
-                {((lang === "en" && activeArticle.subtitleEn) ? activeArticle.subtitleEn : activeArticle.subtitle) && (
+                {tl(activeArticle.subtitle, activeArticle.subtitleEn) && (
                   <p className="mt-4 text-[20px] leading-[1.5] text-[#002f5e]/65 font-odesa-regular">
-                    {(lang === "en" && activeArticle.subtitleEn) ? activeArticle.subtitleEn : activeArticle.subtitle}
+                    {tl(activeArticle.subtitle, activeArticle.subtitleEn)}
                   </p>
                 )}
                 {((lang === "en" && activeArticle.contentEn) ? activeArticle.contentEn : activeArticle.content) && (
