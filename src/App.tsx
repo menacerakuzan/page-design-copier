@@ -1,22 +1,26 @@
-import { useEffect } from "react";
+import { Suspense, lazy, useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
 import { loadHierarchySnapshot, loadPublishedContentCards } from "@/lib/adminRepository";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { LangProvider } from "@/lib/langContext";
-import Index from "./pages/Index";
-import CityPage from "./pages/CityPage";
-import DistrictPage from "./pages/DistrictPage";
-import EntityDetail from "./pages/EntityDetail";
-import TourismTypesPage from "./pages/TourismTypesPage";
-import InfoPage from "./pages/InfoPage";
-import DistrictsPage from "./pages/DistrictsPage";
-import Admin from "./pages/Admin";
-import RoutesPage from "./pages/RoutesPage";
-import NearbyPage from "./pages/NearbyPage";
-import NotFound from "./pages/NotFound";
 import MobileNav from "./components/MobileNav";
+import Index from "./pages/Index";
+
+// Home (Index) stays eager so the landing page paints from the main bundle.
+// Everything else is code-split — notably Admin (TipTap) and NearbyPage
+// (MapLibre), which are heavy and rarely needed on first load.
+const CityPage = lazy(() => import("./pages/CityPage"));
+const DistrictPage = lazy(() => import("./pages/DistrictPage"));
+const EntityDetail = lazy(() => import("./pages/EntityDetail"));
+const TourismTypesPage = lazy(() => import("./pages/TourismTypesPage"));
+const InfoPage = lazy(() => import("./pages/InfoPage"));
+const DistrictsPage = lazy(() => import("./pages/DistrictsPage"));
+const Admin = lazy(() => import("./pages/Admin"));
+const RoutesPage = lazy(() => import("./pages/RoutesPage"));
+const NearbyPage = lazy(() => import("./pages/NearbyPage"));
+const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -32,21 +36,6 @@ const queryClient = new QueryClient({
   },
 });
 
-// Prefetch hierarchy immediately so detail pages render without waiting
-void queryClient.prefetchQuery({
-  queryKey: ["hierarchy-snapshot"],
-  queryFn: () => loadHierarchySnapshot(),
-});
-
-// Prefetch content cards used by landing pages so their grids mount once
-// with data already present (uses default staleTime above).
-for (const pageKey of ["index", "tourism-types"]) {
-  void queryClient.prefetchQuery({
-    queryKey: ["content-cards", pageKey],
-    queryFn: () => loadPublishedContentCards(pageKey),
-  });
-}
-
 const ScrollToTop = () => {
   const { pathname } = useLocation();
 
@@ -57,34 +46,58 @@ const ScrollToTop = () => {
   return null;
 };
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <LangProvider>
-    <TooltipProvider>
-      <BrowserRouter>
-        <ScrollToTop />
-        <Toaster />
-        <MobileNav />
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/types" element={<TourismTypesPage />} />
-          <Route path="/districts" element={<DistrictsPage />} />
-          <Route path="/info" element={<InfoPage />} />
-          <Route path="/napryamky/:citySlug" element={<CityPage />} />
-          <Route path="/raion/:districtSlug" element={<DistrictPage />} />
-          <Route path="/mistse/:slug" element={<EntityDetail type="attraction" />} />
-          <Route path="/podiyi/:slug" element={<EntityDetail type="event" />} />
-          <Route path="/restorany/:slug" element={<EntityDetail type="restaurant" />} />
-          <Route path="/hoteli/:slug" element={<EntityDetail type="hotel" />} />
-          <Route path="/marshruty" element={<RoutesPage />} />
-          <Route path="/poblizu" element={<NearbyPage />} />
-          <Route path="/admin" element={<Admin />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-    </LangProvider>
-  </QueryClientProvider>
+const RouteFallback = () => (
+  <div className="flex min-h-screen items-center justify-center bg-[#fff2e8]">
+    <span className="h-8 w-8 animate-spin rounded-full border-2 border-[#002f5e]/20 border-t-[#002f5e]" />
+  </div>
 );
+
+const App = () => {
+  // Warm the caches used by the landing/detail pages once, on mount.
+  useEffect(() => {
+    void queryClient.prefetchQuery({
+      queryKey: ["hierarchy-snapshot"],
+      queryFn: () => loadHierarchySnapshot(),
+    });
+    for (const pageKey of ["index", "tourism-types"]) {
+      void queryClient.prefetchQuery({
+        queryKey: ["content-cards", pageKey],
+        queryFn: () => loadPublishedContentCards(pageKey),
+      });
+    }
+  }, []);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <LangProvider>
+        <TooltipProvider>
+          <BrowserRouter>
+            <ScrollToTop />
+            <Toaster />
+            <MobileNav />
+            <Suspense fallback={<RouteFallback />}>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/types" element={<TourismTypesPage />} />
+                <Route path="/districts" element={<DistrictsPage />} />
+                <Route path="/info" element={<InfoPage />} />
+                <Route path="/napryamky/:citySlug" element={<CityPage />} />
+                <Route path="/raion/:districtSlug" element={<DistrictPage />} />
+                <Route path="/mistse/:slug" element={<EntityDetail type="attraction" />} />
+                <Route path="/podiyi/:slug" element={<EntityDetail type="event" />} />
+                <Route path="/restorany/:slug" element={<EntityDetail type="restaurant" />} />
+                <Route path="/hoteli/:slug" element={<EntityDetail type="hotel" />} />
+                <Route path="/marshruty" element={<RoutesPage />} />
+                <Route path="/poblizu" element={<NearbyPage />} />
+                <Route path="/admin" element={<Admin />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Suspense>
+          </BrowserRouter>
+        </TooltipProvider>
+      </LangProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
