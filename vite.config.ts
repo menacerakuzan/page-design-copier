@@ -38,6 +38,18 @@ export default defineConfig({
           if (assetInfo.name?.endsWith(".otf")) return "assets/fonts/[name][extname]";
           return "assets/[name]-[hash][extname]";
         },
+        // Split heavy vendors into their own chunks. The big win is maplibre:
+        // it's only used by the map routes (Nearby / RouteMap), so isolating it
+        // keeps it out of the main bundle and loads it on demand.
+        manualChunks: (id) => {
+          if (!id.includes("node_modules")) return;
+          if (id.includes("maplibre")) return "maplibre";
+          if (id.includes("@tiptap") || id.includes("prosemirror")) return "editor";
+          if (id.includes("framer-motion")) return "framer";
+          if (id.includes("recharts") || id.includes("/d3-")) return "charts";
+          if (/[\\/]node_modules[\\/](react|react-dom|react-router|react-router-dom|scheduler)[\\/]/.test(id)) return "react";
+          if (id.includes("@tanstack")) return "react-query";
+        },
       },
     },
   },
