@@ -26,3 +26,5 @@ plan.txt
 .vexp/
 .github/
 .claude/
+.local-bin/
+postgrest-v12.2.3-linux-static-x64.tar.xz
