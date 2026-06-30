@@ -1,4 +1,7 @@
-export type ContentThemeType = "event" | "hotel" | "restaurant" | "attraction";
+import type { TourismObjectType } from "@/types/hierarchy";
+
+/** Theme keys mirror the tourism-object types. */
+export type ContentThemeType = TourismObjectType;
 
 export const CONTENT_THEMES: Record<
   ContentThemeType,
