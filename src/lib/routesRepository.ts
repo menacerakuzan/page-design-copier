@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabaseClient";
+import { db } from "@/lib/apiClient";
 
 export type Route = {
   id: string;
@@ -80,7 +80,7 @@ const toRow = (r: Route) => ({
 });
 
 export async function loadRoutes(publishedOnly = false): Promise<Route[]> {
-  let q = supabase.from("routes").select("*").order("sort_order").order("name");
+  let q = db.from("routes").select("*").order("sort_order").order("name");
   if (publishedOnly) q = q.eq("published", true);
   const { data, error } = await q;
   if (error) { console.error(error); return []; }
@@ -88,19 +88,19 @@ export async function loadRoutes(publishedOnly = false): Promise<Route[]> {
 }
 
 export async function upsertRoute(route: Route): Promise<void> {
-  const { error } = await supabase.from("routes").upsert(toRow(route));
+  const { error } = await db.from("routes").upsert(toRow(route));
   if (error) throw error;
 }
 
 export async function deleteRoute(id: string): Promise<void> {
-  const { error } = await supabase.from("routes").delete().eq("id", id);
+  const { error } = await db.from("routes").delete().eq("id", id);
   if (error) throw error;
 }
 
 const TAG_ORDER_CARD_ID = "route-tag-order-settings";
 
 export async function loadRouteTagOrder(): Promise<string[]> {
-  const { data } = await supabase
+  const { data } = await db
     .from("content_cards")
     .select("payload")
     .eq("id", TAG_ORDER_CARD_ID)
@@ -110,7 +110,7 @@ export async function loadRouteTagOrder(): Promise<string[]> {
 }
 
 export async function saveRouteTagOrder(order: string[]): Promise<void> {
-  const { error } = await supabase.from("content_cards").upsert({
+  const { error } = await db.from("content_cards").upsert({
     id: TAG_ORDER_CARD_ID,
     page_key: "settings",
     section_key: "route-tag-order",

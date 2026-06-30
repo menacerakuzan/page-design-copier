@@ -26,8 +26,8 @@ const REST = `${API_URL}/rest/v1`;
 
 function authHeaders(): Record<string, string> {
   return {
-    apikey: env.VITE_SUPABASE_ANON_KEY,
-    Authorization: `Bearer ${env.VITE_SUPABASE_ANON_KEY}`,
+    apikey: env.VITE_API_ANON_KEY,
+    Authorization: `Bearer ${env.VITE_API_ANON_KEY}`,
   };
 }
 

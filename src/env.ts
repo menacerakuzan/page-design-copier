@@ -6,8 +6,8 @@ import { z } from "zod";
  * confusing 404s deep in the data layer.
  */
 const schema = z.object({
-  VITE_SUPABASE_URL: z.string().url(),
-  VITE_SUPABASE_ANON_KEY: z.string().min(1),
+  VITE_API_URL: z.string().url(),
+  VITE_API_ANON_KEY: z.string().min(1),
   VITE_OPENWEATHER_KEY: z.string().optional().default(""),
   VITE_ADMIN_EMAIL: z.string().default("admin@tourism.od.gov.ua"),
   VITE_ADMIN_PASSWORD: z.string().default(""),
@@ -17,10 +17,10 @@ const parsed = schema.safeParse(import.meta.env);
 if (!parsed.success) {
   // eslint-disable-next-line no-console
   console.error("Invalid environment configuration:", parsed.error.flatten().fieldErrors);
-  throw new Error("Invalid environment configuration — check your .env.local (VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY).");
+  throw new Error("Invalid environment configuration — check your .env.local (VITE_API_URL, VITE_API_ANON_KEY).");
 }
 
 export const env = parsed.data;
 
 /** REST/storage origin, with any trailing `/rest/v1` stripped. */
-export const API_URL = env.VITE_SUPABASE_URL.replace(/\/rest\/v1\/?$/, "");
+export const API_URL = env.VITE_API_URL.replace(/\/rest\/v1\/?$/, "");
