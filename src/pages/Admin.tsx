@@ -5,7 +5,9 @@ import AdminLoginGate from "@/components/AdminLoginGate";
 import BackButton from "@/components/BackButton";
 import { District, City, Region, TourismObject, TourismObjectType } from "@/types/hierarchy";
 import { ContentCardEntity } from "@/types/cms";
-import { loadHierarchySnapshot, upsertDistrict, upsertCity, upsertTourismObject, deleteDistrict, deleteCity, deleteTourismObject, upsertContentCard, deleteContentCard, loadPublishedContentCards } from "@/lib/adminRepository";
+import { upsertDistrict, upsertCity, upsertTourismObject, deleteDistrict, deleteCity, deleteTourismObject, upsertContentCard, deleteContentCard } from "@/lib/adminRepository";
+import { useHierarchySnapshot } from "@/hooks/useHierarchySnapshot";
+import { useQueryClient } from "@tanstack/react-query";
 import AdminConstructor from "./AdminConstructor";
 import AdminPageEditor from "./AdminPageEditor";
 import { TourismTypesAdmin } from "./admin/TourismTypesAdmin";
@@ -63,15 +65,17 @@ const emptyPlace = (cityId: string): PlaceForm => ({ id: "", slug: "", name: "",
 const Admin = () => {
   const [section, setSection] = useState<AdminSection>("districts");
   const [placePageType, setPlacePageType] = useState<PlacePageType>("attraction");
-  const [regions, setRegions] = useState<Region[]>([]);
-  const [districts, setDistricts] = useState<District[]>([]);
-  const [cities, setCities] = useState<City[]>([]);
-  const [places, setPlaces] = useState<TourismObject[]>([]);
+  const queryClient = useQueryClient();
+  const { data: snapshot, isFetching: loading } = useHierarchySnapshot();
+  const regions = snapshot?.regions ?? [];
+  const districts = snapshot?.districts ?? [];
+  const cities = snapshot?.cities ?? [];
+  const places = snapshot?.objects ?? [];
+  const contentCards = snapshot?.contentCards ?? [];
+  const refresh = () => { void queryClient.invalidateQueries({ queryKey: ["hierarchy-snapshot"] }); };
   const [districtQuery, setDistrictQuery] = useState("");
   const [cityQuery, setCityQuery] = useState("");
   const [placeQuery, setPlaceQuery] = useState("");
-  const [contentCards, setContentCards] = useState<ContentCardEntity[]>([]);
-  const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
 
@@ -141,26 +145,12 @@ const Admin = () => {
     setTimeout(() => setToast(null), 3500);
   };
 
-  const loadData = async () => {
-    setLoading(true);
-    try {
-      const snap = await loadHierarchySnapshot();
-      setRegions(snap.regions);
-      setDistricts(snap.districts);
-      setCities(snap.cities);
-      setPlaces(snap.objects);
-      setContentCards(snap.contentCards ?? []);
-      // оновлюємо дефолтні id у формах після завантаження реальних даних
-      setCityForm(prev => prev.districtId && snap.districts.find(d => d.id === prev.districtId) ? prev : emptyCity(snap.districts[0]?.id ?? ""));
-      setPlaceForm(prev => prev.cityId && snap.cities.find(c => c.id === prev.cityId) ? prev : emptyPlace(snap.cities[0]?.id ?? ""));
-    } catch (e: any) {
-      showToast(e?.message ?? "Помилка завантаження", false);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => { void loadData(); }, []);
+  // Keep the city/place form's default parent id valid once data loads.
+  useEffect(() => {
+    if (!snapshot) return;
+    setCityForm(prev => prev.districtId && snapshot.districts.find(d => d.id === prev.districtId) ? prev : emptyCity(snapshot.districts[0]?.id ?? ""));
+    setPlaceForm(prev => prev.cityId && snapshot.cities.find(c => c.id === prev.cityId) ? prev : emptyPlace(snapshot.cities[0]?.id ?? ""));
+  }, [snapshot]);
 
   // ─── District handlers ──────────────────────────────────────────────────────
 
@@ -189,8 +179,7 @@ const Admin = () => {
         descriptionEn: districtForm.descriptionEn || undefined,
       };
       await upsertDistrict(district);
-      setDistricts(prev => editingDistrictId ? prev.map(d => d.id === id ? district : d) : [district, ...prev]);
-      setDistrictForm(emptyDistrict(districtForm.regionId));
+      refresh();      setDistrictForm(emptyDistrict(districtForm.regionId));
       setEditingDistrictId(null);
       showToast(editingDistrictId ? "Район оновлено" : "Район створено");
     } catch (e: any) {
@@ -209,8 +198,7 @@ const Admin = () => {
     if (!confirm("Видалити район? Це також видалить пов'язані міста.")) return;
     try {
       await deleteDistrict(id);
-      setDistricts(prev => prev.filter(d => d.id !== id));
-      showToast("Район видалено");
+      refresh();      showToast("Район видалено");
     } catch (e: any) { showToast(e?.message ?? "Помилка", false); }
   };
 
@@ -244,8 +232,7 @@ const Admin = () => {
         descriptionEn: cityForm.descriptionEn || undefined,
       };
       await upsertCity(city);
-      setCities(prev => editingCityId ? prev.map(c => c.id === id ? city : c) : [city, ...prev]);
-      setCityForm(emptyCity(cityForm.districtId));
+      refresh();      setCityForm(emptyCity(cityForm.districtId));
       setEditingCityId(null);
       showToast(editingCityId ? "Місто оновлено" : "Місто створено");
     } catch (e: any) {
@@ -264,8 +251,7 @@ const Admin = () => {
     if (!confirm("Видалити місто? Це також видалить пов'язані місця.")) return;
     try {
       await deleteCity(id);
-      setCities(prev => prev.filter(c => c.id !== id));
-      showToast("Місто видалено");
+      refresh();      showToast("Місто видалено");
     } catch (e: any) { showToast(e?.message ?? "Помилка", false); }
   };
 
@@ -319,8 +305,7 @@ const Admin = () => {
         heroFontSize: placeForm.heroFontSize || undefined,
       };
       await upsertTourismObject(place);
-      setPlaces(prev => editingPlaceId ? prev.map(p => p.id === id ? place : p) : [place, ...prev]);
-      setPlaceForm(emptyPlace(placeForm.cityId));
+      refresh();      setPlaceForm(emptyPlace(placeForm.cityId));
       setEditingPlaceId(null);
       showToast(editingPlaceId ? "Місце оновлено" : "Місце створено");
     } catch (e: any) {
@@ -340,8 +325,7 @@ const Admin = () => {
     if (!confirm("Видалити місце?")) return;
     try {
       await deleteTourismObject(id);
-      setPlaces(prev => prev.filter(p => p.id !== id));
-      showToast("Місце видалено");
+      refresh();      showToast("Місце видалено");
     } catch (e: any) { showToast(e?.message ?? "Помилка", false); }
   };
 
@@ -397,7 +381,7 @@ const Admin = () => {
               </span>
               <button
                 type="button"
-                onClick={() => void loadData()}
+                onClick={refresh}
                 disabled={loading}
                 className="rounded-xl border border-[#002f5e]/15 bg-white px-4 py-1.5 text-[13px] font-medium text-[#002f5e] transition hover:bg-[#002f5e]/5 disabled:opacity-50"
               >
@@ -1003,7 +987,7 @@ const Admin = () => {
                 places={places}
                 districts={districts}
                 cities={cities}
-                onCardsChange={setContentCards}
+                onCardsChange={refresh}
                 showToast={showToast}
               />
             )}
@@ -1028,7 +1012,7 @@ const Admin = () => {
                     places={places}
                     showToast={showToast}
                     allCards={contentCards}
-                    onCardsChange={setContentCards}
+                    onCardsChange={refresh}
                   />
                 </div>
               </div>
@@ -1054,7 +1038,7 @@ const Admin = () => {
                     places={places}
                     showToast={showToast}
                     allCards={contentCards}
-                    onCardsChange={setContentCards}
+                    onCardsChange={refresh}
                   />
                 </div>
               </div>
@@ -1102,7 +1086,7 @@ const Admin = () => {
                     places={places.filter(p => p.type === placePageType)}
                     showToast={showToast}
                     allCards={contentCards}
-                    onCardsChange={setContentCards}
+                    onCardsChange={refresh}
                   />
                 </div>
               </div>
