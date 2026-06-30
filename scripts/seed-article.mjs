@@ -1,9 +1,8 @@
-import { createClient } from "@supabase/supabase-js";
+import pg from "pg";
 
-const SUPABASE_URL = "https://yvqksgfqfxhegtpezukt.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl2cWtzZ2ZxZnhoZWd0cGV6dWt0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczNjE3NDQsImV4cCI6MjA5MjkzNzc0NH0.9ONFSv_6rw7rtj8vQJm54jWYNvXcnFwvNeMRJ9lsp6w";
-
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+const { Client } = pg;
+const connectionString =
+  process.env.DATABASE_URL || "postgresql://authenticator:changeme123@localhost:5432/tourism";
 
 const content = `
 <h2>Що таке туристична Одещина?</h2>
@@ -72,10 +71,20 @@ const article = {
   },
 };
 
-const { error } = await supabase.from("content_cards").upsert(article);
+const cols = Object.keys(article);
+const values = cols.map((c) =>
+  article[c] !== null && typeof article[c] === "object" ? JSON.stringify(article[c]) : article[c],
+);
+const placeholders = cols.map((_, i) => `$${i + 1}`);
+const setCols = cols.filter((c) => c !== "id").map((c) => `${c} = EXCLUDED.${c}`);
 
-if (error) {
-  console.error("❌ Помилка:", error.message);
-} else {
-  console.log("✅ Статтю успішно додано до Supabase!");
-}
+const client = new Client({ connectionString });
+await client.connect();
+await client.query("SET ROLE service_role");
+await client.query(
+  `INSERT INTO content_cards (${cols.join(", ")}) VALUES (${placeholders.join(", ")})
+   ON CONFLICT (id) DO UPDATE SET ${setCols.join(", ")}`,
+  values,
+);
+await client.end();
+console.log("✅ Статтю успішно додано до БД!");

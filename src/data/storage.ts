@@ -1,9 +1,9 @@
 import { env, API_URL } from "@/env";
 
 /**
- * Media uploads against the self-hosted storage-server. Replaces the
- * `supabase.storage` usage: small files go straight to the object endpoint,
- * large files use the server's chunked upload protocol with progress.
+ * Media uploads against the self-hosted storage-server: small files go straight
+ * to the object endpoint, large files use the server's chunked upload protocol
+ * with progress.
  */
 
 const STORAGE = `${API_URL}/storage/v1`;
@@ -46,8 +46,8 @@ async function uploadDirect(file: File, filePath: string): Promise<void> {
   const res = await fetch(`${STORAGE}/object/${BUCKET}/${filePath}`, {
     method: "POST",
     headers: {
-      apikey: env.VITE_SUPABASE_ANON_KEY,
-      Authorization: `Bearer ${env.VITE_SUPABASE_ANON_KEY}`,
+      apikey: env.VITE_API_ANON_KEY,
+      Authorization: `Bearer ${env.VITE_API_ANON_KEY}`,
       "Content-Type": file.type || "application/octet-stream",
       "x-upsert": "true",
     },

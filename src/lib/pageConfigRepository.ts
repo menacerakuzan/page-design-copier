@@ -3,13 +3,13 @@
  * persisted in the `page_configs` table via PostgREST.
  */
 
-import { supabase } from "@/lib/supabaseClient";
+import { db } from "@/lib/apiClient";
 import { PageConfig, PageEntityType, makeDefaultConfig } from "@/types/pages";
 
 // ─── Load all configs ─────────────────────────────────────────────────────────
 
 export const loadPageConfigs = async (): Promise<PageConfig[]> => {
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("page_configs")
     .select("*")
     .order("updated_at", { ascending: false });
@@ -35,7 +35,7 @@ export const getOrCreatePageConfig = async (
 
 export const upsertPageConfig = async (config: PageConfig): Promise<void> => {
   const updated: PageConfig = { ...config, updatedAt: new Date().toISOString() };
-  const { error } = await supabase
+  const { error } = await db
     .from("page_configs")
     .upsert(configToRow(updated), { onConflict: "entity_type,entity_id" });
   if (error) throw error;
@@ -62,7 +62,7 @@ export const getPageConfigForDisplay = async (
 // ─── Delete config ────────────────────────────────────────────────────────────
 
 export const deletePageConfig = async (entityType: PageEntityType, entityId: string): Promise<void> => {
-  const { error } = await supabase
+  const { error } = await db
     .from("page_configs")
     .delete()
     .eq("entity_type", entityType)

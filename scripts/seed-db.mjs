@@ -1,21 +1,16 @@
-import { createClient } from "@supabase/supabase-js";
+import pg from "pg";
 
-const rawUrl = process.env.SUPABASE_URL;
-const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-if (!rawUrl || !serviceKey) {
-  console.error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
-  process.exit(1);
-}
-
-const url = rawUrl.replace(/\/rest\/v1\/?$/, "");
-const supabase = createClient(url, serviceKey, { auth: { persistSession: false } });
+const { Client } = pg;
+const connectionString =
+  process.env.DATABASE_URL || "postgresql://authenticator:changeme123@localhost:5432/tourism";
 
 const regions = [{ id: "region-odesa", name: "Одеська область", slug: "odeska-oblast" }];
+
 const districts = [
   { id: "district-odeskyi", region_id: "region-odesa", name: "Одеський район", slug: "odeskyi-raion" },
   { id: "district-bilhorod", region_id: "region-odesa", name: "Білгород-Дністровський район", slug: "bilhorod-dnistrovskyi-raion" },
 ];
+
 const cities = [
   { id: "city-odesa", district_id: "district-odeskyi", name: "Одеса", slug: "odesa" },
   { id: "city-bilhorod", district_id: "district-bilhorod", name: "Білгород-Дністровський", slug: "bilhorod-dnistrovskyi" },
@@ -119,7 +114,29 @@ const contentCards = [
   },
 ];
 
-const run = async () => {
+/** Upsert plain objects into a table by `id`, JSON-encoding object columns (jsonb). */
+async function upsertRows(client, table, rows) {
+  for (const row of rows) {
+    const cols = Object.keys(row);
+    const values = cols.map((c) =>
+      row[c] !== null && typeof row[c] === "object" ? JSON.stringify(row[c]) : row[c],
+    );
+    const placeholders = cols.map((_, i) => `$${i + 1}`);
+    const setCols = cols.filter((c) => c !== "id").map((c) => `${c} = EXCLUDED.${c}`);
+    await client.query(
+      `INSERT INTO ${table} (${cols.join(", ")}) VALUES (${placeholders.join(", ")})
+       ON CONFLICT (id) DO UPDATE SET ${setCols.join(", ")}`,
+      values,
+    );
+  }
+}
+
+async function main() {
+  const client = new Client({ connectionString });
+  await client.connect();
+  // service_role has the table grants + bypassrls; authenticator is a member of it.
+  await client.query("SET ROLE service_role");
+
   const steps = [
     ["regions", regions],
     ["districts", districts],
@@ -127,15 +144,16 @@ const run = async () => {
     ["tourism_objects", tourismObjects],
     ["content_cards", contentCards],
   ];
-
   for (const [table, rows] of steps) {
-    const { error } = await supabase.from(table).upsert(rows);
-    if (error) {
-      console.error(`Seed error at ${table}:`, error);
-      process.exit(1);
-    }
+    await upsertRows(client, table, rows);
+    console.log(`Seeded ${table} (${rows.length})`);
   }
-  console.log("Supabase seed completed");
-};
 
-run();
+  await client.end();
+  console.log("DB seed completed");
+}
+
+main().catch((e) => {
+  console.error("Seed failed:", e.message);
+  process.exit(1);
+});

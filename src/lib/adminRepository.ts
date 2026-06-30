@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabaseClient";
+import { db } from "@/lib/apiClient";
 import { env } from "@/env";
 import { AdminChangeLog, ContentCardEntity } from "@/types/cms";
 import { City, District, Region, TourismObject } from "@/types/hierarchy";
@@ -199,7 +199,7 @@ async function appendChangeLog(entry: {
   afterData: Record<string, any> | null;
 }) {
   const actorEmail = await getActorEmail();
-  const { error } = await supabase.from(tableNames.changeLogs).insert({
+  const { error } = await db.from(tableNames.changeLogs).insert({
     entity_type: entry.entityType,
     entity_id: entry.entityId,
     action: entry.action,
@@ -212,11 +212,11 @@ async function appendChangeLog(entry: {
 
 export async function loadHierarchySnapshot(): Promise<Snapshot> {
   const [regionsRes, districtsRes, citiesRes, objectsRes, contentCardsRes] = await Promise.all([
-    supabase.from(tableNames.regions).select("*").order("name"),
-    supabase.from(tableNames.districts).select("*").order("sort_order").order("name"),
-    supabase.from(tableNames.cities).select("*").order("sort_order").order("name"),
-    supabase.from(tableNames.objects).select("*").order("name"),
-    supabase.from(tableNames.contentCards).select("*").order("sort_order").order("title"),
+    db.from(tableNames.regions).select("*").order("name"),
+    db.from(tableNames.districts).select("*").order("sort_order").order("name"),
+    db.from(tableNames.cities).select("*").order("sort_order").order("name"),
+    db.from(tableNames.objects).select("*").order("name"),
+    db.from(tableNames.contentCards).select("*").order("sort_order").order("title"),
   ]);
 
   if (regionsRes.error) throw regionsRes.error;
@@ -239,7 +239,7 @@ export async function loadHierarchySnapshot(): Promise<Snapshot> {
 }
 
 export async function loadPublishedContentCards(pageKey: string) {
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from(tableNames.contentCards)
     .select("*")
     .eq("page_key", pageKey)
@@ -251,7 +251,7 @@ export async function loadPublishedContentCards(pageKey: string) {
 }
 
 export async function upsertTourismObject(obj: TourismObject) {
-  const { data: beforeData, error: beforeError } = await supabase
+  const { data: beforeData, error: beforeError } = await db
     .from(tableNames.objects)
     .select("*")
     .eq("id", obj.id)
@@ -259,7 +259,7 @@ export async function upsertTourismObject(obj: TourismObject) {
   if (beforeError) throw beforeError;
 
   const dbObj = toDbObject(obj);
-  const { error } = await supabase.from(tableNames.objects).upsert(dbObj);
+  const { error } = await db.from(tableNames.objects).upsert(dbObj);
   if (error) throw error;
 
   await appendChangeLog({
@@ -274,7 +274,7 @@ export async function upsertTourismObject(obj: TourismObject) {
 
 export async function insertTourismObject(obj: TourismObject) {
   const dbObj = toDbObject(obj);
-  const { error } = await supabase.from(tableNames.objects).insert(dbObj);
+  const { error } = await db.from(tableNames.objects).insert(dbObj);
   if (error) throw error;
   await appendChangeLog({
     entityType: "tourism_object",
@@ -287,14 +287,14 @@ export async function insertTourismObject(obj: TourismObject) {
 }
 
 export async function deleteTourismObject(id: string) {
-  const { data: beforeData, error: beforeError } = await supabase
+  const { data: beforeData, error: beforeError } = await db
     .from(tableNames.objects)
     .select("*")
     .eq("id", id)
     .maybeSingle();
   if (beforeError) throw beforeError;
 
-  const { error } = await supabase.from(tableNames.objects).delete().eq("id", id);
+  const { error } = await db.from(tableNames.objects).delete().eq("id", id);
   if (error) throw error;
   await appendChangeLog({
     entityType: "tourism_object",
@@ -306,7 +306,7 @@ export async function deleteTourismObject(id: string) {
 }
 
 export async function upsertContentCard(card: ContentCardEntity) {
-  const { data: beforeData, error: beforeError } = await supabase
+  const { data: beforeData, error: beforeError } = await db
     .from(tableNames.contentCards)
     .select("*")
     .eq("id", card.id)
@@ -314,7 +314,7 @@ export async function upsertContentCard(card: ContentCardEntity) {
   if (beforeError) throw beforeError;
 
   const dbCard = toDbCard(card);
-  const { error } = await supabase.from(tableNames.contentCards).upsert(dbCard);
+  const { error } = await db.from(tableNames.contentCards).upsert(dbCard);
   if (error) throw error;
   await appendChangeLog({
     entityType: "content_card",
@@ -328,7 +328,7 @@ export async function upsertContentCard(card: ContentCardEntity) {
 
 export async function insertContentCard(card: ContentCardEntity) {
   const dbCard = toDbCard(card);
-  const { error } = await supabase.from(tableNames.contentCards).insert(dbCard);
+  const { error } = await db.from(tableNames.contentCards).insert(dbCard);
   if (error) throw error;
   await appendChangeLog({
     entityType: "content_card",
@@ -341,14 +341,14 @@ export async function insertContentCard(card: ContentCardEntity) {
 }
 
 export async function deleteContentCard(id: string) {
-  const { data: beforeData, error: beforeError } = await supabase
+  const { data: beforeData, error: beforeError } = await db
     .from(tableNames.contentCards)
     .select("*")
     .eq("id", id)
     .maybeSingle();
   if (beforeError) throw beforeError;
 
-  const { error } = await supabase.from(tableNames.contentCards).delete().eq("id", id);
+  const { error } = await db.from(tableNames.contentCards).delete().eq("id", id);
   if (error) throw error;
   await appendChangeLog({
     entityType: "content_card",
@@ -360,7 +360,7 @@ export async function deleteContentCard(id: string) {
 }
 
 export async function loadChangeLogs(limit = 80) {
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from(tableNames.changeLogs)
     .select("*")
     .order("created_at", { ascending: false })
@@ -370,7 +370,7 @@ export async function loadChangeLogs(limit = 80) {
 }
 
 export async function rollbackChange(logId: string) {
-  const { data: logRow, error: logError } = await supabase
+  const { data: logRow, error: logError } = await db
     .from(tableNames.changeLogs)
     .select("*")
     .eq("id", logId)
@@ -382,10 +382,10 @@ export async function rollbackChange(logId: string) {
   if (!table) return;
 
   if (logRow.action === "create") {
-    const { error } = await supabase.from(table).delete().eq("id", logRow.entity_id);
+    const { error } = await db.from(table).delete().eq("id", logRow.entity_id);
     if (error) throw error;
   } else if (logRow.before_data) {
-    const { error } = await supabase.from(table).upsert(logRow.before_data);
+    const { error } = await db.from(table).upsert(logRow.before_data);
     if (error) throw error;
   }
 
@@ -400,7 +400,7 @@ export async function rollbackChange(logId: string) {
 
 export async function insertRegion(region: Region) {
   const dbRegion = { id: region.id, name: region.name, slug: region.slug };
-  const { error } = await supabase.from(tableNames.regions).insert(dbRegion);
+  const { error } = await db.from(tableNames.regions).insert(dbRegion);
   if (error) throw error;
   await appendChangeLog({
     entityType: "region",
@@ -428,7 +428,7 @@ export async function insertDistrict(district: District) {
     subtitle_en: district.subtitleEn ?? null,
     description_en: district.descriptionEn ?? null,
   };
-  const { error } = await supabase.from(tableNames.districts).upsert(dbDistrict);
+  const { error } = await db.from(tableNames.districts).upsert(dbDistrict);
   if (error) throw error;
   await appendChangeLog({
     entityType: "district",
@@ -441,7 +441,7 @@ export async function insertDistrict(district: District) {
 }
 
 export async function upsertDistrict(district: District) {
-  const { data: beforeData } = await supabase.from(tableNames.districts).select("*").eq("id", district.id).maybeSingle();
+  const { data: beforeData } = await db.from(tableNames.districts).select("*").eq("id", district.id).maybeSingle();
   const dbDistrict = {
     id: district.id,
     region_id: district.regionId,
@@ -458,7 +458,7 @@ export async function upsertDistrict(district: District) {
     description_en: district.descriptionEn ?? null,
     sort_order: district.sortOrder ?? 0,
   };
-  const { error } = await supabase.from(tableNames.districts).upsert(dbDistrict);
+  const { error } = await db.from(tableNames.districts).upsert(dbDistrict);
   if (error) throw error;
   await appendChangeLog({
     entityType: "district",
@@ -473,7 +473,7 @@ export async function upsertDistrict(district: District) {
 export async function updateDistrictSortOrders(orders: { id: string; sortOrder: number }[]) {
   await Promise.all(
     orders.map(({ id, sortOrder }) =>
-      supabase.from(tableNames.districts).update({ sort_order: sortOrder }).eq("id", id)
+      db.from(tableNames.districts).update({ sort_order: sortOrder }).eq("id", id)
     )
   );
 }
@@ -481,7 +481,7 @@ export async function updateDistrictSortOrders(orders: { id: string; sortOrder: 
 export async function updateCitySortOrders(orders: { id: string; sortOrder: number }[]) {
   await Promise.all(
     orders.map(({ id, sortOrder }) =>
-      supabase.from(tableNames.cities).update({ sort_order: sortOrder }).eq("id", id)
+      db.from(tableNames.cities).update({ sort_order: sortOrder }).eq("id", id)
     )
   );
 }
@@ -504,7 +504,7 @@ export async function insertCity(city: City) {
     subtitle_en: city.subtitleEn ?? null,
     description_en: city.descriptionEn ?? null,
   };
-  const { error } = await supabase.from(tableNames.cities).upsert(dbCity);
+  const { error } = await db.from(tableNames.cities).upsert(dbCity);
   if (error) throw error;
   await appendChangeLog({
     entityType: "city",
@@ -517,7 +517,7 @@ export async function insertCity(city: City) {
 }
 
 export async function upsertCity(city: City) {
-  const { data: beforeData } = await supabase.from(tableNames.cities).select("*").eq("id", city.id).maybeSingle();
+  const { data: beforeData } = await db.from(tableNames.cities).select("*").eq("id", city.id).maybeSingle();
   const dbCity = {
     id: city.id,
     district_id: city.districtId,
@@ -535,7 +535,7 @@ export async function upsertCity(city: City) {
     subtitle_en: city.subtitleEn ?? null,
     description_en: city.descriptionEn ?? null,
   };
-  const { error } = await supabase.from(tableNames.cities).upsert(dbCity);
+  const { error } = await db.from(tableNames.cities).upsert(dbCity);
   if (error) throw error;
   await appendChangeLog({
     entityType: "city",
@@ -548,13 +548,13 @@ export async function upsertCity(city: City) {
 }
 
 export async function deleteRegion(id: string) {
-  const { data: beforeData, error: beforeError } = await supabase
+  const { data: beforeData, error: beforeError } = await db
     .from(tableNames.regions)
     .select("*")
     .eq("id", id)
     .single();
   if (beforeError) throw beforeError;
-  const { error } = await supabase.from(tableNames.regions).delete().eq("id", id);
+  const { error } = await db.from(tableNames.regions).delete().eq("id", id);
   if (error) throw error;
   await appendChangeLog({
     entityType: "region",
@@ -566,13 +566,13 @@ export async function deleteRegion(id: string) {
 }
 
 export async function deleteDistrict(id: string) {
-  const { data: beforeData, error: beforeError } = await supabase
+  const { data: beforeData, error: beforeError } = await db
     .from(tableNames.districts)
     .select("*")
     .eq("id", id)
     .single();
   if (beforeError) throw beforeError;
-  const { error } = await supabase.from(tableNames.districts).delete().eq("id", id);
+  const { error } = await db.from(tableNames.districts).delete().eq("id", id);
   if (error) throw error;
   await appendChangeLog({
     entityType: "district",
@@ -584,13 +584,13 @@ export async function deleteDistrict(id: string) {
 }
 
 export async function deleteCity(id: string) {
-  const { data: beforeData, error: beforeError } = await supabase
+  const { data: beforeData, error: beforeError } = await db
     .from(tableNames.cities)
     .select("*")
     .eq("id", id)
     .single();
   if (beforeError) throw beforeError;
-  const { error } = await supabase.from(tableNames.cities).delete().eq("id", id);
+  const { error } = await db.from(tableNames.cities).delete().eq("id", id);
   if (error) throw error;
   await appendChangeLog({
     entityType: "city",
