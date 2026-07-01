@@ -5,6 +5,7 @@ import { loadHierarchySnapshot, loadPublishedContentCards } from "@/lib/adminRep
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { LangProvider } from "@/lib/langContext";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import MobileNav from "./components/MobileNav";
 import Index from "./pages/Index";
 
@@ -75,24 +76,26 @@ const App = () => {
             <ScrollToTop />
             <Toaster />
             <MobileNav />
-            <Suspense fallback={<RouteFallback />}>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/types" element={<TourismTypesPage />} />
-                <Route path="/districts" element={<DistrictsPage />} />
-                <Route path="/info" element={<InfoPage />} />
-                <Route path="/napryamky/:citySlug" element={<CityPage />} />
-                <Route path="/raion/:districtSlug" element={<DistrictPage />} />
-                <Route path="/mistse/:slug" element={<EntityDetail type="attraction" />} />
-                <Route path="/podiyi/:slug" element={<EntityDetail type="event" />} />
-                <Route path="/restorany/:slug" element={<EntityDetail type="restaurant" />} />
-                <Route path="/hoteli/:slug" element={<EntityDetail type="hotel" />} />
-                <Route path="/marshruty" element={<RoutesPage />} />
-                <Route path="/poblizu" element={<NearbyPage />} />
-                <Route path="/admin" element={<Admin />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Suspense>
+            <ErrorBoundary>
+              <Suspense fallback={<RouteFallback />}>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/types" element={<TourismTypesPage />} />
+                  <Route path="/districts" element={<DistrictsPage />} />
+                  <Route path="/info" element={<InfoPage />} />
+                  <Route path="/napryamky/:citySlug" element={<CityPage />} />
+                  <Route path="/raion/:districtSlug" element={<DistrictPage />} />
+                  <Route path="/mistse/:slug" element={<EntityDetail type="attraction" />} />
+                  <Route path="/podiyi/:slug" element={<EntityDetail type="event" />} />
+                  <Route path="/restorany/:slug" element={<EntityDetail type="restaurant" />} />
+                  <Route path="/hoteli/:slug" element={<EntityDetail type="hotel" />} />
+                  <Route path="/marshruty" element={<RoutesPage />} />
+                  <Route path="/poblizu" element={<NearbyPage />} />
+                  <Route path="/admin" element={<Admin />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </Suspense>
+            </ErrorBoundary>
           </BrowserRouter>
         </TooltipProvider>
       </LangProvider>
