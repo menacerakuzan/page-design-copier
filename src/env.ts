@@ -23,5 +23,16 @@ if (!parsed.success) {
 
 export const env = parsed.data;
 
-/** REST/storage origin, with any trailing `/rest/v1` stripped. */
-export const API_URL = env.VITE_API_URL.replace(/\/rest\/v1\/?$/, "");
+/**
+ * REST/storage origin. Same-origin by design (see vite.config.ts proxy / prod
+ * reverse proxy), so we derive it from the page's own origin at runtime rather
+ * than trusting VITE_API_URL literally — that value gets baked into the bundle
+ * at build time, so a hardcoded `http://localhost:8080` breaks the moment the
+ * app is opened from anywhere other than that exact host (e.g. a phone over a
+ * tunnel, or a different port). VITE_API_URL remains as the fallback for
+ * non-browser contexts and to keep env.ts's validation meaningful.
+ */
+export const API_URL =
+  typeof window !== "undefined"
+    ? window.location.origin
+    : env.VITE_API_URL.replace(/\/rest\/v1\/?$/, "");

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { motion } from "framer-motion";
 import {
   Home,
   MapPinned,
@@ -23,6 +24,8 @@ const TikTokIcon = ({ className = "h-5 w-5" }: { className?: string }) => (
     <path d="M14 3c.3 1.6 1.5 2.9 3 3.3V9a7 7 0 0 1-3-1v6.2a5.2 5.2 0 1 1-5.2-5.2h.2v2.8h-.2a2.4 2.4 0 1 0 2.4 2.4V3h2.8z" />
   </svg>
 );
+
+const MotionLink = motion(Link);
 
 const socials = [
   { label: "Instagram", href: "https://www.instagram.com/odesa_travel/", Icon: Instagram },
@@ -58,39 +61,43 @@ export function MobileNav() {
 
   return (
     <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
-      {/* ── Нижня таб-навігація ─────────────────────────────────── */}
+      {/* ── Нижня таб-навігація: плаваючий док ──────────────────── */}
       <nav
         aria-label="Головна навігація"
-        className="fixed inset-x-0 bottom-0 z-30 border-t border-[#002f5e]/12 bg-[#fff2e8]/95 pb-safe backdrop-blur-xl md:hidden"
+        className="fixed inset-x-0 bottom-0 z-30 px-4 md:hidden"
+        style={{ paddingBottom: "max(0.6rem, env(safe-area-inset-bottom))" }}
       >
-        <ul className="mx-auto flex max-w-[520px] items-stretch justify-around px-1">
+        {/* Той самий стиль, кольори й форма кнопок, що й у пігулці з соцмережами на головній */}
+        <ul className="mx-auto flex max-w-[420px] items-center justify-around rounded-full bg-[#fff2e8] px-2 py-1.5 text-[#00376c] shadow-[0_16px_36px_-14px_rgba(0,47,94,0.45)]">
           {tabs.map(({ href, label, Icon }) => {
             const active = isActive(href);
             return (
               <li key={href} className="flex-1">
-                <Link
+                <MotionLink
                   to={href}
-                  className={`tap flex flex-col items-center justify-center gap-0.5 px-1 py-2 font-odesa-medium transition-colors ${
-                    active ? "text-[#002f5e]" : "text-[#002f5e]/50"
+                  whileTap={{ scale: 0.9 }}
+                  className={`tap flex flex-col items-center justify-center gap-1 transition-opacity hover:opacity-80 ${
+                    active ? "text-[#df9b3b] opacity-100" : "text-[#00376c] opacity-45"
                   }`}
                   aria-current={active ? "page" : undefined}
                 >
-                  <Icon className="h-[22px] w-[22px]" strokeWidth={active ? 2.4 : 1.8} />
-                  <span className="text-[10px] leading-none">{label}</span>
-                </Link>
+                  <Icon className="h-6 w-6" strokeWidth={active ? 2.2 : 1.8} />
+                  <span className="text-[9px] leading-none font-odesa-medium">{label}</span>
+                </MotionLink>
               </li>
             );
           })}
           <li className="flex-1">
             <SheetTrigger asChild>
-              <button
+              <motion.button
+                whileTap={{ scale: 0.9 }}
                 type="button"
-                className="tap flex w-full flex-col items-center justify-center gap-0.5 px-1 py-2 font-odesa-medium text-[#002f5e]/50 transition-colors hover:text-[#002f5e]"
+                className="tap flex w-full flex-col items-center justify-center gap-1 text-[#00376c] opacity-45 transition-opacity hover:opacity-80"
                 aria-label="Меню"
               >
-                <MenuIcon className="h-[22px] w-[22px]" strokeWidth={1.8} />
-                <span className="text-[10px] leading-none">{lang === "en" ? "Menu" : "Меню"}</span>
-              </button>
+                <MenuIcon className="h-6 w-6" strokeWidth={1.8} />
+                <span className="text-[9px] leading-none font-odesa-medium">{lang === "en" ? "Menu" : "Меню"}</span>
+              </motion.button>
             </SheetTrigger>
           </li>
         </ul>

@@ -9,6 +9,8 @@ export default defineConfig({
     hmr: {
       overlay: false,
     },
+    // Allow viewing the dev server through an ngrok tunnel (mobile preview during design work).
+    allowedHosts: [".ngrok-free.dev", ".ngrok-free.app", ".ngrok.io"],
     // Local dev: proxy Supabase-style paths to the local PostgREST (port 3100),
     // stripping the /rest/v1 (and /auth/v1, /storage/v1) prefixes that the
     // production gateway would normally remove. Keeps requests same-origin (no CORS).
