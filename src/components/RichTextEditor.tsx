@@ -29,7 +29,10 @@ type Props = { value: string; onChange: (html: string) => void };
 export default function RichTextEditor({ value, onChange }: Props) {
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      // StarterKit v3 bundles Link + Underline; disable them here so our own
+      // configured copies below don't register duplicate extension names —
+      // duplicates leave editor.schema null and crash getHTML().
+      StarterKit.configure({ link: false, underline: false }),
       Underline,
       TextAlign.configure({ types: ["heading", "paragraph"] }),
       Image.configure({ inline: false }),
@@ -41,10 +44,15 @@ export default function RichTextEditor({ value, onChange }: Props) {
   });
 
   useEffect(() => {
-    if (editor && value !== editor.getHTML()) {
+    // Guard isDestroyed: after a hot-reload / remount the previous editor is
+    // destroyed (its schema is nulled), and calling getHTML() on it throws
+    // "schema is null". Re-run when the editor instance itself changes so the
+    // live editor gets synced.
+    if (!editor || editor.isDestroyed) return;
+    if (value !== editor.getHTML()) {
       editor.commands.setContent(value, false);
     }
-  }, [value]);
+  }, [value, editor]);
 
   if (!editor) return null;
 
