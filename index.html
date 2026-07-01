@@ -18,9 +18,11 @@
     <meta name="twitter:site" content="@odesa_travel" />
     <meta name="twitter:image" content="/image.jpg" />
 
-    <link rel="preload" href="/assets/fonts/OdesaRegionType-Regular.otf" as="font" type="font/otf" crossorigin="anonymous" />
-    <link rel="preload" href="/assets/fonts/OdesaRegionType-Medium.otf" as="font" type="font/otf" crossorigin="anonymous" />
-    <link rel="preload" href="/assets/fonts/OdesaRegionType-Bold.otf" as="font" type="font/otf" crossorigin="anonymous" />
+    <!-- Warm up the connection to the image host (most photos live here). -->
+    <link rel="preconnect" href="https://tourism.od.gov.ua" crossorigin />
+    <!-- Preload the woff2 fonts the browser actually uses (not the heavy .otf). -->
+    <link rel="preload" href="/assets/fonts/OdesaRegionType-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous" />
+    <link rel="preload" href="/assets/fonts/OdesaRegionType-Medium.woff2" as="font" type="font/woff2" crossorigin="anonymous" />
   </head>
 
   <body>

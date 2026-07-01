@@ -1,8 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, lazy, Suspense } from "react";
 import { X, MapPin, Clock, Navigation, ArrowRight, ExternalLink, Globe, Route as RouteIcon, ChevronLeft } from "lucide-react";
-import RouteMap from "@/components/RouteMap";
+
+// Lazy so MapLibre (~1 MB) isn't pulled into the eager landing-page bundle —
+// the map only renders when a route with coordinates is opened.
+const RouteMap = lazy(() => import("@/components/RouteMap"));
 import { Link } from "react-router-dom";
 import { loadRoutes, type Route, ROUTE_TAG_OPTIONS, loadRouteTagOrder } from "@/lib/routesRepository";
 import { useHierarchySnapshot } from "@/hooks/useHierarchySnapshot";
@@ -263,7 +266,9 @@ const RouteDetail = ({ route }: { route: Route }) => {
           {showMap && route.mapUrl && (
             <div>
               <SectionTitle>Маршрут на карті</SectionTitle>
-              <RouteMap mapUrl={route.mapUrl} waypoints={waypointObjects} />
+              <Suspense fallback={<div className="h-[420px] w-full rounded-2xl bg-black/5" />}>
+                <RouteMap mapUrl={route.mapUrl} waypoints={waypointObjects} />
+              </Suspense>
             </div>
           )}
 
