@@ -7,7 +7,7 @@ export default defineConfig({
     host: "::",
     port: 8080,
     hmr: {
-      overlay: true,
+      overlay: false,
     },
     // Local dev: proxy Supabase-style paths to the local PostgREST (port 3100),
     // stripping the /rest/v1 (and /auth/v1, /storage/v1) prefixes that the
@@ -32,10 +32,18 @@ export default defineConfig({
   },
   plugins: [react()],
   build: {
+    // Don't modulepreload the heavy on-demand chunks (maplibre, admin/editor) on
+    // the landing page — they should load only when their route/overlay is used.
+    modulePreload: {
+      resolveDependencies: (_file, deps) =>
+        deps.filter((d) => !/maplibre|Admin|editor/i.test(d)),
+    },
     rollupOptions: {
       output: {
         assetFileNames: (assetInfo) => {
-          if (assetInfo.name?.endsWith(".otf")) return "assets/fonts/[name][extname]";
+          // Keep font filenames stable (unhashed) so the <link rel=preload> in
+          // index.html resolves in the production build.
+          if (/\.(otf|woff2?|ttf)$/i.test(assetInfo.name ?? "")) return "assets/fonts/[name][extname]";
           return "assets/[name]-[hash][extname]";
         },
         // Split heavy vendors into their own chunks. The big win is maplibre:
@@ -43,12 +51,15 @@ export default defineConfig({
         // keeps it out of the main bundle and loads it on demand.
         manualChunks: (id) => {
           if (!id.includes("node_modules")) return;
+          // maplibre: force into its own chunk so it isn't hoisted into the entry
+          // (it's shared by two lazy routes — Nearby and the routes overlay).
           if (id.includes("maplibre")) return "maplibre";
-          if (id.includes("@tiptap") || id.includes("prosemirror")) return "editor";
           if (id.includes("framer-motion")) return "framer";
-          if (id.includes("recharts") || id.includes("/d3-")) return "charts";
           if (/[\\/]node_modules[\\/](react|react-dom|react-router|react-router-dom|scheduler)[\\/]/.test(id)) return "react";
           if (id.includes("@tanstack")) return "react-query";
+          // NOTE: tiptap/prosemirror (editor) and recharts are intentionally NOT
+          // split out — they're admin-only and belong in the lazy Admin chunk, so
+          // they don't get modulepreloaded on the public landing page.
         },
       },
     },

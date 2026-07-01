@@ -5,7 +5,7 @@
        url("./assets/fonts/OdesaRegionType-Regular.otf") format("opentype");
   font-style: normal;
   font-weight: 400;
-  font-display: block;
+  font-display: swap;
 }
 
 @font-face {
@@ -15,7 +15,7 @@
        url("./assets/fonts/OdesaRegionType-Medium.otf") format("opentype");
   font-style: normal;
   font-weight: 500;
-  font-display: block;
+  font-display: swap;
 }
 
 @font-face {
@@ -25,7 +25,7 @@
        url("./assets/fonts/OdesaRegionType-Semi.otf") format("opentype");
   font-style: normal;
   font-weight: 600;
-  font-display: block;
+  font-display: swap;
 }
 
 @font-face {
@@ -35,7 +35,7 @@
        url("./assets/fonts/OdesaRegionType-Bold.otf") format("opentype");
   font-style: normal;
   font-weight: 700;
-  font-display: block;
+  font-display: swap;
 }
 
 @font-face {
@@ -45,7 +45,7 @@
        url("./assets/fonts/OdesaRegionType-Heavy.otf") format("opentype");
   font-style: normal;
   font-weight: 800;
-  font-display: block;
+  font-display: swap;
 }
 
 @tailwind base;
