@@ -1,26 +1,28 @@
 import { useState } from "react";
-
-const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL ?? "admin@tourism.od.gov.ua";
-const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD ?? "admin123";
-const SESSION_KEY = "tourism_admin_session";
+import { loginAdmin, isAdminAuthed } from "@/lib/adminAuth";
 
 type Props = { children: React.ReactNode };
 
 export default function AdminLoginGate({ children }: Props) {
-  const [authed, setAuthed] = useState(() => sessionStorage.getItem(SESSION_KEY) === "1");
+  const [authed, setAuthed] = useState(() => isAdminAuthed());
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
 
   if (authed) return <>{children}</>;
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-      sessionStorage.setItem(SESSION_KEY, "1");
+    setBusy(true);
+    setError("");
+    try {
+      await loginAdmin(email, password);
       setAuthed(true);
-    } else {
-      setError("Невірний email або пароль");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Помилка входу");
+    } finally {
+      setBusy(false);
     }
   };
 
@@ -46,9 +48,9 @@ export default function AdminLoginGate({ children }: Props) {
                 className="w-full rounded-xl border border-[#002f5e]/15 bg-[#fff2e8] px-4 py-3 text-[15px] text-[#002f5e] placeholder:text-[#002f5e]/30 focus:border-[#002f5e]/40 focus:outline-none focus:ring-2 focus:ring-[#002f5e]/10 transition" />
             </div>
             {error && <p className="rounded-xl bg-[#9f1f47]/8 px-4 py-2.5 text-[13px] text-[#9f1f47]">{error}</p>}
-            <button type="submit"
-              className="mt-2 flex items-center justify-center rounded-xl bg-[#002f5e] py-3 text-[15px] font-medium text-[#fff2e8] transition hover:bg-[#002f5e]/85">
-              Увійти
+            <button type="submit" disabled={busy}
+              className="mt-2 flex items-center justify-center rounded-xl bg-[#002f5e] py-3 text-[15px] font-medium text-[#fff2e8] transition hover:bg-[#002f5e]/85 disabled:opacity-60">
+              {busy ? "Вхід…" : "Увійти"}
             </button>
           </div>
         </form>

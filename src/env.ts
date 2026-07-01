@@ -10,7 +10,8 @@ const schema = z.object({
   VITE_API_ANON_KEY: z.string().min(1),
   VITE_OPENWEATHER_KEY: z.string().optional().default(""),
   VITE_ADMIN_EMAIL: z.string().default("admin@tourism.od.gov.ua"),
-  VITE_ADMIN_PASSWORD: z.string().default(""),
+  // NB: no admin password here — auth is server-side (see src/lib/adminAuth.ts).
+  // A VITE_-prefixed secret would be inlined into the client bundle.
 });
 
 const parsed = schema.safeParse(import.meta.env);

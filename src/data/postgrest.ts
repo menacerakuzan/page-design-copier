@@ -1,4 +1,5 @@
 import { env, API_URL } from "@/env";
+import { getAdminToken } from "@/lib/adminAuth";
 
 /**
  * Minimal typed PostgREST client over `fetch` — a hand-written replacement for
@@ -25,9 +26,12 @@ export interface PostgrestResult<T> {
 const REST = `${API_URL}/rest/v1`;
 
 function authHeaders(): Record<string, string> {
+  // When an admin is logged in, send their JWT (role=authenticated) so writes are
+  // allowed; otherwise the anon key (read-only). `apikey` stays the anon key.
+  const token = getAdminToken();
   return {
     apikey: env.VITE_API_ANON_KEY,
-    Authorization: `Bearer ${env.VITE_API_ANON_KEY}`,
+    Authorization: `Bearer ${token ?? env.VITE_API_ANON_KEY}`,
   };
 }
 
