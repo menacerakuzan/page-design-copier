@@ -7,7 +7,7 @@ export default defineConfig({
     host: "::",
     port: 8080,
     hmr: {
-      overlay: false,
+      overlay: true,
     },
     // Local dev: proxy Supabase-style paths to the local PostgREST (port 3100),
     // stripping the /rest/v1 (and /auth/v1, /storage/v1) prefixes that the
