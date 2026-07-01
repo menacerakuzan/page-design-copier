@@ -19,11 +19,19 @@ export function Img({ src, w = 600, quality = 70, priority = false, alt = "", on
   const original = src ?? "";
   const [useOriginal, setUseOriginal] = useState(false);
   const shown = useOriginal ? original : resizedImageUrl(original, w, quality);
+  // Retina/HiDPI: also offer a 2× variant so the browser picks a crisp image on
+  // dense screens instead of upscaling the 1× one (which looks soft/pixelated).
+  // Only when a resize actually applied (shown differs from the original URL).
+  const src2x = useOriginal ? "" : resizedImageUrl(original, w * 2, quality);
+  const srcSet = !useOriginal && shown !== original && src2x !== shown
+    ? `${shown} 1x, ${src2x} 2x`
+    : undefined;
 
   return (
     <img
       {...rest}
       src={shown}
+      srcSet={srcSet}
       alt={alt}
       loading={priority ? "eager" : "lazy"}
       decoding="async"

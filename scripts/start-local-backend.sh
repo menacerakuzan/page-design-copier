@@ -14,6 +14,29 @@ set -euo pipefail
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PGREST="$DIR/.local-bin/postgrest"
 LOG="/tmp/postgrest.log"
+STORAGE_DIR="$DIR/../storage-server"
+STORAGE_LOG="/tmp/storage-server.log"
+
+# ─── Storage server (media + on-the-fly resize) on :5100 ─────────────────────
+# Serves /storage/v1/object/public/... and /storage/v1/render/image/... locally.
+if [ -d "$STORAGE_DIR" ]; then
+  if curl -s -m 3 -o /dev/null "http://127.0.0.1:5100/storage/v1/bucket/media"; then
+    echo "Storage server уже запущен на :5100"
+  else
+    if [ ! -d "$STORAGE_DIR/node_modules/sharp" ]; then
+      echo "Устанавливаю зависимости storage-server..."
+      (cd "$STORAGE_DIR" && npm install --silent)
+    fi
+    echo "Запускаю storage server на :5100 (лог: $STORAGE_LOG)..."
+    (cd "$STORAGE_DIR" && nohup node server.js > "$STORAGE_LOG" 2>&1 &)
+    sleep 1
+    curl -s -m 5 -o /dev/null "http://127.0.0.1:5100/storage/v1/bucket/media" \
+      && echo "OK — storage server отвечает" \
+      || { echo "Не удалось поднять storage server, смотри $STORAGE_LOG"; tail -20 "$STORAGE_LOG"; }
+  fi
+else
+  echo "⚠ storage-server не найден ($STORAGE_DIR) — медиа/ресайз работать не будут"
+fi
 
 if [ ! -x "$PGREST" ]; then
   echo "Распаковываю PostgREST..."
