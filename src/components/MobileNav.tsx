@@ -64,11 +64,20 @@ export function MobileNav() {
       {/* ── Нижня таб-навігація: плаваючий док ──────────────────── */}
       <nav
         aria-label="Головна навігація"
-        className="fixed inset-x-0 bottom-0 z-30 px-4 md:hidden"
-        style={{ paddingBottom: "max(0.6rem, env(safe-area-inset-bottom))" }}
+        className="fixed inset-x-0 bottom-0 z-30 md:hidden"
       >
-        {/* Той самий стиль, кольори й форма кнопок, що й у пігулці з соцмережами на головній */}
-        <ul className="mx-auto flex max-w-[420px] items-center justify-around rounded-full bg-[#fff2e8] px-2 py-1.5 text-[#00376c] shadow-[0_16px_36px_-14px_rgba(0,47,94,0.45)]">
+        {/*
+          Safari 26+ семплить background-color/backdrop-filter САМОГО fixed/sticky
+          елемента біля краю екрана — якщо там щось є, ОС бере це замість реального
+          фону сторінки. Тому сам <nav> лишаємо зовсім "порожнім" (без фону, блюру,
+          відступів), а всю візуальну пігулку виносимо в absolute-дитину нижче:
+          за community-реверс-інжинірингом (github.com/andesco/safari-color-tinting)
+          абсолютно спозиційованих дітей Safari під час семплінгу ігнорує.
+        */}
+        <ul
+          className="absolute inset-x-4 mx-auto flex max-w-[420px] items-center justify-around rounded-full bg-[#fff2e8] px-2 py-1.5 text-[#00376c] shadow-[0_4px_14px_-6px_rgba(0,47,94,0.35)]"
+          style={{ bottom: "max(0.6rem, env(safe-area-inset-bottom))" }}
+        >
           {tabs.map(({ href, label, Icon }) => {
             const active = isActive(href);
             return (
