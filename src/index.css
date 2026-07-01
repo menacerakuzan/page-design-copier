@@ -102,17 +102,18 @@
     @apply border-border;
   }
 
-  /* Кремовий фон документа (не темно-синій --background) — щоб на iOS Safari
-     ділянки поза контентом (нотч, домашній індикатор) не підсвічувались синім. */
+  /* Safari 26+ бере колір верхньої/нижньої панелі з background-color кореня
+     сторінки (не з реального відео/градієнта) — тому саме тут задаємо темний
+     колір бренду, щоб панелі були темними, а не світлими. */
   html {
-    background-color: #fff2e8;
+    background-color: #001a3d;
   }
 
   body {
     margin: 0;
     font-family: "Odesa Region Type", sans-serif;
-    background-color: #fff2e8;
-    color: #002f5e;
+    background-color: #001a3d;
+    color: #fff2e8;
   }
 }
 
