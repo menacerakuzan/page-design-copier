@@ -3,6 +3,7 @@ import { screen } from "@testing-library/react";
 import { renderRoute } from "@/test/render";
 import { tableData } from "@/test/msw/handlers";
 import { regionRow, districtRow, cityRow, objectRow, contentCardRow } from "@/test/fixtures";
+import { loginTestAdmin } from "@/test/adminSession";
 import Admin from "./Admin";
 
 /**
@@ -11,7 +12,7 @@ import Admin from "./Admin";
  * mount and render its section navigation without throwing.
  */
 beforeEach(() => {
-  sessionStorage.setItem("tourism_admin_session", "1");
+  loginTestAdmin();
   tableData.regions = [regionRow];
   tableData.districts = [districtRow];
   tableData.cities = [cityRow];

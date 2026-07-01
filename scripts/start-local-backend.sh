@@ -54,6 +54,7 @@ PGRST_DB_URI="postgres://authenticator:changeme123@127.0.0.1:5432/tourism" \
 PGRST_DB_SCHEMAS="public" \
 PGRST_DB_ANON_ROLE="anon" \
 PGRST_JWT_SECRET="super-secret-jwt-token-min-32-chars-long" \
+PGRST_APP_SETTINGS_JWT_SECRET="super-secret-jwt-token-min-32-chars-long" \
 PGRST_SERVER_PORT="3100" \
 PGRST_SERVER_HOST="127.0.0.1" \
 nohup "$PGREST" > "$LOG" 2>&1 &

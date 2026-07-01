@@ -3,11 +3,12 @@ import { render, screen, waitFor } from "@testing-library/react";
 import App from "@/App";
 import { tableData } from "@/test/msw/handlers";
 import { regionRow, districtRow, cityRow, objectRow, contentCardRow } from "@/test/fixtures";
+import { loginTestAdmin } from "@/test/adminSession";
 
 // Regression: drive the REAL lazy /admin route through <App/> to reproduce the
 // browser "blue screen" (a runtime crash in the lazily-loaded Admin chunk).
 beforeEach(() => {
-  sessionStorage.setItem("tourism_admin_session", "1");
+  loginTestAdmin();
   window.history.pushState({}, "", "/admin");
   tableData.regions = [regionRow];
   tableData.districts = [districtRow];

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { CheckCircle2, MapPin, Building2, Landmark, Plus, Settings2, AlertCircle, LayoutDashboard, Calendar, UtensilsCrossed, BedDouble, ChevronRight, Palmtree, Newspaper, LogOut, Languages, Route } from "lucide-react";
 import { translateFields } from "@/lib/translate";
 import AdminLoginGate from "@/components/AdminLoginGate";
+import { adminLogout } from "@/lib/adminAuth";
 import BackButton from "@/components/BackButton";
 import { District, City, Region, TourismObject, TourismObjectType } from "@/types/hierarchy";
 import { ContentCardEntity } from "@/types/cms";
@@ -389,7 +390,7 @@ const Admin = () => {
               </button>
               <button
                   type="button"
-                  onClick={() => { sessionStorage.removeItem("tourism_admin_session"); window.location.reload(); }}
+                  onClick={() => { adminLogout(); window.location.reload(); }}
                   className="flex items-center gap-1.5 rounded-xl border border-[#002f5e]/15 bg-white px-3 py-1.5 text-[13px] font-medium text-[#002f5e]/50 transition hover:bg-[#9f1f47]/8 hover:text-[#9f1f47] hover:border-[#9f1f47]/20"
                   title="Вийти"
                 >
