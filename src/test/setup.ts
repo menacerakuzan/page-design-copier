@@ -25,6 +25,10 @@ class MockObserver {
 // jsdom defines scrollTo as a throwing stub — replace it with a no-op.
 (window as any).scrollTo = () => {};
 
+// jsdom lacks these; maplibre-gl / blob-based code calls them at module load.
+if (!window.URL.createObjectURL) (window.URL as any).createObjectURL = () => "blob:mock";
+if (!window.URL.revokeObjectURL) (window.URL as any).revokeObjectURL = () => {};
+
 // jsdom lacks these; TipTap/ProseMirror (rich-text editor) calls them.
 if (!document.elementFromPoint) {
   (document as any).elementFromPoint = () => null;

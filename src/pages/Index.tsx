@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Img } from "@/components/Img";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight, ArrowUpRight, ChevronLeft, ChevronRight, Facebook, Instagram, MapPin } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -466,7 +467,7 @@ const Index = () => {
               {destinationCards.map((card, idx) => {
                 const cardBody = (
                   <>
-                    <img loading="lazy" decoding="async" src={card.image} alt={card.title} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                    <Img w={500} src={card.image} alt={card.title} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#002f5e]/85 via-[#002f5e]/15 to-transparent" />
                     <span className="absolute left-6 top-6 rounded-full border border-[#fff2e8]/30 bg-[#002f5e]/30 px-4 py-2 text-[15px] leading-none text-[#fff2e8] backdrop-blur-md font-odesa-medium">
                       {String(idx + 1).padStart(2, "0")}
@@ -599,7 +600,7 @@ const Index = () => {
 
                 const inner = (
                   <>
-                    <img loading="lazy" decoding="async" src={item.imageUrl} alt={item.title} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                    <Img w={500} src={item.imageUrl} alt={item.title} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
                     <h4 className={`absolute bottom-5 left-5 right-5 leading-[0.95] font-odesa-medium ${textSizeClass}`}>
                       {item.title}
@@ -672,7 +673,7 @@ const Index = () => {
                 }
                 const inner = (
                   <>
-                    <img loading="lazy" decoding="async" src={item.imageUrl} alt={item.title} className="h-full w-full object-cover" />
+                    <Img w={500} src={item.imageUrl} alt={item.title} className="h-full w-full object-cover" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                     <h4 className="absolute bottom-3 left-3 right-3 text-[16px] leading-[0.95] font-odesa-medium">
                       {item.title}
@@ -838,7 +839,7 @@ const Index = () => {
                   }`}
                   aria-label={att.title}
                 >
-                  <img loading="lazy" decoding="async" src={att.image} alt="" className="h-full w-full object-cover transition-transform duration-500 group-hover/thumb:scale-110" />
+                  <Img w={500} src={att.image} alt="" className="h-full w-full object-cover transition-transform duration-500 group-hover/thumb:scale-110" />
                   <span className="absolute bottom-1 left-2 text-[11px] font-odesa-medium text-[#fff2e8] drop-shadow">
                     {String(idx + 1).padStart(2, "0")}
                   </span>
@@ -989,7 +990,7 @@ const Index = () => {
                 const eventCard = (
                   <div className="relative overflow-hidden rounded-[26px] bg-white/75 shadow-[0_18px_40px_-22px_rgba(0,47,94,0.35)] backdrop-blur-sm transition-all duration-300 group-hover:-translate-y-2 group-hover:shadow-[0_30px_55px_-22px_rgba(159,31,71,0.4)]">
                     <div className="relative h-[230px] overflow-hidden md:h-[280px]">
-                      <img loading="lazy" decoding="async"
+                      <Img w={500}
                         src={event.image}
                         alt={event.title}
                         className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
