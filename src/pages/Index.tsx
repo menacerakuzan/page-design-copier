@@ -226,7 +226,8 @@ const Index = () => {
         >
           <source src={heroVideo} type="video/mp4" />
         </video>
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,12,33,0.28),rgba(0,12,33,0.82))]" />
+        <div className="absolute inset-0 hidden md:block bg-[linear-gradient(180deg,rgba(0,12,33,0.28),rgba(0,12,33,0.82))]" />
+        <div className="absolute inset-0 md:hidden bg-[linear-gradient(180deg,rgba(0,12,33,0.5),rgba(0,12,33,0.82))]" />
 
         <motion.header
           initial={{ opacity: 0, y: -24 }}
@@ -234,27 +235,43 @@ const Index = () => {
           transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
           className="relative z-20 mx-auto w-full max-w-[1180px] px-4 pt-0 md:px-5"
         >
-          <div className="rounded-b-[44px] bg-[#fff2e8] px-4 pb-3 pt-3 text-[#00376c] md:rounded-b-[58px] md:px-8 md:pb-4 md:pt-4">
-            <div className="grid grid-cols-1 items-center gap-1.5 md:grid-cols-[1fr_auto_1fr] md:gap-5">
-              <nav className="order-2 flex items-center justify-center gap-2.5 text-[11px] leading-none font-odesa-medium md:order-none md:justify-start md:gap-4 md:text-[14px]">
-                <span className="text-[12px] md:text-[15px]">{star}</span>
+          <div className="rounded-b-[36px] bg-[#fff2e8] px-4 pb-2.5 pt-2.5 text-[#00376c] md:rounded-b-[58px] md:px-8 md:pb-4 md:pt-4">
+            {/* ── Мобільна шапка: як десктопна за стилем, але компактніша (без "Контакти", щоб влізти в один рядок) ── */}
+            <div className="md:hidden">
+              <h1 className="px-2 text-center text-[30px] leading-[0.95] font-odesa-medium font-odesa-ss02" style={{ letterSpacing: "0.04em" }}>
+                ОДЕЩИНА
+              </h1>
+              <nav className="mt-1.5 flex items-center justify-center gap-2.5 text-[11px] leading-none font-odesa-medium">
+                <span className="text-[12px]">{star}</span>
+                <Link to="/districts" className="transition-opacity hover:opacity-75">Туристичні об'єкти</Link>
+                <span className="text-[12px]">{star}</span>
+                <Link to="/poblizu" className="transition-opacity hover:opacity-75">Поблизу</Link>
+                <span className="text-[12px]">{star}</span>
+                <a href="#" className="transition-opacity hover:opacity-75">Гіди</a>
+              </nav>
+            </div>
+
+            {/* ── Десктопна шапка: три колонки, як і раніше ── */}
+            <div className="hidden md:grid md:grid-cols-[1fr_auto_1fr] md:items-center md:gap-5">
+              <nav className="flex items-center justify-start gap-4 text-[14px] leading-none font-odesa-medium">
+                <span className="text-[15px]">{star}</span>
                 <Link to="/districts" className="transition-opacity hover:opacity-75">Туристичні об'єкти</Link>
               </nav>
 
-              <h1 className="order-1 px-2 text-center text-[30px] leading-[0.95] font-odesa-medium font-odesa-ss02 md:order-none md:text-[42px]" style={{ letterSpacing: "0.04em" }}>
+              <h1 className="px-2 text-center text-[42px] leading-[0.95] font-odesa-medium font-odesa-ss02" style={{ letterSpacing: "0.04em" }}>
                 ОДЕЩИНА
               </h1>
 
-              <nav className="order-3 flex items-center justify-center gap-2.5 text-[11px] leading-none font-odesa-medium md:order-none md:justify-end md:gap-4 md:text-[14px]">
-                <span className="text-[12px] md:text-[15px]">{star}</span>
+              <nav className="flex items-center justify-end gap-4 text-[14px] leading-none font-odesa-medium">
+                <span className="text-[15px]">{star}</span>
                 <Link to="/poblizu" className="transition-opacity hover:opacity-75">Поблизу</Link>
-                <span className="text-[12px] md:text-[15px]">{star}</span>
+                <span className="text-[15px]">{star}</span>
                 {navRight.map((item, index) => (
                   <a key={item} href="#"
                     onClick={item === "Контакти" ? (e) => { e.preventDefault(); scrollToFooter(); } : undefined}
                     className="transition-opacity hover:opacity-75">
                     {item}
-                    {index === 0 ? <span className="ml-2.5 text-[12px] md:ml-4 md:text-[15px]">{star}</span> : null}
+                    {index === 0 ? <span className="ml-4 text-[15px]">{star}</span> : null}
                   </a>
                 ))}
               </nav>
@@ -262,30 +279,32 @@ const Index = () => {
           </div>
         </motion.header>
 
-        <main className="relative z-10 mx-auto flex min-h-[calc(100vh-96px)] w-full max-w-[1320px] flex-col items-center px-4 pb-24 pt-0 text-center md:px-6 md:pb-0 md:pt-0">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.92 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1], delay: 0.05 }}
-            className="h-[140px] w-[140px] xs:h-[180px] xs:w-[180px] md:h-[320px] md:w-[320px]"
-            style={{
-              backgroundColor: "#fff2e8",
-              WebkitMaskImage: `url(${geminiLogo})`,
-              maskImage: `url(${geminiLogo})`,
-              WebkitMaskPosition: "center",
-              maskPosition: "center",
-              WebkitMaskRepeat: "no-repeat",
-              maskRepeat: "no-repeat",
-              WebkitMaskSize: "contain",
-              maskSize: "contain",
-            }}
-          />
+        <main className="relative z-10 mx-auto flex min-h-[calc(100vh-96px)] w-full max-w-[1320px] flex-col items-center px-4 pb-tabbar pt-0 text-center md:px-6 md:pb-0 md:pt-0">
+          <div className="relative flex items-center justify-center">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.92 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1], delay: 0.05 }}
+              className="relative h-[228px] w-[228px] xs:h-[270px] xs:w-[270px] md:h-[320px] md:w-[320px]"
+              style={{
+                backgroundColor: "#fff2e8",
+                WebkitMaskImage: `url(${geminiLogo})`,
+                maskImage: `url(${geminiLogo})`,
+                WebkitMaskPosition: "center",
+                maskPosition: "center",
+                WebkitMaskRepeat: "no-repeat",
+                maskRepeat: "no-repeat",
+                WebkitMaskSize: "contain",
+                maskSize: "contain",
+              }}
+            />
+          </div>
 
           <motion.h2
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="mt-0 text-[38px] leading-[1.02] md:text-[68px] font-odesa-medium"
+            className="mt-0 text-[34px] leading-[1.02] md:text-[68px] font-odesa-medium"
           >
             {t("explore")}
           </motion.h2>
@@ -312,7 +331,7 @@ const Index = () => {
             </button>
           </motion.div>
 
-          <section className="mt-auto w-full pt-0">
+          <section className="mt-auto w-full pb-7 pt-0 md:pb-0">
             <div className="mx-auto flex max-w-[1060px] flex-col items-center gap-3 md:relative md:min-h-[120px] md:block">
               <div className="inline-flex items-center gap-4 rounded-full bg-[#fff2e8] px-6 py-3 text-[#00376c] md:absolute md:bottom-0 md:left-1/2 md:-translate-x-1/2 md:px-8 md:py-4">
                 {socialLinks.map(({ label, href, Icon }) => (
@@ -332,21 +351,21 @@ const Index = () => {
               <div className="grid w-full grid-cols-2 items-stretch gap-3 md:absolute md:bottom-0 md:right-0 md:w-auto md:items-end md:gap-8">
                 {featureCards.map((item) => (
                   <Link key={item.number} to={item.href}
-                    className="group cursor-pointer rounded-[20px] border border-[#fff2e8]/15 bg-black/25 p-3.5 text-left backdrop-blur-md transition-colors hover:border-[#df9b3b]/40 md:max-w-[170px] md:rounded-none md:border-0 md:bg-transparent md:p-0 md:backdrop-blur-none"
+                    className="group cursor-pointer text-left transition-colors md:max-w-[170px]"
                     style={{ textDecoration: "none" }}>
                     <div className="flex items-end gap-2 transition-colors duration-500"
                       style={{ color: "inherit" }}>
-                      <span className="text-[30px] leading-none font-odesa-regular transition-colors duration-500 group-hover:text-[#df9b3b] md:text-[40px]"
+                      <span className="text-[30px] leading-none font-odesa-regular transition-colors duration-500 group-hover:text-[#df9b3b] group-active:text-[#df9b3b] md:text-[40px]"
                         style={{ transitionProperty: "color" }}>
                         {item.number}
                       </span>
-                      <div className="flex min-h-[40px] flex-col justify-end pb-[3px] text-[17px] leading-[0.95] font-odesa-medium transition-colors duration-500 group-hover:text-[#df9b3b] md:min-h-[44px] md:pb-[5px] md:text-[22px]">
-                        <div>{item.first}</div>
-                        {item.second ? <div>{item.second}</div> : null}
+                      <div className="flex min-h-[40px] flex-row items-end gap-1.5 pb-[3px] text-[17px] leading-[0.95] font-odesa-medium transition-colors duration-500 group-hover:text-[#df9b3b] group-active:text-[#df9b3b] md:min-h-[44px] md:flex-col md:items-start md:justify-end md:gap-0 md:pb-[5px] md:text-[22px]">
+                        <div className="whitespace-nowrap">{item.first}</div>
+                        {item.second ? <div className="whitespace-nowrap">{item.second}</div> : null}
                       </div>
                     </div>
                     <div className="relative mt-2 h-[5px] w-full overflow-hidden rounded-full bg-[#fff2e8]/30 md:h-[6px] md:rounded-none md:bg-[#fff2e8]/40">
-                      <div className="absolute inset-y-0 left-0 w-0 bg-[#df9b3b] transition-all duration-500 ease-in-out group-hover:w-full" />
+                      <div className="absolute inset-y-0 left-0 w-0 bg-[#df9b3b] transition-all duration-500 ease-in-out group-hover:w-full group-active:w-full" />
                     </div>
                   </Link>
                 ))}

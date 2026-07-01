@@ -102,10 +102,17 @@
     @apply border-border;
   }
 
+  /* Кремовий фон документа (не темно-синій --background) — щоб на iOS Safari
+     ділянки поза контентом (нотч, домашній індикатор) не підсвічувались синім. */
+  html {
+    background-color: #fff2e8;
+  }
+
   body {
-    @apply bg-background text-foreground;
     margin: 0;
     font-family: "Odesa Region Type", sans-serif;
+    background-color: #fff2e8;
+    color: #002f5e;
   }
 }
 
@@ -144,7 +151,7 @@
   .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
   .pt-safe { padding-top: env(safe-area-inset-top); }
   .mb-safe { margin-bottom: env(safe-area-inset-bottom); }
-  /* Висота нижньої таб-навігації + safe-area, щоб контент не перекривався */
+  /* Висота нижньої таб-навігації (плаваючий док) + safe-area, щоб контент не перекривався */
   .pb-tabbar { padding-bottom: calc(64px + env(safe-area-inset-bottom)); }
 
   /* Єдиний адаптивний контейнер замість розсипу max-w-[…] + px-4 md:px-10 */
