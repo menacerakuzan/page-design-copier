@@ -23,10 +23,11 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (p) => p.replace(/^\/auth\/v1/, ""),
       },
+      // Media + on-the-fly resize are served by the local storage-server (:5100),
+      // which serves the FULL /storage/v1/... path — no prefix stripping here.
       "/storage/v1": {
-        target: "http://127.0.0.1:3100",
+        target: "http://127.0.0.1:5100",
         changeOrigin: true,
-        rewrite: (p) => p.replace(/^\/storage\/v1/, ""),
       },
     },
   },
