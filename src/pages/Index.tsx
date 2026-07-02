@@ -396,7 +396,7 @@ const Index = () => {
         </div>
       </section>
 
-      <section ref={setSectionRef(1)} className="relative z-10 px-4 pt-10 pb-8 md:pb-10 text-[#002f5e] md:px-10"
+      <section ref={setSectionRef(1)} className="relative z-10 px-4 pt-8 pb-6 md:pb-8 text-[#002f5e] md:px-10"
         style={{ backgroundColor: "#fff2e8", backgroundImage: "url(/bgmainnapryam.svg)", backgroundSize: "cover", backgroundPosition: "center center", backgroundRepeat: "no-repeat" }}>
         <div className="pointer-events-none absolute inset-0 z-0 bg-[#fff2e8]/90" />
         <div className="relative z-10 mx-auto max-w-[1400px]">
@@ -453,7 +453,7 @@ const Index = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.15 }}
             transition={{ duration: 0.75, delay: 0.1 }}
-            className="mt-10 -mx-4 md:-mx-10"
+            className="mt-8 -mx-4 md:-mx-10"
           >
             <div
               ref={destinationsScrollerRef}
@@ -510,8 +510,8 @@ const Index = () => {
                     <span className="absolute bottom-8 right-7 flex h-12 w-12 translate-y-3 items-center justify-center rounded-full bg-[#df9b3b] text-[#002f5e] opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
                       <ArrowUpRight className="h-5 w-5" />
                     </span>
-                    <div className="absolute bottom-8 left-7 right-24">
-                      <h4 className="text-[30px] leading-[0.95] text-[#fff2e8] font-odesa-medium xs:text-[34px] md:text-[40px]">{card.title}</h4>
+                    <div className="absolute bottom-6 left-6 right-20">
+                      <h4 className="text-[26px] leading-[0.95] text-[#fff2e8] font-odesa-medium xs:text-[29px] md:text-[34px]">{card.title}</h4>
                       <div className="mt-3 h-[3px] w-10 rounded-full bg-[#df9b3b] transition-all duration-500 group-hover:w-24" />
                     </div>
                   </>
@@ -522,7 +522,7 @@ const Index = () => {
                     <Link
                       key={card.title}
                       to={card.href}
-                      className="group relative h-[440px] w-[80vw] shrink-0 snap-start rounded-[26px] transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_30px_60px_-24px_rgba(0,47,94,0.45)] xs:h-[500px] xs:w-[330px] md:h-[520px] md:w-[420px]"
+                      className="group relative h-[370px] w-[72vw] shrink-0 snap-start rounded-[26px] transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_30px_60px_-24px_rgba(0,47,94,0.45)] xs:h-[420px] xs:w-[280px] md:h-[440px] md:w-[360px]"
                     >
                       <div className="relative h-full w-full overflow-hidden rounded-[26px] bg-[#002f5e]/10">
                         {cardBody}
@@ -532,7 +532,7 @@ const Index = () => {
                 }
 
                 return (
-                  <article key={card.title} className="group relative h-[440px] w-[80vw] shrink-0 snap-start rounded-[26px] xs:h-[500px] xs:w-[330px] md:h-[520px] md:w-[420px]">
+                  <article key={card.title} className="group relative h-[370px] w-[72vw] shrink-0 snap-start rounded-[26px] xs:h-[420px] xs:w-[280px] md:h-[440px] md:w-[360px]">
                     <div className="relative h-full w-full overflow-hidden rounded-[26px] bg-[#002f5e]/10">
                       {cardBody}
                     </div>
