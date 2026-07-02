@@ -380,7 +380,7 @@ const Index = () => {
         </div>
       </section>
 
-      <section ref={setSectionRef(1)} className="relative z-10 px-4 pt-10 pb-20 text-[#002f5e] md:px-10"
+      <section ref={setSectionRef(1)} className="relative z-10 px-4 pt-10 pb-8 md:pb-10 text-[#002f5e] md:px-10"
         style={{ backgroundColor: "#fff2e8", backgroundImage: "url(/bgmainnapryam.svg)", backgroundSize: "cover", backgroundPosition: "center center", backgroundRepeat: "no-repeat" }}>
         <div className="pointer-events-none absolute inset-0 z-0 bg-[#fff2e8]/90" />
         <div className="relative z-10 mx-auto max-w-[1400px]">
@@ -412,7 +412,7 @@ const Index = () => {
               </Link>
             </div>
 
-            <div className="flex items-center gap-3 text-[#002f5e]">
+            <div className="hidden items-center gap-3 text-[#002f5e] md:flex">
               <button
                 type="button"
                 onClick={() => scrollDestinations(-1)}
@@ -441,7 +441,7 @@ const Index = () => {
           >
             <div
               ref={destinationsScrollerRef}
-              className="flex gap-4 md:gap-6 overflow-x-auto snap-x snap-mandatory scroll-px-4 pt-4 pb-4 px-4 md:px-10 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden cursor-grab active:cursor-grabbing select-none"
+              className="flex gap-4 md:gap-6 overflow-x-auto snap-x snap-mandatory scroll-px-4 pt-4 pb-16 md:pb-20 px-4 md:px-10 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden cursor-grab active:cursor-grabbing select-none"
               onMouseDown={(e) => {
                 const el = e.currentTarget;
                 let x = e.pageX;
