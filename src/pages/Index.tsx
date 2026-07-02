@@ -176,7 +176,7 @@ const Index = () => {
     return () => clearInterval(id);
   }, [activeAttraction, safeTopAttractions.length]);
 
-  const eventsPerPage = 4;
+  const eventsPerPage = 2;
   const totalEventPages = Math.max(1, Math.ceil(events.length / eventsPerPage));
   const pagedEvents = events.slice(eventsPage * eventsPerPage, (eventsPage + 1) * eventsPerPage);
 
@@ -1081,11 +1081,11 @@ const Index = () => {
         </div>
       </section>
 
-      <div className="relative z-10"
-        style={{ backgroundColor: "#fff2e8", backgroundImage: "url(/bgpodii.svg)", backgroundSize: "cover", backgroundPosition: "center center", backgroundRepeat: "no-repeat" }}>
+      <div className="relative z-10">
+      <section ref={setSectionRef(4)} className="relative flex min-h-screen items-center px-4 py-12 text-[#002f5e] md:px-10"
+        style={{ backgroundColor: "#fff2e8", backgroundImage: "url(/bgpodii.svg)", backgroundSize: "cover", backgroundPosition: "center top", backgroundRepeat: "no-repeat" }}>
         <div className="pointer-events-none absolute inset-0 z-0 bg-[#fff2e8]/90" />
-      <section ref={setSectionRef(4)} className="relative z-10 flex min-h-screen items-center px-4 py-12 text-[#002f5e] md:px-10">
-        <div className="mx-auto w-full max-w-[1400px]">
+        <div className="relative z-10 mx-auto w-full max-w-[1400px]">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -1094,33 +1094,15 @@ const Index = () => {
             className="flex flex-wrap items-end justify-between gap-5"
           >
             <div>
-              <h3 className="text-[36px] leading-none md:text-[64px] font-odesa-medium">{t("events")}</h3>
-              <button className="group/all mt-5 inline-flex items-center gap-3 text-[18px] text-[#9f1f47] font-odesa-medium" type="button">
-                <span className="relative">
-                  {t("viewAll")}
-                  <span className="absolute -bottom-1 left-0 h-[2px] w-full origin-left scale-x-0 bg-[#9f1f47] transition-transform duration-300 group-hover/all:scale-x-100" />
-                </span>
-                <ArrowRight className="h-5 w-5 transition-transform duration-300 group-hover/all:translate-x-1" />
-              </button>
+              <h3 className="text-[36px] leading-none md:text-[64px] font-odesa-bold">{t("events")}</h3>
             </div>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={goPrevEventsPage}
-                className="flex h-11 w-11 items-center justify-center rounded-full border border-[#002f5e]/30 transition-all duration-300 hover:border-[#9f1f47] hover:bg-[#9f1f47] hover:text-[#fff2e8]"
-                aria-label="Попередня сторінка подій"
-              >
-                <ChevronLeft className="h-5 w-5" />
-              </button>
-              <button
-                type="button"
-                onClick={goNextEventsPage}
-                className="flex h-11 w-11 items-center justify-center rounded-full border border-[#002f5e]/30 transition-all duration-300 hover:border-[#9f1f47] hover:bg-[#9f1f47] hover:text-[#fff2e8]"
-                aria-label="Наступна сторінка подій"
-              >
-                <ChevronRight className="h-5 w-5" />
-              </button>
-            </div>
+            <button className="group/all inline-flex items-center gap-3 text-[18px] text-[#9f1f47] font-odesa-medium" type="button">
+              <span className="relative">
+                {t("viewAll")}
+                <span className="absolute -bottom-1 left-0 h-[2px] w-full origin-left scale-x-0 bg-[#9f1f47] transition-transform duration-300 group-hover/all:scale-x-100" />
+              </span>
+              <ArrowRight className="h-5 w-5 transition-transform duration-300 group-hover/all:translate-x-1" />
+            </button>
           </motion.div>
 
           <AnimatePresence mode="wait">
@@ -1130,47 +1112,51 @@ const Index = () => {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -12 }}
               transition={{ duration: 0.35 }}
-              className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-8 xl:grid-cols-4"
+              className="mt-10 grid grid-cols-1 gap-x-4 gap-y-7 sm:grid-cols-2 sm:gap-x-6 sm:gap-y-9 md:gap-x-8 md:gap-y-10"
             >
               {pagedEvents.map((event) => {
-                // «Квиток»: фото + дата-стаб, перфорація, нижня частина з назвою
+                // «Квиток»: фото + дата-стаб, перфорація, нижня частина з назвою.
+                // Заголовок/локація мають фіксовану висоту (line-clamp + min-h) — інакше
+                // картки з різною довжиною тексту виходять різного розміру.
                 const eventCard = (
-                  <div className="relative overflow-hidden rounded-[26px] bg-white/75 shadow-[0_18px_40px_-22px_rgba(0,47,94,0.35)] backdrop-blur-sm transition-all duration-300 group-hover:-translate-y-2 group-hover:shadow-[0_30px_55px_-22px_rgba(159,31,71,0.4)]">
-                    <div className="relative h-[230px] overflow-hidden md:h-[280px]">
-                      <Img w={500}
+                  <div className="relative flex h-full flex-col overflow-hidden rounded-[22px] bg-white/75 shadow-[0_16px_34px_-20px_rgba(0,47,94,0.35)] backdrop-blur-sm transition-all duration-300 group-hover:-translate-y-2 group-hover:shadow-[0_26px_48px_-20px_rgba(159,31,71,0.4)]">
+                    <div className="relative h-[185px] overflow-hidden md:h-[225px]">
+                      <Img w={400}
                         src={event.image}
                         alt={event.title}
                         className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-[#002f5e]/25 to-transparent" />
-                      <div className="absolute left-4 top-4 overflow-hidden rounded-[16px] bg-[#9f1f47] text-center text-[#fff2e8] shadow-lg">
+                      <div className="absolute left-3 top-3 overflow-hidden rounded-[14px] bg-[#9f1f47] text-center text-[#fff2e8] shadow-lg">
                         {event.badgeTop ? (
-                          <div className="bg-[#85173c] px-4 py-1.5 text-[12px] leading-none font-odesa-regular">{event.badgeTop}</div>
+                          <div className="bg-[#85173c] px-3.5 py-1.5 text-[11px] leading-none font-odesa-regular">{event.badgeTop}</div>
                         ) : null}
-                        <div className="px-4 pb-2.5 pt-2">
-                          <div className="text-[34px] leading-none font-odesa-medium">{event.badgeDay}</div>
-                          <div className="mt-1 text-[15px] uppercase leading-none tracking-wide font-odesa-medium text-[#fff2e8]/85">{event.badgeMonth}</div>
+                        <div className="px-3.5 pb-2 pt-1.5">
+                          <div className="text-[27px] leading-none font-odesa-medium">{event.badgeDay}</div>
+                          <div className="mt-1 text-[13px] uppercase leading-none tracking-wide font-odesa-medium text-[#fff2e8]/85">{event.badgeMonth}</div>
                         </div>
                       </div>
                     </div>
 
                     {/* перфорація квитка */}
-                    <div className="relative px-5" aria-hidden="true">
-                      <div className="absolute -left-3 -top-3 h-6 w-6 rounded-full bg-[#fff2e8]" />
-                      <div className="absolute -right-3 -top-3 h-6 w-6 rounded-full bg-[#fff2e8]" />
+                    <div className="relative px-4" aria-hidden="true">
+                      <div className="absolute -left-2.5 -top-2.5 h-5 w-5 rounded-full bg-[#fff2e8]" />
+                      <div className="absolute -right-2.5 -top-2.5 h-5 w-5 rounded-full bg-[#fff2e8]" />
                       <div className="border-t-2 border-dashed border-[#002f5e]/15" />
                     </div>
 
-                    <div className="px-5 pb-5 pt-4">
-                      <h4 className="text-[26px] leading-[1.05] font-odesa-medium transition-colors duration-300 group-hover:text-[#9f1f47]">{event.title}</h4>
-                      {event.locationDate ? (
-                        <p className="mt-2 flex items-center gap-1.5 text-[17px] leading-tight text-[#002f5e]/70 font-odesa-regular">
-                          <MapPin className="h-4 w-4 shrink-0 text-[#df9b3b]" /> {event.locationDate}
-                        </p>
-                      ) : null}
-                      <div className="mt-4 inline-flex items-center gap-2 text-[14px] font-odesa-medium text-[#9f1f47]">
+                    <div className="flex flex-1 flex-col px-4 pb-4 pt-3">
+                      <h4 className="line-clamp-2 min-h-[46px] text-[20px] leading-[1.05] font-odesa-medium transition-colors duration-300 group-hover:text-[#9f1f47]">{event.title}</h4>
+                      <p className="mt-1.5 flex min-h-[20px] items-center gap-1.5 text-[14px] leading-tight text-[#002f5e]/70 font-odesa-regular">
+                        {event.locationDate ? (
+                          <>
+                            <MapPin className="h-3.5 w-3.5 shrink-0 text-[#df9b3b]" /> {event.locationDate}
+                          </>
+                        ) : null}
+                      </p>
+                      <div className="mt-auto flex items-center gap-2 pt-3 text-[13px] font-odesa-medium text-[#9f1f47]">
                         {t("details")}
-                        <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+                        <ArrowRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1" />
                       </div>
                     </div>
                   </div>
@@ -1181,7 +1167,7 @@ const Index = () => {
                     <Link
                       key={event.title}
                       to={event.href}
-                      className="group block"
+                      className="group mx-auto block h-full w-full max-w-[300px] sm:max-w-none"
                     >
                       {eventCard}
                     </Link>
@@ -1189,7 +1175,7 @@ const Index = () => {
                 }
 
                 return (
-                  <article key={event.title} className="group">
+                  <article key={event.title} className="group mx-auto h-full w-full max-w-[300px] sm:max-w-none">
                     {eventCard}
                   </article>
                 );
@@ -1197,16 +1183,34 @@ const Index = () => {
             </motion.div>
           </AnimatePresence>
 
-          <div className="mt-7 flex items-center justify-center gap-2">
-            {Array.from({ length: totalEventPages }).map((_, idx) => (
-              <button
-                key={idx}
-                type="button"
-                onClick={() => setEventsPage(idx)}
-                className={`h-2.5 rounded-full transition-all duration-300 ${idx === eventsPage ? "w-8 bg-[#9f1f47]" : "w-2.5 bg-[#002f5e]/30 hover:bg-[#9f1f47]/50"}`}
-                aria-label={`Сторінка подій ${idx + 1}`}
-              />
-            ))}
+          <div className="mt-7 flex items-center justify-center gap-4">
+            <button
+              type="button"
+              onClick={goPrevEventsPage}
+              className="flex items-center justify-center p-1 text-[#002f5e] transition-opacity hover:opacity-55"
+              aria-label="Попередня сторінка подій"
+            >
+              <ChevronLeft className="h-6 w-6" strokeWidth={3} />
+            </button>
+            <div className="flex items-center gap-2">
+              {Array.from({ length: totalEventPages }).map((_, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => setEventsPage(idx)}
+                  className={`h-2.5 rounded-full transition-all duration-300 ${idx === eventsPage ? "w-8 bg-[#9f1f47]" : "w-2.5 bg-[#002f5e]/30 hover:bg-[#9f1f47]/50"}`}
+                  aria-label={`Сторінка подій ${idx + 1}`}
+                />
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={goNextEventsPage}
+              className="flex items-center justify-center p-1 text-[#002f5e] transition-opacity hover:opacity-55"
+              aria-label="Наступна сторінка подій"
+            >
+              <ChevronRight className="h-6 w-6" strokeWidth={3} />
+            </button>
           </div>
         </div>
       </section>
