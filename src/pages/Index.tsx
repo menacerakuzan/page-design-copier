@@ -57,6 +57,7 @@ const Index = () => {
   const sectionRefs = useRef<Array<HTMLElement | null>>([]);
   const destinationsScrollerRef = useRef<HTMLDivElement | null>(null);
   const interestingScrollerRef = useRef<HTMLDivElement | null>(null);
+  const interestingDragRef = useRef(0);
   const footerRef = useRef<HTMLElement | null>(null);
   const heroVideoRef = useRef<HTMLVideoElement | null>(null);
 
@@ -64,6 +65,9 @@ const Index = () => {
   const [activeAttraction, setActiveAttraction] = useState(0);
   const [eventsPage, setEventsPage] = useState(0);
   const [routesOpen, setRoutesOpen] = useState(false);
+  const [interestingIndex, setInterestingIndex] = useState(0);
+  const [interestingDragProgress, setInterestingDragProgress] = useState(0);
+  const [isInterestingPanning, setIsInterestingPanning] = useState(false);
 
   const liveCards = useMemo(
     () => (indexCardsData ?? []).filter((c) => c.pageKey === "index"),
@@ -154,6 +158,14 @@ const Index = () => {
     setActiveAttraction((prev) => (prev + 1) % safeTopAttractions.length);
   };
 
+  const goPrevInteresting = () => {
+    setInterestingIndex((prev) => (prev - 1 + interestingCards.length) % interestingCards.length);
+  };
+
+  const goNextInteresting = () => {
+    setInterestingIndex((prev) => (prev + 1) % interestingCards.length);
+  };
+
   // Автозміна слайдів «Топ місць»; будь-яка ручна навігація скидає таймер,
   // бо ефект перезапускається при зміні activeAttraction
   useEffect(() => {
@@ -171,6 +183,10 @@ const Index = () => {
   useEffect(() => {
     setActiveAttraction((prev) => Math.min(prev, Math.max(safeTopAttractions.length - 1, 0)));
   }, [safeTopAttractions.length]);
+
+  useEffect(() => {
+    setInterestingIndex((prev) => Math.min(prev, Math.max(interestingCards.length - 1, 0)));
+  }, [interestingCards.length]);
 
   useEffect(() => {
     setEventsPage((prev) => Math.min(prev, Math.max(totalEventPages - 1, 0)));
@@ -528,13 +544,27 @@ const Index = () => {
         </div>
       </section>
 
-      <section ref={setSectionRef(2)} className="relative z-10 py-5 text-[#fff2e8] flex flex-col justify-start md:h-screen md:overflow-y-hidden" style={{ background: "linear-gradient(160deg, transparent 0%, transparent 30%, rgba(0,0,0,0.04) 42%, rgba(0,0,0,0.04) 52%, rgba(0,0,0,0.12) 62%, rgba(0,0,0,0.12) 72%, rgba(0,0,0,0.28) 82%, rgba(0,0,0,0.28) 90%, rgba(0,0,0,0.48) 100%), #001a3d" }}>
-          {/* Right-edge fade hint (десктоп) */}
-          <div className="pointer-events-none absolute right-0 inset-y-0 z-10 hidden w-20 md:block md:w-72" aria-hidden="true" style={{ background: "linear-gradient(to left, #1c1a15aa 0%, #1c1a1577 30%, #1c1a1533 60%, transparent 100%)" }} />
+      <section ref={setSectionRef(2)} className="relative z-10 py-10 text-[#002f5e] flex flex-col justify-start md:h-screen md:overflow-y-hidden" style={{ backgroundColor: "#fff2e8" }}>
+          {/* Текстура: класична хвиля з гострим (не заокругленим) гребенем */}
+          {/* 👇 ПРОЗОРІСТЬ ХВИЛЬ — міняй ось це число (0.1 = 10%) */}
+          <div className="pointer-events-none absolute inset-0 z-0 opacity-[0.1]" aria-hidden="true"
+            style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='65'%3E%3Cpath d='M0,55 C20,55 30,10 45,10 C52,6 54,18 46,22 C42,30 55,45 90,55' stroke='%23df9b3b' stroke-width='3' fill='none' stroke-linecap='round'/%3E%3C/svg%3E")`,
+              backgroundSize: "90px 65px",
+              backgroundRepeat: "repeat",
+            }} />
+
+          <div className="relative z-10 mx-auto mb-6 h-[3px] w-24 shrink-0 self-center rounded-full bg-[#df9b3b]/70 md:w-40" aria-hidden="true" />
+
+          <h3 className="relative z-10 flex items-center justify-center gap-4 px-4 pb-3 text-center text-[28px] leading-none text-[#002f5e] font-odesa-bold md:gap-6 md:pb-4 md:text-[56px]">
+            <span className="text-[16px] text-[#df9b3b] md:text-[28px]">{star}</span>
+            {t("interesting")}
+            <span className="text-[16px] text-[#df9b3b] md:text-[28px]">{star}</span>
+          </h3>
 
           <div
             ref={interestingScrollerRef}
-            className="hidden md:block overflow-x-auto [overflow-y:clip] pt-3 pb-2 pl-3 md:pl-20 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden cursor-grab active:cursor-grabbing select-none touch-pan-x"
+            className="relative z-10 hidden md:block overflow-x-auto [overflow-y:clip] pt-3 pb-2 pl-3 md:pl-20 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden cursor-grab active:cursor-grabbing select-none touch-pan-x"
             onMouseDown={(e) => {
               const el = e.currentTarget;
               let x = e.pageX;
@@ -570,7 +600,7 @@ const Index = () => {
             }}
           >
             {interestingCards.length === 0 ? (
-              <p className="text-[#fff2e8]/30 text-[15px] font-odesa-regular py-8">
+              <p className="text-[#002f5e]/30 text-[15px] font-odesa-regular py-8">
                 Картки ще не додано — налаштуйте розділ в адмінці
               </p>
             ) : (() => {
@@ -588,31 +618,31 @@ const Index = () => {
               const renderCard = (item: typeof interestingCards[0]) => {
                 const w = cardW_CSS(item.colSpan ?? 1);
                 const textSizeClass =
-                  item.textSize === "lg" ? "text-[34px] md:text-[44px]"
-                  : item.textSize === "sm" ? "text-[18px] md:text-[22px]"
-                  : "text-[24px] md:text-[30px]";
+                  item.textSize === "lg" ? "text-[38px] md:text-[50px]"
+                  : item.textSize === "sm" ? "text-[22px] md:text-[26px]"
+                  : "text-[28px] md:text-[36px]";
 
                 if (item.isText) {
                   const descSizeClass =
-                    item.descSize === "lg" ? "text-[16px] md:text-[19px]"
-                    : item.descSize === "md" ? "text-[14px] md:text-[16px]"
-                    : "text-[13px] md:text-[14px]";
+                    item.descSize === "lg" ? "text-[20px] md:text-[24px]"
+                    : item.descSize === "md" ? "text-[17px] md:text-[20px]"
+                    : "text-[16px] md:text-[18px]";
                   return (
                     <div
                       key={item.title + item.row + "text"}
-                      className="group/text relative shrink-0 flex flex-col justify-between overflow-hidden rounded-[22px] border border-[#fff2e8]/10 bg-[#fff2e8]/5 px-7 pt-6 pb-6 backdrop-blur-sm transition-all duration-300 hover:-translate-y-2 hover:border-[#df9b3b]/35 hover:bg-[#fff2e8]/8"
+                      className="group/text relative shrink-0 flex flex-col justify-between overflow-hidden rounded-[22px] border border-[#002f5e]/10 bg-white px-7 pt-6 pb-6 shadow-[0_18px_40px_-26px_rgba(0,47,94,0.35)] transition-all duration-300 hover:-translate-y-2 hover:border-[#df9b3b]/45 hover:bg-white"
                       style={{ width: w, height: CARD_H_CSS }}
                     >
                       {/* тепле сяйво у куті */}
-                      <div className="pointer-events-none absolute -right-12 -top-12 h-36 w-36 rounded-full bg-[#df9b3b]/12 blur-2xl transition-opacity duration-500 group-hover/text:bg-[#df9b3b]/22" aria-hidden="true" />
-                      <div className="h-[1px] w-full bg-gradient-to-r from-[#df9b3b]/45 to-transparent" />
+                      <div className="pointer-events-none absolute -right-12 -top-12 h-36 w-36 rounded-full bg-[#df9b3b]/16 blur-2xl transition-opacity duration-500 group-hover/text:bg-[#df9b3b]/26" aria-hidden="true" />
+                      <div className="h-[2.5px] w-full bg-gradient-to-r from-[#df9b3b]/50 to-transparent" />
                       <div>
-                        <h4 className={`leading-[0.93] font-odesa-medium ${textSizeClass}`}>{item.title}</h4>
+                        <h4 className={`leading-[0.93] font-odesa-bold ${textSizeClass}`}>{item.title}</h4>
                         {item.description && (
-                          <p className={`mt-4 leading-[1.65] text-[#fff2e8]/55 font-odesa-regular ${descSizeClass}`}>{item.description.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim()}</p>
+                          <p className={`mt-4 leading-[1.65] text-[#002f5e]/60 font-odesa-regular ${descSizeClass}`}>{item.description.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim()}</p>
                         )}
                       </div>
-                      <div className="h-[1px] w-full bg-gradient-to-l from-[#df9b3b]/45 to-transparent" />
+                      <div className="h-[2.5px] w-full bg-gradient-to-l from-[#df9b3b]/50 to-transparent" />
                     </div>
                   );
                 }
@@ -621,7 +651,7 @@ const Index = () => {
                   <>
                     <Img w={500} src={item.imageUrl} alt={item.title} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
-                    <h4 className={`absolute bottom-5 left-5 right-5 leading-[0.95] font-odesa-medium ${textSizeClass}`}>
+                    <h4 className={`absolute bottom-5 left-5 right-5 leading-[0.95] font-odesa-medium text-[#fff2e8] ${textSizeClass}`}>
                       {item.title}
                     </h4>
                   </>
@@ -665,60 +695,146 @@ const Index = () => {
             })()}
           </div>
 
-          {/* ── Мобільна вертикальна сітка ─────────────────────────── */}
-          <div className="grid grid-cols-2 gap-3 px-4 md:hidden">
+          {/* ── Мобільна fan-карусель ─────────────────────────────────── */}
+          <div className="relative z-10 md:hidden">
             {interestingCards.length === 0 ? (
-              <p className="col-span-2 py-8 text-[15px] text-[#fff2e8]/30 font-odesa-regular">
+              <p className="px-4 py-8 text-[15px] text-[#002f5e]/30 font-odesa-regular">
                 Картки ще не додано — налаштуйте розділ в адмінці
               </p>
             ) : (
-              interestingCards.map((item, i) => {
-                const wide = (item.colSpan ?? 1) >= 2;
-                const colClass = wide ? "col-span-2" : "col-span-1";
-                if (item.isText) {
-                  return (
-                    <div
-                      key={`m-${item.title}-${i}`}
-                      className={`${colClass} flex flex-col justify-between gap-3 overflow-hidden rounded-[18px] border border-[#fff2e8]/10 bg-[#fff2e8]/5 px-5 py-5`}
-                    >
-                      <h4 className="text-[20px] leading-[0.95] font-odesa-medium">{item.title}</h4>
-                      {item.description && (
-                        <p className="text-[13px] leading-[1.5] text-[#fff2e8]/55 font-odesa-regular">
-                          {item.description.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim()}
-                        </p>
-                      )}
-                    </div>
-                  );
-                }
-                const inner = (
-                  <>
-                    <Img w={500} src={item.imageUrl} alt={item.title} className="h-full w-full object-cover" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                    <h4 className="absolute bottom-3 left-3 right-3 text-[16px] leading-[0.95] font-odesa-medium">
-                      {item.title}
-                    </h4>
-                  </>
-                );
-                const frame = wide ? "aspect-[16/10]" : "aspect-[3/4]";
-                return item.href ? (
-                  <Link
-                    key={`m-${item.title}-${i}`}
-                    to={item.href}
-                    className={`${colClass} relative overflow-hidden rounded-[18px] ${frame}`}
+              <>
+                <motion.div
+                  className="relative flex h-[420px] items-start justify-center overflow-hidden pt-6"
+                  style={{ perspective: 900, touchAction: "pan-y" }}
+                  onPanStart={() => setIsInterestingPanning(true)}
+                  onPan={(_, info) => {
+                    interestingDragRef.current += info.delta.x / 100;
+                    setInterestingDragProgress(interestingDragRef.current);
+                  }}
+                  onPanEnd={(_, info) => {
+                    // Різкий свайп (висока швидкість відпускання) прокручує на кілька
+                    // карток одразу — не лише дистанція пальця, а й "розгін" від флiку.
+                    const flingSteps = info.velocity.x / 1000;
+                    const steps = Math.round(interestingDragRef.current + flingSteps);
+                    const n = interestingCards.length;
+                    if (steps !== 0 && n) {
+                      setInterestingIndex((prev) => {
+                        let next = (prev - steps) % n;
+                        if (next < 0) next += n;
+                        return next;
+                      });
+                    }
+                    interestingDragRef.current = 0;
+                    setInterestingDragProgress(0);
+                    setIsInterestingPanning(false);
+                  }}
+                >
+                  {interestingCards.map((item, i) => {
+                    const n = interestingCards.length;
+                    // Неперервне циклічне загортання: рахуємо щоразу наново від
+                    // поточного (i - interestingIndex + прогрес драга), тому під час
+                    // одного довгого свайпу картки нескінченно повторюються по колу,
+                    // а не «закінчуються», поки не відпустиш палець.
+                    let liveOffset = i - interestingIndex + interestingDragProgress;
+                    liveOffset -= n * Math.round(liveOffset / n);
+                    if (Math.abs(liveOffset) > 2.6) return null;
+
+                    const abs = Math.abs(liveOffset);
+                    const isActive = i === interestingIndex;
+                    const description = item.description.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+
+                    const frame = (
+                      <div
+                        className="relative h-full w-full overflow-hidden rounded-[24px] transition-shadow duration-300"
+                        style={{
+                          boxShadow: isActive
+                            ? "0 26px 52px -16px rgba(0,0,0,0.55), 10px 0 30px -14px rgba(0,0,0,0.4), -10px 0 30px -14px rgba(0,0,0,0.4)"
+                            : "none",
+                        }}
+                      >
+                        {item.isText ? (
+                          <div className="relative flex h-full w-full flex-col justify-between border border-[#002f5e]/10 bg-white px-5 py-5">
+                            <div className="pointer-events-none absolute -right-8 -top-8 h-28 w-28 rounded-full bg-[#df9b3b]/22 blur-2xl" aria-hidden="true" />
+                            <div className="h-[2.5px] w-full bg-gradient-to-r from-[#df9b3b]/50 to-transparent" />
+                            <div>
+                              <h4 className="text-[22px] leading-[1.05] font-odesa-bold">{item.title}</h4>
+                              {description && (
+                                <p className="mt-2 line-clamp-4 text-[16px] leading-[1.5] text-[#002f5e]/65 font-odesa-regular">
+                                  {description}
+                                </p>
+                              )}
+                            </div>
+                            <div className="h-[2.5px] w-full bg-gradient-to-l from-[#df9b3b]/50 to-transparent" />
+                          </div>
+                        ) : (
+                          <>
+                            <Img w={400} src={item.imageUrl} alt={item.title} className="h-full w-full object-cover" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+                            <div className="absolute inset-x-0 bottom-0 p-4">
+                              <h4 className="line-clamp-2 text-[16px] leading-[1.15] font-odesa-medium text-[#fff2e8] drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)] [overflow-wrap:anywhere]">
+                                {item.title}
+                              </h4>
+                              <div className="mt-2 h-[3px] w-8 rounded-full bg-[#df9b3b]" />
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    );
+
+                    return (
+                      <motion.div
+                        key={`fan-${item.title}-${i}`}
+                        className="absolute aspect-[3/4] w-[60vw] max-w-[235px] shrink-0"
+                        style={{ originY: 0.85 }}
+                        animate={{
+                          x: `${liveOffset * 54}%`,
+                          rotate: liveOffset * 9,
+                          scale: 1 - abs * 0.12,
+                          zIndex: 10 - Math.round(abs),
+                        }}
+                        transition={isInterestingPanning ? { duration: 0 } : { type: "spring", stiffness: 260, damping: 28 }}
+                        onClick={() => {
+                          if (!isActive) setInterestingIndex(i);
+                        }}
+                      >
+                        {isActive && item.href ? (
+                          <Link to={item.href} className="block h-full w-full">
+                            {frame}
+                          </Link>
+                        ) : (
+                          frame
+                        )}
+                      </motion.div>
+                    );
+                  })}
+                </motion.div>
+
+                <div className="-mt-3 flex items-center justify-center gap-4 font-odesa-medium">
+                  <button
+                    type="button"
+                    onClick={goPrevInteresting}
+                    className="flex items-center justify-center p-1 text-[#002f5e] transition-opacity hover:opacity-55"
+                    aria-label="Попереднє"
                   >
-                    {inner}
-                  </Link>
-                ) : (
-                  <article
-                    key={`m-${item.title}-${i}`}
-                    className={`${colClass} relative overflow-hidden rounded-[18px] ${frame}`}
+                    <ChevronLeft className="h-7 w-7" strokeWidth={3} />
+                  </button>
+                  <span className="text-[13px] text-[#002f5e]/55">
+                    {String(interestingIndex + 1).padStart(2, "0")} / {String(interestingCards.length).padStart(2, "0")}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={goNextInteresting}
+                    className="flex items-center justify-center p-1 text-[#002f5e] transition-opacity hover:opacity-55"
+                    aria-label="Наступне"
                   >
-                    {inner}
-                  </article>
-                );
-              })
+                    <ChevronRight className="h-7 w-7" strokeWidth={3} />
+                  </button>
+                </div>
+              </>
             )}
           </div>
+
+          <div className="relative z-10 mx-auto mt-8 h-[3px] w-24 shrink-0 self-center rounded-full bg-[#df9b3b]/70 md:mt-10 md:w-40" aria-hidden="true" />
       </section>
 
       <section ref={setSectionRef(3)} className="relative overflow-hidden bg-black text-[#fff2e8] md:min-h-screen">
