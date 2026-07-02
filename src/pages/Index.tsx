@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Img } from "@/components/Img";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowRight, ArrowUpRight, ChevronLeft, ChevronRight, Facebook, Instagram, MapPin } from "lucide-react";
+import { ArrowRight, ArrowUpRight, ChevronLeft, ChevronRight, Instagram, MapPin } from "lucide-react";
 import { Link } from "react-router-dom";
 import heroVideo from "@/assets/episode-01.mp4";
 import geminiLogo from "@/assets/gemini-svg-2.svg";
@@ -29,11 +29,6 @@ const TikTokIcon = ({ className = "h-6 w-6" }: { className?: string }) => (
 const socialLinks = [
   { label: "Instagram", href: "https://www.instagram.com/odesa_travel/", Icon: Instagram },
   { label: "TikTok", href: "https://www.tiktok.com/@odesa.travel", Icon: TikTokIcon },
-  {
-    label: "Facebook",
-    href: "https://www.facebook.com/share/1BMayDdZLc/",
-    Icon: Facebook,
-  },
 ];
 
 const ArrowGlyph = ({ direction }: { direction: "up" | "down" }) => (
@@ -349,7 +344,7 @@ const Index = () => {
 
           <section className="mt-auto w-full pb-7 pt-0 md:pb-0">
             <div className="mx-auto flex max-w-[1060px] flex-col items-center gap-3 md:relative md:min-h-[120px] md:block">
-              <div className="inline-flex items-center gap-4 rounded-full bg-[#fff2e8] px-6 py-3 text-[#00376c] md:absolute md:bottom-0 md:left-1/2 md:-translate-x-1/2 md:px-8 md:py-4">
+              <div className="inline-flex items-center gap-3 rounded-full bg-[#fff2e8] px-5 py-2.5 text-[#00376c] md:absolute md:bottom-0 md:left-1/2 md:-translate-x-1/2 md:px-6 md:py-3">
                 {socialLinks.map(({ label, href, Icon }) => (
                   <a
                     key={label}
@@ -359,7 +354,7 @@ const Index = () => {
                     aria-label={label}
                     className="transition-opacity hover:opacity-80"
                   >
-                    <Icon className="h-6 w-6" />
+                    <Icon className="h-5 w-5" />
                   </a>
                 ))}
               </div>
