@@ -837,9 +837,17 @@ const Index = () => {
           <div className="relative z-10 mx-auto mt-8 h-[3px] w-24 shrink-0 self-center rounded-full bg-[#df9b3b]/70 md:mt-10 md:w-40" aria-hidden="true" />
       </section>
 
-      <section ref={setSectionRef(3)} className="relative overflow-hidden bg-black text-[#fff2e8] md:min-h-screen">
+      <section ref={setSectionRef(3)} className="relative overflow-hidden text-[#fff2e8] md:min-h-screen" style={{ backgroundColor: "#001a3d" }}>
+        {/* Текстура: та сама хвиля, що і в «Цікаве» — тон у тон з кремовим, ледь помітна на темному тлі (тільки на мобільній картці, на десктопі все одно ховається під фото-слайдером) */}
+        <div className="pointer-events-none absolute inset-0 z-0 opacity-[0.06]" aria-hidden="true"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='65'%3E%3Cpath d='M0,55 C20,55 30,10 45,10 C52,6 54,18 46,22 C42,30 55,45 90,55' stroke='%23fff2e8' stroke-width='3' fill='none' stroke-linecap='round'/%3E%3C/svg%3E")`,
+            backgroundSize: "90px 65px",
+            backgroundRepeat: "repeat",
+          }} />
+
         {/* ─── Десктоп: повноекранний слайдер ─── */}
-        <div className="hidden md:block">
+        <div className="relative z-10 hidden md:block">
         {/* Crossfade images — opacity only, no filter, compositor-only = smooth 60fps */}
         <AnimatePresence mode="sync">
           <motion.img
@@ -987,13 +995,8 @@ const Index = () => {
         </div>
 
         {/* ─── Мобільний: контейнерна картка (фото не ріжеться) ─── */}
-        <div className="px-4 pb-24 pt-6 md:hidden">
-          <div className="mb-3 flex items-baseline gap-2 font-odesa-medium">
-            <span className="text-[34px] leading-none text-[#df9b3b]">{String(activeAttraction + 1).padStart(2, "0")}</span>
-            <span className="text-[15px] text-[#fff2e8]/45">/ {String(safeTopAttractions.length).padStart(2, "0")}</span>
-          </div>
-
-          <div className="relative aspect-[4/3] w-full overflow-hidden rounded-[24px] bg-white/5">
+        <div className="relative z-10 px-4 pb-10 pt-6 md:hidden">
+          <div className="relative aspect-[4/3] w-full overflow-hidden rounded-[28px] bg-white/5 shadow-[0_26px_50px_-22px_rgba(0,0,0,0.65)]">
             <AnimatePresence mode="sync">
               <motion.img
                 key={`m-${safeTopAttractions[activeAttraction].image}`}
@@ -1027,43 +1030,52 @@ const Index = () => {
             ))}
           </div>
 
-          <h3 className="mt-4 text-[30px] leading-[0.98] font-odesa-medium [overflow-wrap:anywhere]">
+          {/* min-h тримає висоту сталою на 2 рядки — інакше заголовки різної довжини
+              «стрибають» і зсувають опис/кнопки нижче при зміні атракції */}
+          <h3 className="mt-5 line-clamp-2 min-h-[62px] text-[32px] leading-[0.95] font-odesa-bold [overflow-wrap:anywhere]">
             {safeTopAttractions[activeAttraction].title}
           </h3>
-          {safeTopAttractions[activeAttraction].description && (
-            <p className="mt-2 line-clamp-4 text-[14px] leading-[1.55] text-[#fff2e8]/75 font-odesa-regular">
-              {safeTopAttractions[activeAttraction].description.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim()}
-            </p>
-          )}
+          <div className="mt-3 h-[3px] w-14 rounded-full bg-[#df9b3b]" />
+          {/* так само — фіксована висота під опис (з рендером навіть якщо опису нема),
+              щоб кнопки нижче стояли на місці */}
+          <p className="mt-4 line-clamp-4 min-h-[90px] text-[14px] leading-[1.6] text-[#fff2e8]/70 font-odesa-regular">
+            {safeTopAttractions[activeAttraction].description.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim()}
+          </p>
 
-          <div className="mt-5 flex items-center gap-3">
+          <div className="mt-5 flex items-center gap-4">
             {safeTopAttractions[activeAttraction].href ? (
               <Link
                 to={safeTopAttractions[activeAttraction].href!}
-                className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-[#df9b3b] px-6 py-3 text-[14px] font-odesa-medium text-[#002f5e] transition-opacity hover:opacity-90"
+                className="group/cta inline-flex flex-1 items-center justify-between gap-3 rounded-full bg-[#fff2e8] py-1.5 pl-6 pr-1.5 text-[15px] font-odesa-bold text-[#002f5e] shadow-[0_14px_28px_-14px_rgba(0,0,0,0.5)] transition-transform duration-300 hover:-translate-y-0.5"
               >
-                Детальніше <ArrowRight className="h-4 w-4" />
+                Детальніше
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#002f5e] text-[#fff2e8] transition-transform duration-300 group-hover/cta:translate-x-1">
+                  <ArrowRight className="h-4 w-4" />
+                </span>
               </Link>
             ) : (
-              <span className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border border-[#fff2e8]/20 px-6 py-3 text-[14px] font-odesa-medium text-[#fff2e8]/40">
-                Детальніше <ArrowRight className="h-4 w-4" />
+              <span className="inline-flex flex-1 items-center justify-between gap-3 rounded-full border border-[#fff2e8]/20 py-1.5 pl-6 pr-1.5 text-[15px] font-odesa-bold text-[#fff2e8]/40">
+                Детальніше
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#fff2e8]/20 text-[#fff2e8]/40">
+                  <ArrowRight className="h-4 w-4" />
+                </span>
               </span>
             )}
             <button
               type="button"
               onClick={goPrevAttraction}
-              className="tap flex items-center justify-center rounded-full border border-white/20 bg-white/6 transition-all hover:bg-white/25"
+              className="flex items-center justify-center p-1 text-[#fff2e8] transition-opacity hover:opacity-55"
               aria-label="Попередній"
             >
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft className="h-6 w-6" strokeWidth={3} />
             </button>
             <button
               type="button"
               onClick={goNextAttraction}
-              className="tap flex items-center justify-center rounded-full border border-white/20 bg-white/6 transition-all hover:bg-white/25"
+              className="flex items-center justify-center p-1 text-[#fff2e8] transition-opacity hover:opacity-55"
               aria-label="Наступний"
             >
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="h-6 w-6" strokeWidth={3} />
             </button>
           </div>
         </div>
