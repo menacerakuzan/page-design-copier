@@ -1,0 +1,16 @@
+{
+  "name": "tourism-assistant-server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Туристичний ІІ-асистент — окремий Node-процес (OpenAI proxy + доступ до PostgREST).",
+  "main": "index.mjs",
+  "scripts": {
+    "start": "node index.mjs",
+    "dev": "node --watch index.mjs"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "openai": "^4.77.0"
+  }
+}
