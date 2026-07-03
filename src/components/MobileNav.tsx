@@ -14,6 +14,7 @@ import {
   Layers,
   Phone,
   Compass,
+  Sparkles,
   ChevronRight,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -58,6 +59,7 @@ export function MobileNav() {
 
   // У меню — лише те, чого НЕМАЄ у таб-барі (без дублювання основних розділів)
   const secondaryLinks = [
+    { href: "/asystent", label: t("assistant"), Icon: Sparkles },
     { href: "/info", label: t("info"), Icon: Info },
     { href: "/types", label: t("types"), Icon: Layers },
     { href: "/poblizu", label: lang === "en" ? "Nearby" : "Поблизу", Icon: Compass },

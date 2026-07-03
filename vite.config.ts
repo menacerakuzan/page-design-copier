@@ -31,6 +31,12 @@ export default defineConfig({
         target: "http://127.0.0.1:5100",
         changeOrigin: true,
       },
+      // ІІ-асистент — окремий Node-процес (server/assistant, порт 8790). Тримаємо
+      // same-origin (без CORS) як і решту бекенду. SSE-стрім — без буферизації.
+      "/api": {
+        target: "http://127.0.0.1:8790",
+        changeOrigin: true,
+      },
     },
   },
   plugins: [react()],

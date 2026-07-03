@@ -8,6 +8,7 @@ import { LangProvider } from "@/lib/langContext";
 import { BasketProvider } from "@/lib/basketContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import MobileNav from "./components/MobileNav";
+import { AssistantFab } from "./components/assistant/AssistantFab";
 import Index from "./pages/Index";
 
 // Home (Index) stays eager so the landing page paints from the main bundle.
@@ -24,6 +25,7 @@ const RoutesPage = lazy(() => import("./pages/RoutesPage"));
 const NearbyPage = lazy(() => import("./pages/NearbyPage"));
 const BasketPage = lazy(() => import("./pages/BasketPage"));
 const RouteMapPage = lazy(() => import("./pages/RouteMapPage"));
+const AssistantPage = lazy(() => import("./pages/AssistantPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient({
@@ -80,6 +82,7 @@ const App = () => {
             <ScrollToTop />
             <Toaster />
             <MobileNav />
+            <AssistantFab />
             <ErrorBoundary>
               <Suspense fallback={<RouteFallback />}>
                 <Routes>
@@ -97,6 +100,7 @@ const App = () => {
                   <Route path="/poblizu" element={<NearbyPage />} />
                   <Route path="/koshyk" element={<BasketPage />} />
                   <Route path="/marshrut" element={<RouteMapPage />} />
+                  <Route path="/asystent" element={<AssistantPage />} />
                   <Route path="/admin" element={<Admin />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
