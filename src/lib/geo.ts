@@ -18,6 +18,11 @@ export function extractCoordsFromUrl(url: string): LatLng | null {
 }
 
 export function getObjectCoords(obj: TourismObject): LatLng | null {
+  // Спершу — точні координати з БД (заповнюються в адмінці / скриптом бекфілу).
+  if (typeof obj.latitude === "number" && typeof obj.longitude === "number") {
+    return { lat: obj.latitude, lng: obj.longitude };
+  }
+  // Фолбек — витягти з посилання Google Maps (працює лише для повних URL).
   if (!obj.mapUrl) return null;
   const firstLine = obj.mapUrl.split("\n").find(Boolean) ?? "";
   return extractCoordsFromUrl(firstLine);

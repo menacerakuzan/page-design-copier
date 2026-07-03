@@ -12,7 +12,10 @@ export type WaypointObject = {
 };
 
 type Props = {
-  mapUrl: string;
+  /** Джерело координат #1: рядок Google Maps (парситься через extractCoords). */
+  mapUrl?: string;
+  /** Джерело координат #2: готовий масив [lng, lat] (пріоритетніше за mapUrl). */
+  coords?: [number, number][];
   waypoints?: WaypointObject[];
 };
 
@@ -63,31 +66,43 @@ async function fetchRoadRoute(coords: [number, number][]): Promise<[number, numb
   }
 }
 
-export default function RouteMap({ mapUrl, waypoints = [] }: Props) {
+export default function RouteMap({ mapUrl, coords: coordsProp, waypoints = [] }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [activeObj, setActiveObj] = useState<TourismObject | null>(null);
   const [routing, setRouting] = useState(true);
+  // Якщо WebGL недоступний (старий/приватний браузер) — не валимо всю сторінку.
+  const [failed, setFailed] = useState(false);
 
   useEffect(() => {
     if (!containerRef.current) return;
-    const coords = extractCoords(mapUrl);
+    const coords = coordsProp && coordsProp.length > 0 ? coordsProp : extractCoords(mapUrl ?? "");
     if (coords.length === 0) return;
 
     let cancelled = false;
     setRouting(true);
+    setFailed(false);
 
     const lngs = coords.map(c => c[0]);
     const lats = coords.map(c => c[1]);
     const centerLng = (Math.min(...lngs) + Math.max(...lngs)) / 2;
     const centerLat = (Math.min(...lats) + Math.max(...lats)) / 2;
 
-    const map = new maplibregl.Map({
-      container: containerRef.current,
-      style: "https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json",
-      center: [centerLng, centerLat],
-      zoom: 8,
-      attributionControl: false,
-    });
+    let map: maplibregl.Map;
+    try {
+      map = new maplibregl.Map({
+        container: containerRef.current,
+        style: "https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json",
+        center: [centerLng, centerLat],
+        zoom: 8,
+        attributionControl: false,
+      });
+    } catch {
+      // WebGL init failed — показуємо fallback, решта сторінки (список зупинок,
+      // кнопка Google Maps) лишається робочою.
+      setFailed(true);
+      setRouting(false);
+      return;
+    }
 
     const fitTo = (pts: [number, number][], maxZoom: number) => {
       const bounds = new maplibregl.LngLatBounds();
@@ -123,18 +138,25 @@ export default function RouteMap({ mapUrl, waypoints = [] }: Props) {
 
         const el = document.createElement("div");
         el.className = "rm-marker";
+        const label = String(i + 1); // нумерація 1..N — як у списку зупинок
 
         if (obj?.imageUrl) {
+          // Номер — окремим бейджем ПОВЕРХ кола справа-зверху (не всередині,
+          // щоб не обрізався краєм круглого фото з overflow:hidden). Обгортка
+          // .rm-photo-wrap — контекст позиціонування (НЕ корінь маркера, інакше
+          // перебиває maplibre .maplibregl-marker{position:absolute}).
           el.innerHTML = `
-            <div class="rm-photo">
-              <img loading="lazy" decoding="async" src="${obj.imageUrl}" alt="" />
-              <span class="rm-num">${isFirst ? "A" : isLast ? "B" : i}</span>
+            <div class="rm-photo-wrap">
+              <div class="rm-photo">
+                <img loading="lazy" decoding="async" src="${obj.imageUrl}" alt="" />
+              </div>
+              <span class="rm-num">${label}</span>
             </div>`;
         } else {
           const bg = isFirst ? WINE : isLast ? NAVY : GOLD;
           el.innerHTML = `
             <div class="rm-dot ${isFirst || isLast ? "rm-dot-lg" : ""}" style="background:${bg}">
-              ${isFirst ? "A" : isLast ? "B" : i}
+              ${label}
             </div>`;
         }
 
@@ -171,7 +193,7 @@ export default function RouteMap({ mapUrl, waypoints = [] }: Props) {
       document.removeEventListener("fullscreenchange", onFsChange);
       map.remove();
     };
-  }, [mapUrl, waypoints]);
+  }, [mapUrl, coordsProp, waypoints]);
 
   return (
     <div
@@ -182,6 +204,7 @@ export default function RouteMap({ mapUrl, waypoints = [] }: Props) {
         .route-map-wrap:fullscreen { border-radius: 0; }
         .route-map-wrap:fullscreen .route-map-canvas { height: 100vh !important; }
         .rm-marker { will-change: transform; }
+        .rm-photo-wrap { position: relative; width: 46px; height: 46px; }
         .rm-photo {
           position: relative; width: 46px; height: 46px; border-radius: 50%;
           border: 3px solid ${GOLD}; overflow: hidden; background: ${NAVY};
@@ -190,9 +213,10 @@ export default function RouteMap({ mapUrl, waypoints = [] }: Props) {
         .rm-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
         .rm-marker:hover .rm-photo { transform: scale(1.12); box-shadow: 0 6px 20px rgba(0,0,0,0.55), 0 0 0 4px ${GOLD}66; }
         .rm-num {
-          position: absolute; right: -3px; bottom: -3px; min-width: 18px; height: 18px;
-          padding: 0 4px; border-radius: 9px; background: ${GOLD}; color: ${NAVY};
-          font: 700 11px/18px sans-serif; text-align: center; border: 2px solid ${CREAM};
+          position: absolute; top: -8px; right: -8px; min-width: 20px; height: 20px;
+          padding: 0 5px; border-radius: 10px; background: ${GOLD}; color: ${NAVY};
+          font: 700 12px/20px sans-serif; text-align: center; border: 2px solid ${CREAM};
+          box-shadow: 0 2px 6px rgba(0,0,0,0.35); z-index: 2; pointer-events: none;
         }
         .rm-dot {
           width: 24px; height: 24px; border-radius: 50%; border: 3px solid ${CREAM};
@@ -205,6 +229,19 @@ export default function RouteMap({ mapUrl, waypoints = [] }: Props) {
       `}</style>
 
       <div ref={containerRef} className="route-map-canvas h-[320px] w-full md:h-[460px]" />
+
+      {/* Fallback, якщо WebGL недоступний */}
+      {failed && (
+        <div
+          className="absolute inset-0 flex flex-col items-center justify-center gap-2 px-6 text-center"
+          style={{ backgroundColor: NAVY, color: CREAM }}
+        >
+          <p className="text-[15px] font-odesa-medium">Карту не вдалося завантажити</p>
+          <p className="text-[13px] font-odesa-regular" style={{ color: `${CREAM}80` }}>
+            Ваш браузер не підтримує WebGL. Скористайтесь кнопкою «Відкрити в Google Maps».
+          </p>
+        </div>
+      )}
 
       {/* Індикатор побудови маршруту по дорогах */}
       <AnimatePresence>

@@ -4,7 +4,7 @@ import { useLang } from "@/lib/langContext";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowRight, ArrowUpRight, Calendar, Check, ChevronLeft, ChevronRight,
-  Clock, Globe, MapPin, Navigation, Phone, Share2, Tag, Ticket, BookOpen, Volume2, VolumeX, X, Maximize2,
+  Clock, Globe, MapPin, Navigation, Phone, Share2, ShoppingCart, Tag, Ticket, BookOpen, Volume2, VolumeX, X, Maximize2,
 } from "lucide-react";
 import { GalleryVideoCard } from "@/components/GalleryVideoCard";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
@@ -18,6 +18,7 @@ import { applyFilter } from "@/lib/pageSections";
 import NotFound from "@/pages/NotFound";
 import type { TourismObject } from "@/types/hierarchy";
 import { getObjectCoords, haversineKm } from "@/lib/geo";
+import { useBasket } from "@/lib/basketContext";
 
 /* ── palette ─────────────────────────────────────────────────────── */
 const BG   = "#fff2e8";
@@ -146,7 +147,8 @@ const EntityDetail = ({ type }: { type: PageType }) => {
   );
 
   const { config } = usePageConfig(type, object?.id ?? null);
-  const { tl } = useLang();
+  const { tl, t } = useLang();
+  const { has: inBasket, toggle: toggleBasket } = useBasket();
 
   useEffect(() => { window.scrollTo({ top: 0, behavior: "auto" }); }, [slug]);
 
@@ -416,7 +418,25 @@ const EntityDetail = ({ type }: { type: PageType }) => {
                           ))}
                         </div>
                       )}
-                      <div className="mt-4 flex flex-wrap gap-2 border-t border-white/10 pt-4">
+                      <div className="mt-6 border-t border-white/10 pt-5">
+                        <motion.button
+                          type="button"
+                          whileTap={{ scale: 0.97 }}
+                          onClick={() => toggleBasket(object.id)}
+                          aria-pressed={inBasket(object.id)}
+                          className="flex w-full items-center justify-center gap-2 rounded-full px-6 py-3.5 text-[15px] font-odesa-bold transition-colors"
+                          style={
+                            inBasket(object.id)
+                              ? { backgroundColor: GOLD, color: NAVY }
+                              : { backgroundColor: BG, color: NAVY }
+                          }
+                        >
+                          {inBasket(object.id)
+                            ? <><Check className="h-[18px] w-[18px]" /> {t("inBasket")}</>
+                            : <><ShoppingCart className="h-[18px] w-[18px]" /> {t("addToBasket")}</>}
+                        </motion.button>
+                      </div>
+                      <div className="mt-4 flex flex-wrap gap-2">
                         {address && (
                           <a
                             href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address.split("\n")[0])}`}
