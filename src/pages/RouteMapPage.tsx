@@ -208,10 +208,12 @@ const RouteMapPage = () => {
 
   return (
     <div className="relative min-h-screen bg-[#fff2e8]">
-      {/* Легкий фоновий патерн */}
+      {/* Легкий фоновий патерн. absolute (у потоці сторінки), а не fixed —
+          інакше при overscroll на iOS патерн «відклеюється» і крізь нього видно
+          синій html/body. Так само на робочих сторінках. */}
       <div
         aria-hidden
-        className="pointer-events-none fixed inset-0 z-0"
+        className="pointer-events-none absolute inset-0 z-0"
         style={{ backgroundImage: "url(/beigepattern.svg)", backgroundSize: "cover", backgroundPosition: "center", opacity: 0.1 }}
       />
       <header className="container-edge pt-safe relative z-10">

@@ -32,10 +32,13 @@ const BasketPage = () => {
 
   return (
     <div className="relative min-h-screen bg-[#fff2e8]">
-      {/* Легкий фоновий патерн */}
+      {/* Легкий фоновий патерн. ВАЖЛИВО: absolute (у потоці сторінки), а не
+          fixed — інакше при overscroll на iOS патерн «відклеюється» від бежевого
+          фону і крізь нього видно синій html/body. Так само зроблено на робочих
+          сторінках (патерн absolute усередині секції). */}
       <div
         aria-hidden
-        className="pointer-events-none fixed inset-0 z-0"
+        className="pointer-events-none absolute inset-0 z-0"
         style={{ backgroundImage: "url(/beigepattern.svg)", backgroundSize: "cover", backgroundPosition: "center", opacity: 0.1 }}
       />
       {/* ── Шапка ─────────────────────────────────────────────── */}
@@ -163,45 +166,40 @@ const BasketPage = () => {
       </main>
 
       {/* ── Липка кнопка «Створити маршрут» ───────────────────── */}
-      {/* Обгортка прозора + кнопка як absolute-дитина: Safari не семплить фон
-          знизу екрана (той самий приём, що і в MobileNav). */}
-      <AnimatePresence>
-        {count > 0 && (
-          <motion.div
-            initial={{ y: 80, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 80, opacity: 0 }}
-            transition={{ type: "spring", stiffness: 320, damping: 32 }}
-            className="pointer-events-none fixed inset-x-0 bottom-0 z-20"
+      {/* Прозора fixed-обгортка + кнопка як absolute-дитина: Safari не семплить
+          низ екрана (той самий приём, що і в MobileNav / на сторінці маршруту).
+          ВАЖЛИВО: жодного framer-motion/transform у цьому піддереві — transform
+          створює композитний шар, який Safari семплить як колір нижньої панелі
+          (незалежно від position:absolute), і низ перестає бути прозорим. */}
+      {count > 0 && (
+        <div className="pointer-events-none fixed inset-x-0 bottom-0 z-20">
+          <div
+            className="pointer-events-auto absolute inset-x-4 mx-auto max-w-[560px]"
+            style={{ bottom: "calc(72px + env(safe-area-inset-bottom))" }}
           >
-            <div
-              className="pointer-events-auto absolute inset-x-4 mx-auto max-w-[560px]"
-              style={{ bottom: "calc(72px + env(safe-area-inset-bottom))" }}
+            <button
+              type="button"
+              disabled={!canBuild}
+              onClick={() => navigate("/marshrut")}
+              className="group/cta flex w-full items-center justify-between gap-3 rounded-full py-2 pl-7 pr-2 text-[16px] font-odesa-bold shadow-[0_18px_40px_-14px_rgba(0,47,94,0.6)] transition-all disabled:cursor-not-allowed disabled:opacity-60"
+              style={{ backgroundColor: canBuild ? NAVY : "#6b7f95", color: CREAM }}
             >
-              <button
-                type="button"
-                disabled={!canBuild}
-                onClick={() => navigate("/marshrut")}
-                className="group/cta flex w-full items-center justify-between gap-3 rounded-full py-2 pl-7 pr-2 text-[16px] font-odesa-bold shadow-[0_18px_40px_-14px_rgba(0,47,94,0.6)] transition-all disabled:cursor-not-allowed disabled:opacity-60"
-                style={{ backgroundColor: canBuild ? NAVY : "#6b7f95", color: CREAM }}
+              <span className="flex flex-col items-start leading-tight">
+                {t("buildRoute")}
+                {!canBuild && (
+                  <span className="text-[11px] font-odesa-regular opacity-80">{t("needTwoStops")}</span>
+                )}
+              </span>
+              <span
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition-transform group-hover/cta:translate-x-1"
+                style={{ backgroundColor: GOLD, color: NAVY }}
               >
-                <span className="flex flex-col items-start leading-tight">
-                  {t("buildRoute")}
-                  {!canBuild && (
-                    <span className="text-[11px] font-odesa-regular opacity-80">{t("needTwoStops")}</span>
-                  )}
-                </span>
-                <span
-                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition-transform group-hover/cta:translate-x-1"
-                  style={{ backgroundColor: GOLD, color: NAVY }}
-                >
-                  <ArrowRight className="h-5 w-5" />
-                </span>
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+                <ArrowRight className="h-5 w-5" />
+              </span>
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
