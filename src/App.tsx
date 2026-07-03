@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect } from "react";
+import { Suspense, lazy, useEffect, useLayoutEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
 import { loadHierarchySnapshot, loadPublishedContentCards } from "@/lib/adminRepository";
@@ -52,6 +52,25 @@ const ScrollToTop = () => {
   return null;
 };
 
+/**
+ * Safari 26+ бере колір верхньої/нижньої системних панелей із background-color
+ * кореня (html/body). Тримаємо його в тон сторінки: головна — темна (брендовий
+ * хіро), решта сторінок — кремові, щоб панелі зливались із контентом, а не
+ * давали синю смугу знизу. useLayoutEffect — щоб застосувати до кадру (Safari
+ * фіксує колір панелей рано і не завжди пересемплить при SPA-навігації).
+ */
+const PanelColor = () => {
+  const { pathname } = useLocation();
+
+  useLayoutEffect(() => {
+    const color = pathname === "/" ? "#001a3d" : "#fff2e8";
+    document.documentElement.style.backgroundColor = color;
+    document.body.style.backgroundColor = color;
+  }, [pathname]);
+
+  return null;
+};
+
 const RouteFallback = () => (
   <div className="flex min-h-screen items-center justify-center bg-[#fff2e8]">
     <span className="h-8 w-8 animate-spin rounded-full border-2 border-[#002f5e]/20 border-t-[#002f5e]" />
@@ -80,6 +99,7 @@ const App = () => {
         <TooltipProvider>
           <BrowserRouter>
             <ScrollToTop />
+            <PanelColor />
             <Toaster />
             <MobileNav />
             <AssistantFab />

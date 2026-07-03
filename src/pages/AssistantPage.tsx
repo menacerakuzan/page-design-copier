@@ -291,6 +291,9 @@ export default function AssistantPage() {
           {isStreaming ? (
             <button
               type="button"
+              // preventDefault на mousedown — щоб тап по кнопці не «крав» фокус у
+              // textarea (інакше перший тап лише ховає клавіатуру, а не діє).
+              onMouseDown={(e) => e.preventDefault()}
               onClick={stop}
               aria-label={t("assistantStop")}
               className="tap flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#9f1f47] text-[#fff2e8]"
@@ -300,6 +303,7 @@ export default function AssistantPage() {
           ) : (
             <button
               type="button"
+              onMouseDown={(e) => e.preventDefault()}
               onClick={() => submit(input)}
               disabled={!input.trim()}
               aria-label={t("assistantSend")}
