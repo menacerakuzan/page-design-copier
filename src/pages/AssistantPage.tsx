@@ -82,6 +82,16 @@ export default function AssistantPage() {
     void sendMessage(value, lang);
   };
 
+  // iOS: при фокусі на полі Safari прокручує всю сторінку вгору, щоб підняти
+  // поле над клавіатурою, і після закриття клавіатури часто НЕ повертає
+  // прокрутку — поле «зависає» вгорі. На blur (надсилання / тап убік)
+  // примусово повертаємо сторінку на місце. Мінімальний фікс без зміни макета.
+  const resetScroll = () => {
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  };
+
   const examples = [t("assistantEx1"), t("assistantEx2"), t("assistantEx3")];
 
   return (
@@ -273,6 +283,7 @@ export default function AssistantPage() {
                 submit(input);
               }
             }}
+            onBlur={resetScroll}
             rows={1}
             placeholder={t("assistantInput")}
             className="max-h-[140px] flex-1 resize-none bg-transparent py-2 text-[16px] text-[#002f5e] outline-none font-odesa-regular placeholder:text-[#002f5e]/40"
