@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Home,
   MapPinned,
   Route as RouteIcon,
+  ShoppingCart,
   Info,
   Menu as MenuIcon,
   Instagram,
@@ -18,6 +19,7 @@ import {
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { AccessibilityMenu } from "@/components/AccessibilityMenu";
 import { useLang } from "@/lib/langContext";
+import { useBasket } from "@/lib/basketContext";
 
 const TikTokIcon = ({ className = "h-5 w-5" }: { className?: string }) => (
   <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden="true">
@@ -41,6 +43,7 @@ const socials = [
 export function MobileNav() {
   const { pathname } = useLocation();
   const { t, lang, setLang } = useLang();
+  const { count } = useBasket();
   const [menuOpen, setMenuOpen] = useState(false);
 
   const isActive = (href: string) =>
@@ -50,11 +53,12 @@ export function MobileNav() {
     { href: "/", label: t("home"), Icon: Home },
     { href: "/districts", label: t("districts"), Icon: MapPinned },
     { href: "/marshruty", label: t("routes"), Icon: RouteIcon },
-    { href: "/info", label: t("info"), Icon: Info },
+    { href: "/koshyk", label: t("basket"), Icon: ShoppingCart, badge: count },
   ];
 
   // У меню — лише те, чого НЕМАЄ у таб-барі (без дублювання основних розділів)
   const secondaryLinks = [
+    { href: "/info", label: t("info"), Icon: Info },
     { href: "/types", label: t("types"), Icon: Layers },
     { href: "/poblizu", label: lang === "en" ? "Nearby" : "Поблизу", Icon: Compass },
   ];
@@ -78,20 +82,39 @@ export function MobileNav() {
           className="absolute inset-x-4 mx-auto flex max-w-[420px] items-center justify-around rounded-full bg-[#fff2e8] px-2 py-1.5 text-[#00376c] shadow-[0_4px_14px_-6px_rgba(0,47,94,0.35)]"
           style={{ bottom: "max(0.6rem, env(safe-area-inset-bottom))" }}
         >
-          {tabs.map(({ href, label, Icon }) => {
+          {tabs.map(({ href, label, Icon, badge }) => {
             const active = isActive(href);
             return (
               <li key={href} className="flex-1">
                 <MotionLink
                   to={href}
                   whileTap={{ scale: 0.9 }}
-                  className={`tap flex flex-col items-center justify-center gap-1 transition-opacity hover:opacity-80 ${
-                    active ? "text-[#df9b3b] opacity-100" : "text-[#00376c] opacity-45"
-                  }`}
+                  className="tap relative flex flex-col items-center justify-center gap-1"
                   aria-current={active ? "page" : undefined}
                 >
-                  <Icon className="h-6 w-6" strokeWidth={active ? 2.2 : 1.8} />
-                  <span className="text-[9px] leading-none font-odesa-medium">{label}</span>
+                  <span
+                    className={`flex flex-col items-center justify-center gap-1 transition-opacity hover:opacity-80 ${
+                      active ? "text-[#df9b3b] opacity-100" : "text-[#00376c] opacity-45"
+                    }`}
+                  >
+                    <Icon className="h-6 w-6" strokeWidth={active ? 2.2 : 1.8} />
+                    <span className="text-[9px] leading-none font-odesa-medium">{label}</span>
+                  </span>
+                  <AnimatePresence>
+                    {badge ? (
+                      <motion.span
+                        key={badge}
+                        initial={{ scale: 0, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0, opacity: 0 }}
+                        transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                        className="absolute right-[calc(50%-18px)] top-0 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[#df9b3b] px-1 text-[10px] leading-none text-[#002f5e] font-odesa-bold shadow-[0_2px_6px_-1px_rgba(0,47,94,0.5)]"
+                        aria-label={`${badge} ${t("inBasketCount")}`}
+                      >
+                        {badge > 99 ? "99+" : badge}
+                      </motion.span>
+                    ) : null}
+                  </AnimatePresence>
                 </MotionLink>
               </li>
             );

@@ -65,6 +65,8 @@ export type TourismObject = {
   imageUrl?: string;
   videoUrl?: string;
   mapUrl?: string;
+  latitude?: number;
+  longitude?: number;
   address?: string;
   addressEn?: string;
   phone?: string;

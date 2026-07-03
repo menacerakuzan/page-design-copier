@@ -1,0 +1,51 @@
+[
+  {
+    "id": "place-vxc64mpu",
+    "name": "Грецький парк",
+    "slug": "hretskyy-park-v38it2",
+    "type": "attraction",
+    "map_url": "https://www.google.com/maps?sca_esv=46b5e676a6bf9410&rlz=1C1GCEA_enUA1203UA1203&output=search&q=%D0%B3%D1%80%D0%B5%D1%86%D1%8C%D0%BA%D0%B8%D0%B9+%D0%BF%D0%B0%D1%80%D0%BA&source=lnms&fbs=ABfTbFVIi9k-mbTAj7CH-OQ94GaekNZRZjP8dAZepX_AVORvGxEEKrc7emumnZPWyRCKxn92x-Og1jhzhfT2uP_mgL7lRT0JfqjgxIlfEP2s-SwxHr0nm3Rku2aRi91AeOV6qdDzGWJ8Woh50zwLnynOsSyZQ2UcayMqzXQ_wIBLdb75yz5PCprA3rgFyxIQDyt-SYKkA_-pvCPalkH-WY-GajohV40C21wCOVYvGeHbqHKj0X_SlBY7hWwyTyX_92bu_apHKor-odkM-jwuNjpIULy79ce2cQ&entry=mc&ved=1t:200715&ictx=111"
+  },
+  {
+    "id": "place-ioc9qq6f",
+    "name": "Золота Нива",
+    "slug": "zolota-nyva-dw7xic",
+    "type": "attraction",
+    "map_url": "https://www.google.com/maps?sca_esv=b89316bc51f952b2&rlz=1C1GCEA_enUA1203UA1203&output=search&q=%D1%81%D0%B0%D0%BD%D0%B0%D1%82%D0%BE%D1%80%D1%96%D0%B9+%D0%B7%D0%BE%D0%BB%D0%BE%D1%82%D0%B0+%D0%BD%D0%B8%D0%B2%D0%B0&source=lnms&fbs=ABfTbFX3FFFlZdO0k-zoJP1_-gL-W84EmYxPBOj9NC73_7QnmjnR7TY7bUZoeMlNH4xl1Gt_fN5QeGYFeB32Nm28RyQ-N9E5lZ_FvnyVYALwurXzFBGEnSAHNqYa1NTaIs5x4VrOKrS-8WBLXflTo2fU4hFOq8ZYaKQhryNjqz1EJLfaXH4yRyoZpZ03lrdDbacvznwsJMfM72WPFWoEtqepxO5iyXI6cqdBsNF36U3OlmxXOJq04cN1XpmWzf8-df_rabQCoGgyQYhu0czUSsxzqe1wNC829g&entry=mc&ved=1t:200715&ictx=111"
+  },
+  {
+    "id": "place-r0i8p50b",
+    "name": "Міський сад",
+    "slug": "miskyy-sad-8d1l8e",
+    "type": "attraction",
+    "map_url": "http://google.com/maps?sca_esv=46b5e676a6bf9410&rlz=1C1GCEA_enUA1203UA1203&output=search&q=%D0%BC%D1%96%D1%81%D1%8C%D0%BA%D0%B8%D0%B9+%D1%81%D0%B0%D0%B4&source=lnms&fbs=ABfTbFVIi9k-mbTAj7CH-OQ94GaekNZRZjP8dAZepX_AVORvGxEEKrc7emumnZPWyRCKxn92x-Og1jhzhfT2uP_mgL7lRT0JfqjgxIlfEP2s-SwxHr0nm3Rku2aRi91AeOV6qdDzGWJ8Woh50zwLnynOsSyZQ2UcayMqzXQ_wIBLdb75yz5PCprA3rgFyxIQDyt-SYKkA_-pvCPalkH-WY-GajohV40C21wCOVYvGeHbqHKj0X_SlBY7hWwyTyX_92bu_apHKor-odkM-jwuNjpIULy79ce2cQ&entry=mc&ved=1t:200715&ictx=111"
+  },
+  {
+    "id": "place-d7zz5w2x",
+    "name": "Одеський археологічний музей",
+    "slug": "odeskyy-arkheolohichnyy-muzey-eunqxc",
+    "type": "attraction",
+    "map_url": "https://www.google.com/maps?sca_esv=e81adbbb4a121c19&rlz=1C1GCEA_enUA1203UA1203&biw=1920&bih=869&output=search&q=%D0%B0%D1%80%D1%85%D0%B5%D0%BE%D0%BB%D0%BE%D0%B3%D1%96%D1%87%D0%BD%D0%B8%D0%B9+%D0%BC%D1%83%D0%B7%D0%B5%D0%B9+%D0%BE%D0%B4%D0%B5%D1%81%D0%B0&source=lnms&fbs=ABfTbFV6Rb8ZwEyXmXh-f2J3CPqn0rFSrx_CaplAVZDPxGy3-_f6axupKSzbpQH8VDHeLB0teTMckJuKJ3mYqMjdmKpflS4NhO-FJ9XfstD2m9oJxwMCQNNUdlFQN9ZFpKCvU4lkxeziHHWM7n4cdH6MzrnlZsyOmMUzEKHlYEnSmikcIGuGwCcfNyIbe_GwniEhFU3W5jlotgcQZ__ViROEExyhnx-4M8ymBAY7iMeygKi4u4GdpCapYbOKUKSOLk5Ovw-hntw8thjUUb-iJe5REtblmu_bsQ&entry=mc&ved=1t:200715&ictx=111"
+  },
+  {
+    "id": "place-jc1jv3cj",
+    "name": "Одеський обласний академічний драматичний театр",
+    "slug": "odeskyy-oblasnyy-akademichnyy-dramatychnyy-teatr-492bw1",
+    "type": "event",
+    "map_url": "https://share.google/1YhO3oI02cMRzqYq9 "
+  },
+  {
+    "id": "place-ruar3ani",
+    "name": "Репертуар Липаня 2026",
+    "slug": "repertuar-lypanya-2026-49bz2d",
+    "type": "event",
+    "map_url": "https://www.google.com/maps?sca_esv=46b5e676a6bf9410&rlz=1C1GCEA_enUA1203UA1203&output=search&q=%D0%BE%D0%BF%D0%B5%D1%80%D0%B8+%D1%82%D0%B0+%D0%B1%D0%B0%D0%BB%D0%B5%D1%82%D1%83&source=lnms&fbs=ABfTbFWFV78FamsVPyUhpMOG2e4uAixGEbQRlxbX_blkM50PI9Rh5vMA6hY3vioMNu0Wi2ggz2tIYR9IkZCBf64y_dOG89WrOGx8I8l2x-81OQ814wNEg7dKfcrPyyIVruVMhZf98vujD9yaNaLuzkGWObR1L5LBbOOf-vHfiGgJ2H8YYhwJTjWL_hr2WDgDspSsjSockLE5LkEfjLNhEKjMgBYY5FossBiw5k5MbOFOabxB9ZyT8sOUT7toewNI0relUaYdM-ClHbLAd12T-MIKlxj3LllIUw&entry=mc&ved=1t:200715&ictx=111"
+  },
+  {
+    "id": "place-xkr1a48k",
+    "name": "Стамбульський парк",
+    "slug": "stambulskyy-park-wk2l9s",
+    "type": "attraction",
+    "map_url": "https://www.google.com/maps?sca_esv=46b5e676a6bf9410&rlz=1C1GCEA_enUA1203UA1203&output=search&q=%D1%81%D1%82%D0%B0%D0%BC%D0%B1%D1%83%D0%BB%D1%8C%D1%81%D1%8C%D0%BA%D0%B8%D0%B9+%D0%BF%D0%B0%D1%80%D0%BA&source=lnms&fbs=ABfTbFXzkycPw9b_fl96Ub-C36xwapuN8i3Ssb3JOZyRgBL1nTtYXE38pSDwd4FeuiiRb4VfoLAC8PcKvIg7Ua4jVrpnglwS3-EXcGcXTWTbW_Zx5H-MM1ystRzOoE6B5iwMMOQD3Yh04iOYADOqPoJVMLJg1Pmu6lBn7n6PEX6DIXedRW2jgzx6agXqkiFaXqoZEcj-LUzMOxZ0ULxQUVUD1N5Wcsi1t45Me4gcqkp-JZb7wYZR4SEc9jsyiBYsQh_x32rX1nuR305KHnAA776iQqhe6v9XAg&entry=mc&ved=1t:200715&ictx=111"
+  }
+]

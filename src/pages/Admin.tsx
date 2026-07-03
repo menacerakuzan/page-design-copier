@@ -49,7 +49,7 @@ type PlaceForm = {
   id: string; slug: string; name: string; subtitle: string; description: string;
   detailedInfo: string; imageUrl: string; videoUrl: string; reelUrl: string; reelImageUrl: string;
   cityId: string; districtOnlyMode: boolean; type: TourismObjectType;
-  mapUrl: string; address: string; phone: string; website: string;
+  mapUrl: string; latitude: string; longitude: string; address: string; phone: string; website: string;
   eventDates: string; hours: string; amenities: string;
   published: boolean; tourismTypes: string[];
   nameEn: string; subtitleEn: string; descriptionEn: string;
@@ -60,7 +60,7 @@ type PlaceForm = {
 
 const emptyDistrict = (regionId: string): DistrictForm => ({ id: "", name: "", subtitle: "", description: "", detailedInfo: "", imageUrl: "", videoUrl: "", reelUrl: "", regionId, nameEn: "", subtitleEn: "", descriptionEn: "" });
 const emptyCity = (districtId: string): CityForm => ({ id: "", name: "", subtitle: "", description: "", detailedInfo: "", imageUrl: "", videoUrl: "", reelUrl: "", districtId, weatherCityName: "", settlementType: "місто", nameEn: "", subtitleEn: "", descriptionEn: "" });
-const emptyPlace = (cityId: string): PlaceForm => ({ id: "", slug: "", name: "", subtitle: "", description: "", detailedInfo: "", imageUrl: "", videoUrl: "", reelUrl: "", reelImageUrl: "", cityId, districtOnlyMode: false, type: "attraction", mapUrl: "", address: "", phone: "", website: "", eventDates: "", hours: "", amenities: "", published: true, tourismTypes: [], nameEn: "", subtitleEn: "", descriptionEn: "", detailedInfoEn: "", addressEn: "", hoursEn: "", amenitiesEn: "", venueId: "", repertoire: "", heroFontSize: "" });
+const emptyPlace = (cityId: string): PlaceForm => ({ id: "", slug: "", name: "", subtitle: "", description: "", detailedInfo: "", imageUrl: "", videoUrl: "", reelUrl: "", reelImageUrl: "", cityId, districtOnlyMode: false, type: "attraction", mapUrl: "", latitude: "", longitude: "", address: "", phone: "", website: "", eventDates: "", hours: "", amenities: "", published: true, tourismTypes: [], nameEn: "", subtitleEn: "", descriptionEn: "", detailedInfoEn: "", addressEn: "", hoursEn: "", amenitiesEn: "", venueId: "", repertoire: "", heroFontSize: "" });
 
 
 const Admin = () => {
@@ -286,6 +286,8 @@ const Admin = () => {
         videoUrl: placeForm.videoUrl || undefined,
         reelUrl: placeForm.reelUrl || undefined,
         mapUrl: placeForm.mapUrl || undefined,
+        latitude: placeForm.latitude.trim() ? Number(placeForm.latitude) : undefined,
+        longitude: placeForm.longitude.trim() ? Number(placeForm.longitude) : undefined,
         address: placeForm.address || undefined,
         phone: placeForm.phone || undefined,
         website: placeForm.website || undefined,
@@ -319,7 +321,7 @@ const Admin = () => {
   const editPlace = (p: TourismObject) => {
     setEditingPlaceId(p.id);
     const isDistrictOnly = !p.cityId;
-    setPlaceForm({ id: p.id, slug: p.slug, name: p.name, subtitle: p.subtitle ?? "", description: p.description ?? "", detailedInfo: p.detailedInfo ?? "", imageUrl: p.imageUrl ?? "", videoUrl: p.videoUrl ?? "", reelUrl: p.reelUrl ?? "", reelImageUrl: p.reelImageUrl ?? "", cityId: isDistrictOnly ? p.districtId : (p.cityId ?? ""), districtOnlyMode: isDistrictOnly, type: p.type, mapUrl: p.mapUrl ?? "", address: p.address ?? "", phone: p.phone ?? "", website: p.website ?? "", eventDates: p.eventDates ?? "", hours: p.hours ?? "", amenities: p.amenities ?? "", published: p.published, tourismTypes: p.tourismTypes ?? [], nameEn: p.nameEn ?? "", subtitleEn: p.subtitleEn ?? "", descriptionEn: p.descriptionEn ?? "", detailedInfoEn: p.detailedInfoEn ?? "", addressEn: p.addressEn ?? "", hoursEn: p.hoursEn ?? "", amenitiesEn: p.amenitiesEn ?? "", venueId: p.venueId ?? "", repertoire: p.repertoire ?? "", heroFontSize: p.heroFontSize ?? "" });
+    setPlaceForm({ id: p.id, slug: p.slug, name: p.name, subtitle: p.subtitle ?? "", description: p.description ?? "", detailedInfo: p.detailedInfo ?? "", imageUrl: p.imageUrl ?? "", videoUrl: p.videoUrl ?? "", reelUrl: p.reelUrl ?? "", reelImageUrl: p.reelImageUrl ?? "", cityId: isDistrictOnly ? p.districtId : (p.cityId ?? ""), districtOnlyMode: isDistrictOnly, type: p.type, mapUrl: p.mapUrl ?? "", latitude: p.latitude != null ? String(p.latitude) : "", longitude: p.longitude != null ? String(p.longitude) : "", address: p.address ?? "", phone: p.phone ?? "", website: p.website ?? "", eventDates: p.eventDates ?? "", hours: p.hours ?? "", amenities: p.amenities ?? "", published: p.published, tourismTypes: p.tourismTypes ?? [], nameEn: p.nameEn ?? "", subtitleEn: p.subtitleEn ?? "", descriptionEn: p.descriptionEn ?? "", detailedInfoEn: p.detailedInfoEn ?? "", addressEn: p.addressEn ?? "", hoursEn: p.hoursEn ?? "", amenitiesEn: p.amenitiesEn ?? "", venueId: p.venueId ?? "", repertoire: p.repertoire ?? "", heroFontSize: p.heroFontSize ?? "" });
   };
 
   const handleDeletePlace = async (id: string) => {
@@ -849,7 +851,17 @@ const Admin = () => {
 
                       {/* Type-specific fields */}
                       {(placeForm.type === "attraction" || placeForm.type === "event" || placeForm.type === "hotel" || placeForm.type === "restaurant") && (
-                        <MultiField label="Посилання на карту" value={placeForm.mapUrl} onChange={v => setPlaceForm(p => ({ ...p, mapUrl: v }))} placeholder="https://maps.google.com/..." />
+                        <>
+                          <MultiField label="Посилання на карту" value={placeForm.mapUrl} onChange={v => setPlaceForm(p => ({ ...p, mapUrl: v }))} placeholder="https://maps.google.com/..." />
+                          <div>
+                            <Label>Координати (для карти маршруту)</Label>
+                            <p className="mb-1 text-[11px] text-[#002f5e]/40">Широта / довгота. У Google Maps: ПКМ по точці → перше число широта, друге довгота.</p>
+                            <div className="grid grid-cols-2 gap-2">
+                              <Input value={placeForm.latitude} onChange={v => setPlaceForm(p => ({ ...p, latitude: v }))} placeholder="46.4825 (широта)" />
+                              <Input value={placeForm.longitude} onChange={v => setPlaceForm(p => ({ ...p, longitude: v }))} placeholder="30.7233 (довгота)" />
+                            </div>
+                          </div>
+                        </>
                       )}
 
                       {placeForm.type === "event" && (

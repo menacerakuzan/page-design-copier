@@ -165,6 +165,8 @@ alter table public.tourism_objects add column if not exists detailed_info text;
 alter table public.tourism_objects add column if not exists image_url text;
 alter table public.tourism_objects add column if not exists video_url text;
 alter table public.tourism_objects add column if not exists map_url text;
+alter table public.tourism_objects add column if not exists latitude double precision;
+alter table public.tourism_objects add column if not exists longitude double precision;
 alter table public.tourism_objects add column if not exists address text;
 alter table public.tourism_objects add column if not exists phone text;
 alter table public.tourism_objects add column if not exists website text;

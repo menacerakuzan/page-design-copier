@@ -5,6 +5,7 @@ import { loadHierarchySnapshot, loadPublishedContentCards } from "@/lib/adminRep
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { LangProvider } from "@/lib/langContext";
+import { BasketProvider } from "@/lib/basketContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import MobileNav from "./components/MobileNav";
 import Index from "./pages/Index";
@@ -21,6 +22,8 @@ const DistrictsPage = lazy(() => import("./pages/DistrictsPage"));
 const Admin = lazy(() => import("./pages/Admin"));
 const RoutesPage = lazy(() => import("./pages/RoutesPage"));
 const NearbyPage = lazy(() => import("./pages/NearbyPage"));
+const BasketPage = lazy(() => import("./pages/BasketPage"));
+const RouteMapPage = lazy(() => import("./pages/RouteMapPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient({
@@ -71,6 +74,7 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <LangProvider>
+        <BasketProvider>
         <TooltipProvider>
           <BrowserRouter>
             <ScrollToTop />
@@ -91,6 +95,8 @@ const App = () => {
                   <Route path="/hoteli/:slug" element={<EntityDetail type="hotel" />} />
                   <Route path="/marshruty" element={<RoutesPage />} />
                   <Route path="/poblizu" element={<NearbyPage />} />
+                  <Route path="/koshyk" element={<BasketPage />} />
+                  <Route path="/marshrut" element={<RouteMapPage />} />
                   <Route path="/admin" element={<Admin />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
@@ -98,6 +104,7 @@ const App = () => {
             </ErrorBoundary>
           </BrowserRouter>
         </TooltipProvider>
+        </BasketProvider>
       </LangProvider>
     </QueryClientProvider>
   );
