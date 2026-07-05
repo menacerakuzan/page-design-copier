@@ -2,26 +2,17 @@ import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLang } from "@/lib/langContext";
 import { Link } from "react-router-dom";
-import { ChevronLeft, ArrowRight, MapPin } from "lucide-react";
+import {
+  ChevronLeft, Layers, Check,
+  UtensilsCrossed, Landmark, HeartPulse, Waves, Church, PartyPopper, Leaf, Mountain,
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import SiteFooter from "@/components/SiteFooter";
 import { useHierarchySnapshot } from "@/hooks/useHierarchySnapshot";
 import { usePageContentCards } from "@/hooks/usePageContentCards";
+import { ObjectCard } from "@/components/ObjectCard";
 
-const ROUTE: Record<string, string> = {
-  attraction: "/mistse",
-  event: "/podiyi",
-  hotel: "/hoteli",
-  restaurant: "/restorany",
-};
-
-const TYPE_LABEL: Record<string, string> = {
-  attraction: "Тур. об'єкт",
-  event: "Подія",
-  hotel: "Готель",
-  restaurant: "Ресторан",
-};
-
-const star = "✦";
+const GOLD = "#df9b3b";
 
 const TOURISM_TYPES = [
   "Гастрономічний туризм",
@@ -45,8 +36,21 @@ const DEFAULT_IMAGES: Record<string, string> = {
   "Спортивний туризм": "https://images.unsplash.com/photo-1571902943202-507ec2618e8f?auto=format&fit=crop&w=800&q=80",
 };
 
+// Колір + іконка для кожного виду туризму — суто фронтенд-подання (немає
+// відповідних полів у БД), ключ — точний рядок із TOURISM_TYPES.
+const TYPE_META: Record<string, { color: string; Icon: LucideIcon }> = {
+  "Гастрономічний туризм": { color: "#d97706", Icon: UtensilsCrossed },
+  "Історико-культурний туризм": { color: "#a16207", Icon: Landmark },
+  "Медико-оздоровчий туризм": { color: "#0d9488", Icon: HeartPulse },
+  "Морський туризм": { color: "#0284c7", Icon: Waves },
+  "Релігійний туризм": { color: "#7c3aed", Icon: Church },
+  "Розважальний туризм": { color: "#db2777", Icon: PartyPopper },
+  "Сільський та зелений туризм": { color: "#16a34a", Icon: Leaf },
+  "Спортивний туризм": { color: "#4f46e5", Icon: Mountain },
+};
+
 export default function TourismTypesPage() {
-  const { t, tl } = useLang();
+  const { t, tl, lang } = useLang();
   const [activeType, setActiveType] = useState<string | null>(null);
   const { data: snapshot } = useHierarchySnapshot();
   const { data: cardsData } = usePageContentCards("tourism-types");
@@ -69,54 +73,64 @@ export default function TourismTypesPage() {
   }, [allObjects, activeType]);
 
   return (
-    <div className="min-h-screen bg-[#fff2e8] font-odesa-regular text-[#002f5e]">
-      {/* Hero */}
-      <section className="relative overflow-hidden bg-[#002f5e] px-4 pb-20 pt-0 text-[#fff2e8] md:px-10">
-        <div className="pointer-events-none absolute inset-0 z-0 opacity-[0.08]"
-          style={{ backgroundImage: "url(/shieldtile.svg)", backgroundSize: "180px 203px", backgroundRepeat: "repeat" }} />
-        <div className="relative z-10 mx-auto w-full max-w-[1180px]">
-          <div className="rounded-b-[48px] bg-[#fff2e8] px-6 pb-4 pt-4 text-[#002f5e]">
-            <div className="flex items-center justify-between gap-4 text-[14px] font-odesa-medium">
-              <Link to="/" className="inline-flex items-center gap-1.5 transition-opacity hover:opacity-70">
-                <ChevronLeft className="h-4 w-4" /> {t("backHome")}
-              </Link>
-              <div className="flex items-center gap-3 text-[#002f5e]/65">
-                <span className="text-[15px] text-[#002f5e]/30">{star}</span>
-                <span>Туризм</span>
-                <span className="text-[15px] text-[#002f5e]/30">{star}</span>
-                <span>Одещина</span>
-                <span className="text-[15px] text-[#002f5e]/30">{star}</span>
-              </div>
-              <Link to="/" className="transition-opacity hover:opacity-70">{t("home")}</Link>
-            </div>
+    <div className="relative min-h-screen bg-[#fff2e8] font-odesa-regular text-[#002f5e]">
+      {/* Легкий фоновий патерн (гора, листок, іскра, хвиля — розмаїття видів
+          туризму). ВАЖЛИВО: absolute (у потоці сторінки), а не fixed — інакше
+          при overscroll на iOS патерн «відклеюється» від бежевого фону і крізь
+          нього видно синій html/body. Так само зроблено на робочих сторінках. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 z-0"
+        style={{ backgroundImage: "url(/typespattern.svg)", backgroundSize: "200px 200px", backgroundRepeat: "repeat", opacity: 0.1 }}
+      />
+
+      {/* ── Шапка-«бровь» (як на головній), мінімальна: тільки назад ───────── */}
+      <div className="container-edge pt-safe relative z-10">
+        <div
+          className="mt-4 rounded-b-[36px] bg-[#fff2e8] px-4 pb-2.5 pt-2.5"
+          style={{ boxShadow: "0 8px 24px -18px rgba(0,47,94,0.35)" }}
+        >
+          <div className="relative flex items-center justify-center">
+            <Link
+              to="/"
+              aria-label={t("backHome")}
+              className="tap absolute left-0 flex h-9 w-9 items-center justify-center rounded-full text-[#002f5e] transition-opacity hover:opacity-70"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </Link>
+            <h1
+              className="px-2 text-center text-[30px] leading-[0.95] text-[#00376c] font-odesa-medium font-odesa-ss02"
+              style={{ letterSpacing: "0.04em" }}
+            >
+              ОДЕЩИНА
+            </h1>
           </div>
         </div>
-        <div className="relative z-10 mx-auto mt-16 max-w-[1400px] px-4 md:px-10">
-          <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
-            className="text-[12px] uppercase tracking-[0.08em] font-odesa-medium text-[#df9b3b]">
-            {t("types")}
-          </motion.p>
-          <motion.h1 initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-            className="mt-3 font-odesa-medium text-[56px] leading-[0.92] md:text-[100px]">
-            {t("typesTitle")}
-          </motion.h1>
-          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8, delay: 0.2 }}
-            className="mt-5 max-w-[560px] text-[18px] leading-[1.55] text-[#fff2e8]/65 font-odesa-regular">
-            {t("typesDesc")}
-          </motion.p>
-        </div>
-      </section>
+      </div>
 
-      {/* Type grid */}
-      <section className="px-4 py-16 md:px-10">
-        <div className="mx-auto max-w-[1400px]">
-          {!ready ? (
-            <div className="flex items-center justify-center py-32">
-              <span className="h-8 w-8 animate-spin rounded-full border-2 border-[#002f5e] border-t-transparent" />
-            </div>
-          ) : (
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+      {/* ── Заголовок сторінки ──────────────────────────────────────────── */}
+      <div className="container-edge relative z-10 pb-6 pt-8">
+        <div className="flex items-center gap-3">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#002f5e] text-[#fff2e8]">
+            <Layers className="h-5 w-5" />
+          </span>
+          <h2 className="text-[34px] leading-[0.95] text-[#002f5e] font-odesa-bold">{t("typesTitle")}</h2>
+        </div>
+        <p className="mt-3 max-w-[520px] text-[15px] leading-[1.5] text-[#002f5e]/60 font-odesa-regular">
+          {t("typesDesc")}
+        </p>
+      </div>
+
+      <main className="container-edge relative z-10 pb-tabbar md:pb-16">
+        {!ready ? (
+          <div className="flex items-center justify-center py-32">
+            <span className="h-8 w-8 animate-spin rounded-full border-2 border-[#002f5e] border-t-transparent" />
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
             {TOURISM_TYPES.map((type, idx) => {
+              const meta = TYPE_META[type];
+              const Icon = meta.Icon;
               const img = typeImages[type] ?? DEFAULT_IMAGES[type] ?? "";
               const isActive = activeType === type;
               const count = allObjects.filter(o => o.tourismTypes?.includes(type)).length;
@@ -125,103 +139,92 @@ export default function TourismTypesPage() {
                   key={type}
                   type="button"
                   onClick={() => setActiveType(isActive ? null : type)}
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: idx * 0.05 }}
-                  className={`group relative overflow-hidden rounded-[24px] text-left transition-all duration-300 ${isActive ? "ring-4 ring-[#df9b3b] ring-offset-2 ring-offset-[#fff2e8]" : "hover:-translate-y-1"}`}
-                  style={{ aspectRatio: "4/3" }}
+                  transition={{ duration: 0.4, delay: idx * 0.04 }}
+                  className="group relative overflow-hidden rounded-[24px] p-4 text-left transition-transform active:scale-[0.97]"
+                  style={{
+                    aspectRatio: "1/1",
+                    background: `linear-gradient(150deg, ${meta.color}e6, ${meta.color}b3)`,
+                    boxShadow: isActive
+                      ? `0 0 0 3px ${GOLD}, 0 14px 30px -12px ${meta.color}90`
+                      : `0 10px 26px -16px ${meta.color}70`,
+                  }}
                 >
-                  {img ? (
-                    <img loading="lazy" decoding="async" src={img} alt={type} className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                  ) : (
-                    <div className="absolute inset-0 bg-[#002f5e]" />
+                  {img && (
+                    <img
+                      src={img}
+                      alt=""
+                      aria-hidden
+                      className="absolute inset-0 h-full w-full object-cover opacity-25 mix-blend-overlay"
+                    />
                   )}
-                  <div className="absolute inset-0"
-                    style={{ background: "linear-gradient(160deg, transparent 0%, transparent 30%, rgba(0,0,0,0.04) 42%, rgba(0,0,0,0.04) 52%, rgba(0,0,0,0.18) 65%, rgba(0,0,0,0.55) 100%)" }} />
+                  <Icon className="absolute -bottom-3 -right-3 h-24 w-24 text-white/20" strokeWidth={1.5} />
                   {isActive && (
-                    <div className="absolute inset-0 bg-[#df9b3b]/20" />
+                    <span
+                      className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-full bg-white"
+                      style={{ color: meta.color }}
+                    >
+                      <Check className="h-4 w-4" strokeWidth={3} />
+                    </span>
                   )}
-                  <div className="absolute bottom-0 left-0 right-0 p-4">
-                    <p className="font-odesa-medium text-[18px] leading-[1.1] text-[#fff2e8] md:text-[20px]">{type}</p>
-                    <p className="mt-1 text-[12px] font-odesa-regular text-[#fff2e8]/60">{count} об'єктів</p>
-                  </div>
-                  {isActive && (
-                    <div className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-full bg-[#df9b3b] text-[#002f5e]">
-                      <span className="text-[14px] font-bold">✓</span>
+                  <div className="relative z-10 flex h-full flex-col justify-between">
+                    <Icon className="h-7 w-7 text-white" />
+                    <div className="mb-1.5">
+                      <p className="text-[15px] leading-tight text-white font-odesa-semi">{type}</p>
+                      <p className="mt-0.5 text-[11px] text-white/70 font-odesa-regular">{count} {tl("об'єктів", "objects")}</p>
                     </div>
-                  )}
+                  </div>
                 </motion.button>
               );
             })}
           </div>
-          )}
-        </div>
-      </section>
+        )}
 
-      {/* Filtered results */}
-      <AnimatePresence>
-        {activeType && (
-          <motion.section
-            key={activeType}
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            transition={{ duration: 0.5 }}
-            className="px-4 pb-20 md:px-10"
-          >
-            <div className="mx-auto max-w-[1400px]">
-              <div className="mb-8 flex items-center justify-between">
+        {/* Відфільтровані результати */}
+        <AnimatePresence>
+          {activeType && (
+            <motion.section
+              key="results"
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 16 }}
+              transition={{ duration: 0.4 }}
+              className="mt-10"
+            >
+              <div className="mb-5 flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-[12px] uppercase tracking-[0.08em] font-odesa-medium text-[#df9b3b]">{activeType}</p>
-                  <h2 className="mt-1 font-odesa-medium text-[40px] leading-none md:text-[56px]">
-                    {filteredObjects.length} об'єктів
+                  <p className="text-[12px] uppercase tracking-[0.08em] text-[#df9b3b] font-odesa-medium">{activeType}</p>
+                  <h2 className="mt-1 text-[24px] leading-none text-[#002f5e] font-odesa-bold">
+                    {filteredObjects.length} {tl("об'єктів", "objects")}
                   </h2>
                 </div>
-                <button type="button" onClick={() => setActiveType(null)}
-                  className="rounded-full border border-[#002f5e]/20 px-5 py-2 text-[14px] font-odesa-medium text-[#002f5e]/60 transition hover:border-[#002f5e]/40 hover:text-[#002f5e]">
-                  Скинути
+                <button
+                  type="button"
+                  onClick={() => setActiveType(null)}
+                  className="shrink-0 rounded-full border border-[#002f5e]/20 px-4 py-1.5 text-[13px] font-odesa-semi text-[#002f5e]/60 transition hover:border-[#002f5e]/40 hover:text-[#002f5e]"
+                >
+                  {tl("Скинути", "Reset")}
                 </button>
               </div>
 
               {filteredObjects.length === 0 ? (
-                <div className="flex items-center justify-center rounded-[28px] border border-dashed border-[#002f5e]/20 py-24">
-                  <p className="text-[18px] text-[#002f5e]/40 font-odesa-regular">Об'єктів цього типу поки немає</p>
+                <div className="flex items-center justify-center rounded-[26px] border border-dashed border-[#002f5e]/20 py-24">
+                  <p className="text-[16px] text-[#002f5e]/40 font-odesa-regular">
+                    {tl("Об'єктів цього типу поки немає", "No objects of this type yet")}
+                  </p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                   {filteredObjects.map((obj, idx) => (
-                    <motion.div key={obj.id}
-                      initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.4, delay: idx * 0.04 }}>
-                      <Link to={`${ROUTE[obj.type]}/${obj.slug}`}
-                        className="group block overflow-hidden rounded-[22px] border border-[#002f5e]/8 bg-white transition-transform duration-300 hover:-translate-y-1">
-                        <div className="relative h-[200px] overflow-hidden">
-                          <img loading="lazy" decoding="async" src={obj.imageUrl ?? "https://images.unsplash.com/photo-1552083375-1447ce886485?auto=format&fit=crop&w=800&q=80"}
-                            alt={obj.name} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                          <span className="absolute left-3 top-3 rounded-full bg-[#002f5e]/80 px-3 py-1 text-[11px] font-odesa-medium uppercase tracking-wide text-[#fff2e8] backdrop-blur-sm">
-                            {TYPE_LABEL[obj.type]}
-                          </span>
-                        </div>
-                        <div className="p-4">
-                          <p className="font-odesa-medium text-[18px] leading-[1.1]">{obj.name}</p>
-                          {obj.address && (
-                            <p className="mt-1.5 flex items-center gap-1.5 text-[13px] text-[#002f5e]/50 font-odesa-regular">
-                              <MapPin className="h-3.5 w-3.5" /> {obj.address.split("\n")[0]}
-                            </p>
-                          )}
-                          <div className="mt-3 inline-flex items-center gap-1.5 text-[13px] font-odesa-medium text-[#df9b3b]">
-                            {t("details")} <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
-                          </div>
-                        </div>
-                      </Link>
-                    </motion.div>
+                    <ObjectCard key={obj.id} obj={obj} idx={idx} lang={lang} />
                   ))}
                 </div>
               )}
-            </div>
-          </motion.section>
-        )}
-      </AnimatePresence>
+            </motion.section>
+          )}
+        </AnimatePresence>
+      </main>
 
       <SiteFooter />
     </div>
