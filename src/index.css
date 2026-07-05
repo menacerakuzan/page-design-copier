@@ -362,3 +362,57 @@
   color: rgba(255,242,232,0.72);
   margin-bottom: 0.25rem;
 }
+
+/* Rich text на світлому фоні (сторінка маршруту /marshruty/:id) */
+.route-rich-content-light h2 {
+  font-family: "Odesa Region Type", sans-serif;
+  font-weight: 500;
+  font-size: 20px;
+  line-height: 1.1;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+  color: #002f5e;
+}
+.route-rich-content-light h3 {
+  font-family: "Odesa Region Type", sans-serif;
+  font-weight: 500;
+  font-size: 16px;
+  line-height: 1.15;
+  margin-top: 1.25rem;
+  margin-bottom: 0.4rem;
+  color: #002f5e;
+}
+.route-rich-content-light p {
+  font-size: 14px;
+  line-height: 1.7;
+  color: rgba(0,47,94,0.72);
+  margin-bottom: 0.85rem;
+}
+.route-rich-content-light strong { font-weight: 700; color: #002f5e; }
+.route-rich-content-light em { font-style: italic; }
+.route-rich-content-light u { text-decoration: underline; }
+.route-rich-content-light a { color: #c9973a; text-decoration: underline; }
+.route-rich-content-light a:hover { opacity: 0.75; }
+.route-rich-content-light blockquote {
+  border-left: 3px solid #c9973a;
+  padding-left: 1rem;
+  margin: 1rem 0;
+  font-style: italic;
+  color: rgba(0,47,94,0.55);
+}
+.route-rich-content-light ul {
+  list-style: disc;
+  padding-left: 1.25rem;
+  margin-bottom: 0.85rem;
+}
+.route-rich-content-light ol {
+  list-style: decimal;
+  padding-left: 1.25rem;
+  margin-bottom: 0.85rem;
+}
+.route-rich-content-light li {
+  font-size: 14px;
+  line-height: 1.65;
+  color: rgba(0,47,94,0.72);
+  margin-bottom: 0.25rem;
+}

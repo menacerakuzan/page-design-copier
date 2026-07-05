@@ -13,8 +13,10 @@ export function AssistantFab() {
   const hidden = pathname.startsWith("/asystent");
 
   // /koshyk і /marshrut мають власну липку CTA-кнопку одразу над нижнім меню —
-  // піднімаємо FAB вище неї, щоб не перекривались.
-  const raised = pathname.startsWith("/koshyk") || pathname.startsWith("/marshrut");
+  // піднімаємо FAB вище неї, щоб не перекривались. Точна рівність (не
+  // startsWith) — інакше /marshrut ловить і /marshruty (список маршрутів),
+  // де такої CTA-кнопки немає.
+  const raised = pathname === "/koshyk" || pathname === "/marshrut";
   const bottom = raised
     ? "calc(150px + env(safe-area-inset-bottom))"
     : "calc(84px + env(safe-area-inset-bottom))";
