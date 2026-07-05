@@ -32,7 +32,7 @@ export const SECTION_VARIANT: Record<TourismObjectType, "carousel" | "tickets" |
 };
 
 /** Свій фоновий патерн для кожного типу (секції тут темні — заливка кремова). */
-const SECTION_PATTERN: Record<TourismObjectType, string> = {
+export const SECTION_PATTERN: Record<TourismObjectType, string> = {
   attraction: "/attractionpattern.svg",
   event: "/eventpattern.svg",
   hotel: "/hotelpattern.svg",

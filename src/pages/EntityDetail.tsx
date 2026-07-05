@@ -19,7 +19,7 @@ import NotFound from "@/pages/NotFound";
 import type { TourismObject, TourismObjectType } from "@/types/hierarchy";
 import { getObjectCoords, haversineKm } from "@/lib/geo";
 import { useBasket } from "@/lib/basketContext";
-import { ObjectSection, DEFAULT_BG } from "@/components/ObjectSection";
+import { ObjectSection, DEFAULT_BG, SECTION_PATTERN } from "@/components/ObjectSection";
 import { CollapsibleRichText } from "@/components/CollapsibleRichText";
 import { objectDetailPath, objectTypeColor } from "@/lib/entityLinks";
 import { CompassRose } from "@/components/decor";
@@ -37,6 +37,15 @@ const meta: Record<string, { label: string; schedBg: string }> = {
 };
 
 type PageType = "event" | "hotel" | "restaurant" | "attraction";
+
+/** Легкий фоновий патерн (компас — тема мандрів), тільки для кремових секцій. */
+const SectionPattern = () => (
+  <div
+    aria-hidden="true"
+    className="pointer-events-none absolute inset-0 z-0"
+    style={{ backgroundImage: "url(/districtspattern.svg)", backgroundSize: "200px 200px", backgroundRepeat: "repeat", opacity: 0.1 }}
+  />
+);
 
 function parseRepertoire(text: string): { date: string; title: string; time: string }[] {
   return text.split("\n").map(line => {
@@ -275,9 +284,7 @@ const EntityDetail = ({ type }: { type: PageType }) => {
         return (
           <section key={section.id} ref={setRef("about")}
             className="relative scroll-mt-6 overflow-hidden px-4 py-20 md:px-10" style={{ backgroundColor: bg }}>
-            <div aria-hidden className="pointer-events-none absolute -right-16 -top-20 h-72 w-72 opacity-[0.07] md:h-96 md:w-96" style={{ color: accent }}>
-              <CompassRose className="h-full w-full" />
-            </div>
+            <SectionPattern />
             <div className="relative z-10 mx-auto max-w-[1400px]">
               <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.7 }}>
@@ -360,8 +367,9 @@ const EntityDetail = ({ type }: { type: PageType }) => {
         const bg = section.bgColor ?? BG;
         return (
           <section key={section.id} ref={setRef("contacts")}
-            className="scroll-mt-6 px-4 py-14 md:px-10" style={{ backgroundColor: bg }}>
-            <div className="mx-auto max-w-[600px]">
+            className="relative scroll-mt-6 overflow-hidden px-4 py-14 md:px-10" style={{ backgroundColor: bg }}>
+            <SectionPattern />
+            <div className="relative z-10 mx-auto max-w-[600px]">
               <ContactCard
                 name={section.title || tl(object.name, object.nameEn)}
                 address={address} hours={hours} eventDates={object.eventDates}
@@ -381,9 +389,11 @@ const EntityDetail = ({ type }: { type: PageType }) => {
         const bg = section.bgColor ?? schedBg;
         return (
           <section key={section.id} ref={setRef("schedule")}
-            className="scroll-mt-6 px-4 py-20 text-[#fff2e8] md:px-10"
+            className="relative scroll-mt-6 overflow-hidden px-4 py-20 text-[#fff2e8] md:px-10"
             style={{ background: `linear-gradient(160deg, transparent 0%, transparent 30%, rgba(0,0,0,0.04) 42%, rgba(0,0,0,0.04) 52%, rgba(0,0,0,0.12) 62%, rgba(0,0,0,0.12) 72%, rgba(0,0,0,0.28) 82%, rgba(0,0,0,0.28) 90%, rgba(0,0,0,0.48) 100%), ${bg}` }}>
-            <div className="mx-auto max-w-[1400px]">
+            <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-0"
+              style={{ backgroundImage: `url(${SECTION_PATTERN[type]})`, backgroundSize: "200px 200px", backgroundRepeat: "repeat", opacity: 0.08 }} />
+            <div className="relative z-10 mx-auto max-w-[1400px]">
               <ScheduleHeader type={type} accent={accent} />
               <div className="mt-10 flex flex-col items-center gap-6">
                 {hours && (
@@ -419,9 +429,11 @@ const EntityDetail = ({ type }: { type: PageType }) => {
         const bg = section.bgColor ?? schedBg;
         return (
           <section key={section.id} ref={setRef("schedule")}
-            className="scroll-mt-6 px-4 py-20 text-[#fff2e8] md:px-10"
+            className="relative scroll-mt-6 overflow-hidden px-4 py-20 text-[#fff2e8] md:px-10"
             style={{ background: `linear-gradient(160deg, transparent 0%, transparent 30%, rgba(0,0,0,0.04) 42%, rgba(0,0,0,0.04) 52%, rgba(0,0,0,0.12) 62%, rgba(0,0,0,0.12) 72%, rgba(0,0,0,0.28) 82%, rgba(0,0,0,0.28) 90%, rgba(0,0,0,0.48) 100%), ${bg}` }}>
-            <div className="mx-auto max-w-[1400px]">
+            <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-0"
+              style={{ backgroundImage: `url(${SECTION_PATTERN[type]})`, backgroundSize: "200px 200px", backgroundRepeat: "repeat", opacity: 0.08 }} />
+            <div className="relative z-10 mx-auto max-w-[1400px]">
               <ScheduleHeader type={type} accent={accent} />
               <div className="mt-10 flex flex-col items-center gap-6">
                 {object.eventDates && (
@@ -476,9 +488,11 @@ const EntityDetail = ({ type }: { type: PageType }) => {
         const bg = section.bgColor ?? schedBg;
         return (
           <section key={section.id} ref={setRef("schedule")}
-            className="scroll-mt-6 px-4 py-20 text-[#fff2e8] md:px-10"
+            className="relative scroll-mt-6 overflow-hidden px-4 py-20 text-[#fff2e8] md:px-10"
             style={{ background: `linear-gradient(160deg, transparent 0%, transparent 30%, rgba(0,0,0,0.04) 42%, rgba(0,0,0,0.04) 52%, rgba(0,0,0,0.12) 62%, rgba(0,0,0,0.12) 72%, rgba(0,0,0,0.28) 82%, rgba(0,0,0,0.28) 90%, rgba(0,0,0,0.48) 100%), ${bg}` }}>
-            <div className="mx-auto max-w-[1400px]">
+            <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-0"
+              style={{ backgroundImage: `url(${SECTION_PATTERN[type]})`, backgroundSize: "200px 200px", backgroundRepeat: "repeat", opacity: 0.08 }} />
+            <div className="relative z-10 mx-auto max-w-[1400px]">
               <ScheduleHeader type={type} accent={accent} />
               <div className="mt-10 flex flex-wrap justify-center gap-3">
                 {amenities && amenities.split(",").map((a, i) => (
@@ -506,8 +520,10 @@ const EntityDetail = ({ type }: { type: PageType }) => {
         const eventColor = objectTypeColor.event;
         const bg = section.bgColor ?? DEFAULT_BG.event;
         return (
-          <section key={section.id} className="px-4 py-16 md:px-10" style={{ backgroundColor: bg }}>
-            <div className="relative mx-auto max-w-[520px]">
+          <section key={section.id} className="relative overflow-hidden px-4 py-16 md:px-10" style={{ backgroundColor: bg }}>
+            <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-0"
+              style={{ backgroundImage: `url(${SECTION_PATTERN.event})`, backgroundSize: "200px 200px", backgroundRepeat: "repeat", opacity: 0.08 }} />
+            <div className="relative z-10 mx-auto max-w-[520px]">
               <div className="absolute left-0 top-1/2 h-7 w-7 -translate-x-1/2 -translate-y-1/2 rounded-full" style={{ backgroundColor: bg }} aria-hidden="true" />
               <div className="absolute right-0 top-1/2 h-7 w-7 translate-x-1/2 -translate-y-1/2 rounded-full" style={{ backgroundColor: bg }} aria-hidden="true" />
               <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
@@ -694,10 +710,12 @@ const EntityDetail = ({ type }: { type: PageType }) => {
         const author = (section.payload?.author as string | undefined) ?? "";
         if (!quote) return null;
         const bg = section.bgColor ?? BG;
-        const textColor = bg === BG || bg === "#fff2e8" ? NAVY : "#fff2e8";
+        const isLight = bg === BG || bg === "#fff2e8";
+        const textColor = isLight ? NAVY : "#fff2e8";
         return (
-          <section key={section.id} className="px-4 py-20 md:px-10" style={{ backgroundColor: bg }}>
-            <div className="container-edge">
+          <section key={section.id} className="relative overflow-hidden px-4 py-20 md:px-10" style={{ backgroundColor: bg }}>
+            {isLight && <SectionPattern />}
+            <div className="container-edge relative z-10">
               <div className="mx-auto max-w-[860px] text-center">
                 <motion.blockquote initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.7 }}>
@@ -716,10 +734,12 @@ const EntityDetail = ({ type }: { type: PageType }) => {
         const text = (section.payload?.text as string | undefined) ?? "";
         if (!text) return null;
         const bg = section.bgColor ?? BG;
-        const textColor = bg === BG || bg === "#fff2e8" ? NAVY : "#fff2e8";
+        const isLight = bg === BG || bg === "#fff2e8";
+        const textColor = isLight ? NAVY : "#fff2e8";
         return (
-          <section key={section.id} className="px-4 py-20 md:px-10" style={{ backgroundColor: bg }}>
-            <div className="container-edge">
+          <section key={section.id} className="relative overflow-hidden px-4 py-20 md:px-10" style={{ backgroundColor: bg }}>
+            {isLight && <SectionPattern />}
+            <div className="container-edge relative z-10">
               <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.7 }}>
                 {section.title && <h2 className="mb-2 font-odesa-medium text-[40px] leading-none" style={{ color: textColor }}>{section.title}</h2>}
