@@ -1,237 +1,125 @@
 import { useQuery } from "@tanstack/react-query";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useState, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { MapPin, Clock, Navigation, ArrowRight, X, ChevronLeft, SlidersHorizontal } from "lucide-react";
+import { ChevronLeft, Clock, Navigation, ArrowRight, Route as RouteIcon } from "lucide-react";
+import { Img } from "@/components/Img";
 import { loadRoutes, type Route, ROUTE_TAG_OPTIONS, loadRouteTagOrder } from "@/lib/routesRepository";
 import { useLang } from "@/lib/langContext";
-import { AccessibilityMenu } from "@/components/AccessibilityMenu";
 import SiteFooter from "@/components/SiteFooter";
 
-const NAVY = "#002f5e";
-const CREAM = "#fff2e8";
-const GOLD = "#c9973a";
+const GOLD = "#df9b3b";
 
-const RouteCard = ({ route, idx, onClick }: { route: Route; idx: number; onClick: () => void }) => {
+const BadgePill = ({ children }: { children: React.ReactNode }) => (
+  <span
+    className="flex items-center gap-1.5 rounded-full border border-[#fff2e8]/30 bg-[#002f5e]/30 px-3 py-1 text-[12px] leading-none text-[#fff2e8] backdrop-blur-md font-odesa-medium"
+  >
+    {children}
+  </span>
+);
+
+const RouteCard = ({ route, idx }: { route: Route; idx: number }) => {
   const { tl } = useLang();
   const name = tl(route.name, route.nameEn);
   const desc = tl(route.description, route.descriptionEn);
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 32 }}
+      initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.1 }}
-      transition={{ duration: 0.6, delay: idx * 0.07 }}
-      onClick={onClick}
-      className="group cursor-pointer"
+      transition={{ duration: 0.5, delay: idx * 0.06 }}
     >
-      <div className="relative overflow-hidden rounded-[28px] transition-transform duration-500 group-hover:-translate-y-2"
-        style={{ background: NAVY }}>
-        {route.imageUrl && (
-          <div className="relative h-[260px] overflow-hidden">
-            <img loading="lazy" decoding="async" src={route.imageUrl} alt={name}
-              className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
-            <div className="absolute inset-0"
-              style={{ background: "linear-gradient(180deg, transparent 40%, rgba(0,18,47,0.85) 100%)" }} />
-            <div className="absolute bottom-4 left-5 flex gap-2">
-              {route.duration && (
-                <span className="flex items-center gap-1.5 rounded-full px-3 py-1 text-[12px] font-odesa-medium"
-                  style={{ backgroundColor: "rgba(0,18,47,0.7)", color: CREAM, backdropFilter: "blur(8px)" }}>
-                  <Clock className="h-3 w-3" style={{ color: GOLD }} />
-                  {route.duration}
-                </span>
-              )}
-              {route.distance && (
-                <span className="flex items-center gap-1.5 rounded-full px-3 py-1 text-[12px] font-odesa-medium"
-                  style={{ backgroundColor: "rgba(0,18,47,0.7)", color: CREAM, backdropFilter: "blur(8px)" }}>
-                  <Navigation className="h-3 w-3" style={{ color: GOLD }} />
-                  {route.distance}
-                </span>
-              )}
+      <Link
+        to={`/marshruty/${route.id}`}
+        className="group block overflow-hidden rounded-[26px] bg-[#fffaf3]"
+        style={{ boxShadow: "0 0 0 1px rgba(0,47,94,0.05), 0 12px 32px -10px rgba(0,47,94,0.22)" }}
+      >
+        <div className="relative h-[170px] overflow-hidden bg-[#002f5e]/10 xs:h-[198px]">
+          {route.imageUrl ? (
+            <Img
+              w={700}
+              src={route.imageUrl}
+              alt={name}
+              className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center">
+              <RouteIcon className="h-8 w-8 text-[#002f5e]/30" />
             </div>
-          </div>
-        )}
-        <div className="p-6">
-          {!route.imageUrl && route.duration && (
-            <div className="mb-4 flex gap-2">
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-[#002f5e]/85 via-[#002f5e]/15 to-transparent" />
+          {(route.duration || route.distance) && (
+            <div className="absolute left-4 top-4 flex flex-wrap gap-2">
               {route.duration && (
-                <span className="flex items-center gap-1.5 rounded-full border px-3 py-1 text-[12px] font-odesa-medium"
-                  style={{ borderColor: `${CREAM}20`, color: `${CREAM}70` }}>
+                <BadgePill>
                   <Clock className="h-3 w-3" style={{ color: GOLD }} />
                   {route.duration}
-                </span>
+                </BadgePill>
               )}
               {route.distance && (
-                <span className="flex items-center gap-1.5 rounded-full border px-3 py-1 text-[12px] font-odesa-medium"
-                  style={{ borderColor: `${CREAM}20`, color: `${CREAM}70` }}>
+                <BadgePill>
                   <Navigation className="h-3 w-3" style={{ color: GOLD }} />
                   {route.distance}
-                </span>
+                </BadgePill>
               )}
             </div>
           )}
+          <div className="absolute bottom-4 left-4 right-4">
+            <h3 className="text-[22px] leading-[0.95] text-[#fff2e8] font-odesa-medium xs:text-[24px]">{name}</h3>
+            <div className="mt-2 h-[3px] w-9 rounded-full bg-[#df9b3b] transition-all duration-500 group-hover:w-[72px]" />
+          </div>
+        </div>
+
+        <div className="p-3.5">
           {route.tags && route.tags.length > 0 && (
-            <div className="mb-3 flex flex-wrap gap-1.5">
-              {route.tags.map(tagId => {
-                const meta = ROUTE_TAG_OPTIONS.find(t => t.id === tagId);
+            <div className="flex flex-wrap gap-1.5">
+              {route.tags.map((tagId) => {
+                const meta = ROUTE_TAG_OPTIONS.find((t) => t.id === tagId);
                 if (!meta) return null;
                 return (
-                  <span key={tagId} className="flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-odesa-medium"
-                    style={{ backgroundColor: "rgba(201,151,58,0.15)", color: GOLD }}>
+                  <span
+                    key={tagId}
+                    className="flex items-center gap-1 rounded-full bg-[#df9b3b] px-2.5 py-1 text-[11px] text-[#002f5e] font-odesa-semi"
+                  >
                     {meta.emoji} {meta.label}
                   </span>
                 );
               })}
             </div>
           )}
-          <h3 className="font-odesa-medium text-[22px] leading-[1.1]" style={{ color: CREAM }}>
-            {name}
-          </h3>
           {desc && (
-            <p className="mt-3 line-clamp-3 text-[14px] font-odesa-regular leading-[1.6]"
-              style={{ color: `${CREAM}70` }}>
+            <p className="mt-2 line-clamp-2 text-[14px] leading-[1.55] text-[#002f5e]/65 font-odesa-regular">
               {desc}
             </p>
           )}
-          <div className="mt-5 flex items-center gap-2 text-[13px] font-odesa-medium transition-opacity group-hover:opacity-100"
-            style={{ color: GOLD, opacity: 0.7 }}>
-            Детальніше <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-          </div>
+          <span className="mt-2 inline-flex items-center gap-1.5 text-[13px] text-[#df9b3b] font-odesa-medium">
+            Детальніше <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
+          </span>
         </div>
-      </div>
-    </motion.div>
-  );
-};
-
-const RouteModal = ({ route, onClose }: { route: Route; onClose: () => void }) => {
-  const { tl } = useLang();
-  const name = tl(route.name, route.nameEn);
-  const desc = tl(route.description, route.descriptionEn);
-
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.25 }}
-      className="fixed inset-0 z-50 flex items-end justify-center md:items-center p-4"
-      style={{ backgroundColor: "rgba(0,10,30,0.75)", backdropFilter: "blur(8px)" }}
-      onClick={onClose}
-    >
-      <motion.div
-        initial={{ opacity: 0, y: 40, scale: 0.97 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: 40, scale: 0.97 }}
-        transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-        className="relative w-full max-w-[680px] overflow-hidden rounded-[28px] max-h-[90vh] overflow-y-auto"
-        style={{ backgroundColor: NAVY }}
-        onClick={e => e.stopPropagation()}
-      >
-        {route.imageUrl && (
-          <div className="relative h-[200px] shrink-0 sm:h-[280px]">
-            <img loading="lazy" decoding="async" src={route.imageUrl} alt={name} className="h-full w-full object-cover" />
-            <div className="absolute inset-0"
-              style={{ background: "linear-gradient(180deg, transparent 50%, rgba(0,18,47,0.9) 100%)" }} />
-          </div>
-        )}
-
-        <button onClick={onClose}
-          className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full transition-opacity hover:opacity-75"
-          style={{ backgroundColor: "rgba(0,18,47,0.6)", backdropFilter: "blur(8px)" }}>
-          <X className="h-5 w-5" style={{ color: CREAM }} />
-        </button>
-
-        <div className="p-7">
-          {(route.duration || route.distance) && (
-            <div className="mb-4 flex flex-wrap gap-2">
-              {route.duration && (
-                <span className="flex items-center gap-1.5 rounded-full border px-4 py-1.5 text-[13px] font-odesa-medium"
-                  style={{ borderColor: `${CREAM}25`, color: `${CREAM}80` }}>
-                  <Clock className="h-3.5 w-3.5" style={{ color: GOLD }} />
-                  {route.duration}
-                </span>
-              )}
-              {route.distance && (
-                <span className="flex items-center gap-1.5 rounded-full border px-4 py-1.5 text-[13px] font-odesa-medium"
-                  style={{ borderColor: `${CREAM}25`, color: `${CREAM}80` }}>
-                  <Navigation className="h-3.5 w-3.5" style={{ color: GOLD }} />
-                  {route.distance}
-                </span>
-              )}
-            </div>
-          )}
-
-          {route.tags && route.tags.length > 0 && (
-            <div className="mb-4 flex flex-wrap gap-2">
-              {route.tags.map(tagId => {
-                const meta = ROUTE_TAG_OPTIONS.find(t => t.id === tagId);
-                if (!meta) return null;
-                return (
-                  <span key={tagId} className="flex items-center gap-1.5 rounded-full px-3 py-1 text-[12px] font-odesa-medium"
-                    style={{ backgroundColor: "rgba(201,151,58,0.12)", color: GOLD }}>
-                    {meta.emoji} {meta.label}
-                  </span>
-                );
-              })}
-            </div>
-          )}
-          <h2 className="font-odesa-medium text-[28px] leading-[1.05]" style={{ color: CREAM }}>
-            {name}
-          </h2>
-
-          {desc && (
-            <div className="mt-5 space-y-3 text-[15px] font-odesa-regular leading-[1.7]"
-              style={{ color: `${CREAM}80` }}>
-              {desc.split("\n").filter(Boolean).map((para, i) => (
-                <p key={i}>{para}</p>
-              ))}
-            </div>
-          )}
-
-          {(route.mapUrl || route.mapUrl2) && (
-            <div className="mt-7 flex flex-wrap gap-3">
-              {route.mapUrl && (
-                <a href={route.mapUrl} target="_blank" rel="noreferrer"
-                  className="inline-flex items-center gap-2 rounded-full px-6 py-3 text-[14px] font-odesa-medium transition-opacity hover:opacity-85"
-                  style={{ backgroundColor: GOLD, color: NAVY }}>
-                  <MapPin className="h-4 w-4" />
-                  Відкрити маршрут
-                </a>
-              )}
-              {route.mapUrl2 && (
-                <a href={route.mapUrl2} target="_blank" rel="noreferrer"
-                  className="inline-flex items-center gap-2 rounded-full border px-6 py-3 text-[14px] font-odesa-medium transition-opacity hover:opacity-85"
-                  style={{ borderColor: `${CREAM}30`, color: CREAM }}>
-                  <MapPin className="h-4 w-4" style={{ color: GOLD }} />
-                  Альтернативний маршрут
-                </a>
-              )}
-            </div>
-          )}
-        </div>
-      </motion.div>
+      </Link>
     </motion.div>
   );
 };
 
 const RoutesPage = () => {
+  const { t } = useLang();
   const { data: routes = [], isLoading } = useQuery({
     queryKey: ["routes-published"],
     queryFn: () => loadRoutes(true),
   });
-  const [selected, setSelected] = useState<Route | null>(null);
   const [activeTag, setActiveTag] = useState<string | null>(null);
   const [tagOrder, setTagOrder] = useState<string[]>([]);
 
   useEffect(() => {
-    loadRouteTagOrder().then(order => { if (order.length > 0) setTagOrder(order); });
+    loadRouteTagOrder().then((order) => {
+      if (order.length > 0) setTagOrder(order);
+    });
   }, []);
 
-  // Collect tags that actually exist in loaded routes, sorted by saved order
   const availableTags = useMemo(() => {
-    const used = new Set(routes.flatMap(r => r.tags ?? []));
-    const all = ROUTE_TAG_OPTIONS.filter(t => used.has(t.id));
+    const used = new Set(routes.flatMap((r) => r.tags ?? []));
+    const all = ROUTE_TAG_OPTIONS.filter((t) => used.has(t.id));
     if (!tagOrder.length) return all;
     return [...all].sort((a, b) => {
       const ai = tagOrder.indexOf(a.id);
@@ -245,140 +133,129 @@ const RoutesPage = () => {
 
   const filtered = useMemo(() => {
     if (!activeTag) return routes;
-    return routes.filter(r => r.tags?.includes(activeTag));
+    return routes.filter((r) => r.tags?.includes(activeTag));
   }, [routes, activeTag]);
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: "#001224" }}>
-      <AccessibilityMenu />
+    <div className="relative min-h-screen bg-[#fff2e8]">
+      {/* Легкий фоновий патерн (звивиста дорога + мітки — тема маршрутів).
+          ВАЖЛИВО: absolute (у потоці сторінки), а не fixed — інакше при overscroll
+          на iOS патерн «відклеюється» від бежевого фону і крізь нього видно синій
+          html/body. Так само зроблено на робочих сторінках. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 z-0"
+        style={{ backgroundImage: "url(/routespattern.svg)", backgroundSize: "200px 200px", backgroundRepeat: "repeat", opacity: 0.1 }}
+      />
 
-      {/* Header */}
-      <div className="px-4 pt-10 md:px-10">
-        <div className="mx-auto max-w-[1400px]">
-          <Link to="/" className="inline-flex items-center gap-2 text-[13px] font-odesa-medium transition-opacity hover:opacity-70"
-            style={{ color: `${CREAM}55` }}>
-            <ChevronLeft className="h-4 w-4" /> Головна
-          </Link>
+      {/* ── Шапка-«бровь» (як на головній), мінімальна: тільки назад ───────── */}
+      <div className="container-edge pt-safe relative z-10">
+        <div
+          className="mt-4 rounded-b-[36px] bg-[#fff2e8] px-4 pb-2.5 pt-2.5"
+          style={{ boxShadow: "0 8px 24px -18px rgba(0,47,94,0.35)" }}
+        >
+          <div className="relative flex items-center justify-center">
+            <Link
+              to="/"
+              aria-label={t("backHome")}
+              className="tap absolute left-0 flex h-9 w-9 items-center justify-center rounded-full text-[#002f5e] transition-opacity hover:opacity-70"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </Link>
+            <h1
+              className="px-2 text-center text-[30px] leading-[0.95] text-[#00376c] font-odesa-medium font-odesa-ss02"
+              style={{ letterSpacing: "0.04em" }}
+            >
+              ОДЕЩИНА
+            </h1>
+          </div>
         </div>
       </div>
 
-      {/* Hero */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7 }}
-        className="px-4 pb-12 pt-8 md:px-10 md:pt-12"
-      >
-        <div className="mx-auto max-w-[1400px]">
-          <p className="text-[11px] uppercase tracking-[0.35em] font-odesa-medium" style={{ color: `${CREAM}35` }}>
-            Одещина
-          </p>
-          <h1 className="mt-2 font-odesa-medium text-[56px] leading-[0.93] md:text-[88px] lg:text-[110px]"
-            style={{ color: CREAM }}>
-            Маршрути
-          </h1>
-          <p className="mt-5 max-w-[520px] text-[17px] font-odesa-regular leading-[1.55]"
-            style={{ color: `${CREAM}65` }}>
-            Туристичні маршрути Одещини — від винних доріг Бессарабії до морського узбережжя
-          </p>
+      {/* ── Заголовок сторінки ──────────────────────────────────────────── */}
+      <div className="container-edge relative z-10 pb-6 pt-8">
+        <div className="flex items-center gap-3">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#002f5e] text-[#fff2e8]">
+            <RouteIcon className="h-5 w-5" />
+          </span>
+          <h2 className="text-[34px] leading-[0.95] text-[#002f5e] font-odesa-bold">{t("routes")}</h2>
         </div>
-      </motion.div>
+        <p className="mt-3 max-w-[520px] text-[15px] leading-[1.5] text-[#002f5e]/60 font-odesa-regular">
+          {t("routesPageDesc")}
+        </p>
+      </div>
 
-      {/* Filters */}
+      {/* ── Фільтр за тегами: горизонтальна прокрутка, без стрілок ─────────── */}
       {availableTags.length > 0 && (
-        <div className="px-4 pb-8 md:px-10">
-          <div className="mx-auto max-w-[1400px]">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="flex items-center gap-1.5 text-[12px] font-odesa-medium mr-1"
-                style={{ color: `${CREAM}40` }}>
-                <SlidersHorizontal className="h-3.5 w-3.5" /> Фільтр:
-              </span>
-              <button
-                onClick={() => setActiveTag(null)}
-                className="rounded-full border px-4 py-1.5 text-[13px] font-odesa-medium transition-all duration-200"
-                style={{
-                  borderColor: activeTag === null ? GOLD : `${CREAM}20`,
-                  backgroundColor: activeTag === null ? GOLD : "transparent",
-                  color: activeTag === null ? "#001224" : `${CREAM}65`,
-                }}
-              >
-                Всі ({routes.length})
-              </button>
-              {availableTags.map(tag => {
-                const count = routes.filter(r => r.tags?.includes(tag.id)).length;
-                const isActive = activeTag === tag.id;
-                return (
-                  <motion.button
-                    key={tag.id}
-                    onClick={() => setActiveTag(isActive ? null : tag.id)}
-                    whileTap={{ scale: 0.95 }}
-                    className="flex items-center gap-1.5 rounded-full border px-4 py-1.5 text-[13px] font-odesa-medium transition-all duration-200"
-                    style={{
-                      borderColor: isActive ? GOLD : `${CREAM}20`,
-                      backgroundColor: isActive ? GOLD : "transparent",
-                      color: isActive ? "#001224" : `${CREAM}65`,
-                    }}
-                  >
-                    {tag.emoji} {tag.label}
-                    <span className="ml-0.5 text-[11px] opacity-60">({count})</span>
-                  </motion.button>
-                );
-              })}
-            </div>
+        <div className="container-edge relative z-10 pb-6">
+          <div className="flex gap-2 overflow-x-auto p-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <button
+              type="button"
+              onClick={() => setActiveTag(null)}
+              className="shrink-0 rounded-full px-4 py-1.5 text-[13px] font-odesa-semi transition-all duration-200"
+              style={{
+                backgroundColor: activeTag === null ? GOLD : "rgba(0,47,94,0.07)",
+                color: activeTag === null ? "#002f5e" : "rgba(0,47,94,0.6)",
+                boxShadow: activeTag === null ? "0 6px 14px -6px rgba(223,155,59,0.7)" : "none",
+              }}
+            >
+              {t("viewAll")} ({routes.length})
+            </button>
+            {availableTags.map((tag) => {
+              const isActive = activeTag === tag.id;
+              const count = routes.filter((r) => r.tags?.includes(tag.id)).length;
+              return (
+                <button
+                  key={tag.id}
+                  type="button"
+                  onClick={() => setActiveTag(isActive ? null : tag.id)}
+                  className="flex shrink-0 items-center gap-1.5 rounded-full px-4 py-1.5 text-[13px] font-odesa-semi transition-all duration-200"
+                  style={{
+                    backgroundColor: isActive ? GOLD : "rgba(0,47,94,0.07)",
+                    color: isActive ? "#002f5e" : "rgba(0,47,94,0.6)",
+                    boxShadow: isActive ? "0 6px 14px -6px rgba(223,155,59,0.7)" : "none",
+                  }}
+                >
+                  {tag.emoji} {tag.label}
+                  <span className="ml-0.5 text-[11px] opacity-60">({count})</span>
+                </button>
+              );
+            })}
           </div>
         </div>
       )}
 
-      {/* Grid */}
-      <div className="px-4 pb-20 md:px-10">
-        <div className="mx-auto max-w-[1400px]">
-          {isLoading ? (
-            <div className="flex justify-center py-24">
-              <div className="h-12 w-12 rounded-full border-4 animate-spin"
-                style={{ borderColor: `${CREAM}20`, borderTopColor: `${CREAM}80` }} />
-            </div>
-          ) : routes.length === 0 ? (
-            <div className="py-24 text-center text-[17px] font-odesa-regular" style={{ color: `${CREAM}40` }}>
-              Маршрути незабаром з'являться
-            </div>
-          ) : filtered.length === 0 ? (
-            <motion.div
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-              className="py-24 text-center"
+      {/* ── Список маршрутів ────────────────────────────────────────────── */}
+      <main className="container-edge relative z-10 pb-tabbar md:pb-10">
+        {isLoading ? (
+          <div className="flex justify-center py-24">
+            <span className="h-10 w-10 animate-spin rounded-full border-4 border-[#002f5e]/15 border-t-[#002f5e]" />
+          </div>
+        ) : routes.length === 0 ? (
+          <div className="py-24 text-center text-[16px] text-[#002f5e]/45 font-odesa-regular">
+            {t("noRoutesYet")}
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="py-24 text-center">
+            <p className="text-[16px] text-[#002f5e]/45 font-odesa-regular">{t("noRoutesInCategory")}</p>
+            <button
+              type="button"
+              onClick={() => setActiveTag(null)}
+              className="mt-4 rounded-full border border-[#002f5e]/20 px-5 py-2 text-[13px] text-[#002f5e]/65 font-odesa-medium transition hover:border-[#002f5e]/40"
             >
-              <p className="text-[17px] font-odesa-regular" style={{ color: `${CREAM}40` }}>
-                Маршрутів з цією категорією поки немає
-              </p>
-              <button onClick={() => setActiveTag(null)}
-                className="mt-4 rounded-full border px-5 py-2 text-[13px] font-odesa-medium transition hover:opacity-80"
-                style={{ borderColor: `${CREAM}25`, color: `${CREAM}65` }}>
-                Показати всі
-              </button>
-            </motion.div>
-          ) : (
-            <AnimatePresence mode="wait" initial={false}>
-              <motion.div
-                key={activeTag ?? "all"}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
-              >
-                {filtered.map((route, idx) => (
-                  <RouteCard key={route.id} route={route} idx={idx} onClick={() => setSelected(route)} />
-                ))}
-              </motion.div>
-            </AnimatePresence>
-          )}
-        </div>
-      </div>
+              {t("viewAll")}
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-5">
+            {filtered.map((route, idx) => (
+              <RouteCard key={route.id} route={route} idx={idx} />
+            ))}
+          </div>
+        )}
+      </main>
 
       <SiteFooter />
-
-      <AnimatePresence>
-        {selected && <RouteModal route={selected} onClose={() => setSelected(null)} />}
-      </AnimatePresence>
     </div>
   );
 };

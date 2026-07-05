@@ -22,6 +22,7 @@ const InfoPage = lazy(() => import("./pages/InfoPage"));
 const DistrictsPage = lazy(() => import("./pages/DistrictsPage"));
 const Admin = lazy(() => import("./pages/Admin"));
 const RoutesPage = lazy(() => import("./pages/RoutesPage"));
+const RouteDetailPage = lazy(() => import("./pages/RouteDetailPage"));
 const NearbyPage = lazy(() => import("./pages/NearbyPage"));
 const BasketPage = lazy(() => import("./pages/BasketPage"));
 const RouteMapPage = lazy(() => import("./pages/RouteMapPage"));
@@ -117,6 +118,7 @@ const App = () => {
                   <Route path="/restorany/:slug" element={<EntityDetail type="restaurant" />} />
                   <Route path="/hoteli/:slug" element={<EntityDetail type="hotel" />} />
                   <Route path="/marshruty" element={<RoutesPage />} />
+                  <Route path="/marshruty/:id" element={<RouteDetailPage />} />
                   <Route path="/poblizu" element={<NearbyPage />} />
                   <Route path="/koshyk" element={<BasketPage />} />
                   <Route path="/marshrut" element={<RouteMapPage />} />
