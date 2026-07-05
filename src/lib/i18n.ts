@@ -103,6 +103,7 @@ export const translations = {
     altRoute: "Альтернативний маршрут",
     usefulLinks: "Корисні посилання",
     backToRoutes: "До маршрутів",
+    districtsPageDesc: "Досліджуйте райони Одеської області — оберіть район, населений пункт і знайдіть найкращі місця",
   },
   en: {
     home: "Home",
@@ -208,6 +209,7 @@ export const translations = {
     altRoute: "Alternative route",
     usefulLinks: "Useful links",
     backToRoutes: "Back to routes",
+    districtsPageDesc: "Explore the districts of Odesa region — select a district, settlement and find the best places",
   },
 } as const;
 
