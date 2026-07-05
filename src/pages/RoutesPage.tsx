@@ -19,7 +19,7 @@ const BadgePill = ({ children }: { children: React.ReactNode }) => (
 );
 
 const RouteCard = ({ route, idx }: { route: Route; idx: number }) => {
-  const { t, tl } = useLang();
+  const { tl } = useLang();
   const name = tl(route.name, route.nameEn);
   const desc = tl(route.description, route.descriptionEn);
   const stopsCount = (route.objectIds?.length ?? 0) > 0
@@ -69,7 +69,7 @@ const RouteCard = ({ route, idx }: { route: Route; idx: number }) => {
               {stopsCount > 0 && (
                 <BadgePill>
                   <MapPin className="h-3 w-3" style={{ color: GOLD }} />
-                  {t("routeStops")}: {stopsCount}
+                  {stopsCount}
                 </BadgePill>
               )}
             </div>
