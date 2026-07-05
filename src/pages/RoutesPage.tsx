@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { useState, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { ChevronLeft, Clock, Navigation, ArrowRight, Route as RouteIcon } from "lucide-react";
+import { ChevronLeft, Clock, Navigation, MapPin, ArrowRight, Route as RouteIcon } from "lucide-react";
 import { Img } from "@/components/Img";
 import { loadRoutes, type Route, ROUTE_TAG_OPTIONS, loadRouteTagOrder } from "@/lib/routesRepository";
 import { useLang } from "@/lib/langContext";
@@ -19,9 +19,12 @@ const BadgePill = ({ children }: { children: React.ReactNode }) => (
 );
 
 const RouteCard = ({ route, idx }: { route: Route; idx: number }) => {
-  const { tl } = useLang();
+  const { t, tl } = useLang();
   const name = tl(route.name, route.nameEn);
   const desc = tl(route.description, route.descriptionEn);
+  const stopsCount = (route.objectIds?.length ?? 0) > 0
+    ? route.objectIds!.length
+    : (route.waypointObjectIds ?? []).filter(Boolean).length;
 
   return (
     <motion.div
@@ -49,7 +52,7 @@ const RouteCard = ({ route, idx }: { route: Route; idx: number }) => {
             </div>
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-[#002f5e]/85 via-[#002f5e]/15 to-transparent" />
-          {(route.duration || route.distance) && (
+          {(route.duration || route.distance || stopsCount > 0) && (
             <div className="absolute left-4 top-4 flex flex-wrap gap-2">
               {route.duration && (
                 <BadgePill>
@@ -61,6 +64,12 @@ const RouteCard = ({ route, idx }: { route: Route; idx: number }) => {
                 <BadgePill>
                   <Navigation className="h-3 w-3" style={{ color: GOLD }} />
                   {route.distance}
+                </BadgePill>
+              )}
+              {stopsCount > 0 && (
+                <BadgePill>
+                  <MapPin className="h-3 w-3" style={{ color: GOLD }} />
+                  {t("routeStops")}: {stopsCount}
                 </BadgePill>
               )}
             </div>
