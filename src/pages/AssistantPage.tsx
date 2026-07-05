@@ -110,11 +110,11 @@ export default function AssistantPage() {
         style={{ height: "env(safe-area-inset-bottom)" }}
       />
 
-      {/* фоновий патерн */}
+      {/* фоновий патерн (сузір'я з іскор — тема асистента) */}
       <div
         aria-hidden
         className="pointer-events-none fixed inset-0 z-0"
-        style={{ backgroundImage: "url(/beigepattern.svg)", backgroundSize: "cover", backgroundPosition: "center", opacity: 0.1 }}
+        style={{ backgroundImage: "url(/assistantpattern.svg)", backgroundSize: "200px 200px", backgroundRepeat: "repeat", opacity: 0.07 }}
       />
 
       {/* ── Хедер ─────────────────────────────────────────────── */}
