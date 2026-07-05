@@ -49,6 +49,12 @@ const SiteFooter = () => {
     });
   }, [globalCards]);
 
+  // Instagram (чи перша половина, якщо адмін додасть більше іконок) — зліва
+  // від хвилі, решта — справа, на одному рівні з нею.
+  const splitAt = Math.ceil(socialLinksData.length / 2);
+  const socialLinksLeft = socialLinksData.slice(0, splitAt);
+  const socialLinksRight = socialLinksData.slice(splitAt);
+
   const searchItems = useMemo(
     () => [
       ...(hierarchy?.districts ?? []).map((x) => ({ label: x.name, meta: "Район", href: `/raion/${x.slug}` })),
@@ -108,23 +114,33 @@ const SiteFooter = () => {
           ) : null}
         </div>
 
-        {/* бренд + соцмережі */}
-        <div className="mt-10 flex flex-col items-center text-center">
-          <WaveLines className="h-6 w-28 text-[#df9b3b]" />
-          <div className="mt-6 flex items-center gap-2">
-            {socialLinksData.map(({ label, href, Icon }) => (
-              <a
-                key={label}
-                href={href}
-                target="_blank"
-                rel="noreferrer"
-                className="flex h-11 w-11 items-center justify-center rounded-full border border-[#fff2e8]/25 text-[#fff2e8] transition-all duration-300 hover:-translate-y-1 hover:border-[#df9b3b] hover:bg-[#df9b3b] hover:text-[#002f5e]"
-                aria-label={label}
-              >
-                <Icon className="h-5 w-5" />
-              </a>
-            ))}
-          </div>
+        {/* бренд + соцмережі: іконки по боках від хвилі, на одному рівні */}
+        <div className="mt-10 flex items-center justify-center gap-5">
+          {socialLinksLeft.map(({ label, href, Icon }) => (
+            <a
+              key={label}
+              href={href}
+              target="_blank"
+              rel="noreferrer"
+              className="flex h-11 w-11 items-center justify-center rounded-full border border-[#fff2e8]/25 text-[#fff2e8] transition-all duration-300 hover:-translate-y-1 hover:border-[#df9b3b] hover:bg-[#df9b3b] hover:text-[#002f5e]"
+              aria-label={label}
+            >
+              <Icon className="h-5 w-5" />
+            </a>
+          ))}
+          <WaveLines className="h-6 w-28 shrink-0 text-[#df9b3b]" />
+          {socialLinksRight.map(({ label, href, Icon }) => (
+            <a
+              key={label}
+              href={href}
+              target="_blank"
+              rel="noreferrer"
+              className="flex h-11 w-11 items-center justify-center rounded-full border border-[#fff2e8]/25 text-[#fff2e8] transition-all duration-300 hover:-translate-y-1 hover:border-[#df9b3b] hover:bg-[#df9b3b] hover:text-[#002f5e]"
+              aria-label={label}
+            >
+              <Icon className="h-5 w-5" />
+            </a>
+          ))}
         </div>
 
         {/* контакт для додавання об'єктів — все в один рядок, тому текст короткий */}
