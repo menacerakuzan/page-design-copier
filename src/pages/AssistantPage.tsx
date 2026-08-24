@@ -36,7 +36,7 @@ export default function AssistantPage() {
 
   const [input, setInput] = useState("");
   const [historyOpen, setHistoryOpen] = useState(false);
-  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const scrollRef = useRef<HTMLElement | null>(null);
   const taRef = useRef<HTMLTextAreaElement | null>(null);
 
   const messages = active?.messages ?? [];
@@ -49,16 +49,17 @@ export default function AssistantPage() {
   // (не useEffect) — щоб застосувати ДО першого пофарбування кадру: це SPA-
   // навігація без перезавантаження сторінки, і Safari фіксує колір панелей
   // рано, тож пізня зміна може не встигнути.
+  //
+  // НЕ відновлюємо "попереднє" значення при виході (unmount) — колір для
+  // ЦІЛЬОВОЇ сторінки вже виставляє глобальний PanelColor (App.tsx) за новим
+  // pathname у тому самому переході. Якщо тут ще й відновлювати збережений
+  // при вході колір, два незалежні записи в document.documentElement.style
+  // змагаються без гарантованого порядку — саме це спричиняло "синій екран"
+  // після кнопки «назад»: cleanup міг перезаписати щойно виставлений
+  // PanelColor колір застарілим значенням.
   useLayoutEffect(() => {
-    const html = document.documentElement;
-    const prevHtmlBg = html.style.backgroundColor;
-    const prevBodyBg = document.body.style.backgroundColor;
-    html.style.backgroundColor = "#fff2e8";
+    document.documentElement.style.backgroundColor = "#fff2e8";
     document.body.style.backgroundColor = "#fff2e8";
-    return () => {
-      html.style.backgroundColor = prevHtmlBg;
-      document.body.style.backgroundColor = prevBodyBg;
-    };
   }, []);
 
   // Автоскрол донизу під час стріму / нових повідомлень.
@@ -122,6 +123,12 @@ export default function AssistantPage() {
         <Link
           to="/"
           aria-label={t("backHome")}
+          // Явний blur ДО навігації — якщо клавіатура була відкрита (фокус у
+          // textarea), Safari інакше ховає її вже ПІСЛЯ переходу на головну,
+          // і зсув visual viewport від цієї запізнілої анімації лишає
+          // головну "з'їханою" вгору (RouteCleanup нижче підстраховує ще й
+          // відкладеним скидом скролу).
+          onClick={() => taRef.current?.blur()}
           className="tap flex h-9 w-9 items-center justify-center rounded-full text-[#002f5e] transition-colors hover:bg-[#002f5e]/5"
         >
           <ChevronLeft className="h-5 w-5" />
@@ -130,7 +137,7 @@ export default function AssistantPage() {
         <AssistantAvatar size={40} />
         <div className="min-w-0 flex-1">
           <p className="truncate text-[16px] leading-tight text-[#002f5e] font-odesa-bold">{t("assistantName")}</p>
-          <p className="truncate text-[12px] leading-tight text-[#002f5e]/55 font-odesa-regular">{t("assistantTagline")}</p>
+          <p className="truncate text-[12px] leading-tight text-[#002f5e]/70 font-odesa-regular">{t("assistantTagline")}</p>
         </div>
 
         <Sheet open={historyOpen} onOpenChange={setHistoryOpen}>
@@ -160,7 +167,7 @@ export default function AssistantPage() {
               </button>
 
               {conversations.length === 0 ? (
-                <p className="px-1 py-6 text-center text-[14px] text-[#002f5e]/45 font-odesa-regular">
+                <p className="px-1 py-6 text-center text-[14px] text-[#002f5e]/70 font-odesa-regular">
                   {t("assistantNoHistory")}
                 </p>
               ) : (
@@ -207,12 +214,12 @@ export default function AssistantPage() {
       </header>
 
       {/* ── Стрічка повідомлень ───────────────────────────────── */}
-      <div ref={scrollRef} className="relative z-10 flex-1 overflow-y-auto px-4 py-4">
+      <main id="main-content" tabIndex={-1} ref={scrollRef} className="relative z-10 flex-1 overflow-y-auto px-4 py-4">
         {isEmpty ? (
           <div className="mx-auto flex h-full max-w-[520px] flex-col items-center justify-center text-center">
             <AssistantAvatar size={72} />
             <h1 className="mt-5 text-[24px] leading-tight text-[#002f5e] font-odesa-bold">{t("assistantGreeting")}</h1>
-            <p className="mt-2 max-w-[420px] text-[15px] leading-[1.5] text-[#002f5e]/60 font-odesa-regular">
+            <p className="mt-2 max-w-[420px] text-[15px] leading-[1.5] text-[#002f5e]/70 font-odesa-regular">
               {t("assistantGreetingDesc")}
             </p>
             <div className="mt-6 w-full">
@@ -220,7 +227,7 @@ export default function AssistantPage() {
             </div>
           </div>
         ) : (
-          <div className="mx-auto flex max-w-[640px] flex-col gap-3">
+          <div className="mx-auto flex max-w-[640px] flex-col gap-3 md:max-w-[760px]">
             {messages.map((m) => {
               if (m.role === "user") {
                 return (
@@ -262,15 +269,21 @@ export default function AssistantPage() {
             })}
           </div>
         )}
-      </div>
+      </main>
 
       {/* ── Поле вводу ────────────────────────────────────────── */}
       <div
-        className="relative z-10 shrink-0 border-t border-[#002f5e]/10 bg-[#fff2e8]/90 px-3 pt-2.5 backdrop-blur-md"
-        style={{ paddingBottom: "calc(84px + env(safe-area-inset-bottom))" }}
+        className="relative z-10 shrink-0 border-t border-[#002f5e]/10 bg-[#fff2e8]/90 px-3 pt-2.5 backdrop-blur-md pb-[calc(84px+env(safe-area-inset-bottom))] md:pb-[calc(16px+env(safe-area-inset-bottom))]"
       >
-        <div className="mx-auto flex max-w-[640px] items-end gap-2 rounded-[24px] border border-[#002f5e]/12 bg-white p-1.5 pl-4 shadow-[0_10px_26px_-20px_rgba(0,47,94,0.4)]">
+        <div className="mx-auto flex max-w-[640px] items-end gap-2 rounded-[24px] border border-[#002f5e]/12 bg-white p-1.5 pl-4 shadow-[0_10px_26px_-20px_rgba(0,47,94,0.4)] md:max-w-[760px]">
+          {/* Мітка є в дереві доступності, але візуально прихована: у полі
+              чату видимий підпис над рядком вводу лише дублював би плейсхолдер
+              і з'їдав висоту на мобільних. Плейсхолдер сам по собі міткою не є. */}
+          <label htmlFor="assistant-input" className="sr-only-a11y">
+            {t("assistantInput")}
+          </label>
           <textarea
+            id="assistant-input"
             ref={taRef}
             value={input}
             onChange={(e) => {
@@ -286,7 +299,7 @@ export default function AssistantPage() {
             onBlur={resetScroll}
             rows={1}
             placeholder={t("assistantInput")}
-            className="max-h-[140px] flex-1 resize-none bg-transparent py-2 text-[16px] text-[#002f5e] outline-none font-odesa-regular placeholder:text-[#002f5e]/40"
+            className="max-h-[140px] flex-1 resize-none bg-transparent py-2 text-[16px] text-[#002f5e] outline-none font-odesa-regular placeholder:text-[#002f5e]/70"
           />
           {isStreaming ? (
             <button

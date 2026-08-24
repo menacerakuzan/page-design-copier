@@ -162,12 +162,12 @@ const GalleryEditor = ({
     onCardsChange(next);
   };
 
-  const inputCls = "w-full rounded-xl border border-[#002f5e]/15 bg-white px-3 py-2 text-[13px] text-[#002f5e] placeholder:text-[#002f5e]/30 focus:border-[#002f5e]/35 focus:outline-none";
+  const inputCls = "w-full rounded-xl border border-[#002f5e]/15 bg-white px-3 py-2 text-[13px] text-[#002f5e] placeholder:text-[#002f5e]/70 focus:border-[#002f5e]/35 focus:outline-none";
 
   return (
     <div className="mt-4 flex flex-col gap-3">
       <div className="flex items-center justify-between">
-        <p className="text-[12px] font-semibold uppercase tracking-wide text-[#002f5e]/55">
+        <p className="text-[12px] font-semibold uppercase tracking-wide text-[#002f5e]/70">
           Елементи галереї ({items.length})
           {draftCount > 0 && (
             <span className="ml-2 rounded-full bg-[#df9b3b]/20 px-2 py-0.5 text-[11px] font-semibold normal-case tracking-normal text-[#9a6611]">
@@ -203,7 +203,7 @@ const GalleryEditor = ({
 
       {items.length === 0 && (
         <div
-          className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-[#002f5e]/20 py-10 text-[#002f5e]/35 transition hover:border-[#002f5e]/40"
+          className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-[#002f5e]/20 py-10 text-[#002f5e]/70 transition hover:border-[#002f5e]/40"
           onClick={() => fileRef.current?.click()}
         >
           <ImageIcon className="h-8 w-8 opacity-40" />
@@ -227,13 +227,13 @@ const GalleryEditor = ({
               >
                 <div className="h-12 w-16 shrink-0 overflow-hidden rounded-xl bg-[#002f5e]/8">
                   {isVideo ? (
-                    <div className="flex h-full items-center justify-center text-[#002f5e]/30">
+                    <div className="flex h-full items-center justify-center text-[#002f5e]/70">
                       <Video className="h-5 w-5" />
                     </div>
                   ) : item.imageUrl ? (
                     <img loading="lazy" decoding="async" src={item.imageUrl} alt={item.title} className="h-full w-full object-cover" />
                   ) : (
-                    <div className="flex h-full items-center justify-center text-[#002f5e]/30">
+                    <div className="flex h-full items-center justify-center text-[#002f5e]/70">
                       <ImageIcon className="h-5 w-5" />
                     </div>
                   )}
@@ -245,7 +245,7 @@ const GalleryEditor = ({
                     )}
                     <span className="truncate">{item.title || "(без назви)"}</span>
                   </p>
-                  <p className="text-[11px] text-[#002f5e]/40">
+                  <p className="text-[11px] text-[#002f5e]/70">
                     {isVideo ? "Відео" : "Фото"} · {COL_SPAN_OPTIONS.find((o) => o.value === colSpan)?.label}
                   </p>
                 </div>
@@ -267,7 +267,7 @@ const GalleryEditor = ({
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>
-                  <ChevronDown className={`h-4 w-4 text-[#002f5e]/30 transition-transform ${isEditing ? "rotate-180" : ""}`} />
+                  <ChevronDown className={`h-4 w-4 text-[#002f5e]/70 transition-transform ${isEditing ? "rotate-180" : ""}`} />
                 </div>
               </div>
 
@@ -275,7 +275,7 @@ const GalleryEditor = ({
               {isEditing && (
                 <div className="flex flex-col gap-3 border-t border-[#002f5e]/8 px-3 py-3">
                   <div>
-                    <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-[#002f5e]/45">Підпис</label>
+                    <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-[#002f5e]/70">Підпис</label>
                     <input
                       value={item.title}
                       onChange={(e) => void updateItem(item.id, { title: e.target.value })}
@@ -284,14 +284,14 @@ const GalleryEditor = ({
                     />
                   </div>
                   <div>
-                    <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-[#002f5e]/45">Ширина картки</label>
+                    <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-[#002f5e]/70">Ширина картки</label>
                     <div className="flex gap-1.5">
                       {COL_SPAN_OPTIONS.map((opt) => (
                         <button
                           key={opt.value}
                           type="button"
                           onClick={() => void updateItem(item.id, { payload: { ...item.payload, colSpan: opt.value } })}
-                          className={`flex-1 rounded-xl py-2 text-[12px] font-medium transition ${colSpan === opt.value ? "bg-[#002f5e] text-[#fff2e8]" : "bg-[#002f5e]/8 text-[#002f5e]/60 hover:bg-[#002f5e]/15"}`}
+                          className={`flex-1 rounded-xl py-2 text-[12px] font-medium transition ${colSpan === opt.value ? "bg-[#002f5e] text-[#fff2e8]" : "bg-[#002f5e]/8 text-[#002f5e]/70 hover:bg-[#002f5e]/15"}`}
                         >
                           {opt.label}
                         </button>
@@ -299,14 +299,14 @@ const GalleryEditor = ({
                     </div>
                   </div>
                   <div>
-                    <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-[#002f5e]/45">Розмір тексту</label>
+                    <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-[#002f5e]/70">Розмір тексту</label>
                     <div className="flex gap-1.5">
                       {TEXT_SIZE_OPTIONS.map((opt) => (
                         <button
                           key={opt.value}
                           type="button"
                           onClick={() => void updateItem(item.id, { payload: { ...item.payload, textSize: opt.value } })}
-                          className={`flex-1 rounded-xl py-2 text-[12px] font-medium transition ${textSize === opt.value ? "bg-[#002f5e] text-[#fff2e8]" : "bg-[#002f5e]/8 text-[#002f5e]/60 hover:bg-[#002f5e]/15"}`}
+                          className={`flex-1 rounded-xl py-2 text-[12px] font-medium transition ${textSize === opt.value ? "bg-[#002f5e] text-[#fff2e8]" : "bg-[#002f5e]/8 text-[#002f5e]/70 hover:bg-[#002f5e]/15"}`}
                         >
                           {opt.label}
                         </button>
@@ -317,7 +317,7 @@ const GalleryEditor = ({
                     <button
                       type="button"
                       onClick={() => fileRef.current?.click()}
-                      className="flex items-center justify-center gap-2 rounded-xl border border-[#002f5e]/15 py-2 text-[12px] text-[#002f5e]/50 transition hover:border-[#002f5e]/30 hover:text-[#002f5e]"
+                      className="flex items-center justify-center gap-2 rounded-xl border border-[#002f5e]/15 py-2 text-[12px] text-[#002f5e]/70 transition hover:border-[#002f5e]/30 hover:text-[#002f5e]"
                     >
                       <Upload className="h-3.5 w-3.5" /> Замінити файл
                     </button>
@@ -395,8 +395,8 @@ const ColorPicker = ({
               : "repeating-conic-gradient(#ccc 0% 25%, #fff 0% 50%) 0/8px 8px",
           }}
         />
-        <Palette className="h-3.5 w-3.5 text-[#002f5e]/50" />
-        <span className="text-[#002f5e]/60">{value ?? "Без кольору"}</span>
+        <Palette className="h-3.5 w-3.5 text-[#002f5e]/70" />
+        <span className="text-[#002f5e]/70">{value ?? "Без кольору"}</span>
       </button>
 
       {open && (
@@ -416,7 +416,7 @@ const ColorPicker = ({
                     className="h-7 w-7 rounded-full border border-[#002f5e]/15"
                     style={{ backgroundColor: p.value }}
                   />
-                  <span className="text-center text-[10px] leading-tight text-[#002f5e]/60">
+                  <span className="text-center text-[10px] leading-tight text-[#002f5e]/70">
                     {p.label}
                   </span>
                 </button>
@@ -485,31 +485,31 @@ const SectionRow = ({
       }}
     />
     {/* icon */}
-    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#002f5e]/8 text-[#002f5e]/60">
+    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#002f5e]/8 text-[#002f5e]/70">
       <SectionIcon kind={section.kind} />
     </span>
     {/* title */}
     <div className="min-w-0 flex-1">
       <p className="truncate text-[14px] font-semibold text-[#002f5e]">{section.title}</p>
-      <p className="truncate text-[11px] text-[#002f5e]/45">{SECTION_KIND_META[section.kind]?.label}</p>
+      <p className="truncate text-[11px] text-[#002f5e]/70">{SECTION_KIND_META[section.kind]?.label}</p>
     </div>
     {!section.visible && (
-      <span className="shrink-0 rounded-full bg-[#002f5e]/10 px-2 py-0.5 text-[10px] font-medium text-[#002f5e]/50">
+      <span className="shrink-0 rounded-full bg-[#002f5e]/10 px-2 py-0.5 text-[10px] font-medium text-[#002f5e]/70">
         Приховано
       </span>
     )}
     {/* actions */}
     <div className="flex shrink-0 items-center gap-1 opacity-0 transition group-hover:opacity-100">
       <button type="button" onClick={(e) => { e.stopPropagation(); onMoveUp(); }} disabled={isFirst}
-        className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#002f5e]/8 text-[#002f5e]/60 transition hover:bg-[#002f5e]/15 disabled:opacity-25">
+        className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#002f5e]/8 text-[#002f5e]/70 transition hover:bg-[#002f5e]/15 disabled:opacity-25">
         <ChevronUp className="h-3.5 w-3.5" />
       </button>
       <button type="button" onClick={(e) => { e.stopPropagation(); onMoveDown(); }} disabled={isLast}
-        className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#002f5e]/8 text-[#002f5e]/60 transition hover:bg-[#002f5e]/15 disabled:opacity-25">
+        className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#002f5e]/8 text-[#002f5e]/70 transition hover:bg-[#002f5e]/15 disabled:opacity-25">
         <ChevronDown className="h-3.5 w-3.5" />
       </button>
       <button type="button" onClick={(e) => { e.stopPropagation(); onToggleVisible(); }}
-        className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#002f5e]/8 text-[#002f5e]/60 transition hover:bg-[#002f5e]/15">
+        className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#002f5e]/8 text-[#002f5e]/70 transition hover:bg-[#002f5e]/15">
         {section.visible ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
       </button>
       <button type="button" onClick={(e) => { e.stopPropagation(); onDelete(); }}
@@ -572,13 +572,13 @@ const ObjectOrderEditor = ({
   return (
     <div className="mt-1">
       <div className="mb-3 flex items-center justify-between">
-        <label className="text-[12px] font-semibold uppercase tracking-wide text-[#002f5e]/55">
+        <label className="text-[12px] font-semibold uppercase tracking-wide text-[#002f5e]/70">
           Порядок та видимість
         </label>
         <div className="flex gap-3">
           {!hasCustomOrder ? (
             <button type="button" onClick={enableAll}
-              className="rounded-lg border border-[#002f5e]/15 px-3 py-1 text-[12px] text-[#002f5e]/60 transition hover:border-[#002f5e]/30 hover:text-[#002f5e]">
+              className="rounded-lg border border-[#002f5e]/15 px-3 py-1 text-[12px] text-[#002f5e]/70 transition hover:border-[#002f5e]/30 hover:text-[#002f5e]">
               Задати порядок
             </button>
           ) : (
@@ -593,14 +593,14 @@ const ObjectOrderEditor = ({
       {!hasCustomOrder ? (
         <div className="flex items-center justify-center rounded-2xl border border-dashed border-[#002f5e]/15 py-8 text-center">
           <div>
-            <GripVertical className="mx-auto mb-2 h-6 w-6 text-[#002f5e]/20" />
-            <p className="text-[13px] text-[#002f5e]/45">Об'єкти відображаються у порядку за замовчуванням</p>
-            <p className="mt-1 text-[11px] text-[#002f5e]/30">Натисніть «Задати порядок» щоб керувати послідовністю</p>
+            <GripVertical className="mx-auto mb-2 h-6 w-6 text-[#002f5e]/70" />
+            <p className="text-[13px] text-[#002f5e]/70">Об'єкти відображаються у порядку за замовчуванням</p>
+            <p className="mt-1 text-[11px] text-[#002f5e]/70">Натисніть «Задати порядок» щоб керувати послідовністю</p>
           </div>
         </div>
       ) : (
         <>
-          <div className="mb-3 flex items-center gap-2 rounded-xl border border-[#002f5e]/10 bg-[#002f5e]/3 px-3 py-2 text-[12px] text-[#002f5e]/50">
+          <div className="mb-3 flex items-center gap-2 rounded-xl border border-[#002f5e]/10 bg-[#002f5e]/3 px-3 py-2 text-[12px] text-[#002f5e]/70">
             <span>Видимо: <strong className="text-[#002f5e]">{visibleIds.length}</strong> з {entities.length}</span>
           </div>
 
@@ -609,7 +609,7 @@ const ObjectOrderEditor = ({
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Пошук..."
-            className="mb-2 w-full rounded-xl border border-[#002f5e]/12 bg-white px-3 py-2 text-[13px] text-[#002f5e] placeholder:text-[#002f5e]/30 focus:border-[#002f5e]/30 focus:outline-none"
+            className="mb-2 w-full rounded-xl border border-[#002f5e]/12 bg-white px-3 py-2 text-[13px] text-[#002f5e] placeholder:text-[#002f5e]/70 focus:border-[#002f5e]/30 focus:outline-none"
           />
 
           <div className="flex flex-col gap-2 max-h-[420px] overflow-y-auto pr-0.5">
@@ -626,18 +626,18 @@ const ObjectOrderEditor = ({
                   <div className="h-11 w-14 shrink-0 overflow-hidden rounded-xl bg-[#002f5e]/8">
                     {ent.imageUrl
                       ? <img loading="lazy" decoding="async" src={ent.imageUrl} alt="" className="h-full w-full object-cover" />
-                      : <div className="flex h-full w-full items-center justify-center text-[#002f5e]/20"><ImageIcon className="h-5 w-5" /></div>
+                      : <div className="flex h-full w-full items-center justify-center text-[#002f5e]/70"><ImageIcon className="h-5 w-5" /></div>
                     }
                   </div>
                   {/* Info */}
                   <div className="min-w-0 flex-1">
-                    <p className={`truncate text-[13px] font-semibold ${isVis ? "text-[#002f5e]" : "text-[#002f5e]/40"}`}>{ent.name}</p>
+                    <p className={`truncate text-[13px] font-semibold ${isVis ? "text-[#002f5e]" : "text-[#002f5e]/70"}`}>{ent.name}</p>
                     {ent.badge && (
                       <span className="mt-0.5 inline-block rounded-full px-2 py-0.5 text-[10px] font-medium text-white" style={{ backgroundColor: ent.badgeColor ?? "#002f5e" }}>
                         {ent.badge}
                       </span>
                     )}
-                    {isVis && <p className="text-[11px] text-[#002f5e]/35">Позиція: {visIdx + 1}</p>}
+                    {isVis && <p className="text-[11px] text-[#002f5e]/70">Позиція: {visIdx + 1}</p>}
                   </div>
                   {/* Controls */}
                   <div className="flex shrink-0 items-center gap-1">
@@ -659,11 +659,11 @@ const ObjectOrderEditor = ({
                           className="w-10 rounded-lg border border-[#002f5e]/15 bg-white px-1 py-1 text-center text-[12px] font-semibold text-[#002f5e] focus:border-[#002f5e]/35 focus:outline-none"
                         />
                         <button type="button" onClick={() => moveUp(visIdx)} disabled={visIdx === 0}
-                          className="flex h-7 w-7 items-center justify-center rounded-lg border border-[#002f5e]/10 text-[#002f5e]/40 transition hover:border-[#002f5e]/25 hover:text-[#002f5e] disabled:opacity-20">
+                          className="flex h-7 w-7 items-center justify-center rounded-lg border border-[#002f5e]/10 text-[#002f5e]/70 transition hover:border-[#002f5e]/25 hover:text-[#002f5e] disabled:opacity-20">
                           <ChevronUp className="h-3.5 w-3.5" />
                         </button>
                         <button type="button" onClick={() => moveDown(visIdx)} disabled={visIdx === visibleIds.length - 1}
-                          className="flex h-7 w-7 items-center justify-center rounded-lg border border-[#002f5e]/10 text-[#002f5e]/40 transition hover:border-[#002f5e]/25 hover:text-[#002f5e] disabled:opacity-20">
+                          className="flex h-7 w-7 items-center justify-center rounded-lg border border-[#002f5e]/10 text-[#002f5e]/70 transition hover:border-[#002f5e]/25 hover:text-[#002f5e] disabled:opacity-20">
                           <ChevronDown className="h-3.5 w-3.5" />
                         </button>
                       </>
@@ -672,8 +672,8 @@ const ObjectOrderEditor = ({
                       title={isVis ? "Приховати" : "Показати"}
                       className={`flex h-7 w-7 items-center justify-center rounded-lg border transition ${
                         isVis
-                          ? "border-[#002f5e]/15 text-[#002f5e]/50 hover:border-[#002f5e]/30 hover:text-[#002f5e]"
-                          : "border-[#002f5e]/10 text-[#002f5e]/25 hover:border-[#002f5e]/20 hover:text-[#002f5e]/60"
+                          ? "border-[#002f5e]/15 text-[#002f5e]/70 hover:border-[#002f5e]/30 hover:text-[#002f5e]"
+                          : "border-[#002f5e]/10 text-[#002f5e]/70 hover:border-[#002f5e]/20 hover:text-[#002f5e]/70"
                       }`}>
                       {isVis ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
                     </button>
@@ -739,7 +739,7 @@ const SectionEditor = ({
     upd({ filter: { ...section.filter, entityIds: next } });
   };
 
-  const inputCls = "w-full rounded-xl border border-[#002f5e]/15 bg-white px-4 py-2.5 text-[14px] text-[#002f5e] placeholder:text-[#002f5e]/30 focus:border-[#002f5e]/35 focus:outline-none focus:ring-2 focus:ring-[#002f5e]/10";
+  const inputCls = "w-full rounded-xl border border-[#002f5e]/15 bg-white px-4 py-2.5 text-[14px] text-[#002f5e] placeholder:text-[#002f5e]/70 focus:border-[#002f5e]/35 focus:outline-none focus:ring-2 focus:ring-[#002f5e]/10";
 
   return (
     <div className="rounded-2xl border border-[#002f5e]/12 bg-white/80 p-5 shadow-sm backdrop-blur">
@@ -750,25 +750,25 @@ const SectionEditor = ({
           </span>
           <div>
             <p className="text-[15px] font-semibold text-[#002f5e]">Редагування блоку</p>
-            <p className="text-[11px] text-[#002f5e]/45">{SECTION_KIND_META[section.kind]?.label}</p>
+            <p className="text-[11px] text-[#002f5e]/70">{SECTION_KIND_META[section.kind]?.label}</p>
           </div>
         </div>
         <button type="button" onClick={onClose} className="rounded-lg p-1.5 hover:bg-[#002f5e]/8">
-          <X className="h-4 w-4 text-[#002f5e]/50" />
+          <X className="h-4 w-4 text-[#002f5e]/70" />
         </button>
       </div>
 
       <div className="flex flex-col gap-4">
         <div>
-          <label className="mb-1 block text-[12px] font-semibold uppercase tracking-wide text-[#002f5e]/55">Заголовок блоку</label>
+          <label className="mb-1 block text-[12px] font-semibold uppercase tracking-wide text-[#002f5e]/70">Заголовок блоку</label>
           <input value={section.title} onChange={(e) => upd({ title: e.target.value })} className={inputCls} />
         </div>
         <div>
-          <label className="mb-1 block text-[12px] font-semibold uppercase tracking-wide text-[#002f5e]/55">Підзаголовок</label>
+          <label className="mb-1 block text-[12px] font-semibold uppercase tracking-wide text-[#002f5e]/70">Підзаголовок</label>
           <input value={section.subtitle ?? ""} onChange={(e) => upd({ subtitle: e.target.value })} placeholder="Необов'язково" className={inputCls} />
         </div>
         <div>
-          <label className="mb-1.5 block text-[12px] font-semibold uppercase tracking-wide text-[#002f5e]/55">Колір фону</label>
+          <label className="mb-1.5 block text-[12px] font-semibold uppercase tracking-wide text-[#002f5e]/70">Колір фону</label>
           <ColorPicker value={section.bgColor} onChange={(v) => upd({ bgColor: v })} />
         </div>
         <label className="flex cursor-pointer items-center gap-3 rounded-xl bg-[#002f5e]/5 px-4 py-3">
@@ -786,7 +786,7 @@ const SectionEditor = ({
 
         {isListSection && (
           <div>
-            <label className="mb-1 block text-[12px] font-semibold uppercase tracking-wide text-[#002f5e]/55">Макс. кількість елементів</label>
+            <label className="mb-1 block text-[12px] font-semibold uppercase tracking-wide text-[#002f5e]/70">Макс. кількість елементів</label>
             <input type="number" min={1} max={100}
               value={section.filter?.limit ?? ""}
               onChange={(e) => upd({ filter: { ...section.filter, limit: e.target.value ? Number(e.target.value) : undefined } })}
@@ -796,49 +796,49 @@ const SectionEditor = ({
 
         {section.kind === "map" && (
           <div>
-            <label className="mb-1 block text-[12px] font-semibold uppercase tracking-wide text-[#002f5e]/55">Embed URL карти</label>
+            <label className="mb-1 block text-[12px] font-semibold uppercase tracking-wide text-[#002f5e]/70">Embed URL карти</label>
             <input value={section.payload?.embedUrl ?? ""} onChange={(e) => upd({ payload: { ...section.payload, embedUrl: e.target.value } })} placeholder="https://maps.google.com/maps?q=...&output=embed" className={inputCls} />
           </div>
         )}
         {section.kind === "custom_text" && (
           <div>
-            <label className="mb-1 block text-[12px] font-semibold uppercase tracking-wide text-[#002f5e]/55">Текст блоку</label>
-            <textarea rows={5} value={section.payload?.text ?? ""} onChange={(e) => upd({ payload: { ...section.payload, text: e.target.value } })} placeholder="Введіть текст..." className="w-full resize-none rounded-xl border border-[#002f5e]/15 bg-white px-4 py-2.5 text-[14px] text-[#002f5e] placeholder:text-[#002f5e]/30 focus:border-[#002f5e]/35 focus:outline-none" />
+            <label className="mb-1 block text-[12px] font-semibold uppercase tracking-wide text-[#002f5e]/70">Текст блоку</label>
+            <textarea rows={5} value={section.payload?.text ?? ""} onChange={(e) => upd({ payload: { ...section.payload, text: e.target.value } })} placeholder="Введіть текст..." className="w-full resize-none rounded-xl border border-[#002f5e]/15 bg-white px-4 py-2.5 text-[14px] text-[#002f5e] placeholder:text-[#002f5e]/70 focus:border-[#002f5e]/35 focus:outline-none" />
           </div>
         )}
         {section.kind === "quote" && (
           <>
             <div>
-              <label className="mb-1 block text-[12px] font-semibold uppercase tracking-wide text-[#002f5e]/55">Текст цитати</label>
-              <textarea rows={3} value={section.payload?.quote ?? ""} onChange={(e) => upd({ payload: { ...section.payload, quote: e.target.value } })} placeholder="«Текст цитати...»" className="w-full resize-none rounded-xl border border-[#002f5e]/15 bg-white px-4 py-2.5 text-[14px] text-[#002f5e] placeholder:text-[#002f5e]/30 focus:border-[#002f5e]/35 focus:outline-none" />
+              <label className="mb-1 block text-[12px] font-semibold uppercase tracking-wide text-[#002f5e]/70">Текст цитати</label>
+              <textarea rows={3} value={section.payload?.quote ?? ""} onChange={(e) => upd({ payload: { ...section.payload, quote: e.target.value } })} placeholder="«Текст цитати...»" className="w-full resize-none rounded-xl border border-[#002f5e]/15 bg-white px-4 py-2.5 text-[14px] text-[#002f5e] placeholder:text-[#002f5e]/70 focus:border-[#002f5e]/35 focus:outline-none" />
             </div>
             <div>
-              <label className="mb-1 block text-[12px] font-semibold uppercase tracking-wide text-[#002f5e]/55">Автор (необов'язково)</label>
+              <label className="mb-1 block text-[12px] font-semibold uppercase tracking-wide text-[#002f5e]/70">Автор (необов'язково)</label>
               <input value={section.payload?.author ?? ""} onChange={(e) => upd({ payload: { ...section.payload, author: e.target.value } })} placeholder="Ім'я автора або джерело" className={inputCls} />
             </div>
           </>
         )}
         {section.kind === "stat_strip" && (
           <div>
-            <label className="mb-1 block text-[12px] font-semibold uppercase tracking-wide text-[#002f5e]/55">Факти (рядок: "Значення | Підпис")</label>
-            <textarea rows={4} value={section.payload?.stats ?? ""} onChange={(e) => upd({ payload: { ...section.payload, stats: e.target.value } })} placeholder={"3 200 км² | Площа\n1.2 млн | Населення"} className="w-full resize-none rounded-xl border border-[#002f5e]/15 bg-white px-4 py-2.5 font-mono text-[13px] text-[#002f5e] placeholder:text-[#002f5e]/30 focus:border-[#002f5e]/35 focus:outline-none" />
+            <label className="mb-1 block text-[12px] font-semibold uppercase tracking-wide text-[#002f5e]/70">Факти (рядок: "Значення | Підпис")</label>
+            <textarea rows={4} value={section.payload?.stats ?? ""} onChange={(e) => upd({ payload: { ...section.payload, stats: e.target.value } })} placeholder={"3 200 км² | Площа\n1.2 млн | Населення"} className="w-full resize-none rounded-xl border border-[#002f5e]/15 bg-white px-4 py-2.5 font-mono text-[13px] text-[#002f5e] placeholder:text-[#002f5e]/70 focus:border-[#002f5e]/35 focus:outline-none" />
           </div>
         )}
         {section.kind === "menu_link" && (
           <div>
-            <label className="mb-1 block text-[12px] font-semibold uppercase tracking-wide text-[#002f5e]/55">Посилання на меню</label>
+            <label className="mb-1 block text-[12px] font-semibold uppercase tracking-wide text-[#002f5e]/70">Посилання на меню</label>
             <input value={section.payload?.menuUrl ?? ""} onChange={(e) => upd({ payload: { ...section.payload, menuUrl: e.target.value } })} placeholder="https://..." className={inputCls} />
           </div>
         )}
         {section.kind === "ticket_info" && (
           <div>
-            <label className="mb-1 block text-[12px] font-semibold uppercase tracking-wide text-[#002f5e]/55">Інформація про квитки</label>
-            <textarea rows={3} value={section.payload?.ticketInfo ?? ""} onChange={(e) => upd({ payload: { ...section.payload, ticketInfo: e.target.value } })} placeholder="Квитки можна придбати на ..." className="w-full resize-none rounded-xl border border-[#002f5e]/15 bg-white px-4 py-2.5 text-[14px] text-[#002f5e] placeholder:text-[#002f5e]/30 focus:border-[#002f5e]/35 focus:outline-none" />
+            <label className="mb-1 block text-[12px] font-semibold uppercase tracking-wide text-[#002f5e]/70">Інформація про квитки</label>
+            <textarea rows={3} value={section.payload?.ticketInfo ?? ""} onChange={(e) => upd({ payload: { ...section.payload, ticketInfo: e.target.value } })} placeholder="Квитки можна придбати на ..." className="w-full resize-none rounded-xl border border-[#002f5e]/15 bg-white px-4 py-2.5 text-[14px] text-[#002f5e] placeholder:text-[#002f5e]/70 focus:border-[#002f5e]/35 focus:outline-none" />
           </div>
         )}
         {section.kind === "video" && (
           <div>
-            <label className="mb-1 block text-[12px] font-semibold uppercase tracking-wide text-[#002f5e]/55">URL або завантажити відео</label>
+            <label className="mb-1 block text-[12px] font-semibold uppercase tracking-wide text-[#002f5e]/70">URL або завантажити відео</label>
             <input value={section.payload?.videoUrl ?? ""} onChange={(e) => upd({ payload: { ...section.payload, videoUrl: e.target.value } })} placeholder="https://..." className={inputCls} />
           </div>
         )}
@@ -876,7 +876,7 @@ const AddSectionPanel = ({
         <div className="flex items-center justify-between border-b border-[#002f5e]/10 px-5 py-4">
           <h3 className="text-[16px] font-semibold text-[#002f5e]">Додати блок</h3>
           <button type="button" onClick={onClose} className="rounded-lg p-1.5 hover:bg-[#002f5e]/8">
-            <X className="h-4 w-4 text-[#002f5e]/50" />
+            <X className="h-4 w-4 text-[#002f5e]/70" />
           </button>
         </div>
         <div className="flex-1 overflow-y-auto px-4 py-4">
@@ -891,7 +891,7 @@ const AddSectionPanel = ({
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="text-[13px] font-semibold text-[#002f5e]">{meta.label}</p>
-                    <p className="text-[11px] text-[#002f5e]/50">{meta.description}</p>
+                    <p className="text-[11px] text-[#002f5e]/70">{meta.description}</p>
                     {alreadyAdded && <span className="mt-1 inline-block text-[10px] text-[#9f1f47]/70">Вже додано</span>}
                   </div>
                 </button>
@@ -958,27 +958,27 @@ const EntityListPanel = ({
             : "border-[#002f5e]/15 bg-white/80 text-[#002f5e] hover:border-[#002f5e]/30 hover:bg-white"
         }`}>
         <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${selectedId === "default" ? "bg-white/15" : "bg-[#002f5e]/8"}`}>
-          <Globe className={`h-5 w-5 ${selectedId === "default" ? "text-[#fff2e8]" : "text-[#002f5e]/60"}`} />
+          <Globe className={`h-5 w-5 ${selectedId === "default" ? "text-[#fff2e8]" : "text-[#002f5e]/70"}`} />
         </span>
         <div className="min-w-0 flex-1">
           <p className="text-[13px] font-semibold">Шаблон за замовчуванням</p>
-          <p className={`text-[11px] ${selectedId === "default" ? "text-[#fff2e8]/60" : "text-[#002f5e]/45"}`}>Застосовується до всіх</p>
+          <p className={`text-[11px] ${selectedId === "default" ? "text-[#fff2e8]/60" : "text-[#002f5e]/70"}`}>Застосовується до всіх</p>
         </div>
         {selectedId === "default" && <Check className="h-4 w-4 shrink-0 text-[#fff2e8]/80" />}
       </button>
 
       {/* Search */}
       <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Пошук..."
-        className="w-full rounded-xl border border-[#002f5e]/12 bg-white px-3 py-2 text-[13px] text-[#002f5e] placeholder:text-[#002f5e]/30 focus:border-[#002f5e]/30 focus:outline-none" />
+        className="w-full rounded-xl border border-[#002f5e]/12 bg-white px-3 py-2 text-[13px] text-[#002f5e] placeholder:text-[#002f5e]/70 focus:border-[#002f5e]/30 focus:outline-none" />
 
-      <p className="px-1 text-[10px] font-semibold uppercase tracking-widest text-[#002f5e]/30">
+      <p className="px-1 text-[10px] font-semibold uppercase tracking-widest text-[#002f5e]/70">
         {entityType === "district" ? "Райони" : entityType === "city" ? "Міста" : "Об'єкти"}
       </p>
 
       {/* Entity cards */}
       <div className="flex flex-1 flex-col gap-2 overflow-y-auto pb-2">
         {items.length === 0 ? (
-          <p className="py-8 text-center text-[12px] text-[#002f5e]/40">Нічого не знайдено</p>
+          <p className="py-8 text-center text-[12px] text-[#002f5e]/70">Нічого не знайдено</p>
         ) : (
           items.map((item) => (
             <button key={item.id} type="button" onClick={() => onSelect(item.id)}
@@ -991,7 +991,7 @@ const EntityListPanel = ({
                 <img loading="lazy" decoding="async" src={item.imageUrl} alt={item.name} className="h-12 w-12 shrink-0 rounded-xl object-cover" />
               ) : (
                 <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#002f5e]/8">
-                  <MapPin className="h-5 w-5 text-[#002f5e]/30" />
+                  <MapPin className="h-5 w-5 text-[#002f5e]/70" />
                 </span>
               )}
               <div className="min-w-0 flex-1">
@@ -1001,7 +1001,7 @@ const EntityListPanel = ({
                     <span className="shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-medium text-white" style={{ backgroundColor: item.badgeColor ?? "#002f5e" }}>{item.badge}</span>
                   )}
                 </div>
-                {item.sub && <p className="truncate text-[11px] text-[#002f5e]/45">{item.sub}</p>}
+                {item.sub && <p className="truncate text-[11px] text-[#002f5e]/70">{item.sub}</p>}
               </div>
               {selectedId === item.id && <Check className="h-4 w-4 shrink-0 text-[#002f5e]" />}
             </button>
@@ -1056,7 +1056,7 @@ const DistrictOrderPanel = ({ districts, showToast, selectedId, onSelect }: {
   return (
     <div className="mb-3 rounded-2xl border border-[#002f5e]/10 bg-white/70 p-3">
       <div className="mb-2 flex items-center justify-between">
-        <p className="text-[10px] font-semibold uppercase tracking-widest text-[#002f5e]/40">Порядок карток</p>
+        <p className="text-[10px] font-semibold uppercase tracking-widest text-[#002f5e]/70">Порядок карток</p>
         {dirty && (
           <button type="button" onClick={save} disabled={saving}
             className="flex items-center gap-1 rounded-lg bg-[#002f5e] px-2.5 py-1 text-[11px] font-medium text-white transition hover:bg-[#002f5e]/85 disabled:opacity-60">
@@ -1078,19 +1078,19 @@ const DistrictOrderPanel = ({ districts, showToast, selectedId, onSelect }: {
                 : "border-[#002f5e]/8 bg-[#fff2e8]/60 hover:bg-[#002f5e]/5"
             }`}
             onClick={() => onSelect(d.id)}>
-            <GripVertical className={`h-3.5 w-3.5 shrink-0 ${isActive ? "text-white/30" : "text-[#002f5e]/20"}`} />
-            <span className={`w-5 shrink-0 text-center text-[11px] font-semibold ${isActive ? "text-white/50" : "text-[#002f5e]/35"}`}>{idx + 1}</span>
+            <GripVertical className={`h-3.5 w-3.5 shrink-0 ${isActive ? "text-white/75" : "text-[#002f5e]/70"}`} />
+            <span className={`w-5 shrink-0 text-center text-[11px] font-semibold ${isActive ? "text-white/75" : "text-[#002f5e]/70"}`}>{idx + 1}</span>
             {d.imageUrl && (
               <img loading="lazy" decoding="async" src={d.imageUrl} alt={d.name} className="h-7 w-10 shrink-0 rounded-md object-cover" />
             )}
             <span className={`flex-1 truncate text-[12px] font-medium ${isActive ? "text-white" : "text-[#002f5e]"}`}>{d.name}</span>
             <div className="flex flex-col" onClick={e => e.stopPropagation()}>
               <button type="button" onClick={() => move(idx, -1)} disabled={idx === 0}
-                className={`rounded p-0.5 transition disabled:opacity-20 ${isActive ? "text-white/50 hover:text-white" : "text-[#002f5e]/30 hover:text-[#002f5e]"}`}>
+                className={`rounded p-0.5 transition disabled:opacity-20 ${isActive ? "text-white/75 hover:text-white" : "text-[#002f5e]/70 hover:text-[#002f5e]"}`}>
                 <ChevronUp className="h-3 w-3" />
               </button>
               <button type="button" onClick={() => move(idx, 1)} disabled={idx === ordered.length - 1}
-                className={`rounded p-0.5 transition disabled:opacity-20 ${isActive ? "text-white/50 hover:text-white" : "text-[#002f5e]/30 hover:text-[#002f5e]"}`}>
+                className={`rounded p-0.5 transition disabled:opacity-20 ${isActive ? "text-white/75 hover:text-white" : "text-[#002f5e]/70 hover:text-[#002f5e]"}`}>
                 <ChevronDown className="h-3 w-3" />
               </button>
             </div>
@@ -1146,7 +1146,7 @@ const CityOrderPanel = ({ cities, districts, showToast, selectedId, onSelect }: 
   return (
     <div className="mb-3 rounded-2xl border border-[#002f5e]/10 bg-white/70 p-3">
       <div className="mb-2 flex items-center justify-between">
-        <p className="text-[10px] font-semibold uppercase tracking-widest text-[#002f5e]/40">Порядок міст</p>
+        <p className="text-[10px] font-semibold uppercase tracking-widest text-[#002f5e]/70">Порядок міст</p>
         {dirty && (
           <button type="button" onClick={save} disabled={saving}
             className="flex items-center gap-1 rounded-lg bg-[#002f5e] px-2.5 py-1 text-[11px] font-medium text-white transition hover:bg-[#002f5e]/85 disabled:opacity-60">
@@ -1169,24 +1169,24 @@ const CityOrderPanel = ({ cities, districts, showToast, selectedId, onSelect }: 
                   : "border-[#002f5e]/8 bg-[#fff2e8]/60 hover:bg-[#002f5e]/5"
               }`}
               onClick={() => onSelect(city.id)}>
-              <GripVertical className={`h-3.5 w-3.5 shrink-0 ${isActive ? "text-white/30" : "text-[#002f5e]/20"}`} />
-              <span className={`w-5 shrink-0 text-center text-[11px] font-semibold ${isActive ? "text-white/50" : "text-[#002f5e]/35"}`}>{idx + 1}</span>
+              <GripVertical className={`h-3.5 w-3.5 shrink-0 ${isActive ? "text-white/75" : "text-[#002f5e]/70"}`} />
+              <span className={`w-5 shrink-0 text-center text-[11px] font-semibold ${isActive ? "text-white/75" : "text-[#002f5e]/70"}`}>{idx + 1}</span>
               {city.imageUrl && (
                 <img loading="lazy" decoding="async" src={city.imageUrl} alt={city.name} className="h-7 w-10 shrink-0 rounded-md object-cover" />
               )}
               <div className="flex-1 min-w-0">
                 <span className={`block truncate text-[12px] font-medium ${isActive ? "text-white" : "text-[#002f5e]"}`}>{city.name}</span>
                 {districtName && (
-                  <span className={`block truncate text-[10px] ${isActive ? "text-white/50" : "text-[#002f5e]/35"}`}>{districtName}</span>
+                  <span className={`block truncate text-[10px] ${isActive ? "text-white/75" : "text-[#002f5e]/70"}`}>{districtName}</span>
                 )}
               </div>
               <div className="flex flex-col" onClick={e => e.stopPropagation()}>
                 <button type="button" onClick={() => move(idx, -1)} disabled={idx === 0}
-                  className={`rounded p-0.5 transition disabled:opacity-20 ${isActive ? "text-white/50 hover:text-white" : "text-[#002f5e]/30 hover:text-[#002f5e]"}`}>
+                  className={`rounded p-0.5 transition disabled:opacity-20 ${isActive ? "text-white/75 hover:text-white" : "text-[#002f5e]/70 hover:text-[#002f5e]"}`}>
                   <ChevronUp className="h-3 w-3" />
                 </button>
                 <button type="button" onClick={() => move(idx, 1)} disabled={idx === ordered.length - 1}
-                  className={`rounded p-0.5 transition disabled:opacity-20 ${isActive ? "text-white/50 hover:text-white" : "text-[#002f5e]/30 hover:text-[#002f5e]"}`}>
+                  className={`rounded p-0.5 transition disabled:opacity-20 ${isActive ? "text-white/75 hover:text-white" : "text-[#002f5e]/70 hover:text-[#002f5e]"}`}>
                   <ChevronDown className="h-3 w-3" />
                 </button>
               </div>
@@ -1316,11 +1316,11 @@ const AdminPageEditor = ({ entityType, districts, cities, places, showToast, all
         <div className="mb-4 flex items-start justify-between gap-3">
           <div>
             <p className="text-[16px] font-semibold text-[#002f5e]">Блоки сторінки</p>
-            <p className="mt-0.5 truncate text-[12px] text-[#002f5e]/50">{entityLabel}</p>
+            <p className="mt-0.5 truncate text-[12px] text-[#002f5e]/70">{entityLabel}</p>
           </div>
           <div className="flex shrink-0 items-center gap-2">
             <button type="button" title="Скинути до шаблону" onClick={resetToDefault}
-              className="flex h-8 w-8 items-center justify-center rounded-xl border border-[#002f5e]/12 text-[#002f5e]/40 transition hover:bg-[#002f5e]/8 hover:text-[#002f5e]">
+              className="flex h-8 w-8 items-center justify-center rounded-xl border border-[#002f5e]/12 text-[#002f5e]/70 transition hover:bg-[#002f5e]/8 hover:text-[#002f5e]">
               <RotateCcw className="h-3.5 w-3.5" />
             </button>
             <button type="button" onClick={() => setAddPanelOpen(true)}
@@ -1348,8 +1348,8 @@ const AdminPageEditor = ({ entityType, districts, cities, places, showToast, all
               </div>
             ) : sortedSections.length === 0 ? (
               <div className="flex flex-1 flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-[#002f5e]/20 py-16 text-center">
-                <Plus className="h-8 w-8 text-[#002f5e]/25" />
-                <p className="text-[13px] text-[#002f5e]/45">Блоків ще немає. Додайте перший!</p>
+                <Plus className="h-8 w-8 text-[#002f5e]/70" />
+                <p className="text-[13px] text-[#002f5e]/70">Блоків ще немає. Додайте перший!</p>
               </div>
             ) : (
               <div className="flex flex-col gap-2 overflow-y-auto pb-2">
@@ -1378,7 +1378,7 @@ const AdminPageEditor = ({ entityType, districts, cities, places, showToast, all
                 allCards={allCards} onCardsChange={onCardsChange}
               />
             ) : (
-              <div className="flex h-full flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-[#002f5e]/12 text-center text-[#002f5e]/35">
+              <div className="flex h-full flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-[#002f5e]/12 text-center text-[#002f5e]/70">
                 <Settings2 className="h-10 w-10 opacity-25" />
                 <div>
                   <p className="text-[14px] font-medium">Оберіть блок для редагування</p>
@@ -1400,7 +1400,7 @@ const AdminPageEditor = ({ entityType, districts, cities, places, showToast, all
           <CityOrderPanel cities={cities} districts={districts} showToast={showToast}
             selectedId={selectedEntityId} onSelect={selectEntity} />
         )}
-        <p className="mb-3 px-1 text-[10px] font-semibold uppercase tracking-widest text-[#002f5e]/35">
+        <p className="mb-3 px-1 text-[10px] font-semibold uppercase tracking-widest text-[#002f5e]/70">
           Налаштувань для
         </p>
         <EntityListPanel entityType={entityType} districts={districts} cities={cities}

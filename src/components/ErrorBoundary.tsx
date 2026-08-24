@@ -2,6 +2,16 @@ import { Component, type ReactNode } from "react";
 
 interface Props {
   children: ReactNode;
+  // Коли задано (навіть null) — тихий режим для дрібних "хром"-компонентів
+  // (MobileNav, музика, тощо), що рендеряться поза основним роутом: просто
+  // ховаємо зламаний шматок замість повноекранного "щось пішло не так".
+  fallback?: ReactNode;
+  // Зміна будь-якого значення в масиві скидає впійману помилку. Без цього
+  // boundary "застряє" в fallback НАЗАВЖДИ після першого падіння — саме так
+  // зникала кнопка асистента: якщо AssistantFab кидав помилку хоч раз під час
+  // анімації входу/виходу з /asystent, fallback=null рендерився і на всіх
+  // наступних сторінках теж, без жодного способу відновитись без reload.
+  resetKeys?: unknown[];
 }
 
 interface State {
@@ -18,6 +28,13 @@ interface State {
 export class ErrorBoundary extends Component<Props, State> {
   state: State = { error: null };
 
+  componentDidMount() {
+    // Успішний рендер без помилки — знімаємо прапорець одноразового
+    // auto-reload, щоб наступний РЕАЛЬНИЙ chunk-error (після майбутнього
+    // деплою) теж міг спрацювати автоматично, а не мовчки пропав назавжди.
+    sessionStorage.removeItem("chunk-error-reload");
+  }
+
   static getDerivedStateFromError(error: Error): State {
     return { error };
   }
@@ -26,15 +43,39 @@ export class ErrorBoundary extends Component<Props, State> {
     console.error("Route render error:", error);
   }
 
+  componentDidUpdate(prevProps: Props) {
+    if (!this.state.error) return;
+    const prevKeys = prevProps.resetKeys ?? [];
+    const nextKeys = this.props.resetKeys ?? [];
+    if (nextKeys.length !== prevKeys.length || nextKeys.some((k, i) => k !== prevKeys[i])) {
+      this.setState({ error: null });
+    }
+  }
+
   render() {
     const { error } = this.state;
     if (!error) return this.props.children;
+
+    if (this.props.fallback !== undefined) return this.props.fallback;
 
     // Failed dynamic import → the deployed/served bundle changed under us.
     // A hard reload pulls the fresh chunk graph.
     const isChunkError = /dynamically imported module|Importing a module|Failed to fetch|ChunkLoadError|Loading chunk/i.test(
       `${error.name} ${error.message}`,
     );
+
+    // Стара вкладка, що пережила редеплой (нові хешовані чанки замінили старі
+    // на диску) — замість того щоб показувати екран і чекати на ручний клік,
+    // перезавантажуємо ОДИН раз автоматично. Прапорець у sessionStorage —
+    // щоб не зациклитись, якщо помилка повториться і після reload.
+    if (isChunkError && typeof window !== "undefined") {
+      const key = "chunk-error-reload";
+      if (!sessionStorage.getItem(key)) {
+        sessionStorage.setItem(key, "1");
+        window.location.reload();
+        return null;
+      }
+    }
 
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-5 bg-[#fff2e8] px-6 text-center text-[#002f5e]">

@@ -134,8 +134,11 @@ async function upsertRows(client, table, rows) {
 async function main() {
   const client = new Client({ connectionString });
   await client.connect();
-  // service_role has the table grants + bypassrls; authenticator is a member of it.
-  await client.query("SET ROLE service_role");
+  // "service_role" — залишок ще з Supabase-часів цього проєкту (до self-hosted
+  // PostgREST), такої ролі тут немає. authenticator є NOINHERIT-членом
+  // authenticated (secure-auth.sql), тож без явного SET ROLE політики RLS
+  // на цю сесію не діють.
+  await client.query("SET ROLE authenticated");
 
   const steps = [
     ["regions", regions],

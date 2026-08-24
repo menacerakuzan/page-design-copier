@@ -30,6 +30,7 @@ export function CollapsibleRichText({
   const { t } = useLang();
   const contentRef = useRef<HTMLDivElement>(null);
   const [fullHeight, setFullHeight] = useState<number | null>(null);
+  const [collapsedHeight, setCollapsedHeight] = useState(collapsedMaxHeightPx);
   const [needsToggle, setNeedsToggle] = useState(false);
   const [expanded, setExpanded] = useState(false);
 
@@ -38,7 +39,25 @@ export function CollapsibleRichText({
     if (!el) return;
     const h = el.scrollHeight;
     setFullHeight(h);
-    setNeedsToggle(h > collapsedMaxHeightPx + 8);
+    // Згорнуту висоту прив'язуємо до цілої кількості рядків (line-height), а
+    // не до довільного пікселя — інакше останній видимий рядок обрізається
+    // прямо посеред тексту (саме такий баг тут був: "...найдекоративнішу вра"
+    // обривалось на половині слова перед градієнтом).
+    // Реальний рядковий інтервал беремо з першого дочірнього елемента (напр.
+    // <p>), а не з контейнера el: CSS-правила на кшталт ".article-content p"
+    // перевизначають font-size/line-height для самих тегів усередині,
+    // тож line-height контейнера не збігається з фактичним — через це
+    // виміряна висота виявлялась замалою й обрізала останній рядок тексту.
+    const measuredEl = (el.firstElementChild as HTMLElement | null) ?? el;
+    const cs = window.getComputedStyle(measuredEl);
+    let lineHeight = parseFloat(cs.lineHeight);
+    if (!lineHeight || Number.isNaN(lineHeight)) {
+      lineHeight = (parseFloat(cs.fontSize) || 16) * 1.5;
+    }
+    const lines = Math.max(1, Math.floor(collapsedMaxHeightPx / lineHeight));
+    const snapped = lines * lineHeight;
+    setCollapsedHeight(snapped);
+    setNeedsToggle(h > snapped + 8);
   };
 
   useLayoutEffect(() => {
@@ -49,19 +68,44 @@ export function CollapsibleRichText({
     // перевимірюємо, поки контент згорнутий.
     const images = el.querySelectorAll("img");
     images.forEach((img) => img.addEventListener("load", measure));
-    return () => images.forEach((img) => img.removeEventListener("load", measure));
+    // Responsive font-size (напр. text-[17px] md:text-[28px]) міняє
+    // line-height при зміні ширини вʼюпорта — перевимірюємо й тут.
+    window.addEventListener("resize", measure);
+    // Фірмовий шрифт (Odesa Region Type) вантажиться асинхронно — перший
+    // measure() на mount часто встигає ще ДО його готовності й рахує
+    // scrollHeight з fallback-шрифтом (інші метрики, коротше). Коли шрифт
+    // підміняється, текст реально стає вищим, а fullHeight/collapsedHeight
+    // лишались старими — з overflow:hidden це обрізало навіть розгорнутий
+    // текст ("Показати менше" видно, а останній рядок все одно обтятий).
+    let cancelled = false;
+    void document.fonts?.ready?.then(() => { if (!cancelled) measure(); });
+    return () => {
+      cancelled = true;
+      images.forEach((img) => img.removeEventListener("load", measure));
+      window.removeEventListener("resize", measure);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [html]);
 
   const unescaped = unescapeHtml(html);
-  const height = !needsToggle ? "auto" : expanded ? (fullHeight ?? "auto") : collapsedMaxHeightPx;
+  const height = !needsToggle ? "auto" : expanded ? (fullHeight ?? "auto") : collapsedHeight;
 
   return (
     <div className="relative">
       <div
         style={{ height, overflow: "hidden", transition: "height 0.45s cubic-bezier(0.22,1,0.36,1)" }}
       >
-        <div ref={contentRef} className={className} dangerouslySetInnerHTML={{ __html: unescaped }} />
+        <div
+          ref={contentRef}
+          // flow-root: контент з адмінки часто містить порожні <p></p> на
+          // початку/в кінці (TipTap лишає їх при копіюванні). Без власного
+          // block formatting context верхній margin такого порожнього
+          // абзацу "втікає" за межі цього div і зсуває весь текст вниз —
+          // а що висота контейнера вище фіксована й обрізана overflow:hidden,
+          // рівно стільки ж пікселів губиться знизу з останнього рядка.
+          className={`flow-root ${className}`}
+          dangerouslySetInnerHTML={{ __html: unescaped }}
+        />
       </div>
       {needsToggle && !expanded && (
         <div

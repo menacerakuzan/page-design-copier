@@ -96,7 +96,7 @@ export function MobileNav() {
                 >
                   <span
                     className={`flex flex-col items-center justify-center gap-1 transition-opacity hover:opacity-80 ${
-                      active ? "text-[#df9b3b] opacity-100" : "text-[#00376c] opacity-45"
+                      active ? "text-[#9c6200] opacity-100" : "text-[#00376c] opacity-75"
                     }`}
                   >
                     <Icon className="h-6 w-6" strokeWidth={active ? 2.2 : 1.8} />
@@ -126,7 +126,7 @@ export function MobileNav() {
               <motion.button
                 whileTap={{ scale: 0.9 }}
                 type="button"
-                className="tap flex w-full flex-col items-center justify-center gap-1 text-[#00376c] opacity-45 transition-opacity hover:opacity-80"
+                className="tap flex w-full flex-col items-center justify-center gap-1 text-[#00376c] opacity-75 transition-opacity hover:opacity-80"
                 aria-label="Меню"
               >
                 <MenuIcon className="h-6 w-6" strokeWidth={1.8} />
@@ -163,7 +163,7 @@ export function MobileNav() {
                 >
                   <Icon className="h-5 w-5 shrink-0" />
                   <span className="flex-1">{label}</span>
-                  <ChevronRight className="h-4 w-4 opacity-40" />
+                  <ChevronRight aria-hidden="true" className="h-4 w-4 opacity-70" />
                 </Link>
               );
             })}
@@ -173,7 +173,7 @@ export function MobileNav() {
             >
               <Phone className="h-5 w-5 shrink-0" />
               <span className="flex-1">{lang === "en" ? "Contacts" : "Контакти"}</span>
-              <ChevronRight className="h-4 w-4 opacity-40" />
+              <ChevronRight aria-hidden="true" className="h-4 w-4 opacity-70" />
             </a>
           </nav>
 

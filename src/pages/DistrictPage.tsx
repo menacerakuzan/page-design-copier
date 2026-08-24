@@ -2,10 +2,16 @@ import { useMemo, useRef, useState } from "react";
 import { Img } from "@/components/Img";
 import { useLang } from "@/lib/langContext";
 import { motion } from "framer-motion";
-import { ChevronLeft, MapPin, Volume2, VolumeX } from "lucide-react";
+import { ChevronLeft, MapPin } from "lucide-react";
 import { GalleryVideoCard } from "@/components/GalleryVideoCard";
+import { ReelVideo } from "@/components/ReelVideo";
+import { HeroBackgroundVideo } from "@/components/HeroBackgroundVideo";
+import { GalleryLightbox, type LightboxImage } from "@/components/GalleryLightbox";
+import { DragScrollRow } from "@/components/DragScrollRow";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { CollapsibleRichText } from "@/components/CollapsibleRichText";
+import { AudioGuidePlayer } from "@/components/AudioGuidePlayer";
+import { useSeo } from "@/hooks/useSeo";
 import { ObjectSection, DEFAULT_BG } from "@/components/ObjectSection";
 import { objectTypeColor } from "@/lib/entityLinks";
 import { RoutePath } from "@/components/decor";
@@ -23,7 +29,7 @@ const NAVY = "#002f5e";
 const GOLD = "#df9b3b";
 
 const LABEL_SHORT: Record<TourismObjectType, string> = {
-  attraction: "Тур об'єкти",
+  attraction: "Туристичні об'єкти",
   event: "Події",
   hotel: "Готелі",
   restaurant: "Ресторани",
@@ -39,12 +45,13 @@ const SectionPattern = () => (
 );
 
 const DistrictPage = () => {
-  const { t } = useLang();
+  const { t, tl, lang } = useLang();
   const { districtSlug } = useParams<{ districtSlug: string }>();
   const { data: snapshot, isLoading } = useHierarchySnapshot();
   const refs = useRef<Record<string, HTMLElement | null>>({});
   const scrollRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const [reelMuted, setReelMuted] = useState(true);
+  const [galleryLightbox, setGalleryLightbox] = useState<{ images: LightboxImage[]; index: number } | null>(null);
 
   const district = useMemo(
     () => snapshot?.districts.find((d) => d.slug === districtSlug),
@@ -66,6 +73,21 @@ const DistrictPage = () => {
   const pageKey = `district-${district?.id ?? ""}`;
   const { data: cardsData } = usePageContentCards(pageKey);
   const allCards = useMemo(() => (cardsData ?? []).filter(c => c.pageKey === pageKey), [cardsData, pageKey]);
+
+  useSeo({
+    title: district ? tl(district.name, district.nameEn) : t("districts"),
+    description: district ? tl(district.subtitle, district.subtitleEn) : undefined,
+    image: district?.imageUrl,
+    lang,
+    videoUrl: district?.reelUrl,
+    breadcrumbs: district
+      ? [
+          { name: t("home"), path: "/" },
+          { name: t("districts"), path: "/districts" },
+          { name: tl(district.name, district.nameEn), path: `/raion/${district.slug}` },
+        ]
+      : undefined,
+  });
 
   if (isLoading) return (
     <div className="min-h-screen bg-[#001a3d] flex items-center justify-center">
@@ -92,7 +114,7 @@ const DistrictPage = () => {
   for (const s of activeSections) {
     if (s.kind === "cities_list") {
       const vis = applyFilter(allCities, s.filter);
-      if (vis.length > 0) jumpPills.push({ id: "cities", label: "Міста", color: GOLD });
+      if (vis.length > 0) jumpPills.push({ id: "cities", label: "Населені пункти", color: GOLD });
     } else if (s.kind === "places_attraction") {
       if (applyFilter(allObjects.filter(o => o.type === "attraction"), s.filter).length > 0)
         jumpPills.push({ id: "attraction", label: LABEL_SHORT.attraction, color: objectTypeColor.attraction });
@@ -126,15 +148,7 @@ const DistrictPage = () => {
                     viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.7 }}
                     className="w-full max-w-[320px] shrink-0 self-start mx-auto lg:mx-0">
                     <div className="relative overflow-hidden rounded-[24px] shadow-xl" style={{ aspectRatio: "9/16" }}>
-                      <video src={district.reelUrl} autoPlay muted={reelMuted} loop playsInline className="h-full w-full object-cover" />
-                      <button
-                        type="button"
-                        onClick={() => setReelMuted((m) => !m)}
-                        className="absolute bottom-3 right-3 flex items-center justify-center rounded-full border border-white/30 bg-black/50 p-2 text-white backdrop-blur-sm transition-all hover:bg-black/70"
-                        aria-label={reelMuted ? "Увімкнути звук" : "Вимкнути звук"}
-                      >
-                        {reelMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-                      </button>
+                      <ReelVideo src={district.reelUrl} muted={reelMuted} onToggleMute={() => setReelMuted((m) => !m)} />
                     </div>
                   </motion.div>
                 )}
@@ -143,7 +157,12 @@ const DistrictPage = () => {
                   <h2 className="font-odesa-medium text-[32px] leading-none text-[#002f5e] md:text-[56px]">
                     {section.title}
                   </h2>
-                  {section.subtitle && <p className="mt-3 text-[16px] font-odesa-regular text-[#002f5e]/60 md:text-[20px]">{section.subtitle}</p>}
+                  {section.subtitle && <p className="mt-3 text-[16px] font-odesa-regular text-[#002f5e]/70 md:text-[20px]">{section.subtitle}</p>}
+                  {tl(district.audioUrl, district.audioUrlEn) && (
+                    <div className="mt-6 max-w-[560px]">
+                      <AudioGuidePlayer src={tl(district.audioUrl, district.audioUrlEn)} accent="#df9b3b" />
+                    </div>
+                  )}
                   <CollapsibleRichText
                     html={district.description}
                     bgColor={bg}
@@ -154,7 +173,7 @@ const DistrictPage = () => {
                       <CollapsibleRichText
                         html={district.detailedInfo}
                         bgColor={bg}
-                        className="text-[15px] leading-[1.65] font-odesa-regular text-[#002f5e]/55 article-content"
+                        className="text-[15px] leading-[1.65] font-odesa-regular text-[#002f5e]/70 article-content"
                       />
                     </div>
                   )}
@@ -178,16 +197,18 @@ const DistrictPage = () => {
                 className="mb-4 mt-1 flex flex-col items-center text-center">
                 <h2 className="flex items-center gap-3 font-odesa-bold text-[28px] leading-none text-[#002f5e] md:text-[48px]">
                   <MapPin className="h-4 w-4 shrink-0 md:h-6 md:w-6" style={{ color: GOLD }} />
-                  {section.title}
+                  {/* Раніше жорстко "Міста" — район може містити й села/селища,
+                      тому дефолтний заголовок замінено; ручні правки не чіпаємо. */}
+                  {section.title === "Міста" ? "Населені пункти" : section.title}
                   <MapPin className="h-4 w-4 shrink-0 md:h-6 md:w-6" style={{ color: GOLD }} />
                 </h2>
-                {section.subtitle && <p className="mt-2 max-w-[440px] text-[14px] font-odesa-regular text-[#002f5e]/55">{section.subtitle}</p>}
+                {section.subtitle && <p className="mt-2 max-w-[440px] text-[14px] font-odesa-regular text-[#002f5e]/70">{section.subtitle}</p>}
                 <RoutePath className="mt-3 h-6 w-40 text-[#df9b3b]" />
               </motion.div>
               {/* Горизонтальна стрічка «поляроїдів» — фото в білій рамці, тіні,
                   легкий нахил через одне фото (без вертикального зсуву, щоб не
                   виглядало, ніби картки можна посунути вгору-вниз), без нумерації. */}
-              <div className="flex items-start gap-5 overflow-x-auto px-1 pb-4 pt-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+              <DragScrollRow className="flex items-start gap-5 overflow-x-auto px-1 pb-4 pt-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden lg:flex-wrap lg:justify-center lg:gap-7 lg:overflow-visible">
                 {cities.map((c, idx) => (
                   <motion.div key={c.id}
                     initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}
@@ -196,7 +217,7 @@ const DistrictPage = () => {
                     <CityPolaroid city={c} />
                   </motion.div>
                 ))}
-              </div>
+              </DragScrollRow>
             </div>
           </section>
         );
@@ -255,7 +276,7 @@ const DistrictPage = () => {
                 viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.7 }}>
                 <span className="block font-odesa-medium text-[56px] leading-none" style={{ color: GOLD }}>&ldquo;</span>
                 <p className="mt-2 font-odesa-medium text-[24px] leading-[1.35] text-[#002f5e] md:text-[36px]">{quote}</p>
-                {author && <footer className="mt-5 text-[14px] font-odesa-regular text-[#002f5e]/50">— {author}</footer>}
+                {author && <footer className="mt-5 text-[14px] font-odesa-regular text-[#002f5e]/70">— {author}</footer>}
               </motion.blockquote>
             </div>
           </section>
@@ -273,7 +294,7 @@ const DistrictPage = () => {
               <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.7 }}>
                 {section.title && <h2 className="mb-2 font-odesa-medium text-[32px] leading-none text-[#002f5e] md:text-[44px]">{section.title}</h2>}
-                {section.subtitle && <p className="mb-4 text-[16px] font-odesa-regular text-[#002f5e]/55">{section.subtitle}</p>}
+                {section.subtitle && <p className="mb-4 text-[16px] font-odesa-regular text-[#002f5e]/70">{section.subtitle}</p>}
                 <p className="text-[17px] leading-[1.6] font-odesa-regular text-[#002f5e]/80 md:text-[22px]">{text}</p>
               </motion.div>
             </div>
@@ -308,7 +329,7 @@ const DistrictPage = () => {
             <SectionPattern />
             <div className="container-edge relative z-10">
               {section.title && <h2 className="mb-2 font-odesa-medium text-[32px] leading-none text-[#002f5e] md:text-[44px]">{section.title}</h2>}
-              {section.subtitle && <p className="mb-4 text-[16px] font-odesa-regular text-[#002f5e]/55">{section.subtitle}</p>}
+              {section.subtitle && <p className="mb-4 text-[16px] font-odesa-regular text-[#002f5e]/70">{section.subtitle}</p>}
               <div className="overflow-hidden rounded-[28px]" style={{ height: "480px" }}>
                 <iframe src={embedUrl} title="Карта" loading="lazy" className="h-full w-full border-0" />
               </div>
@@ -329,13 +350,14 @@ const DistrictPage = () => {
         const CARD_H = "min(calc((100vh - 56px - 20px) / 2), 72vw)";
         const cardW = (colSpan: number) =>
           colSpan === 3 ? `calc(${CARD_H} * 3 + 40px)` : colSpan === 2 ? `calc(${CARD_H} * 2 + 20px)` : CARD_H;
+        const imageItems = items.filter((item) => !item.payload?.videoUrl && item.imageUrl);
         return (
           <section key={section.id} className="py-14" style={{ backgroundColor: bg }}>
             <div className="container-edge mb-6">
               {section.title && <h2 className="font-odesa-medium text-[34px] leading-none md:text-[56px]" style={{ color: textColor }}>{section.title}</h2>}
               {section.subtitle && <p className="mt-2 text-[16px] font-odesa-regular md:text-[20px]" style={{ color: `${textColor}99` }}>{section.subtitle}</p>}
             </div>
-            <div className="flex gap-5 overflow-x-auto px-4 pb-4 md:px-10 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <DragScrollRow hint className="flex gap-5 overflow-x-auto px-4 pb-4 md:px-10 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {items.map((item) => {
                 const isVideo = !!item.payload?.videoUrl;
                 const colSpan = (item.payload?.colSpan as number) ?? 1;
@@ -354,7 +376,19 @@ const DistrictPage = () => {
                   );
                 }
                 return (
-                  <div key={item.id} className="relative shrink-0 overflow-hidden rounded-[22px]" style={{ width: w, height: CARD_H, minHeight: 280 }}>
+                  <div
+                    key={item.id}
+                    onClick={() => {
+                      if (!item.imageUrl) return;
+                      const idx = imageItems.findIndex((i) => i.id === item.id);
+                      setGalleryLightbox({
+                        images: imageItems.map((i) => ({ url: i.imageUrl as string, title: i.title || undefined })),
+                        index: Math.max(0, idx),
+                      });
+                    }}
+                    className="relative shrink-0 cursor-pointer overflow-hidden rounded-[22px]"
+                    style={{ width: w, height: CARD_H, minHeight: 280 }}
+                  >
                     {item.imageUrl ? (
                       <Img w={500} src={item.imageUrl} alt={item.title} className="h-full w-full object-cover" />
                     ) : (
@@ -369,7 +403,7 @@ const DistrictPage = () => {
                   </div>
                 );
               })}
-            </div>
+            </DragScrollRow>
           </section>
         );
       }
@@ -383,13 +417,15 @@ const DistrictPage = () => {
   };
 
   return (
-    <div className="bg-[#fff2e8] font-odesa-regular text-[#002f5e]">
+    // key: між районами переходять напряму (DistrictDiscoverMore) — без
+    // ремоунта hero <img> показує фото попереднього району, доки вантажиться нове.
+    <div key={district.id} className="bg-[#fff2e8] font-odesa-regular text-[#002f5e]">
+     <main id="main-content" tabIndex={-1}>
 
       {/* ══════════════════  HERO  ══════════════════════════════════════ */}
-      <section className="relative min-h-screen overflow-hidden">
+      <section className="relative min-h-screen overflow-hidden bg-[#001a3d]">
         {heroVideo ? (
-          <video src={heroVideo} autoPlay muted loop playsInline
-            className="absolute inset-0 h-full w-full object-cover" />
+          <HeroBackgroundVideo src={heroVideo} poster={heroImage} />
         ) : (
           <Img priority w={1600} src={heroImage} alt={district.name} className="absolute inset-0 h-full w-full object-cover" />
         )}
@@ -415,7 +451,7 @@ const DistrictPage = () => {
           </div>
         </div>
 
-        <div className="relative z-10 flex min-h-[calc(100vh-80px)] flex-col justify-end px-6 pb-24 text-[#fff2e8] md:px-14 md:pb-15">
+        <div className="relative z-10 flex min-h-[calc(100vh-80px)] flex-col justify-end px-6 pb-24 text-[#fff2e8] md:px-14 md:pb-14">
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="mb-5">
             <span className="inline-block rounded-full border border-white/25 bg-white/10 px-5 py-2 text-[12px] uppercase tracking-[0.2em] font-odesa-medium text-[#fff2e8] backdrop-blur-md">
               Район
@@ -423,7 +459,7 @@ const DistrictPage = () => {
           </motion.div>
           <motion.h1 initial={{ opacity: 0, y: 32 }} animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
-            className="font-odesa-medium text-[44px] leading-[0.95] [overflow-wrap:anywhere] xs:text-[52px] md:text-[84px] md:leading-[0.92] lg:text-[96px]">
+            className="font-odesa-medium text-[44px] leading-[0.95] [overflow-wrap:break-word] xs:text-[52px] md:text-[84px] md:leading-[0.92] lg:text-[96px]">
             {district.name}
           </motion.h1>
           {district.subtitle && (
@@ -449,11 +485,19 @@ const DistrictPage = () => {
       </section>
 
       {/* ══════════════════  DYNAMIC SECTIONS  ══════════════════════════ */}
-      <div className="pb-tabbar">
+      <div className="pb-tabbar md:pb-0">
         {activeSections.map(renderSection)}
       </div>
+     </main>
 
       <SiteFooter />
+
+      <GalleryLightbox
+        images={galleryLightbox?.images ?? []}
+        index={galleryLightbox ? galleryLightbox.index : null}
+        onClose={() => setGalleryLightbox(null)}
+        onNavigate={(index) => setGalleryLightbox((cur) => (cur ? { ...cur, index } : cur))}
+      />
     </div>
   );
 };
@@ -462,12 +506,12 @@ const DistrictPage = () => {
 
 const CityPolaroid = ({ city }: { city: City }) => (
   <Link to={`/napryamky/${city.slug}`}
-    className="group block w-[152px] rounded-[10px] bg-white p-2 pb-4 shadow-[0_16px_30px_-16px_rgba(0,20,40,0.4)] transition-transform duration-300 hover:-translate-y-1.5">
-    <div className="h-[172px] w-full overflow-hidden rounded-[6px] bg-[#002f5e]/5">
-      <Img w={320} src={city.imageUrl ?? "https://images.unsplash.com/photo-1508193638397-1c4234db14d8?auto=format&fit=crop&w=800&q=80"}
+    className="group block w-[152px] rounded-[10px] bg-white p-2 pb-4 shadow-[0_16px_30px_-16px_rgba(0,20,40,0.4)] transition-transform duration-300 hover:-translate-y-1.5 md:w-[190px]">
+    <div className="h-[172px] w-full overflow-hidden rounded-[6px] bg-[#002f5e]/5 md:h-[214px]">
+      <Img w={400} src={city.imageUrl ?? "https://images.unsplash.com/photo-1508193638397-1c4234db14d8?auto=format&fit=crop&w=800&q=80"}
         alt={city.name} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" />
     </div>
-    <p className="mt-2.5 line-clamp-1 text-center text-[14px] font-odesa-medium text-[#002f5e]">{city.name}</p>
+    <p className="mt-2.5 line-clamp-1 text-center text-[14px] font-odesa-medium text-[#002f5e] md:text-[15px]">{city.name}</p>
   </Link>
 );
 

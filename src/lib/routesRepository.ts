@@ -33,6 +33,7 @@ export const ROUTE_TAG_OPTIONS = [
   { id: "beach",    label: "Пляжний",        emoji: "🏖" },
   { id: "wine",     label: "Винний",         emoji: "🍇" },
   { id: "eco",      label: "Еко",            emoji: "🌱" },
+  { id: "veteran",  label: "Ветеранський",   emoji: "" },
 ] as const;
 
 const mapRow = (row: any): Route => ({

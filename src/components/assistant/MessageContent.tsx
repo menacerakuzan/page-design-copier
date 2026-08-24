@@ -47,7 +47,11 @@ function renderInline(text: string, keyBase: string): ReactNode[] {
 }
 
 // ── Блоки: абзаци + марковані/нумеровані списки ───────────────────────────
-function renderMarkdown(text: string, keyBase: string): ReactNode {
+// olCounter триває через ВСЕ повідомлення (не лише один текстовий сегмент):
+// картки об'єктів ([[obj:SLUG]]) розривають текст на окремі сегменти, і без
+// наскрізного лічильника кожен сегмент малював свій <ol>, що завжди починався
+// з "1." — звідси "1 1 1 1 1" замість "1 2 3 4 5" у списках рекомендацій.
+function renderMarkdown(text: string, keyBase: string, olCounter: { n: number }): ReactNode {
   const lines = text.replace(/\r/g, "").split("\n");
   const blocks: ReactNode[] = [];
   let list: { ordered: boolean; items: string[] } | null = null;
@@ -75,17 +79,24 @@ function renderMarkdown(text: string, keyBase: string): ReactNode {
         {renderInline(it, `${k}-${idx}`)}
       </li>
     ));
-    blocks.push(
-      list.ordered ? (
-        <ol key={k} className="ml-5 list-decimal space-y-1 marker:text-[#df9b3b] marker:font-odesa-bold">
+    if (list.ordered) {
+      blocks.push(
+        <ol
+          key={k}
+          start={olCounter.n}
+          className="ml-5 list-decimal space-y-1 marker:text-[#9c6200] marker:font-odesa-bold"
+        >
           {items}
-        </ol>
-      ) : (
-        <ul key={k} className="ml-5 list-disc space-y-1 marker:text-[#df9b3b]">
+        </ol>,
+      );
+      olCounter.n += list.items.length;
+    } else {
+      blocks.push(
+        <ul key={k} className="ml-5 list-disc space-y-1 marker:text-[#9c6200]">
           {items}
-        </ul>
-      ),
-    );
+        </ul>,
+      );
+    }
     list = null;
   };
 
@@ -108,7 +119,12 @@ function renderMarkdown(text: string, keyBase: string): ReactNode {
       }
       list.items.push(ul[1]);
     } else if (!line.trim()) {
-      flushList();
+      // Порожній рядок МІЖ пунктами списку (модель часто розділяє їх для
+      // читабельності) не повинен рвати список — інакше кожен пункт стає
+      // окремим <ol> з одного елемента, і всі рендеряться як "1." замість
+      // наскрізної нумерації 1,2,3... Список закривається, лише коли після
+      // порожнього рядка йде НЕ-пункт (звичайний текст) — це вже ловиться
+      // гілкою нижче через flushList() перед para.push.
       flushPara();
     } else {
       flushList();
@@ -131,13 +147,14 @@ export function MessageContent({
   interactive?: boolean;
 }) {
   const segments = parseAssistantMessage(content);
+  const olCounter = { n: 1 };
   return (
     <div className="text-[15px] text-[#002f5e] font-odesa-regular">
       {segments.map((seg, i) => {
         switch (seg.kind) {
           case "text":
             return seg.text.trim() ? (
-              <Fragment key={i}>{renderMarkdown(seg.text, `s${i}`)}</Fragment>
+              <Fragment key={i}>{renderMarkdown(seg.text, `s${i}`, olCounter)}</Fragment>
             ) : null;
           case "obj":
             return <ObjectCard key={i} slug={seg.slug} />;

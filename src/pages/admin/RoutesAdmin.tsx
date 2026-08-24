@@ -171,11 +171,11 @@ export const RoutesAdmin = ({ showToast }: { showToast: (msg: string, ok?: boole
             <p className="font-odesa-medium text-[16px] text-[#002f5e]">{form.id ? "Редагування" : "Новий маршрут"}</p>
             <div className="flex items-center gap-2">
               <button onClick={handleTranslate} disabled={translating}
-                className="flex items-center gap-1.5 rounded-lg border border-[#002f5e]/15 px-3 py-1.5 text-[12px] text-[#002f5e]/60 transition hover:border-[#002f5e]/30 hover:text-[#002f5e] disabled:opacity-40">
+                className="flex items-center gap-1.5 rounded-lg border border-[#002f5e]/15 px-3 py-1.5 text-[12px] text-[#002f5e]/70 transition hover:border-[#002f5e]/30 hover:text-[#002f5e] disabled:opacity-40">
                 <Languages className="h-3.5 w-3.5" />
                 {translating ? "Переклад..." : "Перекласти EN"}
               </button>
-              <button onClick={() => setForm(null)} className="text-[#002f5e]/40 hover:text-[#002f5e]"><X className="h-5 w-5" /></button>
+              <button onClick={() => setForm(null)} className="text-[#002f5e]/70 hover:text-[#002f5e]"><X className="h-5 w-5" /></button>
             </div>
           </div>
 
@@ -213,7 +213,7 @@ export const RoutesAdmin = ({ showToast }: { showToast: (msg: string, ok?: boole
 
           {/* ── Теги / фільтри ─────────────────────────────── */}
           <div className="rounded-xl border border-[#002f5e]/10 bg-[#002f5e]/2 p-4">
-            <span className="mb-3 block text-[12px] font-semibold uppercase tracking-wide text-[#002f5e]/55">
+            <span className="mb-3 block text-[12px] font-semibold uppercase tracking-wide text-[#002f5e]/70">
               Категорії маршруту
             </span>
             <div className="flex flex-wrap gap-2">
@@ -230,7 +230,7 @@ export const RoutesAdmin = ({ showToast }: { showToast: (msg: string, ok?: boole
                     className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[13px] font-medium transition ${
                       active
                         ? "border-[#002f5e] bg-[#002f5e] text-[#fff2e8]"
-                        : "border-[#002f5e]/20 bg-white text-[#002f5e]/60 hover:border-[#002f5e]/40 hover:text-[#002f5e]"
+                        : "border-[#002f5e]/20 bg-white text-[#002f5e]/70 hover:border-[#002f5e]/40 hover:text-[#002f5e]"
                     }`}
                   >
                     <span>{tag.emoji}</span> {tag.label}
@@ -239,7 +239,7 @@ export const RoutesAdmin = ({ showToast }: { showToast: (msg: string, ok?: boole
               })}
             </div>
             {form.tags.length > 0 && (
-              <p className="mt-2 text-[11px] text-[#002f5e]/40">
+              <p className="mt-2 text-[11px] text-[#002f5e]/70">
                 Обрано: {form.tags.map(t => ROUTE_TAG_OPTIONS.find(o => o.id === t)?.label).filter(Boolean).join(", ")}
               </p>
             )}
@@ -255,7 +255,7 @@ export const RoutesAdmin = ({ showToast }: { showToast: (msg: string, ok?: boole
             <Input value={form.mapUrl2} onChange={v => setForm(f => f && ({ ...f, mapUrl2: v }))} placeholder="https://www.google.com/maps/dir/..." />
           </FieldGroup>
 
-          <FieldGroup label={<>Корисні посилання <span className="normal-case font-normal text-[11px] text-[#002f5e]/40">— кожне з нового рядка: Назва|URL або просто URL</span></>}>
+          <FieldGroup label={<>Корисні посилання <span className="normal-case font-normal text-[11px] text-[#002f5e]/70">— кожне з нового рядка: Назва|URL або просто URL</span></>}>
             <Textarea rows={4} value={form.links}
               onChange={v => setForm(f => f && ({ ...f, links: v }))}
               placeholder={"Музей виноробства|https://example.com\nhttps://maps.google.com/..."} />
@@ -300,7 +300,7 @@ export const RoutesAdmin = ({ showToast }: { showToast: (msg: string, ok?: boole
                 {/* Waypoint rows якщо є координати */}
                 {hasWaypoints && (
                   <div className="space-y-2 rounded-xl border border-[#002f5e]/10 bg-[#002f5e]/3 p-3">
-                    <p className="text-[11px] text-[#002f5e]/40 uppercase tracking-wide">По точках маршруту ({coords.length})</p>
+                    <p className="text-[11px] text-[#002f5e]/70 uppercase tracking-wide">По точках маршруту ({coords.length})</p>
                     {coords.map((_, i) => {
                       const selId = form.waypointObjectIds[i] ?? "";
                       const selObj = allObjects.find(o => o.id === selId);
@@ -322,24 +322,24 @@ export const RoutesAdmin = ({ showToast }: { showToast: (msg: string, ok?: boole
                               <div className="flex items-center gap-2 rounded-xl border border-[#002f5e]/15 bg-white px-3 py-2">
                                 {selObj.imageUrl && <img loading="lazy" decoding="async" src={selObj.imageUrl} className="h-7 w-10 shrink-0 rounded-lg object-cover" />}
                                 <span className="flex-1 truncate text-[13px] text-[#002f5e]">{selObj.name}</span>
-                                <button onClick={() => setWaypoint(i, null)} className="text-[#002f5e]/30 hover:text-[#9f1f47]"><X className="h-3.5 w-3.5" /></button>
+                                <button onClick={() => setWaypoint(i, null)} className="text-[#002f5e]/70 hover:text-[#9f1f47]"><X className="h-3.5 w-3.5" /></button>
                               </div>
                             ) : (
                               <div className="relative">
                                 <input value={search} onChange={e => setSearch(e.target.value)}
                                   placeholder="Пошук об'єкта..."
-                                  className="w-full rounded-xl border border-[#002f5e]/15 bg-white px-3 py-2 text-[13px] text-[#002f5e] placeholder:text-[#002f5e]/30 focus:outline-none" />
+                                  className="w-full rounded-xl border border-[#002f5e]/15 bg-white px-3 py-2 text-[13px] text-[#002f5e] placeholder:text-[#002f5e]/70 focus:outline-none" />
                                 {search && (
                                   <div className="absolute left-0 right-0 top-full z-10 mt-1 max-h-[160px] overflow-y-auto rounded-xl border border-[#002f5e]/10 bg-white shadow-lg">
                                     {results.length === 0
-                                      ? <p className="px-3 py-2 text-[12px] text-[#002f5e]/40">Нічого не знайдено</p>
+                                      ? <p className="px-3 py-2 text-[12px] text-[#002f5e]/70">Нічого не знайдено</p>
                                       : results.map(o => (
                                         <button key={o.id} onClick={() => { setWaypoint(i, o.id); setSearch(""); }}
                                           className="flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-[#002f5e]/5">
                                           {o.imageUrl && <img loading="lazy" decoding="async" src={o.imageUrl} className="h-7 w-10 shrink-0 rounded-lg object-cover" />}
                                           <div className="min-w-0">
                                             <p className="truncate text-[12px] font-medium text-[#002f5e]">{o.name}</p>
-                                            <p className="text-[10px] text-[#002f5e]/40">{o.type}</p>
+                                            <p className="text-[10px] text-[#002f5e]/70">{o.type}</p>
                                           </div>
                                         </button>
                                       ))
@@ -364,7 +364,7 @@ export const RoutesAdmin = ({ showToast }: { showToast: (msg: string, ok?: boole
                         return obj ? (
                           <span key={id} className="flex items-center gap-1 rounded-full bg-[#002f5e]/8 px-2.5 py-0.5 text-[12px] text-[#002f5e]">
                             {obj.name}
-                            <button onClick={() => toggleObject(id)} className="ml-0.5 text-[#002f5e]/40 hover:text-[#9f1f47]"><X className="h-3 w-3" /></button>
+                            <button onClick={() => toggleObject(id)} className="ml-0.5 text-[#002f5e]/70 hover:text-[#9f1f47]"><X className="h-3 w-3" /></button>
                           </span>
                         ) : null;
                       })}
@@ -374,14 +374,14 @@ export const RoutesAdmin = ({ showToast }: { showToast: (msg: string, ok?: boole
                   {wpSearch && (
                     <div className="mt-1 max-h-[180px] overflow-y-auto rounded-xl border border-[#002f5e]/10 bg-white shadow-lg">
                       {searchResults.length === 0
-                        ? <p className="px-4 py-3 text-[13px] text-[#002f5e]/40">Нічого не знайдено</p>
+                        ? <p className="px-4 py-3 text-[13px] text-[#002f5e]/70">Нічого не знайдено</p>
                         : searchResults.map(obj => (
                           <button key={obj.id} onClick={() => { toggleObject(obj.id); setObjSearch(""); }}
                             className={`flex w-full items-center gap-3 px-4 py-2.5 text-left transition hover:bg-[#002f5e]/5 ${form.objectIds.includes(obj.id) ? "bg-[#002f5e]/8" : ""}`}>
                             {obj.imageUrl && <img loading="lazy" decoding="async" src={obj.imageUrl} className="h-8 w-11 shrink-0 rounded-lg object-cover" />}
                             <div className="min-w-0 flex-1">
                               <p className="truncate text-[13px] font-medium text-[#002f5e]">{obj.name}</p>
-                              <p className="truncate text-[11px] text-[#002f5e]/40">{obj.type}</p>
+                              <p className="truncate text-[11px] text-[#002f5e]/70">{obj.type}</p>
                             </div>
                             {form.objectIds.includes(obj.id) && <CheckCircle2 className="h-4 w-4 shrink-0 text-green-600" />}
                           </button>
@@ -425,9 +425,9 @@ export const RoutesAdmin = ({ showToast }: { showToast: (msg: string, ok?: boole
             )}
             <div className="flex-1 min-w-0">
               <p className="font-odesa-medium text-[15px] text-[#002f5e] truncate">{route.name}</p>
-              <p className="text-[12px] text-[#002f5e]/50 truncate">{[route.duration, route.distance].filter(Boolean).join(" · ")}</p>
+              <p className="text-[12px] text-[#002f5e]/70 truncate">{[route.duration, route.distance].filter(Boolean).join(" · ")}</p>
               {(route.objectIds?.length ?? 0) > 0 && (
-                <p className="text-[11px] text-[#002f5e]/30">{route.objectIds!.length} об'єктів</p>
+                <p className="text-[11px] text-[#002f5e]/70">{route.objectIds!.length} об'єктів</p>
               )}
             </div>
             <div className="flex items-center gap-1 shrink-0">
@@ -435,7 +435,7 @@ export const RoutesAdmin = ({ showToast }: { showToast: (msg: string, ok?: boole
                 {route.published ? "Опубл." : "Чернетка"}
               </span>
               <button onClick={() => openEdit(route)}
-                className="ml-2 flex h-8 w-8 items-center justify-center rounded-lg text-[#002f5e]/40 hover:bg-[#002f5e]/8 hover:text-[#002f5e]">
+                className="ml-2 flex h-8 w-8 items-center justify-center rounded-lg text-[#002f5e]/70 hover:bg-[#002f5e]/8 hover:text-[#002f5e]">
                 <Pencil className="h-4 w-4" />
               </button>
               <button onClick={() => handleDelete(route.id)}
@@ -446,7 +446,7 @@ export const RoutesAdmin = ({ showToast }: { showToast: (msg: string, ok?: boole
           </div>
         ))}
         {routes.length === 0 && !form && (
-          <p className="py-12 text-center text-[14px] text-[#002f5e]/40">Маршрутів ще немає</p>
+          <p className="py-12 text-center text-[14px] text-[#002f5e]/70">Маршрутів ще немає</p>
         )}
       </div>
 
@@ -455,7 +455,7 @@ export const RoutesAdmin = ({ showToast }: { showToast: (msg: string, ok?: boole
         <div className="mb-4 flex items-center justify-between">
           <div>
             <p className="font-odesa-medium text-[16px] text-[#002f5e]">Порядок фільтрів</p>
-            <p className="mt-0.5 text-[12px] text-[#002f5e]/45">Визначає послідовність відображення кнопок-фільтрів у розділі «Маршрути»</p>
+            <p className="mt-0.5 text-[12px] text-[#002f5e]/70">Визначає послідовність відображення кнопок-фільтрів у розділі «Маршрути»</p>
           </div>
           {tagOrderDirty && (
             <button onClick={() => void saveTagOrder()} disabled={tagOrderSaving}
@@ -475,21 +475,21 @@ export const RoutesAdmin = ({ showToast }: { showToast: (msg: string, ok?: boole
             return (
               <div key={tagId}
                 className="flex items-center gap-3 rounded-xl border border-[#002f5e]/8 bg-[#002f5e]/2 px-4 py-2.5">
-                <span className="w-6 text-center text-[13px] font-semibold text-[#002f5e]/30">{idx + 1}</span>
+                <span className="w-6 text-center text-[13px] font-semibold text-[#002f5e]/70">{idx + 1}</span>
                 <span className="text-[18px]">{meta.emoji}</span>
                 <span className="flex-1 text-[14px] font-medium text-[#002f5e]">{meta.label}</span>
                 {usedCount > 0 && (
-                  <span className="rounded-full bg-[#002f5e]/8 px-2.5 py-0.5 text-[11px] font-medium text-[#002f5e]/50">
+                  <span className="rounded-full bg-[#002f5e]/8 px-2.5 py-0.5 text-[11px] font-medium text-[#002f5e]/70">
                     {usedCount} маршрут{usedCount === 1 ? "" : usedCount < 5 ? "и" : "ів"}
                   </span>
                 )}
                 <div className="flex flex-col">
                   <button type="button" onClick={() => moveTag(idx, -1)} disabled={idx === 0}
-                    className="rounded p-0.5 text-[#002f5e]/30 transition hover:text-[#002f5e] disabled:opacity-20">
+                    className="rounded p-0.5 text-[#002f5e]/70 transition hover:text-[#002f5e] disabled:opacity-20">
                     <ChevronRight className="h-3.5 w-3.5 -rotate-90" />
                   </button>
                   <button type="button" onClick={() => moveTag(idx, 1)} disabled={idx === tagOrder.length - 1}
-                    className="rounded p-0.5 text-[#002f5e]/30 transition hover:text-[#002f5e] disabled:opacity-20">
+                    className="rounded p-0.5 text-[#002f5e]/70 transition hover:text-[#002f5e] disabled:opacity-20">
                     <ChevronRight className="h-3.5 w-3.5 rotate-90" />
                   </button>
                 </div>

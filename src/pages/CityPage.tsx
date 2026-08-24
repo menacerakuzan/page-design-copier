@@ -2,8 +2,8 @@ import { useMemo, useRef, useState } from "react";
 import { Img } from "@/components/Img";
 import { motion } from "framer-motion";
 import { useLang } from "@/lib/langContext";
-import { ChevronLeft, Droplets, Wind, Volume2, VolumeX } from "lucide-react";
-import { Link, useParams } from "react-router-dom";
+import { ChevronLeft, Droplets, Wind } from "lucide-react";
+import { Link, useLocation, useParams } from "react-router-dom";
 import SiteFooter from "@/components/SiteFooter";
 import { useHierarchySnapshot } from "@/hooks/useHierarchySnapshot";
 import { useWeather } from "@/hooks/useWeather";
@@ -14,16 +14,34 @@ import { applyFilter } from "@/lib/pageSections";
 import NotFound from "@/pages/NotFound";
 import type { TourismObjectType } from "@/types/hierarchy";
 import { GalleryVideoCard } from "@/components/GalleryVideoCard";
+import { ReelVideo } from "@/components/ReelVideo";
+import { HeroBackgroundVideo } from "@/components/HeroBackgroundVideo";
+import { GalleryLightbox, type LightboxImage } from "@/components/GalleryLightbox";
+import { DragScrollRow } from "@/components/DragScrollRow";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { CollapsibleRichText } from "@/components/CollapsibleRichText";
+import { AudioGuidePlayer } from "@/components/AudioGuidePlayer";
+import { useSeo } from "@/hooks/useSeo";
 import { ObjectSection, DEFAULT_BG } from "@/components/ObjectSection";
 import { objectTypeColor } from "@/lib/entityLinks";
 
 const NAVY = "#002f5e";
 const GOLD = "#df9b3b";
 
+// Заголовок блоку опису мав жорстко "Про місто" для будь-якого населеного
+// пункту (шаблон DEFAULT_SECTIONS.city у types/pages.ts однаковий для всіх).
+// Підміняємо на правильний варіант за типом населеного пункту — але тільки
+// якщо заголовок і досі дефолтний "Про місто" (адмін міг вручну переписати
+// його на щось своє через конструктор сторінки — таке не чіпаємо).
+const DESCRIPTION_TITLE_BY_SETTLEMENT: Record<string, string> = {
+  "місто": "Про місто",
+  "село": "Про село",
+  "селище": "Про селище",
+  "селище міського типу": "Про селище",
+};
+
 const LABEL_SHORT: Record<TourismObjectType, string> = {
-  attraction: "Тур об'єкти",
+  attraction: "Туристичні об'єкти",
   event: "Події",
   hotel: "Готелі",
   restaurant: "Ресторани",
@@ -39,12 +57,18 @@ const SectionPattern = () => (
 );
 
 const CityPage = () => {
-  const { t } = useLang();
+  const { t, tl, lang } = useLang();
   const { citySlug } = useParams<{ citySlug: string }>();
+  const location = useLocation();
+  // Якщо сюди прийшли не через сторінку району (напр. зі списку районів,
+  // де місто без тур-об'єктів веде одразу на сторінку міста) — "назад" має
+  // повертати туди, звідки прийшли, а не до прив'язаного району.
+  const backOverride = location.state as { backTo?: string; backLabel?: string } | null;
   const { data: snapshot, isLoading } = useHierarchySnapshot();
   const refs = useRef<Record<string, HTMLElement | null>>({});
   const scrollRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const [reelMuted, setReelMuted] = useState(true);
+  const [galleryLightbox, setGalleryLightbox] = useState<{ images: LightboxImage[]; index: number } | null>(null);
 
   const city = useMemo(
     () => snapshot?.cities.find((c) => c.slug === citySlug),
@@ -54,12 +78,32 @@ const CityPage = () => {
     () => (snapshot?.objects ?? []).filter((o) => o.cityId === city?.id && o.published),
     [snapshot, city],
   );
+  const parentDistrict = useMemo(
+    () => snapshot?.districts.find((d) => d.id === city?.districtId),
+    [snapshot, city],
+  );
 
   const { data: weather } = useWeather(city?.weatherCityName || null);
   const { config } = usePageConfig("city", city?.id ?? null);
   const pageKey = `city-${city?.id ?? ""}`;
   const { data: cardsData } = usePageContentCards(pageKey);
   const allCards = useMemo(() => (cardsData ?? []).filter(c => c.pageKey === pageKey), [cardsData, pageKey]);
+
+  useSeo({
+    title: city ? tl(city.name, city.nameEn) : t("districts"),
+    description: city ? tl(city.subtitle, city.subtitleEn) : undefined,
+    image: city?.imageUrl,
+    lang,
+    videoUrl: city?.reelUrl,
+    breadcrumbs: city
+      ? [
+          { name: t("home"), path: "/" },
+          { name: t("districts"), path: "/districts" },
+          ...(parentDistrict ? [{ name: tl(parentDistrict.name, parentDistrict.nameEn), path: `/raion/${parentDistrict.slug}` }] : []),
+          { name: tl(city.name, city.nameEn), path: `/napryamky/${city.slug}` },
+        ]
+      : undefined,
+  });
 
   if (isLoading) return (
     <div className="min-h-screen bg-[#001a3d] flex items-center justify-center">
@@ -68,7 +112,7 @@ const CityPage = () => {
   );
   if (!city) return <NotFound />;
 
-  const district = snapshot?.districts.find((d) => d.id === city.districtId);
+  const district = parentDistrict;
   const heroImage = city.imageUrl ?? "https://images.unsplash.com/photo-1464817739973-0128fe77aaa1?auto=format&fit=crop&w=2400&q=80";
   const heroVideo = city.videoUrl;
 
@@ -117,24 +161,23 @@ const CityPage = () => {
                     viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.7 }}
                     className="w-full max-w-[320px] shrink-0 self-start mx-auto lg:mx-0">
                     <div className="relative overflow-hidden rounded-[24px] shadow-xl" style={{ aspectRatio: "9/16" }}>
-                      <video src={city.reelUrl} autoPlay muted={reelMuted} loop playsInline className="h-full w-full object-cover" />
-                      <button
-                        type="button"
-                        onClick={() => setReelMuted((m) => !m)}
-                        className="absolute bottom-3 right-3 flex items-center justify-center rounded-full border border-white/30 bg-black/50 p-2 text-white backdrop-blur-sm transition-all hover:bg-black/70"
-                        aria-label={reelMuted ? "Увімкнути звук" : "Вимкнути звук"}
-                      >
-                        {reelMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-                      </button>
+                      <ReelVideo src={city.reelUrl} muted={reelMuted} onToggleMute={() => setReelMuted((m) => !m)} />
                     </div>
                   </motion.div>
                 )}
                 <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.7 }} className="flex-1">
                   <h2 className="font-odesa-medium text-[32px] leading-none text-[#002f5e] md:text-[56px]">
-                    {section.title}
+                    {section.title === "Про місто"
+                      ? (DESCRIPTION_TITLE_BY_SETTLEMENT[city.settlementType ?? "місто"] ?? "Про місто")
+                      : section.title}
                   </h2>
-                  {section.subtitle && <p className="mt-3 text-[16px] font-odesa-regular text-[#002f5e]/60 md:text-[20px]">{section.subtitle}</p>}
+                  {section.subtitle && <p className="mt-3 text-[16px] font-odesa-regular text-[#002f5e]/70 md:text-[20px]">{section.subtitle}</p>}
+                  {tl(city.audioUrl, city.audioUrlEn) && (
+                    <div className="mt-6 max-w-[560px]">
+                      <AudioGuidePlayer src={tl(city.audioUrl, city.audioUrlEn)} accent="#df9b3b" />
+                    </div>
+                  )}
                   <CollapsibleRichText
                     html={city.description}
                     bgColor={bg}
@@ -145,7 +188,7 @@ const CityPage = () => {
                       <CollapsibleRichText
                         html={city.detailedInfo}
                         bgColor={bg}
-                        className="text-[15px] leading-[1.65] font-odesa-regular text-[#002f5e]/55 article-content"
+                        className="text-[15px] leading-[1.65] font-odesa-regular text-[#002f5e]/70 article-content"
                       />
                     </div>
                   )}
@@ -209,7 +252,7 @@ const CityPage = () => {
                 viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.7 }}>
                 <span className="block font-odesa-medium text-[56px] leading-none" style={{ color: GOLD }}>&ldquo;</span>
                 <p className="mt-2 font-odesa-medium text-[24px] leading-[1.35] text-[#002f5e] md:text-[36px]">{quote}</p>
-                {author && <footer className="mt-5 text-[14px] font-odesa-regular text-[#002f5e]/50">— {author}</footer>}
+                {author && <footer className="mt-5 text-[14px] font-odesa-regular text-[#002f5e]/70">— {author}</footer>}
               </motion.blockquote>
             </div>
           </section>
@@ -227,7 +270,7 @@ const CityPage = () => {
               <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.7 }}>
                 {section.title && <h2 className="mb-2 font-odesa-medium text-[32px] leading-none text-[#002f5e] md:text-[44px]">{section.title}</h2>}
-                {section.subtitle && <p className="mb-4 text-[16px] font-odesa-regular text-[#002f5e]/55">{section.subtitle}</p>}
+                {section.subtitle && <p className="mb-4 text-[16px] font-odesa-regular text-[#002f5e]/70">{section.subtitle}</p>}
                 <p className="text-[17px] leading-[1.6] font-odesa-regular text-[#002f5e]/80 md:text-[22px]">{text}</p>
               </motion.div>
             </div>
@@ -262,7 +305,7 @@ const CityPage = () => {
             <SectionPattern />
             <div className="container-edge relative z-10">
               {section.title && <h2 className="mb-2 font-odesa-medium text-[32px] leading-none text-[#002f5e] md:text-[44px]">{section.title}</h2>}
-              {section.subtitle && <p className="mb-4 text-[16px] font-odesa-regular text-[#002f5e]/55">{section.subtitle}</p>}
+              {section.subtitle && <p className="mb-4 text-[16px] font-odesa-regular text-[#002f5e]/70">{section.subtitle}</p>}
               <div className="overflow-hidden rounded-[28px]" style={{ height: "480px" }}>
                 <iframe src={embedUrl} title="Карта" loading="lazy" className="h-full w-full border-0" />
               </div>
@@ -283,13 +326,14 @@ const CityPage = () => {
         const CARD_H = "min(calc((100vh - 56px - 20px) / 2), 72vw)";
         const cardW = (colSpan: number) =>
           colSpan === 3 ? `calc(${CARD_H} * 3 + 40px)` : colSpan === 2 ? `calc(${CARD_H} * 2 + 20px)` : CARD_H;
+        const imageItems = items.filter((item) => !item.payload?.videoUrl && item.imageUrl);
         return (
           <section key={section.id} className="py-14" style={{ backgroundColor: bg }}>
             <div className="container-edge mb-6">
               {section.title && <h2 className="font-odesa-medium text-[34px] leading-none md:text-[56px]" style={{ color: textColor }}>{section.title}</h2>}
               {section.subtitle && <p className="mt-2 text-[16px] font-odesa-regular md:text-[20px]" style={{ color: `${textColor}99` }}>{section.subtitle}</p>}
             </div>
-            <div className="flex gap-5 overflow-x-auto px-4 pb-4 md:px-10 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <DragScrollRow hint className="flex gap-5 overflow-x-auto px-4 pb-4 md:px-10 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {items.map((item) => {
                 const isVideo = !!item.payload?.videoUrl;
                 const colSpan = (item.payload?.colSpan as number) ?? 1;
@@ -308,7 +352,19 @@ const CityPage = () => {
                   );
                 }
                 return (
-                  <div key={item.id} className="relative shrink-0 overflow-hidden rounded-[22px]" style={{ width: w, height: CARD_H, minHeight: 280 }}>
+                  <div
+                    key={item.id}
+                    onClick={() => {
+                      if (!item.imageUrl) return;
+                      const idx = imageItems.findIndex((i) => i.id === item.id);
+                      setGalleryLightbox({
+                        images: imageItems.map((i) => ({ url: i.imageUrl as string, title: i.title || undefined })),
+                        index: Math.max(0, idx),
+                      });
+                    }}
+                    className="relative shrink-0 cursor-pointer overflow-hidden rounded-[22px]"
+                    style={{ width: w, height: CARD_H, minHeight: 280 }}
+                  >
                     {item.imageUrl ? (
                       <Img w={500} src={item.imageUrl} alt={item.title} className="h-full w-full object-cover" />
                     ) : (
@@ -323,7 +379,7 @@ const CityPage = () => {
                   </div>
                 );
               })}
-            </div>
+            </DragScrollRow>
           </section>
         );
       }
@@ -337,13 +393,15 @@ const CityPage = () => {
   };
 
   return (
-    <div className="bg-[#fff2e8] font-odesa-regular text-[#002f5e]">
+    // key: перехід місто→місто без ремоунта лишає в hero фото попереднього
+    // міста, доки вантажиться нове.
+    <div key={city.id} className="bg-[#fff2e8] font-odesa-regular text-[#002f5e]">
+     <main id="main-content" tabIndex={-1}>
 
       {/* ══════════════════  HERO  ══════════════════════════════════════ */}
-      <section className="relative min-h-screen overflow-hidden">
+      <section className="relative min-h-screen overflow-hidden bg-[#001a3d]">
         {heroVideo ? (
-          <video src={heroVideo} autoPlay muted loop playsInline
-            className="absolute inset-0 h-full w-full object-cover" />
+          <HeroBackgroundVideo src={heroVideo} poster={heroImage} />
         ) : (
           <Img priority w={1600} src={heroImage} alt={city.name} className="absolute inset-0 h-full w-full object-cover" />
         )}
@@ -353,7 +411,11 @@ const CityPage = () => {
         <div className="relative z-20 mx-auto w-full max-w-[1180px] px-4 pt-0 md:px-5">
           <div className="rounded-b-[36px] bg-[#fff2e8] px-5 pb-3 pt-3 text-[#002f5e] md:rounded-b-[48px] md:px-6 md:pb-4 md:pt-4">
             <div className="flex items-center gap-3">
-              {district ? (
+              {backOverride?.backTo ? (
+                <Link to={backOverride.backTo} className="flex shrink-0 items-center gap-1.5 text-[14px] font-odesa-medium transition-opacity hover:opacity-70">
+                  <ChevronLeft className="h-4 w-4" /> <span className="hidden sm:inline">{backOverride.backLabel ?? t("back")}</span>
+                </Link>
+              ) : district ? (
                 <Link to={`/raion/${district.slug}`} className="flex shrink-0 items-center gap-1.5 text-[14px] font-odesa-medium transition-opacity hover:opacity-70">
                   <ChevronLeft className="h-4 w-4" /> <span className="hidden sm:inline">{district.name}</span>
                 </Link>
@@ -376,7 +438,7 @@ const CityPage = () => {
           </div>
         </div>
 
-        <div className="relative z-10 flex min-h-[calc(100vh-80px)] flex-col justify-end px-6 pb-24 text-[#fff2e8] md:px-14 md:pb-15">
+        <div className="relative z-10 flex min-h-[calc(100vh-80px)] flex-col justify-end px-6 pb-24 text-[#fff2e8] md:px-14 md:pb-14">
           {/* weather widget — above the title */}
           {weather && (
             <motion.div
@@ -403,7 +465,7 @@ const CityPage = () => {
           </motion.div>
           <motion.h1 initial={{ opacity: 0, y: 32 }} animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-            className="font-odesa-medium text-[44px] leading-[0.95] [overflow-wrap:anywhere] xs:text-[52px] md:text-[84px] md:leading-[0.92] lg:text-[96px]">
+            className="font-odesa-medium text-[44px] leading-[0.95] [overflow-wrap:break-word] xs:text-[52px] md:text-[84px] md:leading-[0.92] lg:text-[96px]">
             {city.name}
           </motion.h1>
           {city.subtitle && (
@@ -430,11 +492,19 @@ const CityPage = () => {
       </section>
 
       {/* ══════════════════  DYNAMIC SECTIONS  ══════════════════════════ */}
-      <div className="pb-tabbar">
+      <div className="pb-tabbar md:pb-0">
         {activeSections.map(renderSection)}
       </div>
+     </main>
 
       <SiteFooter />
+
+      <GalleryLightbox
+        images={galleryLightbox?.images ?? []}
+        index={galleryLightbox ? galleryLightbox.index : null}
+        onClose={() => setGalleryLightbox(null)}
+        onNavigate={(index) => setGalleryLightbox((cur) => (cur ? { ...cur, index } : cur))}
+      />
     </div>
   );
 };

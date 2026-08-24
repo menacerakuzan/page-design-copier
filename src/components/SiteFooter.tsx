@@ -84,7 +84,7 @@ const SiteFooter = () => {
   }, [query, searchItems]);
 
   return (
-    <footer className="relative z-10 overflow-hidden rounded-t-[44px] bg-[#002f5e] px-4 pb-[calc(64px+1.5rem)] pt-10 text-[#fff2e8] md:px-10 md:pb-6">
+    <footer className="relative z-10 -mt-11 overflow-hidden rounded-t-[44px] bg-[#002f5e] px-4 pb-[calc(64px+1.5rem)] pt-10 text-[#fff2e8] md:px-10 md:pb-6">
       {/* м'які кольорові плями-сяйва */}
       <div className="pointer-events-none absolute -right-24 -top-28 h-80 w-80 rounded-full bg-[#df9b3b]/12 blur-3xl" aria-hidden="true" />
       <div className="pointer-events-none absolute -left-28 bottom-16 h-96 w-96 rounded-full bg-[#9f1f47]/20 blur-3xl" aria-hidden="true" />
@@ -156,10 +156,14 @@ const SiteFooter = () => {
           </a>
         </div>
 
-        {/* watermark */}
+        {/* watermark. Без overflow-hidden тут: -webkit-text-stroke малює обвід
+            ПОВЕРХ layout-меж гліфа (не впливає на розмір блоку), і з
+            overflow:hidden рівно по краю тексту обвід останньої літери
+            ("А") просто зрізало праворуч. Футер сам по собі вже overflow-
+            hidden з округленими кутами — цього достатньо для кліпінгу. */}
         <div
           aria-hidden="true"
-          className="pointer-events-none mt-8 select-none overflow-hidden whitespace-nowrap text-center leading-none font-odesa-heavy font-odesa-ss02"
+          className="pointer-events-none mt-8 select-none whitespace-nowrap px-2 text-center leading-none font-odesa-heavy font-odesa-ss02"
           style={{
             fontSize: "clamp(40px, 13vw, 190px)",
             color: "transparent",
@@ -171,9 +175,14 @@ const SiteFooter = () => {
 
         {/* нижня панель */}
         <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-[#fff2e8]/12 pt-6">
-          <p className="text-[13px] text-[#fff2e8]/40 font-odesa-regular">
-            © {new Date().getFullYear()} Одещина — серце південного колориту
-          </p>
+          <div className="flex flex-col gap-1">
+            <p className="text-[13px] text-[#fff2e8]/60 font-odesa-regular">
+              © {new Date().getFullYear()} Одещина — серце південного колориту
+            </p>
+            <p className="text-[16px] leading-relaxed text-[#fff2e8]/60 font-odesa-regular">
+              Музика на сайті: «Одеса» · Євген Філатов, альбом «Як Звучить Світ. Україна» — Producer, Composer, Lyricist: Yevhen Filatov
+            </p>
+          </div>
           {/* Кнопка налаштувань відображення тимчасово прихована — повернемо в іншому місці */}
           <div className="hidden">
             <AccessibilityMenu

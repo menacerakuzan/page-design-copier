@@ -1,23 +1,34 @@
 <!doctype html>
-<html lang="en">
+<html lang="uk">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#fff2e8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <!-- favicon.svg раніше було задекларовано тут, але файлу не існувало в
+         public/ — nginx на SPA-фолбек (try_files $uri /index.html) віддавав
+         замість нього HTML-сторінку з content-type: text/html. Браузери це
+         непомітно проковтували (падали на alternate PNG нижче), а Google в
+         результатах пошуку — ні, тому фавікон там не підтягувався. Тепер
+         основний — реальний .ico (Google історично довіряє саме /favicon.ico
+         в корені), PNG лишається як alternate для сучасних браузерів. -->
+    <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="alternate icon" type="image/png" sizes="120x120" href="/favicon-120x120.png" />
     <title>Одещина</title>
     <meta name="description" content="Досліджуй Одещину — туристичний гід по Одеській області" />
     <meta name="author" content="Одещина" />
 
     <meta property="og:title" content="Одещина — Серце Південного Колориту" />
+    <meta property="og:site_name" content="Одещина" />
     <meta property="og:description" content="Досліджуй Одещину — туристичний гід по Одеській області" />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="/image.jpg" />
+    <meta property="og:url" content="https://tourism.od.gov.ua/" />
+    <meta property="og:image" content="https://tourism.od.gov.ua/og-image.jpg" />
+    <meta property="og:image:width" content="1920" />
+    <meta property="og:image:height" content="1080" />
 
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@odesa_travel" />
-    <meta name="twitter:image" content="/image.jpg" />
+    <meta name="twitter:image" content="https://tourism.od.gov.ua/og-image.jpg" />
 
     <!-- Warm up the connection to the image host (most photos live here). -->
     <link rel="preconnect" href="https://tourism.od.gov.ua" crossorigin />
@@ -33,6 +44,36 @@
     <script>
       document.documentElement.style.backgroundColor =
         location.pathname === "/" ? "#001a3d" : "#fff2e8";
+    </script>
+
+    <!-- Google бере назву сайту в результатах пошуку (жирний текст перед URL)
+         насамперед з og:site_name вище, а WebSite.name/GovernmentOrganization
+         тут — резервний сигнал і те, що формує "About this result" / Knowledge
+         Panel з часом. Без цього Google вгадував назву з домену — звідси
+         "od.gov.ua" замість "Одещина" в результатах пошуку. -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "GovernmentOrganization",
+            "name": "Одещина — туристичний портал Одеської області",
+            "alternateName": "Одещина",
+            "url": "https://tourism.od.gov.ua/",
+            "logo": "https://tourism.od.gov.ua/favicon-120x120.png",
+            "sameAs": [
+              "https://www.instagram.com/odesa_travel/",
+              "https://www.tiktok.com/@odesa.travel",
+              "https://www.facebook.com/share/1BMayDdZLc/"
+            ]
+          },
+          {
+            "@type": "WebSite",
+            "name": "Одещина",
+            "url": "https://tourism.od.gov.ua/"
+          }
+        ]
+      }
     </script>
   </head>
 

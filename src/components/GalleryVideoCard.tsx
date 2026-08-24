@@ -1,7 +1,9 @@
 import { useRef, useState, useCallback, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { Pause, Play, Volume2, VolumeX, Maximize2, X } from "lucide-react";
+import { Loader2, Volume2, VolumeX, Maximize2, X } from "lucide-react";
+import { SpinningEmblem } from "@/components/SpinningEmblem";
+import { useDialogA11y } from "@/hooks/useDialogA11y";
 
 interface Props {
   src: string;
@@ -11,19 +13,42 @@ interface Props {
   className?: string;
 }
 
+const Spinner = () => (
+  <div className="absolute inset-0 flex items-center justify-center bg-[#002f5e]/20">
+    <Loader2 className="h-8 w-8 animate-spin text-white/80" />
+  </div>
+);
+
 export function GalleryVideoCard({ src, title, textSizeCls = "text-[20px]", style, className = "" }: Props) {
+  const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [paused, setPaused] = useState(false);
+  const [inView, setInView] = useState(false);
+  const [loading, setLoading] = useState(true);
+  // Відео більше НЕ вмикається само (ні при появі в кадрі, ні при наведенні) —
+  // тому стартовий стан одразу "на паузі", а не false.
+  const [paused, setPaused] = useState(true);
   const [muted, setMuted] = useState(true);
-  const [showControls, setShowControls] = useState(false);
   const [expanded, setExpanded] = useState(false);
+
+  // Не тягнемо всі відео галереї одразу — вантажимо (і починаємо грати) лише
+  // ту картку, що реально під'їхала у видиму область горизонтальної стрічки.
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setInView(entry.isIntersecting),
+      { rootMargin: "200px", threshold: 0.01 },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   const togglePlay = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     const v = videoRef.current;
     if (!v) return;
-    if (v.paused) { void v.play(); setPaused(false); }
-    else { v.pause(); setPaused(true); }
+    if (v.paused) void v.play();
+    else v.pause();
   }, []);
 
   const toggleMute = useCallback((e: React.MouseEvent) => {
@@ -39,25 +64,39 @@ export function GalleryVideoCard({ src, title, textSizeCls = "text-[20px]", styl
     setExpanded(true);
   }, []);
 
+  // Поки відкритий фулскрін — прев'ю на паузі (той самий файл двома окремими
+  // <video> інакше конкурують за пропускну здатність, і фулскрін довго
+  // виглядав "порожнім"). Саме прев'ю більше НЕ вмикається автоматично —
+  // тільки явним кліком користувача.
+  useEffect(() => {
+    if (expanded) videoRef.current?.pause();
+  }, [expanded]);
+
   return (
     <>
       <div
-        className={`relative shrink-0 overflow-hidden rounded-[22px] cursor-pointer ${className}`}
+        ref={containerRef}
+        className={`group relative shrink-0 overflow-hidden rounded-[22px] cursor-pointer bg-[#002f5e]/10 ${className}`}
         style={{ minHeight: 280, ...style }}
-        onMouseEnter={() => setShowControls(true)}
-        onMouseLeave={() => setShowControls(false)}
-        onTouchStart={() => setShowControls(s => !s)}
         onClick={togglePlay}
       >
-        <video
-          ref={videoRef}
-          src={src}
-          autoPlay
-          muted={muted}
-          loop
-          playsInline
-          className="h-full w-full object-cover"
-        />
+        {inView && (
+          <video
+            ref={videoRef}
+            src={src}
+            preload="auto"
+            muted={muted}
+            loop
+            playsInline
+            onPlaying={() => { setLoading(false); setPaused(false); }}
+            onPause={() => setPaused(true)}
+            onWaiting={() => setLoading(true)}
+            onCanPlay={() => setLoading(false)}
+            className="h-full w-full object-cover"
+          />
+        )}
+
+        {(!inView || loading) && <Spinner />}
 
         {/* gradient + title */}
         {title && (
@@ -67,16 +106,18 @@ export function GalleryVideoCard({ src, title, textSizeCls = "text-[20px]", styl
           </>
         )}
 
-        {/* controls overlay */}
-        <div
-          className={`absolute inset-0 flex items-center justify-center transition-opacity duration-200 ${showControls ? "opacity-100" : "opacity-0"}`}
-          style={{ pointerEvents: showControls ? "auto" : "none" }}
-        >
-          {/* center play/pause */}
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm">
-            {paused ? <Play className="h-6 w-6 fill-white" /> : <Pause className="h-6 w-6" />}
+        {/* Емблема замість кнопки play/pause: показується щоразу, коли відео
+            на паузі (не залежно від наведення) — щит нерухомий, кільце з
+            написом крутиться. Клік вимикає паузу (запускає відео) — оверлей
+            одразу ховається, бо paused стає false. */}
+        {!loading && (
+          <div
+            className={`absolute inset-0 flex items-center justify-center transition-opacity duration-200 ${paused ? "opacity-100 backdrop-blur-sm" : "opacity-0"}`}
+            style={{ pointerEvents: paused ? "auto" : "none" }}
+          >
+            <SpinningEmblem size={220} />
           </div>
-        </div>
+        )}
 
         {/* bottom-right buttons — завжди видимі (зручно на тач-екранах) */}
         <div className="absolute bottom-3 right-3 flex items-center gap-2">
@@ -106,27 +147,27 @@ export function GalleryVideoCard({ src, title, textSizeCls = "text-[20px]", styl
 
 function ReelLightbox({ src, title, open, onClose }: { src: string; title?: string; open: boolean; onClose: () => void }) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [muted, setMuted] = useState(false);
+  // Стартуємо без звуку — так само, як картка-прев'ю: браузери надійно
+  // дозволяють autoplay лише muted-відео. Раніше тут стартувало unmuted, і
+  // на суворих autoplay-політиках (Chrome) відео мовчки лишалось на паузі —
+  // "не працює", бо кнопка Play не показувалась (стан paused не встигав
+  // синхронізуватись зі справжнім <video>).
+  const [muted, setMuted] = useState(true);
   const [paused, setPaused] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  // Esc для закриття + блокування скролу body, поки відкрито
+  // Esc, пастка фокуса, повернення фокуса й блокування скролу — у спільному хуку.
+  const dialogRef = useDialogA11y(open, onClose);
+
   useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
-    document.addEventListener("keydown", onKey);
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prevOverflow;
-    };
-  }, [open, onClose]);
+    if (open) setLoading(true);
+  }, [open]);
 
   const togglePlay = useCallback(() => {
     const v = videoRef.current;
     if (!v) return;
-    if (v.paused) { void v.play(); setPaused(false); }
-    else { v.pause(); setPaused(true); }
+    if (v.paused) void v.play();
+    else v.pause();
   }, []);
 
   const toggleMute = useCallback((e: React.MouseEvent) => {
@@ -154,21 +195,39 @@ function ReelLightbox({ src, title, open, onClose }: { src: string; title?: stri
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.92 }}
             transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-            className="relative flex max-h-[90vh] w-auto items-center justify-center"
-            style={{ aspectRatio: "9 / 16" }}
+            ref={dialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label={title ? `Відео: ${title}` : "Перегляд відео"}
+            className="relative flex max-h-[90vh] max-w-[92vw] items-center justify-center"
             onClick={e => e.stopPropagation()}
           >
+            {/* Без фіксованого aspect-ratio: галерейні відео здебільшого
+                горизонтальні (на відміну від портретних reel), тому контейнер
+                мав форму 9:16 і "стискав" ландшафтне відео в невидиму смужку —
+                саме це й читалось як "фулскрін не працює, тільки кнопки". */}
             <video
               ref={videoRef}
               src={src}
+              preload="auto"
               autoPlay
               muted={muted}
               loop
               playsInline
               onClick={togglePlay}
-              className="h-full max-h-[90vh] w-auto rounded-[22px] object-contain"
+              onPlaying={() => { setLoading(false); setPaused(false); }}
+              onPause={() => setPaused(true)}
+              onWaiting={() => setLoading(true)}
+              onCanPlay={() => setLoading(false)}
+              className="max-h-[90vh] max-w-[92vw] rounded-[22px] object-contain"
               style={{ boxShadow: "0 30px 80px -20px rgba(0,0,0,0.8)" }}
             />
+
+            {loading && (
+              <div className="absolute inset-0 flex items-center justify-center rounded-[22px] bg-black/30">
+                <Loader2 className="h-10 w-10 animate-spin text-white/80" />
+              </div>
+            )}
 
             {title && (
               <>
@@ -177,16 +236,18 @@ function ReelLightbox({ src, title, open, onClose }: { src: string; title?: stri
               </>
             )}
 
-            {/* center play/pause hint */}
-            {paused && (
-              <button
-                type="button"
-                onClick={togglePlay}
-                className="absolute left-1/2 top-1/2 flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm"
-                aria-label="Відтворити"
-              >
-                <Play className="h-7 w-7 fill-white" />
-              </button>
+            {/* Замість кнопки play — та сама емблема замість іконки паузи */}
+            {!loading && paused && (
+              <div className="absolute inset-0 flex items-center justify-center rounded-[22px] backdrop-blur-sm">
+                <button
+                  type="button"
+                  onClick={togglePlay}
+                  className="group flex h-56 w-56 items-center justify-center"
+                  aria-label="Відтворити"
+                >
+                  <SpinningEmblem size={224} />
+                </button>
+              </div>
             )}
 
             {/* controls */}

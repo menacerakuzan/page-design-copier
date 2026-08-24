@@ -60,6 +60,10 @@ async function translateTable(table, fields, idCol = "id") {
 
 async function main() {
   await client.connect();
+  // authenticator є NOINHERIT-членом authenticated (secure-auth.sql) — без
+  // явного SET ROLE політики RLS на цю сесію не діють: UPDATE мовчки зачепить
+  // 0 рядків замість помилки.
+  await client.query("SET ROLE authenticated");
   console.log("Connected to DB");
 
   // districts

@@ -37,13 +37,13 @@ export function ObjectCard({ slug }: { slug: string }) {
           {tl(obj.name, obj.nameEn)}
         </p>
         {obj.address && (
-          <p className="mt-1 flex items-center gap-1 text-[12px] leading-tight text-[#002f5e]/55 font-odesa-regular">
+          <p className="mt-1 flex items-center gap-1 text-[12px] leading-tight text-[#002f5e]/70 font-odesa-regular">
             <MapPin className="h-3 w-3 shrink-0" />
             <span className="line-clamp-1">{tl(obj.address, obj.addressEn)}</span>
           </p>
         )}
         {obj.phone && (
-          <p className="mt-0.5 flex items-center gap-1 text-[12px] leading-tight text-[#002f5e]/55 font-odesa-regular">
+          <p className="mt-0.5 flex items-center gap-1 text-[12px] leading-tight text-[#002f5e]/70 font-odesa-regular">
             <Phone className="h-3 w-3 shrink-0" />
             <span className="line-clamp-1">{obj.phone}</span>
           </p>

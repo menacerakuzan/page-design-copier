@@ -3,12 +3,13 @@ import {
   Eye, EyeOff, Trash2, Plus, ChevronUp, ChevronDown,
   MapPin, Calendar, Landmark, LayoutDashboard,
   X, AlignLeft, AlignCenter, Maximize2,
-  Type, Image as ImageIcon, Check,
+  Type, Image as ImageIcon, Check, Upload,
 } from "lucide-react";
 import { ContentCardEntity } from "@/types/cms";
 import { District, City, TourismObject } from "@/types/hierarchy";
 import { upsertContentCard, deleteContentCard } from "@/lib/adminRepository";
 import { uid } from "@/lib/id";
+import { uploadMedia } from "@/data/storage";
 
 // ─── types ────────────────────────────────────────────────────────────────────
 
@@ -67,7 +68,7 @@ const SectionTab = ({
     className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-[14px] font-medium transition ${
       active
         ? "bg-[#002f5e] text-[#fff2e8]"
-        : "text-[#002f5e]/60 hover:bg-[#002f5e]/8 hover:text-[#002f5e]"
+        : "text-[#002f5e]/70 hover:bg-[#002f5e]/8 hover:text-[#002f5e]"
     }`}
   >
     {icon}
@@ -89,8 +90,41 @@ const CardThumb = ({ imageUrl, size = "sm" }: { imageUrl?: string | null; size?:
     />
   ) : (
     <div className={`${dim} shrink-0 rounded-xl bg-[#002f5e]/8 flex items-center justify-center`}>
-      <ImageIcon className="h-5 w-5 text-[#002f5e]/30" />
+      <ImageIcon className="h-5 w-5 text-[#002f5e]/70" />
     </div>
+  );
+};
+
+// Клікабельна мініатюра, що дозволяє замінити фото картки напряму (без
+// видалення й повторного додавання району) — просто клік/наведення й вибір
+// нового файлу, як у "Види туризму".
+const ReplaceableThumb = ({
+  imageUrl, uploading, onFile, size = "sm",
+}: {
+  imageUrl?: string | null; uploading: boolean; onFile: (file: File) => void; size?: "sm" | "md";
+}) => {
+  const dim = size === "sm" ? "h-12 w-12" : "h-16 w-20";
+  return (
+    <label className={`group relative ${dim} shrink-0 cursor-pointer overflow-hidden rounded-xl`} title="Змінити фото">
+      <CardThumb imageUrl={imageUrl} size={size} />
+      <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition group-hover:bg-black/45 group-hover:opacity-100">
+        {uploading ? (
+          <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/50 border-t-white" />
+        ) : (
+          <Upload className="h-4 w-4 text-white" />
+        )}
+      </div>
+      <input
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={e => {
+          const file = e.target.files?.[0];
+          if (file) onFile(file);
+          e.target.value = "";
+        }}
+      />
+    </label>
   );
 };
 
@@ -102,11 +136,12 @@ const MiniBtn = ({
   <button
     type="button"
     title={title}
+    aria-label={title}
     onClick={onClick}
     className={`flex h-7 w-7 items-center justify-center rounded-lg text-[12px] transition ${
       active
         ? "bg-[#002f5e] text-white"
-        : "bg-[#002f5e]/8 text-[#002f5e]/60 hover:bg-[#002f5e]/15 hover:text-[#002f5e]"
+        : "bg-[#002f5e]/8 text-[#002f5e]/70 hover:bg-[#002f5e]/15 hover:text-[#002f5e]"
     }`}
   >
     {children}
@@ -134,7 +169,7 @@ const PickerSheet = ({
         <div className="flex items-center justify-between border-b border-[#002f5e]/10 px-5 py-4">
           <h3 className="text-[16px] font-semibold text-[#002f5e]">{title}</h3>
           <button type="button" onClick={onClose} className="rounded-lg p-1.5 hover:bg-[#002f5e]/8">
-            <X className="h-4 w-4 text-[#002f5e]/50" />
+            <X className="h-4 w-4 text-[#002f5e]/70" />
           </button>
         </div>
         <div className="px-5 py-3">
@@ -143,12 +178,12 @@ const PickerSheet = ({
             value={query}
             onChange={e => setQuery(e.target.value)}
             placeholder="Пошук..."
-            className="w-full rounded-xl border border-[#002f5e]/15 bg-white px-4 py-2.5 text-[14px] text-[#002f5e] placeholder:text-[#002f5e]/35 focus:border-[#002f5e]/35 focus:outline-none"
+            className="w-full rounded-xl border border-[#002f5e]/15 bg-white px-4 py-2.5 text-[14px] text-[#002f5e] placeholder:text-[#002f5e]/70 focus:border-[#002f5e]/35 focus:outline-none"
           />
         </div>
         <div className="flex-1 overflow-y-auto px-3 pb-4">
           {filtered.length === 0 ? (
-            <p className="py-10 text-center text-[13px] text-[#002f5e]/40">{emptyMsg}</p>
+            <p className="py-10 text-center text-[13px] text-[#002f5e]/70">{emptyMsg}</p>
           ) : (
             <div className="flex flex-col gap-1">
               {filtered.map(item => (
@@ -162,7 +197,7 @@ const PickerSheet = ({
                     <img loading="lazy" decoding="async" src={item.imageUrl} alt="" className="h-10 w-10 shrink-0 rounded-lg object-cover" onError={e => (e.currentTarget.style.display = "none")} />
                   ) : (
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#002f5e]/8">
-                      <ImageIcon className="h-4 w-4 text-[#002f5e]/30" />
+                      <ImageIcon className="h-4 w-4 text-[#002f5e]/70" />
                     </div>
                   )}
                   <span className="flex-1 text-[14px] font-medium text-[#002f5e]">{item.name}</span>
@@ -194,16 +229,27 @@ const DirectionsSection = ({
   onMove: (id: string, dir: 1 | -1) => Promise<void>;
 }) => {
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [uploadingId, setUploadingId] = useState<string | null>(null);
   const usedDistrictIds = new Set(cards.map(c => c.districtId).filter(Boolean));
   const availableDistricts = districts.filter(d => !usedDistrictIds.has(d.id));
+
+  const replaceImage = async (card: ContentCardEntity, file: File) => {
+    setUploadingId(card.id);
+    try {
+      const url = await uploadMedia(file);
+      await onUpdate({ ...card, imageUrl: url });
+    } finally {
+      setUploadingId(null);
+    }
+  };
 
   return (
     <>
       <div className="flex flex-col gap-2">
         {cards.length === 0 && (
           <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-[#002f5e]/20 py-14 text-center">
-            <MapPin className="h-8 w-8 text-[#002f5e]/25" />
-            <p className="text-[13px] text-[#002f5e]/45">Додайте райони, які будуть відображатися на головній сторінці</p>
+            <MapPin className="h-8 w-8 text-[#002f5e]/70" />
+            <p className="text-[13px] text-[#002f5e]/70">Додайте райони, які будуть відображатися на головній сторінці</p>
           </div>
         )}
         {cards.map((card, idx) => (
@@ -213,10 +259,14 @@ const DirectionsSection = ({
               card.published ? "border-[#002f5e]/12 bg-white/70" : "border-[#002f5e]/8 bg-white/30 opacity-60"
             }`}
           >
-            <CardThumb imageUrl={card.imageUrl} />
+            <ReplaceableThumb
+              imageUrl={card.imageUrl}
+              uploading={uploadingId === card.id}
+              onFile={file => void replaceImage(card, file)}
+            />
             <div className="min-w-0 flex-1">
               <p className="truncate text-[14px] font-semibold text-[#002f5e]">{card.title}</p>
-              <p className="text-[12px] text-[#002f5e]/50">Сортування: {card.sortOrder}</p>
+              <p className="text-[12px] text-[#002f5e]/70">Сортування: {card.sortOrder}</p>
             </div>
             <div className="flex shrink-0 items-center gap-1.5">
               <MiniBtn onClick={() => onMove(card.id, -1)} title="Вгору">
@@ -242,7 +292,7 @@ const DirectionsSection = ({
           type="button"
           onClick={() => setPickerOpen(true)}
           disabled={availableDistricts.length === 0}
-          className="mt-1 flex items-center justify-center gap-2 rounded-2xl border border-dashed border-[#002f5e]/25 py-3 text-[13px] font-medium text-[#002f5e]/55 transition hover:border-[#002f5e]/45 hover:text-[#002f5e] disabled:cursor-not-allowed disabled:opacity-40"
+          className="mt-1 flex items-center justify-center gap-2 rounded-2xl border border-dashed border-[#002f5e]/25 py-3 text-[13px] font-medium text-[#002f5e]/70 transition hover:border-[#002f5e]/45 hover:text-[#002f5e] disabled:cursor-not-allowed disabled:opacity-40"
         >
           <Plus className="h-4 w-4" /> Додати напрямок
         </button>
@@ -310,8 +360,8 @@ const InterestingSection = ({
       <div className="flex flex-col gap-2">
         {cards.length === 0 && (
           <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-[#002f5e]/20 py-14 text-center">
-            <ImageIcon className="h-8 w-8 text-[#002f5e]/25" />
-            <p className="text-[13px] text-[#002f5e]/45">Додайте об'єкти для розділу «Цікаве»</p>
+            <ImageIcon className="h-8 w-8 text-[#002f5e]/70" />
+            <p className="text-[13px] text-[#002f5e]/70">Додайте об'єкти для розділу «Цікаве»</p>
           </div>
         )}
         {cards.map((card, idx) => {
@@ -342,7 +392,7 @@ const InterestingSection = ({
                     </span>
                   </div>
                   <p className="mt-1 truncate text-[14px] font-semibold text-[#002f5e]">{card.title}</p>
-                  <p className="text-[11px] text-[#002f5e]/45">{colSpan === 3 ? "Повна ширина" : colSpan === 2 ? "2/3 ширини" : "1/3 ширини"} · {row === 2 ? "Нижній рядок" : "Верхній рядок"}{card.cardType === "text" ? ` · Заг. ${textSize.toUpperCase()} / Опис ${descSize.toUpperCase()}` : ` · Текст ${textSize.toUpperCase()}`}</p>
+                  <p className="text-[11px] text-[#002f5e]/70">{colSpan === 3 ? "Повна ширина" : colSpan === 2 ? "2/3 ширини" : "1/3 ширини"} · {row === 2 ? "Нижній рядок" : "Верхній рядок"}{card.cardType === "text" ? ` · Заг. ${textSize.toUpperCase()} / Опис ${descSize.toUpperCase()}` : ` · Текст ${textSize.toUpperCase()}`}</p>
                 </div>
                 <div className="flex shrink-0 items-center gap-1.5">
                   <MiniBtn onClick={() => setExpandedId(expanded ? null : card.id)} active={expanded} title="Налаштування">
@@ -373,7 +423,7 @@ const InterestingSection = ({
                   <div className="grid grid-cols-3 gap-4">
                     {/* Width */}
                     <div>
-                      <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#002f5e]/40">Ширина</p>
+                      <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#002f5e]/70">Ширина</p>
                       <div className="flex gap-1">
                         {SIZE_OPTIONS.map(opt => (
                           <button
@@ -381,7 +431,7 @@ const InterestingSection = ({
                             type="button"
                             onClick={() => updatePayload(card, { colSpan: opt.value })}
                             className={`flex flex-1 items-center justify-center gap-1 rounded-lg py-1.5 text-[11px] font-medium transition ${
-                              colSpan === opt.value ? "bg-[#002f5e] text-white" : "bg-[#002f5e]/8 text-[#002f5e]/60 hover:bg-[#002f5e]/15"
+                              colSpan === opt.value ? "bg-[#002f5e] text-white" : "bg-[#002f5e]/8 text-[#002f5e]/70 hover:bg-[#002f5e]/15"
                             }`}
                           >
                             {opt.icon} {opt.label}
@@ -391,13 +441,13 @@ const InterestingSection = ({
                     </div>
                     {/* Row */}
                     <div>
-                      <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#002f5e]/40">Рядок</p>
+                      <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#002f5e]/70">Рядок</p>
                       <div className="flex gap-1">
                         <button
                           type="button"
                           onClick={() => updatePayload(card, { row: 1 })}
                           className={`flex flex-1 items-center justify-center gap-1 rounded-lg py-1.5 text-[11px] font-medium transition ${
-                            row !== 2 ? "bg-[#002f5e] text-white" : "bg-[#002f5e]/8 text-[#002f5e]/60 hover:bg-[#002f5e]/15"
+                            row !== 2 ? "bg-[#002f5e] text-white" : "bg-[#002f5e]/8 text-[#002f5e]/70 hover:bg-[#002f5e]/15"
                           }`}
                         >
                           <ChevronUp className="h-3 w-3" /> Верхній
@@ -406,7 +456,7 @@ const InterestingSection = ({
                           type="button"
                           onClick={() => updatePayload(card, { row: 2 })}
                           className={`flex flex-1 items-center justify-center gap-1 rounded-lg py-1.5 text-[11px] font-medium transition ${
-                            row === 2 ? "bg-[#002f5e] text-white" : "bg-[#002f5e]/8 text-[#002f5e]/60 hover:bg-[#002f5e]/15"
+                            row === 2 ? "bg-[#002f5e] text-white" : "bg-[#002f5e]/8 text-[#002f5e]/70 hover:bg-[#002f5e]/15"
                           }`}
                         >
                           <ChevronDown className="h-3 w-3" /> Нижній
@@ -415,7 +465,7 @@ const InterestingSection = ({
                     </div>
                     {/* Text size */}
                     <div>
-                      <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#002f5e]/40">Текст</p>
+                      <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#002f5e]/70">Текст</p>
                       <div className="flex gap-1">
                         {TEXT_OPTIONS.map(opt => (
                           <button
@@ -423,7 +473,7 @@ const InterestingSection = ({
                             type="button"
                             onClick={() => updatePayload(card, { textSize: opt.value })}
                             className={`flex flex-1 items-center justify-center rounded-lg py-1.5 text-[11px] font-bold transition ${
-                              textSize === opt.value ? "bg-[#002f5e] text-white" : "bg-[#002f5e]/8 text-[#002f5e]/60 hover:bg-[#002f5e]/15"
+                              textSize === opt.value ? "bg-[#002f5e] text-white" : "bg-[#002f5e]/8 text-[#002f5e]/70 hover:bg-[#002f5e]/15"
                             }`}
                           >
                             {opt.label}
@@ -440,7 +490,7 @@ const InterestingSection = ({
                         <div className="col-span-2" />
                         {/* Desc text size */}
                         <div>
-                          <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#002f5e]/40">Текст опису</p>
+                          <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#002f5e]/70">Текст опису</p>
                           <div className="flex gap-1">
                             {TEXT_OPTIONS.map(opt => (
                               <button
@@ -448,7 +498,7 @@ const InterestingSection = ({
                                 type="button"
                                 onClick={() => updatePayload(card, { descSize: opt.value })}
                                 className={`flex flex-1 items-center justify-center rounded-lg py-1.5 text-[11px] font-bold transition ${
-                                  descSize === opt.value ? "bg-[#002f5e] text-white" : "bg-[#002f5e]/8 text-[#002f5e]/60 hover:bg-[#002f5e]/15"
+                                  descSize === opt.value ? "bg-[#002f5e] text-white" : "bg-[#002f5e]/8 text-[#002f5e]/70 hover:bg-[#002f5e]/15"
                                 }`}
                               >
                                 {opt.label}
@@ -458,9 +508,9 @@ const InterestingSection = ({
                         </div>
                       </div>
                       <div className="mt-3">
-                        <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#002f5e]/40">Опис</p>
+                        <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#002f5e]/70">Опис</p>
                         <textarea
-                          className="w-full resize-none rounded-xl border border-[#002f5e]/15 bg-white px-3 py-2 text-[13px] text-[#002f5e] outline-none placeholder:text-[#002f5e]/35 focus:border-[#002f5e]/40"
+                          className="w-full resize-none rounded-xl border border-[#002f5e]/15 bg-white px-3 py-2 text-[13px] text-[#002f5e] outline-none placeholder:text-[#002f5e]/70 focus:border-[#002f5e]/40"
                           rows={3}
                           placeholder="Текст під заголовком"
                           defaultValue={String(card.payload?.description ?? "")}
@@ -478,14 +528,14 @@ const InterestingSection = ({
         <button
           type="button"
           onClick={() => setPickerOpen(true)}
-          className="mt-1 flex items-center justify-center gap-2 rounded-2xl border border-dashed border-[#002f5e]/25 py-3 text-[13px] font-medium text-[#002f5e]/55 transition hover:border-[#002f5e]/45 hover:text-[#002f5e]"
+          className="mt-1 flex items-center justify-center gap-2 rounded-2xl border border-dashed border-[#002f5e]/25 py-3 text-[13px] font-medium text-[#002f5e]/70 transition hover:border-[#002f5e]/45 hover:text-[#002f5e]"
         >
           <Plus className="h-4 w-4" /> Додати об'єкт
         </button>
         <button
           type="button"
           onClick={() => setTextFormOpen(true)}
-          className="flex items-center justify-center gap-2 rounded-2xl border border-dashed border-[#002f5e]/25 py-3 text-[13px] font-medium text-[#002f5e]/55 transition hover:border-[#002f5e]/45 hover:text-[#002f5e]"
+          className="flex items-center justify-center gap-2 rounded-2xl border border-dashed border-[#002f5e]/25 py-3 text-[13px] font-medium text-[#002f5e]/70 transition hover:border-[#002f5e]/45 hover:text-[#002f5e]"
         >
           <AlignLeft className="h-4 w-4" /> Додати текстову картку
         </button>
@@ -508,21 +558,21 @@ const InterestingSection = ({
               <button
                 type="button"
                 onClick={() => { setTextFormOpen(false); setTextTitle(""); setTextDesc(""); }}
-                className="flex h-8 w-8 items-center justify-center rounded-xl text-[#002f5e]/30 transition hover:bg-[#002f5e]/8 hover:text-[#002f5e]"
+                className="flex h-8 w-8 items-center justify-center rounded-xl text-[#002f5e]/70 transition hover:bg-[#002f5e]/8 hover:text-[#002f5e]"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
             <div className="flex flex-col gap-3">
               <input
-                className="w-full rounded-xl border border-[#002f5e]/15 bg-[#002f5e]/4 px-3 py-2.5 text-[14px] text-[#002f5e] outline-none placeholder:text-[#002f5e]/35 focus:border-[#002f5e]/40 focus:bg-white transition"
+                className="w-full rounded-xl border border-[#002f5e]/15 bg-[#002f5e]/4 px-3 py-2.5 text-[14px] text-[#002f5e] outline-none placeholder:text-[#002f5e]/70 focus:border-[#002f5e]/40 focus:bg-white transition"
                 placeholder="Заголовок картки"
                 value={textTitle}
                 onChange={e => setTextTitle(e.target.value)}
                 autoFocus
               />
               <textarea
-                className="w-full resize-none rounded-xl border border-[#002f5e]/15 bg-[#002f5e]/4 px-3 py-2.5 text-[14px] text-[#002f5e] outline-none placeholder:text-[#002f5e]/35 focus:border-[#002f5e]/40 focus:bg-white transition"
+                className="w-full resize-none rounded-xl border border-[#002f5e]/15 bg-[#002f5e]/4 px-3 py-2.5 text-[14px] text-[#002f5e] outline-none placeholder:text-[#002f5e]/70 focus:border-[#002f5e]/40 focus:bg-white transition"
                 placeholder="Опис (необов'язково)"
                 rows={3}
                 value={textDesc}
@@ -541,7 +591,7 @@ const InterestingSection = ({
               <button
                 type="button"
                 onClick={() => { setTextFormOpen(false); setTextTitle(""); setTextDesc(""); }}
-                className="rounded-xl border border-[#002f5e]/15 px-4 py-2.5 text-[13px] text-[#002f5e]/55 transition hover:bg-[#002f5e]/5"
+                className="rounded-xl border border-[#002f5e]/15 px-4 py-2.5 text-[13px] text-[#002f5e]/70 transition hover:bg-[#002f5e]/5"
               >
                 Скасувати
               </button>
@@ -599,7 +649,7 @@ const PlaceCardsSection = ({
         {cards.length === 0 && (
           <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-[#002f5e]/20 py-14 text-center">
             {icon}
-            <p className="text-[13px] text-[#002f5e]/45">{emptyMsg}</p>
+            <p className="text-[13px] text-[#002f5e]/70">{emptyMsg}</p>
           </div>
         )}
         {cards.map((card, idx) => (
@@ -608,7 +658,7 @@ const PlaceCardsSection = ({
               <CardThumb imageUrl={card.imageUrl} size="md" />
               <div className="min-w-0 flex-1">
                 <p className="truncate text-[14px] font-semibold text-[#002f5e]">{card.title}</p>
-                {card.subtitle && <p className="truncate text-[12px] text-[#002f5e]/55">{card.subtitle}</p>}
+                {card.subtitle && <p className="truncate text-[12px] text-[#002f5e]/70">{card.subtitle}</p>}
               </div>
               <div className="flex shrink-0 items-center gap-1.5">
                 {extraFields && (
@@ -645,7 +695,7 @@ const PlaceCardsSection = ({
           type="button"
           onClick={() => setPickerOpen(true)}
           disabled={available.length === 0}
-          className="mt-1 flex items-center justify-center gap-2 rounded-2xl border border-dashed border-[#002f5e]/25 py-3 text-[13px] font-medium text-[#002f5e]/55 transition hover:border-[#002f5e]/45 hover:text-[#002f5e] disabled:cursor-not-allowed disabled:opacity-40"
+          className="mt-1 flex items-center justify-center gap-2 rounded-2xl border border-dashed border-[#002f5e]/25 py-3 text-[13px] font-medium text-[#002f5e]/70 transition hover:border-[#002f5e]/45 hover:text-[#002f5e] disabled:cursor-not-allowed disabled:opacity-40"
         >
           <Plus className="h-4 w-4" /> {addLabel}
         </button>
@@ -691,10 +741,10 @@ const EventBadgeEditor = ({
 
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-[#002f5e]/40">Бейдж дати на картці</p>
+      <p className="text-[11px] font-semibold uppercase tracking-wider text-[#002f5e]/70">Бейдж дати на картці</p>
       <div className="grid grid-cols-3 gap-2">
         <div>
-          <p className="mb-1 text-[11px] text-[#002f5e]/50">Префікс (до/з)</p>
+          <p className="mb-1 text-[11px] text-[#002f5e]/70">Префікс (до/з)</p>
           <input
             value={badgeTop}
             onChange={e => setBadgeTop(e.target.value)}
@@ -703,7 +753,7 @@ const EventBadgeEditor = ({
           />
         </div>
         <div>
-          <p className="mb-1 text-[11px] text-[#002f5e]/50">День</p>
+          <p className="mb-1 text-[11px] text-[#002f5e]/70">День</p>
           <input
             value={badgeDay}
             onChange={e => setBadgeDay(e.target.value)}
@@ -712,7 +762,7 @@ const EventBadgeEditor = ({
           />
         </div>
         <div>
-          <p className="mb-1 text-[11px] text-[#002f5e]/50">Місяць</p>
+          <p className="mb-1 text-[11px] text-[#002f5e]/70">Місяць</p>
           <input
             value={badgeMonth}
             onChange={e => setBadgeMonth(e.target.value)}
@@ -903,7 +953,7 @@ const AdminConstructor = ({ contentCards, places, districts, cities, onCardsChan
           ))}
         </div>
 
-        <p className="mt-3 text-[13px] text-[#002f5e]/50">{TAB_DESCRIPTIONS[activeTab]}</p>
+        <p className="mt-3 text-[13px] text-[#002f5e]/70">{TAB_DESCRIPTIONS[activeTab]}</p>
       </div>
 
       {/* Section content */}
@@ -938,7 +988,7 @@ const AdminConstructor = ({ contentCards, places, districts, cities, onCardsChan
             places={places}
             filterType="attraction"
             sectionKey="attractions"
-            icon={<Landmark className="h-8 w-8 text-[#002f5e]/25" />}
+            icon={<Landmark className="h-8 w-8 text-[#002f5e]/70" />}
             addLabel="Додати атракцію"
             emptyMsg="Додайте туристичні об'єкти для великого слайдера"
             onUpdate={applyCardChange}
@@ -955,7 +1005,7 @@ const AdminConstructor = ({ contentCards, places, districts, cities, onCardsChan
             places={places}
             filterType="event"
             sectionKey="events"
-            icon={<Calendar className="h-8 w-8 text-[#002f5e]/25" />}
+            icon={<Calendar className="h-8 w-8 text-[#002f5e]/70" />}
             addLabel="Додати подію"
             emptyMsg="Додайте події — вони з'являться як картки з датами"
             onUpdate={applyCardChange}

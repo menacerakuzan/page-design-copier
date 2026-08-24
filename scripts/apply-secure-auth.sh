@@ -29,7 +29,7 @@ psql -v ON_ERROR_STOP=1 -f "$DIR/scripts/secure-auth.sql"
 echo "Сидирую админа ($EMAIL) ..."
 psql -v ON_ERROR_STOP=1 -v email="$EMAIL" -v pw="$PW" <<'SQL'
 INSERT INTO basic_auth.users (email, pass, role)
-VALUES (:'email', public.crypt(:'pw', public.gen_salt('bf')), 'authenticated')
+VALUES (:'email', extensions.crypt(:'pw', extensions.gen_salt('bf')), 'authenticated')
 ON CONFLICT (email) DO UPDATE SET pass = EXCLUDED.pass, role = EXCLUDED.role;
 SQL
 

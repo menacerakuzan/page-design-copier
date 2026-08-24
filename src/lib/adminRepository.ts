@@ -96,6 +96,8 @@ const mapDbObject = (row: any): TourismObject => ({
   venueId: row.venue_id ?? undefined,
   repertoire: row.repertoire ?? undefined,
   heroFontSize: row.hero_font_size ?? undefined,
+  audioUrl: row.audio_url ?? undefined,
+  audioUrlEn: row.audio_url_en ?? undefined,
 });
 
 const mapDbDistrict = (row: any): District => ({
@@ -113,6 +115,8 @@ const mapDbDistrict = (row: any): District => ({
   videoUrl: row.video_url ?? undefined,
   reelUrl: row.reel_url ?? undefined,
   sortOrder: row.sort_order ?? 0,
+  audioUrl: row.audio_url ?? undefined,
+  audioUrlEn: row.audio_url_en ?? undefined,
 });
 
 const mapDbCity = (row: any): City => ({
@@ -132,6 +136,8 @@ const mapDbCity = (row: any): City => ({
   reelUrl: row.reel_url ?? undefined,
   weatherCityName: row.weather_city_name ?? undefined,
   sortOrder: row.sort_order ?? 0,
+  audioUrl: row.audio_url ?? undefined,
+  audioUrlEn: row.audio_url_en ?? undefined,
 });
 
 const toDbObject = (obj: TourismObject) => ({
@@ -169,6 +175,8 @@ const toDbObject = (obj: TourismObject) => ({
   venue_id: obj.venueId ?? null,
   repertoire: obj.repertoire ?? null,
   hero_font_size: obj.heroFontSize ?? null,
+  audio_url: obj.audioUrl ?? null,
+  audio_url_en: obj.audioUrlEn ?? null,
 });
 
 const mapDbChange = (row: any): AdminChangeLog => ({
@@ -461,6 +469,8 @@ export async function upsertDistrict(district: District) {
     subtitle_en: district.subtitleEn ?? null,
     description_en: district.descriptionEn ?? null,
     sort_order: district.sortOrder ?? 0,
+    audio_url: district.audioUrl ?? null,
+    audio_url_en: district.audioUrlEn ?? null,
   };
   const { error } = await db.from(tableNames.districts).upsert(dbDistrict);
   if (error) throw error;
@@ -538,6 +548,8 @@ export async function upsertCity(city: City) {
     name_en: city.nameEn ?? null,
     subtitle_en: city.subtitleEn ?? null,
     description_en: city.descriptionEn ?? null,
+    audio_url: city.audioUrl ?? null,
+    audio_url_en: city.audioUrlEn ?? null,
   };
   const { error } = await db.from(tableNames.cities).upsert(dbCity);
   if (error) throw error;

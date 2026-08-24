@@ -114,6 +114,41 @@
     font-family: "Odesa Region Type", sans-serif;
     background-color: #001a3d;
     color: #fff2e8;
+    /* WCAG 1.4.12: комфортний міжрядковий інтервал за замовчуванням.
+       Явні leading-* класи в компонентах це перекривають там, де потрібно
+       (великі заголовки, однорядкові підписи). */
+    line-height: 1.5;
+  }
+
+  /* ── Маркер фокуса клавіатури (WCAG 2.4.7 / 1.4.11) ─────────────────
+     Двотонове кільце: темний outline + світлий ореол box-shadow. Жоден
+     одноколірний варіант не дає ≥3:1 одночасно на кремовому (#fff2e8),
+     синьому (#002f5e/#001a3d) та бордовому (#9f1f47) тлі, які всі
+     використовуються під інтерактивними елементами. Темне кільце читається
+     на світлому тлі, світлий ореол — на темному й бордовому. outline
+     ніколи не обрізається overflow:hidden, тож навіть якщо ореол зріже
+     контейнер картки, сам маркер лишиться видимим. */
+  :focus-visible {
+    outline: 3px solid #002f5e;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 2px #fff2e8;
+    border-radius: 2px;
+  }
+  /* Не гасимо фокус для мишки повністю, лише прибираємо подвійне кільце
+     у браузерів, що вже підтримують :focus-visible. */
+  :focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  /* ── Посилання в тексті (WCAG 1.4.1) ────────────────────────────────
+     Колір не може бути єдиним способом відрізнити посилання від тексту,
+     тому в контентних областях посилання підкреслені. Навігація, картки
+     та кнопки-посилання позначені класом .link-plain і не підкреслюються
+     (їх роль зрозуміла з розташування й форми). */
+  .prose-content a:not(.link-plain),
+  .rich-text a:not(.link-plain) {
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
   }
 }
 
@@ -193,6 +228,50 @@
 
   /* Прибрати горизонтальний оверфлоу глобально (safety net на мобільних) */
   .no-x-overflow { overflow-x: clip; }
+
+  /* ── Пропустити шапку → до основного вмісту (WCAG 2.4.1) ────────────
+     Не display:none і не visibility:hidden — інакше посилання випадає з
+     порядку читання скринридера в режимі Browse. Прибираємо його з
+     полотна кліп-прямокутником, а при фокусі клавіатурою повертаємо. */
+  .skip-link {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 100;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .skip-link:focus {
+    width: auto;
+    height: auto;
+    padding: 0.85rem 1.5rem;
+    margin: 0.5rem;
+    overflow: visible;
+    clip-path: none;
+    border-radius: 9999px;
+    background-color: #fff2e8;
+    color: #002f5e;
+    font-size: 1rem;
+    line-height: 1;
+    box-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.5);
+  }
+
+  /* Візуально приховано, але доступно скринридеру (підписи до landmark-ів). */
+  .sr-only-a11y {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border-width: 0;
+  }
 }
 
 /* ── Декоративні анімації ──────────────────────────────────────────── */
@@ -210,20 +289,43 @@
   from { width: 0%; }
   to { width: 100%; }
 }
+/* "6-7" мем-жест: два елементи гойдаються по черзі, як руки-терези —
+   один вгору поки інший вниз, з невеликим нахилом. Використано на 404
+   для двох "4" (сторінка НЕ знайдена = типовий сенс жесту "то се, хтозна"). */
+@keyframes six-seven-bounce {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-22px) rotate(-4deg); }
+}
 
 .animate-float-y { animation: float-y 7s ease-in-out infinite; }
 .animate-float-y-slow { animation: float-y 10s ease-in-out 1.4s infinite; }
 .animate-spin-slower { animation: spin-slow 48s linear infinite; }
+.animate-six-seven { animation: six-seven-bounce 0.7s cubic-bezier(0.45,0,0.55,1) infinite alternate; }
 .dash-flow {
   stroke-dasharray: 10 14;
   animation: dash-flow 9s linear infinite;
 }
 .animate-progress-grow { animation: progress-grow 6.5s linear forwards; }
 
+/* Кільце емблеми (SpinningEmblem): крутиться навколо нерухомого щита лише
+   поки курсор над батьківським .group (відео на районі/рілс/галереї) —
+   animation-play-state, не transform, тож обертання не "стрибає" на початок
+   при повторному наведенні, а плавно продовжує з того самого кута. */
+.emblem-ring-spin {
+  animation: spin-slow 9s linear infinite;
+  animation-play-state: paused;
+}
+.group:hover .emblem-ring-spin,
+.group:focus-within .emblem-ring-spin {
+  animation-play-state: running;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-float-y,
   .animate-float-y-slow,
   .animate-spin-slower,
+  .animate-six-seven,
+  .emblem-ring-spin,
   .dash-flow,
   .animate-progress-grow {
     animation: none;

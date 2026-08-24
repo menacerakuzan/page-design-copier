@@ -21,7 +21,7 @@ export function ThinkingIndicator({ label }: { label?: string | null }) {
         key={label || "think"}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="text-[13px] text-[#002f5e]/60 font-odesa-medium"
+        className="text-[13px] text-[#002f5e]/70 font-odesa-medium"
       >
         {label || "Обдумую… 🤔"}
       </motion.span>

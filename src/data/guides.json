@@ -1,0 +1,624 @@
+[
+  {
+    "slug": "bantovska",
+    "surname": "Бантовська",
+    "firstName": "Анжела",
+    "cert": "010104-005",
+    "languages": [
+      "українська"
+    ],
+    "personalUrl": "https://guides.odesatourism.site/reestr/bantovska/",
+    "photoUrl": "https://tourism.od.gov.ua/storage/v1/object/public/media/guides/bantovska.png",
+    "dstu": false
+  },
+  {
+    "slug": "bereziuk",
+    "surname": "Березюк",
+    "firstName": "Оксана",
+    "cert": "010104-003",
+    "languages": [
+      "українська"
+    ],
+    "personalUrl": "https://guides.odesatourism.site/reestr/bereziuk/",
+    "photoUrl": "https://tourism.od.gov.ua/storage/v1/object/public/media/guides/bereziuk.png",
+    "dstu": false
+  },
+  {
+    "slug": "bilyi",
+    "surname": "Білий",
+    "firstName": "Андрій",
+    "cert": "010104-001",
+    "languages": [
+      "українська"
+    ],
+    "personalUrl": "https://guides.odesatourism.site/reestr/bilyi/",
+    "photoUrl": "https://tourism.od.gov.ua/storage/v1/object/public/media/guides/bilyi.png",
+    "dstu": false
+  },
+  {
+    "slug": "artem-vasiuta",
+    "surname": "Васюта",
+    "firstName": "Артем",
+    "cert": "010101-003",
+    "languages": [
+      "українська",
+      "english"
+    ],
+    "personalUrl": "https://guides.odesatourism.site/reestr/artem-vasiuta/",
+    "photoUrl": "https://tourism.od.gov.ua/storage/v1/object/public/media/guides/artem-vasiuta.png",
+    "dstu": false
+  },
+  {
+    "slug": "hanna-vasiuta",
+    "surname": "Васюта",
+    "firstName": "Ганна",
+    "cert": "010101-026",
+    "languages": [
+      "українська",
+      "english"
+    ],
+    "personalUrl": "https://guides.odesatourism.site/reestr/hanna-vasiuta/",
+    "photoUrl": "https://tourism.od.gov.ua/storage/v1/object/public/media/guides/hanna-vasiuta.png",
+    "dstu": false
+  },
+  {
+    "slug": "vitiuk",
+    "surname": "Вітюк",
+    "firstName": "Маріанна",
+    "cert": "010104-018",
+    "languages": [
+      "українська",
+      "english"
+    ],
+    "personalUrl": "https://guides.odesatourism.site/reestr/vitiuk/",
+    "photoUrl": "https://tourism.od.gov.ua/storage/v1/object/public/media/guides/vitiuk.png",
+    "dstu": true
+  },
+  {
+    "slug": "volyniak",
+    "surname": "Волиняк",
+    "firstName": "Ольга",
+    "cert": "010104-009",
+    "languages": [
+      "українська"
+    ],
+    "personalUrl": "https://guides.odesatourism.site/reestr/volyniak/",
+    "photoUrl": "https://tourism.od.gov.ua/storage/v1/object/public/media/guides/volyniak.png",
+    "dstu": false
+  },
+  {
+    "slug": "voronenko",
+    "surname": "Вороненко",
+    "firstName": "Лариса",
+    "cert": "010101-005",
+    "languages": [
+      "українська",
+      "english"
+    ],
+    "personalUrl": "https://guides.odesatourism.site/reestr/voronenko/",
+    "photoUrl": "https://tourism.od.gov.ua/storage/v1/object/public/media/guides/voronenko.png",
+    "dstu": false
+  },
+  {
+    "slug": "hryskov",
+    "surname": "Гриськов",
+    "firstName": "Антон",
+    "cert": "010101-004",
+    "languages": [
+      "українська"
+    ],
+    "personalUrl": "https://guides.odesatourism.site/reestr/hryskov/",
+    "photoUrl": "https://tourism.od.gov.ua/storage/v1/object/public/media/guides/hryskov.png",
+    "dstu": false
+  },
+  {
+    "slug": "derevianchenko",
+    "surname": "Деревянченко",
+    "firstName": "Тетяна",
+    "cert": "010104-016",
+    "languages": [
+      "українська",
+      "english",
+      "deutsche"
+    ],
+    "personalUrl": "https://guides.odesatourism.site/reestr/derevianchenko/",
+    "photoUrl": "https://tourism.od.gov.ua/storage/v1/object/public/media/guides/derevianchenko.png",
+    "dstu": true
+  },
+  {
+    "slug": "diduk",
+    "surname": "Дідук",
+    "firstName": "Віолетта",
+    "cert": "010101-013",
+    "languages": [
+      "українська",
+      "english",
+      "polski"
+    ],
+    "personalUrl": "https://guides.odesatourism.site/reestr/diduk/",
+    "photoUrl": "https://tourism.od.gov.ua/storage/v1/object/public/media/guides/diduk.png",
+    "dstu": false
+  },
+  {
+    "slug": "yemelianova",
+    "surname": "Ємельянова",
+    "firstName": "Олена",
+    "cert": "010101-006",
+    "languages": [
+      "українська"
+    ],
+    "personalUrl": "https://guides.odesatourism.site/reestr/yemelianova/",
+    "photoUrl": "https://tourism.od.gov.ua/storage/v1/object/public/media/guides/yemelianova.png",
+    "dstu": false
+  },
+  {
+    "slug": "yeremieieva",
+    "surname": "Єремєєва",
+    "firstName": "Ліна",
+    "cert": "010101-019",
+    "languages": [
+      "українська"
+    ],
+    "personalUrl": "https://guides.odesatourism.site/reestr/yeremieieva/",
+    "photoUrl": "https://tourism.od.gov.ua/storage/v1/object/public/media/guides/yeremieieva.png",
+    "dstu": false
+  },
+  {
+    "slug": "zabavska",
+    "surname": "Забавська",
+    "firstName": "Ірина",
+    "cert": "010101-023",
+    "languages": [
+      "українська"
+    ],
+    "personalUrl": "https://guides.odesatourism.site/reestr/zabavska/",
+    "photoUrl": "https://tourism.od.gov.ua/storage/v1/object/public/media/guides/zabavska.png",
+    "dstu": false
+  },
+  {
+    "slug": "zaitseva",
+    "surname": "Зайцева",
+    "firstName": "Наталія",
+    "cert": "010104-020",
+    "languages": [
+      "українська"
+    ],
+    "personalUrl": "https://guides.odesatourism.site/reestr/zaitseva/",
+    "photoUrl": "https://tourism.od.gov.ua/storage/v1/object/public/media/guides/zaitseva.png",
+    "dstu": true
+  },
+  {
+    "slug": "zakharenko",
+    "surname": "Захаренко",
+    "firstName": "Олена",
+    "cert": "010101-021",
+    "languages": [
+      "українська"
+    ],
+    "personalUrl": "https://guides.odesatourism.site/reestr/zakharenko/",
+    "photoUrl": "https://tourism.od.gov.ua/storage/v1/object/public/media/guides/zakharenko.png",
+    "dstu": false
+  },
+  {
+    "slug": "zviriaka",
+    "surname": "Звіряка",
+    "firstName": "Гліб",
+    "cert": "010101-020",
+    "languages": [
+      "українська"
+    ],
+    "personalUrl": "https://guides.odesatourism.site/reestr/zviriaka/",
+    "photoUrl": "https://tourism.od.gov.ua/storage/v1/object/public/media/guides/zviriaka.png",
+    "dstu": false
+  },
+  {
+    "slug": "zinchenko",
+    "surname": "Зінченко",
+    "firstName": "Оксана",
+    "cert": "010101-016",
+    "languages": [
+      "українська",
+      "english"
+    ],
+    "personalUrl": "https://guides.odesatourism.site/reestr/zinchenko/",
+    "photoUrl": "https://tourism.od.gov.ua/storage/v1/object/public/media/guides/zinchenko.png",
+    "dstu": false
+  },
+  {
+    "slug": "zubenko",
+    "surname": "Зубенко",
+    "firstName": "Наталя",
+    "cert": "010104-008",
+    "languages": [
+      "українська"
+    ],
+    "personalUrl": "https://guides.odesatourism.site/reestr/zubenko/",
+    "photoUrl": "https://tourism.od.gov.ua/storage/v1/object/public/media/guides/zubenko.png",
+    "dstu": false
+  },
+  {
+    "slug": "ivanova",
+    "surname": "Іванова",
+    "firstName": "Жанна",
+    "cert": "010104-006",
+    "languages": [
+      "українська"
+    ],
+    "personalUrl": "https://guides.odesatourism.site/reestr/ivanova/",
+    "photoUrl": "https://tourism.od.gov.ua/storage/v1/object/public/media/guides/ivanova.png",
+    "dstu": false
+  },
+  {
+    "slug": "kaliuzhna",
+    "surname": "Калюжна",
+    "firstName": "Тетяна",
+    "cert": "010101-029",
+    "languages": [
+      "українська",
+      "english",
+      "中文 (中国)"
+    ],
+    "personalUrl": "https://guides.odesatourism.site/reestr/kaliuzhna/",
+    "photoUrl": "https://tourism.od.gov.ua/storage/v1/object/public/media/guides/kaliuzhna.png",
+    "dstu": false
+  },
+  {
+    "slug": "karabinovych",
+    "surname": "Карабінович",
+    "firstName": "Микола",
+    "cert": "010101-030",
+    "languages": [
+      "українська"
+    ],
+    "personalUrl": "https://guides.odesatourism.site/reestr/karabinovych/",
+    "photoUrl": "https://tourism.od.gov.ua/storage/v1/object/public/media/guides/karabinovych.png",
+    "dstu": false
+  },
+  {
+    "slug": "kirizli",
+    "surname": "Кірізлі",
+    "firstName": "Катерина",
+    "cert": "010101-031",
+    "languages": [
+      "українська"
+    ],
+    "personalUrl": "https://guides.odesatourism.site/reestr/kirizli/",
+    "photoUrl": "https://tourism.od.gov.ua/storage/v1/object/public/media/guides/kirizli.png",
+    "dstu": false
+  },
+  {
+    "slug": "kobylianska",
+    "surname": "Кобилянська",
+    "firstName": "Ірина",
+    "cert": "010101-007",
+    "languages": [
+      "українська",
+      "english",
+      "deutsche"
+    ],
+    "personalUrl": "https://guides.odesatourism.site/reestr/kobylianska/",
+    "photoUrl": "https://tourism.od.gov.ua/storage/v1/object/public/media/guides/kobylianska.png",
+    "dstu": false
+  },
+  {
+    "slug": "kovalenko",
+    "surname": "Коваленко",
+    "firstName": "Сергій",
+    "cert": "010104-002",
+    "languages": [
+      "українська"
+    ],
+    "personalUrl": "https://guides.odesatourism.site/reestr/kovalenko/",
+    "photoUrl": "https://tourism.od.gov.ua/storage/v1/object/public/media/guides/kovalenko.png",
+    "dstu": false
+  },
+  {
+    "slug": "krasnozhan",
+    "surname": "Красножан",
+    "firstName": "Олена",
+    "cert": "010101-014",
+    "languages": [
+      "українська",
+      "english"
+    ],
+    "personalUrl": "https://guides.odesatourism.site/reestr/krasnozhan/",
+    "photoUrl": "https://tourism.od.gov.ua/storage/v1/object/public/media/guides/krasnozhan.png",
+    "dstu": false
+  },
+  {
+    "slug": "kurlap",
+    "surname": "Курлап",
+    "firstName": "Катерина",
+    "cert": "010104-010",
+    "languages": [
+      "українська"
+    ],
+    "personalUrl": "https://guides.odesatourism.site/reestr/kurlap/",
+    "photoUrl": "https://tourism.od.gov.ua/storage/v1/object/public/media/guides/kurlap.png",
+    "dstu": false
+  },
+  {
+    "slug": "linenko",
+    "surname": "Ліненко",
+    "firstName": "Олена",
+    "cert": "010101-017",
+    "languages": [
+      "українська"
+    ],
+    "personalUrl": "https://guides.odesatourism.site/reestr/linenko/",
+    "photoUrl": "https://tourism.od.gov.ua/storage/v1/object/public/media/guides/linenko.png",
+    "dstu": false
+  },
+  {
+    "slug": "litviakova",
+    "surname": "Літвякова",
+    "firstName": "Тамара",
+    "cert": "010101-010",
+    "languages": [
+      "українська"
+    ],
+    "personalUrl": "https://guides.odesatourism.site/reestr/litviakova/",
+    "photoUrl": "https://tourism.od.gov.ua/storage/v1/object/public/media/guides/litviakova.png",
+    "dstu": false
+  },
+  {
+    "slug": "lytvynenko",
+    "surname": "Литвиненко",
+    "firstName": "Ася",
+    "cert": "010104-019",
+    "languages": [
+      "українська"
+    ],
+    "personalUrl": "https://guides.odesatourism.site/reestr/lytvynenko/",
+    "photoUrl": "https://tourism.od.gov.ua/storage/v1/object/public/media/guides/lytvynenko.png",
+    "dstu": true
+  },
+  {
+    "slug": "lototska",
+    "surname": "Лотоцька",
+    "firstName": "Світлана",
+    "cert": "010104-021",
+    "languages": [
+      "українська"
+    ],
+    "personalUrl": "https://guides.odesatourism.site/reestr/lototska/",
+    "photoUrl": "https://tourism.od.gov.ua/storage/v1/object/public/media/guides/lototska.png",
+    "dstu": true
+  },
+  {
+    "slug": "liovkina",
+    "surname": "Льовкіна",
+    "firstName": "Анна",
+    "cert": "010104-022",
+    "languages": [
+      "українська"
+    ],
+    "personalUrl": "https://guides.odesatourism.site/reestr/liovkina/",
+    "photoUrl": "https://tourism.od.gov.ua/storage/v1/object/public/media/guides/liovkina.png",
+    "dstu": true
+  },
+  {
+    "slug": "marshakova",
+    "surname": "Маршакова",
+    "firstName": "Ірина",
+    "cert": "010101-027",
+    "languages": [
+      "українська"
+    ],
+    "personalUrl": "https://guides.odesatourism.site/reestr/marshakova/",
+    "photoUrl": "https://tourism.od.gov.ua/storage/v1/object/public/media/guides/marshakova.png",
+    "dstu": false
+  },
+  {
+    "slug": "mykhailenko",
+    "surname": "Михайленко",
+    "firstName": "Наталія",
+    "cert": "010101-032",
+    "languages": [
+      "українська"
+    ],
+    "personalUrl": "https://guides.odesatourism.site/reestr/mykhailenko/",
+    "photoUrl": "https://tourism.od.gov.ua/storage/v1/object/public/media/guides/mykhailenko.png",
+    "dstu": true
+  },
+  {
+    "slug": "muntian",
+    "surname": "Мунтян",
+    "firstName": "Юлія",
+    "cert": "010104-023",
+    "languages": [
+      "українська"
+    ],
+    "personalUrl": "https://guides.odesatourism.site/reestr/muntian/",
+    "photoUrl": "https://tourism.od.gov.ua/storage/v1/object/public/media/guides/muntian.png",
+    "dstu": true
+  },
+  {
+    "slug": "nikitenko",
+    "surname": "Нікітенко",
+    "firstName": "Ольга",
+    "cert": "010101-022",
+    "languages": [
+      "українська"
+    ],
+    "personalUrl": "https://guides.odesatourism.site/reestr/nikitenko/",
+    "photoUrl": "https://tourism.od.gov.ua/storage/v1/object/public/media/guides/nikitenko.png",
+    "dstu": false
+  },
+  {
+    "slug": "nikiforuk",
+    "surname": "Нікіфорук",
+    "firstName": "Наталя",
+    "cert": "010104-017",
+    "languages": [
+      "українська",
+      "english"
+    ],
+    "personalUrl": "https://guides.odesatourism.site/reestr/nikiforuk/",
+    "photoUrl": "https://tourism.od.gov.ua/storage/v1/object/public/media/guides/nikiforuk.png",
+    "dstu": true
+  },
+  {
+    "slug": "ostiakova",
+    "surname": "Остякова",
+    "firstName": "Вікторія",
+    "cert": "010104-024",
+    "languages": [
+      "українська"
+    ],
+    "personalUrl": "https://guides.odesatourism.site/reestr/ostiakova/",
+    "photoUrl": "https://tourism.od.gov.ua/storage/v1/object/public/media/guides/ostiakova.png",
+    "dstu": true
+  },
+  {
+    "slug": "pivovar",
+    "surname": "Півовар",
+    "firstName": "Вікторія",
+    "cert": "010104-015",
+    "languages": [
+      "українська",
+      "english",
+      "t ürkçe"
+    ],
+    "personalUrl": "https://guides.odesatourism.site/reestr/pivovar/",
+    "photoUrl": "https://tourism.od.gov.ua/storage/v1/object/public/media/guides/pivovar.png",
+    "dstu": false
+  },
+  {
+    "slug": "potiekhina",
+    "surname": "Потєхіна",
+    "firstName": "Ольга",
+    "cert": "010101-015",
+    "languages": [
+      "українська"
+    ],
+    "personalUrl": "https://guides.odesatourism.site/reestr/potiekhina/",
+    "photoUrl": "https://tourism.od.gov.ua/storage/v1/object/public/media/guides/potiekhina.png",
+    "dstu": false
+  },
+  {
+    "slug": "skliaruk",
+    "surname": "Склярук",
+    "firstName": "Марія",
+    "cert": "010101-011",
+    "languages": [
+      "українська",
+      "english"
+    ],
+    "personalUrl": "https://guides.odesatourism.site/reestr/skliaruk/",
+    "photoUrl": "https://tourism.od.gov.ua/storage/v1/object/public/media/guides/skliaruk.png",
+    "dstu": false
+  },
+  {
+    "slug": "sorvachova",
+    "surname": "Сорвачова",
+    "firstName": "Тетяна",
+    "cert": "010101-002",
+    "languages": [
+      "українська"
+    ],
+    "personalUrl": "https://guides.odesatourism.site/reestr/sorvachova/",
+    "photoUrl": "https://tourism.od.gov.ua/storage/v1/object/public/media/guides/sorvachova.png",
+    "dstu": false
+  },
+  {
+    "slug": "surova",
+    "surname": "Сурова",
+    "firstName": "Марія",
+    "cert": "010101-028",
+    "languages": [
+      "українська",
+      "english"
+    ],
+    "personalUrl": "https://guides.odesatourism.site/reestr/surova/",
+    "photoUrl": "https://tourism.od.gov.ua/storage/v1/object/public/media/guides/surova.png",
+    "dstu": false
+  },
+  {
+    "slug": "trehubova",
+    "surname": "Трегубова",
+    "firstName": "Тетяна",
+    "cert": "010104-011",
+    "languages": [
+      "українська"
+    ],
+    "personalUrl": "https://guides.odesatourism.site/reestr/trehubova/",
+    "photoUrl": "https://tourism.od.gov.ua/storage/v1/object/public/media/guides/trehubova.png",
+    "dstu": true
+  },
+  {
+    "slug": "tunik",
+    "surname": "Тунік",
+    "firstName": "Світлана",
+    "cert": "010104-013",
+    "languages": [
+      "українська"
+    ],
+    "personalUrl": "https://guides.odesatourism.site/reestr/tunik/",
+    "photoUrl": "https://tourism.od.gov.ua/storage/v1/object/public/media/guides/tunik.png",
+    "dstu": true
+  },
+  {
+    "slug": "fefelova",
+    "surname": "Фефелова",
+    "firstName": "Наталія",
+    "cert": "010104-014",
+    "languages": [
+      "українська",
+      "english"
+    ],
+    "personalUrl": "https://guides.odesatourism.site/reestr/fefelova/",
+    "photoUrl": "https://tourism.od.gov.ua/storage/v1/object/public/media/guides/fefelova.png",
+    "dstu": true
+  },
+  {
+    "slug": "khomenko",
+    "surname": "Хоменко",
+    "firstName": "Катерина",
+    "cert": "010101-009",
+    "languages": [
+      "українська",
+      "english",
+      "polski"
+    ],
+    "personalUrl": "https://guides.odesatourism.site/reestr/khomenko/",
+    "photoUrl": "https://tourism.od.gov.ua/storage/v1/object/public/media/guides/khomenko.png",
+    "dstu": false
+  },
+  {
+    "slug": "chebak",
+    "surname": "Чебак",
+    "firstName": "Тетяна",
+    "cert": "010104-012",
+    "languages": [
+      "українська"
+    ],
+    "personalUrl": "https://guides.odesatourism.site/reestr/chebak/",
+    "photoUrl": "https://tourism.od.gov.ua/storage/v1/object/public/media/guides/chebak.png",
+    "dstu": true
+  },
+  {
+    "slug": "shershun",
+    "surname": "Шершун",
+    "firstName": "Тетяна",
+    "cert": "010101-012",
+    "languages": [
+      "українська"
+    ],
+    "personalUrl": "https://guides.odesatourism.site/reestr/shershun/",
+    "photoUrl": "https://tourism.od.gov.ua/storage/v1/object/public/media/guides/shershun.png",
+    "dstu": false
+  },
+  {
+    "slug": "shtokalo",
+    "surname": "Штокало",
+    "firstName": "Тетяна",
+    "cert": "010101-018",
+    "languages": [
+      "українська"
+    ],
+    "personalUrl": "https://guides.odesatourism.site/reestr/shtokalo/",
+    "photoUrl": "https://tourism.od.gov.ua/storage/v1/object/public/media/guides/shtokalo.png",
+    "dstu": false
+  }
+]

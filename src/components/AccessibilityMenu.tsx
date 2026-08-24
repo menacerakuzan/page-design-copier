@@ -144,8 +144,9 @@ export function AccessibilityMenu({ onSearchClick, align = "left" }: Props) {
         onClick={() => setOpen((o) => !o)}
         className="flex items-center gap-2 rounded-full bg-[#fff2e8] px-4 py-2.5 text-[#002f5e] border border-[#002f5e]/30 transition-all hover:bg-[#fff2e8]/90 font-odesa-medium"
         aria-label="Меню доступності"
+        aria-expanded={open}
       >
-        <Eye className="h-5 w-5" />
+        <Eye className="h-5 w-5" aria-hidden="true" />
         <span className="text-[13px] leading-none">
           {lang === "uk" ? "Укр" : "Eng"}
         </span>
@@ -161,8 +162,8 @@ export function AccessibilityMenu({ onSearchClick, align = "left" }: Props) {
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-[#002f5e]/10">
             <span className="text-[14px] font-odesa-semi">{t("accessibility")}</span>
-            <button type="button" onClick={() => setOpen(false)} className="rounded-full p-1 hover:bg-[#002f5e]/10 transition-colors">
-              <X className="h-4 w-4" />
+            <button type="button" onClick={() => setOpen(false)} aria-label={t("close")} className="rounded-full p-1 hover:bg-[#002f5e]/10 transition-colors">
+              <X className="h-4 w-4" aria-hidden="true" />
             </button>
           </div>
 

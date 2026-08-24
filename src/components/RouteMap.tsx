@@ -287,11 +287,13 @@ export default function RouteMap({ mapUrl, coords: coordsProp, waypoints = [] }:
             style={{ backgroundColor: NAVY, border: `1px solid ${CREAM}26`, zIndex: 20, boxShadow: "0 20px 50px -16px rgba(0,0,0,0.8)" }}
           >
             <button
+              type="button"
               onClick={() => setActiveObj(null)}
+              aria-label="Закрити картку об'єкта"
               className="absolute right-2.5 top-2.5 flex h-6 w-6 items-center justify-center rounded-full transition-opacity hover:opacity-70"
-              style={{ backgroundColor: "rgba(0,0,0,0.35)", backdropFilter: "blur(4px)", zIndex: 1 }}
+              style={{ backgroundColor: "rgba(0,0,0,0.55)", backdropFilter: "blur(4px)", zIndex: 1 }}
             >
-              <X className="h-3.5 w-3.5" style={{ color: CREAM }} />
+              <X className="h-3.5 w-3.5" style={{ color: CREAM }} aria-hidden="true" />
             </button>
 
             {activeObj.imageUrl && (

@@ -12,7 +12,7 @@ import OpenAI from "openai";
 import { config, assertConfig } from "./config.mjs";
 import { getCatalog } from "./catalog.mjs";
 import { buildSystemPrompt } from "./prompt.mjs";
-import { toolDefs, runTool } from "./tools.mjs";
+import { buildToolDefs, runTool } from "./tools.mjs";
 
 assertConfig();
 
@@ -46,6 +46,7 @@ app.get("/api/assistant/health", (_req, res) => {
 async function runConversation(history, lang) {
   const catalog = await getCatalog();
   const messages = [{ role: "system", content: buildSystemPrompt(catalog, lang) }, ...history];
+  const toolDefs = buildToolDefs(catalog);
 
   for (let round = 0; round < config.maxToolRounds; round++) {
     // eslint-disable-next-line no-console

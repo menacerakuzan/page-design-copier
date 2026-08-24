@@ -5,6 +5,7 @@ import { ShoppingCart, Trash2, ArrowRight, MapPin, MapPinOff } from "lucide-reac
 import { Img } from "@/components/Img";
 import { useLang } from "@/lib/langContext";
 import { useBasket } from "@/lib/basketContext";
+import PageBrow from "@/components/PageBrow";
 import { useHierarchySnapshot } from "@/hooks/useHierarchySnapshot";
 import { getObjectCoords } from "@/lib/geo";
 import { objectDetailPath, objectTypeLabel, objectTypeColor } from "@/lib/entityLinks";
@@ -42,12 +43,17 @@ const BasketPage = () => {
         className="pointer-events-none absolute inset-0 z-0"
         style={{ backgroundImage: "url(/basketpattern.svg)", backgroundSize: "200px 200px", backgroundRepeat: "repeat", opacity: 0.1 }}
       />
+      {/* ── Десктопна навігація (мобільно її роль виконує таб-бар) ── */}
+      <div className="hidden md:block">
+        <PageBrow />
+      </div>
+
       {/* ── Шапка ─────────────────────────────────────────────── */}
       <header className="container-edge pt-safe relative z-10">
-        <div className="flex items-center justify-between pb-6 pt-6">
+        <div className="flex items-center justify-between pb-6 pt-6 md:pt-8">
           <Link
             to="/"
-            className="w-fit rounded-full bg-[#002f5e] px-5 py-2 text-[14px] leading-none text-[#fff2e8] font-odesa-medium transition-colors hover:bg-[#0f3f74]"
+            className="w-fit rounded-full bg-[#002f5e] px-5 py-2 text-[14px] leading-none text-[#fff2e8] font-odesa-medium transition-colors hover:bg-[#0f3f74] md:hidden"
           >
             ← {t("home")}
           </Link>
@@ -55,7 +61,7 @@ const BasketPage = () => {
             <button
               type="button"
               onClick={clear}
-              className="rounded-full px-4 py-2 text-[13px] font-odesa-medium text-[#002f5e]/55 transition-colors hover:text-[#9f1f47]"
+              className="ml-auto rounded-full px-4 py-2 text-[13px] font-odesa-medium text-[#002f5e]/70 transition-colors hover:text-[#9f1f47]"
             >
               {t("clearBasket")}
             </button>
@@ -69,26 +75,26 @@ const BasketPage = () => {
           <div>
             <h1 className="text-[30px] leading-none text-[#002f5e] font-odesa-bold">{t("basketTitle")}</h1>
             {count > 0 && (
-              <p className="mt-1 text-[13px] text-[#002f5e]/55 font-odesa-regular">
+              <p className="mt-1 text-[13px] text-[#002f5e]/70 font-odesa-regular">
                 {count} {t("inBasketCount")}
               </p>
             )}
           </div>
         </div>
-        <p className="max-w-[520px] pb-6 pt-2 text-[15px] leading-[1.5] text-[#002f5e]/60 font-odesa-regular">
+        <p className="max-w-[520px] pb-6 pt-2 text-[15px] leading-[1.5] text-[#002f5e]/70 font-odesa-regular">
           {t("basketDesc")}
         </p>
       </header>
 
       {/* ── Список / порожній стан ────────────────────────────── */}
-      <main className="container-edge relative z-10" style={{ paddingBottom: "calc(184px + env(safe-area-inset-bottom))" }}>
+      <main id="main-content" tabIndex={-1} className="container-edge relative z-10 pb-[calc(184px+env(safe-area-inset-bottom))] md:pb-[calc(120px+env(safe-area-inset-bottom))]">
         {count === 0 ? (
           <div className="flex flex-col items-center justify-center rounded-[26px] border border-[#002f5e]/10 bg-white px-6 py-16 text-center shadow-[0_18px_40px_-30px_rgba(0,47,94,0.4)]">
-            <span className="flex h-16 w-16 items-center justify-center rounded-full bg-[#002f5e]/5 text-[#002f5e]/40">
+            <span className="flex h-16 w-16 items-center justify-center rounded-full bg-[#002f5e]/5 text-[#002f5e]/70">
               <ShoppingCart className="h-7 w-7" />
             </span>
             <p className="mt-5 text-[20px] text-[#002f5e] font-odesa-semi">{t("emptyBasket")}</p>
-            <p className="mt-2 max-w-[320px] text-[14px] leading-[1.5] text-[#002f5e]/55 font-odesa-regular">
+            <p className="mt-2 max-w-[320px] text-[14px] leading-[1.5] text-[#002f5e]/70 font-odesa-regular">
               {t("emptyBasketDesc")}
             </p>
             <Link
@@ -99,7 +105,7 @@ const BasketPage = () => {
             </Link>
           </div>
         ) : (
-          <ul className="flex flex-col gap-3">
+          <ul className="flex flex-col gap-3 md:grid md:grid-cols-2 md:gap-4">
             <AnimatePresence initial={false}>
               {items.map((obj) => {
                 const hasCoords = Boolean(getObjectCoords(obj));
@@ -121,7 +127,7 @@ const BasketPage = () => {
                         {obj.imageUrl ? (
                           <Img w={200} src={obj.imageUrl} alt={obj.name} className="h-full w-full object-cover" />
                         ) : (
-                          <span className="flex h-full w-full items-center justify-center text-[#002f5e]/30">
+                          <span className="flex h-full w-full items-center justify-center text-[#002f5e]/70">
                             <MapPin className="h-6 w-6" />
                           </span>
                         )}
@@ -136,7 +142,7 @@ const BasketPage = () => {
                           {tl(obj.name, obj.nameEn)}
                         </span>
                         {tl(obj.subtitle, obj.subtitleEn) && (
-                          <span className="mt-0.5 line-clamp-2 text-[13px] leading-[1.35] text-[#002f5e]/55 font-odesa-regular">
+                          <span className="mt-0.5 line-clamp-2 text-[13px] leading-[1.35] text-[#002f5e]/70 font-odesa-regular">
                             {tl(obj.subtitle, obj.subtitleEn)}
                           </span>
                         )}
@@ -153,7 +159,7 @@ const BasketPage = () => {
                         whileTap={{ scale: 0.85 }}
                         onClick={() => remove(obj.id)}
                         aria-label={t("removeFromBasket")}
-                        className="tap flex shrink-0 items-center justify-center self-center rounded-full text-[#002f5e]/40 transition-colors hover:bg-[#9f1f47]/10 hover:text-[#9f1f47]"
+                        className="tap flex shrink-0 items-center justify-center self-center rounded-full text-[#002f5e]/70 transition-colors hover:bg-[#9f1f47]/10 hover:text-[#9f1f47]"
                       >
                         <Trash2 className="h-5 w-5" />
                       </motion.button>
@@ -175,8 +181,7 @@ const BasketPage = () => {
       {count > 0 && (
         <div className="pointer-events-none fixed inset-x-0 bottom-0 z-20">
           <div
-            className="pointer-events-auto absolute inset-x-4 mx-auto max-w-[560px]"
-            style={{ bottom: "calc(72px + env(safe-area-inset-bottom))" }}
+            className="pointer-events-auto absolute inset-x-4 mx-auto max-w-[560px] bottom-[calc(72px+env(safe-area-inset-bottom))] md:bottom-[calc(24px+env(safe-area-inset-bottom))]"
           >
             <button
               type="button"
