@@ -1,0 +1,550 @@
+<title>Реєстр туристичних об'єктів — Одещина</title>
+<style>
+  :root {
+    --bg: #fbf6ee;
+    --paper: #ffffff;
+    --ink: #0a2f52;
+    --ink-soft: rgba(10,47,82,0.64);
+    --ink-faint: rgba(10,47,82,0.38);
+    --accent: #c9822b;
+    --accent-soft: rgba(201,130,43,0.14);
+    --line: rgba(10,47,82,0.13);
+    --shadow: 0 18px 40px -28px rgba(10,47,82,0.35);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #071b30;
+      --paper: #0c2440;
+      --ink: #f7ecdf;
+      --ink-soft: rgba(247,236,223,0.66);
+      --ink-faint: rgba(247,236,223,0.4);
+      --accent: #e3a94f;
+      --accent-soft: rgba(227,169,79,0.16);
+      --line: rgba(247,236,223,0.14);
+      --shadow: 0 18px 40px -28px rgba(0,0,0,0.55);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #071b30; --paper: #0c2440; --ink: #f7ecdf; --ink-soft: rgba(247,236,223,0.66);
+    --ink-faint: rgba(247,236,223,0.4); --accent: #e3a94f; --accent-soft: rgba(227,169,79,0.16);
+    --line: rgba(247,236,223,0.14); --shadow: 0 18px 40px -28px rgba(0,0,0,0.55);
+  }
+  :root[data-theme="light"] {
+    --bg: #fbf6ee; --paper: #ffffff; --ink: #0a2f52; --ink-soft: rgba(10,47,82,0.64);
+    --ink-faint: rgba(10,47,82,0.38); --accent: #c9822b; --accent-soft: rgba(201,130,43,0.14);
+    --line: rgba(10,47,82,0.13); --shadow: 0 18px 40px -28px rgba(10,47,82,0.35);
+  }
+
+  * { box-sizing: border-box; }
+  html { color-scheme: light dark; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 56px 24px 96px; }
+
+  h1, h2, h3 {
+    font-family: Iowan Old Style, "Palatino Linotype", Palatino, Georgia, serif;
+    text-wrap: balance;
+    margin: 0;
+  }
+
+  header.doc-head {
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 28px;
+    margin-bottom: 32px;
+  }
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--accent); font-weight: 600; margin-bottom: 10px;
+  }
+  .eyebrow::before { content: ""; width: 18px; height: 1px; background: var(--accent); display: inline-block; }
+  h1 { font-size: 34px; font-weight: 600; letter-spacing: -0.01em; }
+  .doc-meta { margin-top: 10px; color: var(--ink-soft); font-size: 14px; }
+
+  .stat-strip {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px;
+    background: var(--line); border: 1px solid var(--line); border-radius: 14px;
+    overflow: hidden; margin-top: 24px;
+  }
+  @media (min-width: 620px) { .stat-strip { grid-template-columns: repeat(6, 1fr); } }
+  .stat { background: var(--paper); padding: 14px 12px; text-align: center; }
+  .stat b {
+    display: block; font-size: 22px; font-variant-numeric: tabular-nums;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace; color: var(--ink);
+  }
+  .stat span { display: block; font-size: 11px; color: var(--ink-faint); margin-top: 2px; }
+
+  nav.toc {
+    display: flex; flex-wrap: wrap; gap: 8px;
+    margin: 28px 0 40px;
+  }
+  .nav-pill {
+    display: inline-flex; align-items: center; gap: 7px;
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 6px 12px 6px 8px; font-size: 13px; color: var(--ink-soft);
+    text-decoration: none; background: var(--paper);
+    transition: border-color .15s, color .15s;
+  }
+  .nav-pill:hover { border-color: var(--accent); color: var(--ink); }
+  .nav-pill:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .nav-num {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 11px;
+    color: var(--accent); font-variant-numeric: tabular-nums;
+  }
+  .nav-count {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 11px;
+    color: var(--ink-faint); font-variant-numeric: tabular-nums;
+  }
+
+  .district {
+    background: var(--paper); border: 1px solid var(--line); border-radius: 18px;
+    box-shadow: var(--shadow); padding: 26px 28px; margin-bottom: 22px;
+    scroll-margin-top: 20px;
+  }
+  .district-head { display: flex; align-items: flex-start; gap: 16px; }
+  .district-num {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 13px;
+    color: var(--accent); border: 1px solid var(--accent-soft); background: var(--accent-soft);
+    border-radius: 8px; padding: 4px 8px; font-variant-numeric: tabular-nums;
+  }
+  .district-title { flex: 1; min-width: 0; }
+  .district-title h2 { font-size: 22px; font-weight: 600; }
+  .district-meta { margin: 4px 0 0; font-size: 13px; color: var(--ink-faint); }
+  .district-total {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 20px;
+    color: var(--ink); font-variant-numeric: tabular-nums; align-self: center;
+  }
+
+  .cities { margin-top: 20px; display: flex; flex-direction: column; gap: 18px; }
+  .city-block { border-top: 1px solid var(--line); padding-top: 16px; }
+  .city-block:first-child { border-top: none; padding-top: 4px; }
+  .city-block.no-city { opacity: 0.9; }
+  .city-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .city-head h3 { font-size: 16px; font-weight: 600; }
+  .city-block.no-city h3 { font-style: italic; font-weight: 500; color: var(--ink-soft); }
+  .settlement {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--ink-faint); border: 1px solid var(--line); border-radius: 999px; padding: 2px 8px;
+  }
+  .city-total {
+    margin-left: auto; font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 13px; color: var(--ink-faint); font-variant-numeric: tabular-nums;
+  }
+
+  .type-row { margin-top: 10px; }
+  .type-label {
+    font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--accent); font-weight: 600; display: flex; align-items: center; gap: 8px;
+    margin-bottom: 6px;
+  }
+  .type-count {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace; color: var(--ink-faint);
+    font-weight: 400; text-transform: none; letter-spacing: 0; font-size: 11px;
+  }
+  ul.obj-list {
+    margin: 0; padding: 0; list-style: none;
+    display: flex; flex-wrap: wrap; gap: 6px 8px;
+  }
+  ul.obj-list li {
+    font-size: 13.5px; color: var(--ink); background: var(--accent-soft);
+    border-radius: 8px; padding: 3px 9px; line-height: 1.4;
+  }
+
+  footer.doc-foot {
+    margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--line);
+    font-size: 12px; color: var(--ink-faint);
+  }
+
+  @media (max-width: 480px) {
+    .wrap { padding: 36px 16px 72px; }
+    .district { padding: 20px 18px; }
+    h1 { font-size: 27px; }
+  }
+
+  .print-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    margin-top: 20px; padding: 10px 18px; border-radius: 999px;
+    border: 1px solid var(--accent); background: var(--accent-soft); color: var(--ink);
+    font-size: 13px; font-weight: 600; cursor: pointer;
+  }
+  .print-btn:hover { background: var(--accent); color: var(--paper); }
+
+  /* ── Друк: чорно-біло, без тіней, район не рветься між сторінками ── */
+  @media print {
+    .print-btn, nav.toc { display: none; }
+    body { background: #fff; color: #000; }
+    .wrap { max-width: 100%; padding: 0; }
+    a { color: inherit; text-decoration: none; }
+    .stat-strip { border: 1px solid #999; box-shadow: none; }
+    .stat { background: #fff; }
+    .stat b, .stat span { color: #000; }
+    .district {
+      background: #fff; border: 1px solid #999; box-shadow: none;
+      break-inside: avoid; page-break-inside: avoid; margin-bottom: 12px;
+    }
+    .district-num { background: none; border: 1px solid #999; color: #000; }
+    .district-total { color: #000; }
+    .type-label { color: #000; }
+    .type-count, .city-total, .settlement, .district-meta { color: #444; }
+    ul.obj-list li { background: none; border: 1px solid #ccc; color: #000; }
+  }
+</style>
+
+<div class="wrap">
+  <header class="doc-head">
+    <div class="eyebrow">Реєстр даних сайту tourism.od.gov.ua</div>
+    <h1>Туристичні об'єкти Одещини</h1>
+    <p class="doc-meta">Повний перелік того, що зараз завантажено на сайт: районів, населених пунктів і прив'язаних до них об'єктів. Порядок районів — той самий, що й на сайті.</p>
+    <div class="stat-strip">
+      <div class="stat"><b>7</b><span>районів</span></div>
+      <div class="stat"><b>13</b><span>населених пунктів</span></div>
+      <div class="stat"><b>153</b><span>тур. об'єктів</span></div>
+      <div class="stat"><b>5</b><span>подій</span></div>
+      <div class="stat"><b>27</b><span>маршрутів</span></div>
+      <div class="stat"><b>50</b><span>гідів</span></div>
+    </div>
+    <button type="button" class="print-btn" onclick="window.print()">🖨️ Друкувати / зберегти як PDF</button>
+  </header>
+
+  <nav class="toc" aria-label="Перехід за районами">
+    <a class="nav-pill" href="#d0"><span class="nav-num">01</span>Березівський район<span class="nav-count">6</span></a>
+<a class="nav-pill" href="#d1"><span class="nav-num">02</span>Білгород-Дністровський район<span class="nav-count">15</span></a>
+<a class="nav-pill" href="#d2"><span class="nav-num">03</span>Болградський район<span class="nav-count">14</span></a>
+<a class="nav-pill" href="#d3"><span class="nav-num">04</span>Ізмаїльський район<span class="nav-count">21</span></a>
+<a class="nav-pill" href="#d4"><span class="nav-num">05</span>Одеський район<span class="nav-count">88</span></a>
+<a class="nav-pill" href="#d5"><span class="nav-num">06</span>Подільський район<span class="nav-count">11</span></a>
+<a class="nav-pill" href="#d6"><span class="nav-num">07</span>Роздільнянський район<span class="nav-count">3</span></a>
+  </nav>
+
+  
+      <section class="district" id="d0">
+        <div class="district-head">
+          <span class="district-num">01</span>
+          <div class="district-title">
+            <h2>Березівський район</h2>
+            <p class="district-meta">1 населених пунктів · 6 об'єктів</p>
+          </div>
+          <span class="district-total">6</span>
+        </div>
+        <div class="cities">
+        <div class="city-block">
+          <div class="city-head">
+            <h3>Адамівка</h3>
+            <span class="settlement">село</span>
+            <span class="city-total">1</span>
+          </div>
+          
+          <div class="type-row">
+            <div class="type-label">Туристичні об'єкти<span class="type-count">1</span></div>
+            <ul class="obj-list"><li>Кам&#x27;яний вітряк</li></ul>
+          </div>
+        </div>
+        <div class="city-block no-city">
+          <div class="city-head">
+            <h3>Без прив&#x27;язки до населеного пункту</h3>
+            
+            <span class="city-total">5</span>
+          </div>
+          
+          <div class="type-row">
+            <div class="type-label">Туристичні об'єкти<span class="type-count">5</span></div>
+            <ul class="obj-list"><li>Регіональний ландшафтний парк &quot;Тилігульський&quot;</li><li>Садиба Курисів</li><li>Садиба Курисів</li><li>Старовинний цвинтар у Василівці</li><li>Чайка</li></ul>
+          </div>
+        </div></div>
+      </section>
+      <section class="district" id="d1">
+        <div class="district-head">
+          <span class="district-num">02</span>
+          <div class="district-title">
+            <h2>Білгород-Дністровський район</h2>
+            <p class="district-meta">3 населених пунктів · 15 об'єктів</p>
+          </div>
+          <span class="district-total">15</span>
+        </div>
+        <div class="cities">
+        <div class="city-block">
+          <div class="city-head">
+            <h3>Білгород-Дністровський</h3>
+            <span class="settlement">місто</span>
+            <span class="city-total">6</span>
+          </div>
+          
+          <div class="type-row">
+            <div class="type-label">Туристичні об'єкти<span class="type-count">6</span></div>
+            <ul class="obj-list"><li>Європейська сироварня</li><li>Аккерманська фортеця</li><li>Білгород-Дністровський краєзнавчий музей</li><li>Вірменська церква Успіння Пречистої Богородиці</li><li>Центр культури вина “Шабо”</li><li>Церква Святого Іоанна-Предтечі</li></ul>
+          </div>
+        </div>
+        <div class="city-block">
+          <div class="city-head">
+            <h3>Затока</h3>
+            <span class="settlement">селище</span>
+            <span class="city-total">1</span>
+          </div>
+          
+          <div class="type-row">
+            <div class="type-label">Туристичні об'єкти<span class="type-count">1</span></div>
+            <ul class="obj-list"><li>Аквапарк &quot;Затока&quot;</li></ul>
+          </div>
+        </div>
+        <div class="city-block">
+          <div class="city-head">
+            <h3>Татарбунари</h3>
+            <span class="settlement">місто</span>
+            <span class="city-total">2</span>
+          </div>
+          
+          <div class="type-row">
+            <div class="type-label">Туристичні об'єкти<span class="type-count">2</span></div>
+            <ul class="obj-list"><li>Татарбунарський історико – краєзнавчий музей</li><li>Храм Успіння Пресвятої Богородиці</li></ul>
+          </div>
+        </div>
+        <div class="city-block no-city">
+          <div class="city-head">
+            <h3>Без прив&#x27;язки до населеного пункту</h3>
+            
+            <span class="city-total">6</span>
+          </div>
+          
+          <div class="type-row">
+            <div class="type-label">Туристичні об'єкти<span class="type-count">6</span></div>
+            <ul class="obj-list"><li>Зорянський народний етнографічний музей «Голямата къща»</li><li>Національний природний парк Тузловські лимани</li><li>Новоселівський сільський народознавчий музей «Каса пэринтяскэ»</li><li>Санаторій  &quot;Орізонт&quot;</li><li>Санаторій &quot;Золота Нива&quot;</li><li>Фрумушика-Нова</li></ul>
+          </div>
+        </div></div>
+      </section>
+      <section class="district" id="d2">
+        <div class="district-head">
+          <span class="district-num">03</span>
+          <div class="district-title">
+            <h2>Болградський район</h2>
+            <p class="district-meta">1 населених пунктів · 14 об'єктів</p>
+          </div>
+          <span class="district-total">14</span>
+        </div>
+        <div class="cities">
+        <div class="city-block">
+          <div class="city-head">
+            <h3>Болград</h3>
+            <span class="settlement">місто</span>
+            <span class="city-total">8</span>
+          </div>
+          
+          <div class="type-row">
+            <div class="type-label">Туристичні об'єкти<span class="type-count">8</span></div>
+            <ul class="obj-list"><li>Villa Tinta</li><li>Балканські Ястія</li><li>Колоніст</li><li>Обласний центр болгарської культури в м. Болграді</li><li>Собор Святителя і Чудотворця Миколая</li><li>Спасо-Преображенський собор</li><li>У Недева</li><li>Щедра околиця</li></ul>
+          </div>
+        </div>
+        <div class="city-block no-city">
+          <div class="city-head">
+            <h3>Без прив&#x27;язки до населеного пункту</h3>
+            
+            <span class="city-total">6</span>
+          </div>
+          
+          <div class="type-row">
+            <div class="type-label">Туристичні об'єкти<span class="type-count">6</span></div>
+            <ul class="obj-list"><li>Арт-галерея</li><li>Арцизький історико-краєзнавчий музей</li><li>Джерельце та сосонки</li><li>Обласний центр гагаузької культури</li><li>Озеро Ялпуг</li><li>Скіфський курган</li></ul>
+          </div>
+        </div></div>
+      </section>
+      <section class="district" id="d3">
+        <div class="district-head">
+          <span class="district-num">04</span>
+          <div class="district-title">
+            <h2>Ізмаїльський район</h2>
+            <p class="district-meta">3 населених пунктів · 21 об'єктів</p>
+          </div>
+          <span class="district-total">21</span>
+        </div>
+        <div class="cities">
+        <div class="city-block">
+          <div class="city-head">
+            <h3>Ізмаїл</h3>
+            <span class="settlement">місто</span>
+            <span class="city-total">9</span>
+          </div>
+          
+          <div class="type-row">
+            <div class="type-label">Туристичні об'єкти<span class="type-count">9</span></div>
+            <ul class="obj-list"><li>Vinaria</li><li>Ізмаїльська Картинна Галерея</li><li>Ізмаїльський історико-краєзнавчий музей Придунав&#x27;я</li><li>Мала мечеть</li><li>Міський сад</li><li>Обласний центр національних культур (м. Ізмаїл)</li><li>Парк мініатюр</li><li>Свято-Миколаївська церква</li><li>Свято-Успенська церква</li></ul>
+          </div>
+        </div>
+        <div class="city-block">
+          <div class="city-head">
+            <h3>Вилкове</h3>
+            <span class="settlement">місто</span>
+            <span class="city-total">3</span>
+          </div>
+          
+          <div class="type-row">
+            <div class="type-label">Туристичні об'єкти<span class="type-count">3</span></div>
+            <ul class="obj-list"><li>Moncastro</li><li>Краєзнавчий музей Олександра Шаронова</li><li>Пелікан Сіті</li></ul>
+          </div>
+        </div>
+        <div class="city-block">
+          <div class="city-head">
+            <h3>Кілія</h3>
+            <span class="settlement">місто</span>
+            <span class="city-total">2</span>
+          </div>
+          
+          <div class="type-row">
+            <div class="type-label">Туристичні об'єкти<span class="type-count">2</span></div>
+            <ul class="obj-list"><li>Кілійський історико-краєзнавчий музей</li><li>Свято-Миколаївська церква</li></ul>
+          </div>
+        </div>
+        <div class="city-block no-city">
+          <div class="city-head">
+            <h3>Без прив&#x27;язки до населеного пункту</h3>
+            
+            <span class="city-total">7</span>
+          </div>
+          
+          <div class="type-row">
+            <div class="type-label">Туристичні об'єкти<span class="type-count">7</span></div>
+            <ul class="obj-list"><li>Дунай</li><li>Дунайський біосферний заповідник</li><li>Обласний центр національних культур в м. Рені</li><li>Озеро Кагул</li><li>Озеро Катлабуг</li><li>Озеро Саф&#x27;яни</li><li>Храм Покрова Пресвятої Богородиці</li></ul>
+          </div>
+        </div></div>
+      </section>
+      <section class="district" id="d4">
+        <div class="district-head">
+          <span class="district-num">05</span>
+          <div class="district-title">
+            <h2>Одеський район</h2>
+            <p class="district-meta">3 населених пунктів · 88 об'єктів</p>
+          </div>
+          <span class="district-total">88</span>
+        </div>
+        <div class="cities">
+        <div class="city-block">
+          <div class="city-head">
+            <h3>Біляївка</h3>
+            <span class="settlement">місто</span>
+            <span class="city-total">2</span>
+          </div>
+          
+          <div class="type-row">
+            <div class="type-label">Туристичні об'єкти<span class="type-count">2</span></div>
+            <ul class="obj-list"><li>SHEVINO</li><li>Біле озеро</li></ul>
+          </div>
+        </div>
+        <div class="city-block">
+          <div class="city-head">
+            <h3>Одеса</h3>
+            <span class="settlement">місто</span>
+            <span class="city-total">63</span>
+          </div>
+          
+          <div class="type-row">
+            <div class="type-label">Туристичні об'єкти<span class="type-count">58</span></div>
+            <ul class="obj-list"><li>Інклюзивний пляж “Безмеж&quot;</li><li>Аквапарк &quot;Hawaii&quot;</li><li>Аркадія</li><li>Будинок Русова</li><li>Будинок-стіна</li><li>Біопарк</li><li>Водоспад на Фонтанці</li><li>Воронцовський палац</li><li>Грецький парк</li><li>Дендропарк Перемоги</li><li>Зелений театр</li><li>Колонада</li><li>Ланжерон</li><li>Меморіальний будинок-музей академіка В. П. Філатова</li><li>Музей КП &quot;Одесміськелектротранс&quot;</li><li>Музей воскових фігур &quot;У баби Уті&quot;</li><li>Музей геноциду «Територія пам’яті»</li><li>Музей звуку</li><li>Музей коньячної справи Миколи Шустова</li><li>Музей сучасного мистецтва Одеси</li><li>Музей-квартира Леоніда Утьосова</li><li>Міський сад</li><li>Одесос</li><li>Одеська обласна філармонія імені Давида Ойстраха</li><li>Одеський академічний обласний театр ляльок</li><li>Одеський академічний театр музичної комедії ім. М. Водяного</li><li>Одеський академічний український музично-драматичний театр    ім. В. Василька</li><li>Одеський археологічний музей</li><li>Одеський зоопарк</li><li>Одеський літературний музей</li><li>Одеський музей &quot;Степова Україна&quot;</li><li>Одеський музей західного та східного мистецтва</li><li>Одеський музей кіно</li><li>Одеський муніципальний музей особистих колекцій імені О. В. Блещунова</li><li>Одеський національний академічний театр опери та балету</li><li>Одеський національний художній музей (ONFAM)</li><li>Одеський обласний академічний драматичний театр</li><li>Одеський обласний центр української культури</li><li>Одеський театр юного глядача ім. Юрія Олеші</li><li>Одеський історико-краєзнавчий музей</li><li>Одеські катакомби</li><li>Пале-Рояль</li><li>Парк культури і відпочинку імені Марка Твена</li><li>Парк імені Тараса Шевченка</li><li>Пасаж</li><li>Перша виноробна станція</li><li>Пляж &quot;Золотий берег&quot;</li><li>Пляж &quot;Курортний&quot;</li><li>Пляж «Дельфін»</li><li>Пляж «Чайка»</li><li>Пляжний комплекс &quot;Caleton&quot;</li><li>Потьомкінські сходи</li><li>Санаторій  &quot;Біла акація&quot;</li><li>Скеледром</li><li>Спасо-Преображенський кафедральний собор</li><li>Стамбульський парк</li><li>Творчій простір &quot;Діалоги&quot;</li><li>Театр на Чайній</li></ul>
+          </div>
+          <div class="type-row">
+            <div class="type-label">Події<span class="type-count">5</span></div>
+            <ul class="obj-list"><li>Одеський академічний театр юного глядача</li><li>Одеський національний театр опери та балету</li><li>Одеський обласний академічний драматичний театр</li><li>Одеський обласний театр ляльок</li><li>Театр на Чайній</li></ul>
+          </div>
+        </div>
+        <div class="city-block">
+          <div class="city-head">
+            <h3>Чорноморськ</h3>
+            <span class="settlement">місто</span>
+            <span class="city-total">3</span>
+          </div>
+          
+          <div class="type-row">
+            <div class="type-label">Туристичні об'єкти<span class="type-count">3</span></div>
+            <ul class="obj-list"><li>EquiLife</li><li>Нью-Васюки</li><li>Центральний міський пляж Чорноморська</li></ul>
+          </div>
+        </div>
+        <div class="city-block no-city">
+          <div class="city-head">
+            <h3>Без прив&#x27;язки до населеного пункту</h3>
+            
+            <span class="city-total">20</span>
+          </div>
+          
+          <div class="type-row">
+            <div class="type-label">Туристичні об'єкти<span class="type-count">20</span></div>
+            <ul class="obj-list"><li>Don Alejandro Winery</li><li>Manzul Winehouse</li><li>My Wine by Eduard Gorodetsky</li><li>Prestige Group</li><li>«Інститут виноградарства і виноробства ім. В.Є. Таїрова»</li><li>Аквапарк &quot;Одеса&quot;</li><li>Богнатово</li><li>Золота грива</li><li>Козацька Родина</li><li>Лавандія</li><li>Музей вогню</li><li>Національний природний парк &quot;Куяльницький&quot;</li><li>Нерубайські катакомби</li><li>Нижньодністровський національний природний парк</li><li>Ойстервіль</li><li>Пальміра</li><li>Пан Білецький</li><li>Санаторій ім. М. І. Пирогова (курорт Куяльник)</li><li>Світлиця Ластівка</li><li>Хаджибейський лиман</li></ul>
+          </div>
+        </div></div>
+      </section>
+      <section class="district" id="d5">
+        <div class="district-head">
+          <span class="district-num">06</span>
+          <div class="district-title">
+            <h2>Подільський район</h2>
+            <p class="district-meta">2 населених пунктів · 11 об'єктів</p>
+          </div>
+          <span class="district-total">11</span>
+        </div>
+        <div class="cities">
+        <div class="city-block">
+          <div class="city-head">
+            <h3>Балта</h3>
+            <span class="settlement">місто</span>
+            <span class="city-total">4</span>
+          </div>
+          
+          <div class="type-row">
+            <div class="type-label">Туристичні об'єкти<span class="type-count">4</span></div>
+            <ul class="obj-list"><li>Балтський історичний музей</li><li>Костьол св. Станіслава</li><li>Успенський собор Божої Матері</li><li>Файний мед</li></ul>
+          </div>
+        </div>
+        <div class="city-block">
+          <div class="city-head">
+            <h3>Подільськ</h3>
+            <span class="settlement">місто</span>
+            <span class="city-total">1</span>
+          </div>
+          
+          <div class="type-row">
+            <div class="type-label">Туристичні об'єкти<span class="type-count">1</span></div>
+            <ul class="obj-list"><li>Храм Успіння Пресвятої Богородиці</li></ul>
+          </div>
+        </div>
+        <div class="city-block no-city">
+          <div class="city-head">
+            <h3>Без прив&#x27;язки до населеного пункту</h3>
+            
+            <span class="city-total">6</span>
+          </div>
+          
+          <div class="type-row">
+            <div class="type-label">Туристичні об'єкти<span class="type-count">6</span></div>
+            <ul class="obj-list"><li>Гольмянські ковбаси</li><li>Кодимський історико-краєзнавчий музей</li><li>Подільський міський краєзнавчий музей</li><li>Савранка</li><li>Савранський ліс</li><li>Садиба на Кодимі</li></ul>
+          </div>
+        </div></div>
+      </section>
+      <section class="district" id="d6">
+        <div class="district-head">
+          <span class="district-num">07</span>
+          <div class="district-title">
+            <h2>Роздільнянський район</h2>
+            <p class="district-meta">0 населених пунктів · 3 об'єктів</p>
+          </div>
+          <span class="district-total">3</span>
+        </div>
+        <div class="cities">
+        <div class="city-block no-city">
+          <div class="city-head">
+            <h3>Без прив&#x27;язки до населеного пункту</h3>
+            
+            <span class="city-total">3</span>
+          </div>
+          
+          <div class="type-row">
+            <div class="type-label">Туристичні об'єкти<span class="type-count">3</span></div>
+            <ul class="obj-list"><li>Рибальське. Кандель</li><li>Свято-Миколаївська церква</li><li>Собор Успіння Пресвятої Богородиці</li></ul>
+          </div>
+        </div></div>
+      </section>
+
+  <footer class="doc-foot">
+    Джерело — таблиця <code>tourism_objects</code> продакшн-БД (PostgREST, tourism.od.gov.ua). Готелі та ресторани поки не заповнені — на сайті присутні лише типи «Туристичні об'єкти» та «Події».
+  </footer>
+</div>

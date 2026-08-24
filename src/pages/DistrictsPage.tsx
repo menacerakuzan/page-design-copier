@@ -2,10 +2,13 @@ import { useState, useMemo } from "react";
 import { Img } from "@/components/Img";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLang } from "@/lib/langContext";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ChevronLeft, ArrowRight, MapPin, MapPinned, Landmark } from "lucide-react";
 import SiteFooter from "@/components/SiteFooter";
+import PageBrow from "@/components/PageBrow";
+import { DragScrollRow } from "@/components/DragScrollRow";
 import { useHierarchySnapshot } from "@/hooks/useHierarchySnapshot";
+import { useSeo } from "@/hooks/useSeo";
 import { ObjectCard } from "@/components/ObjectCard";
 import type { District, City } from "@/types/hierarchy";
 
@@ -38,27 +41,47 @@ const BadgePill = ({ children }: { children: React.ReactNode }) => (
 
 export default function DistrictsPage() {
   const { t, tl, lang } = useLang();
+  const navigate = useNavigate();
   const { data: snapshot, isLoading } = useHierarchySnapshot();
   const [activeDistrict, setActiveDistrict] = useState<District | null>(null);
   const [activeCity, setActiveCity] = useState<City | null>(null);
   const [activeType, setActiveType] = useState<string | null>(null);
 
-  const districts = useMemo(() =>
-    [...(snapshot?.districts ?? [])].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0) || a.name.localeCompare(b.name)),
-    [snapshot]);
   const allCities = useMemo(() => snapshot?.cities ?? [], [snapshot]);
   const allObjects = useMemo(() => (snapshot?.objects ?? []).filter(o => o.published), [snapshot]);
-
-  const districtCities = useMemo(() =>
-    activeDistrict ? allCities.filter(c => c.districtId === activeDistrict.id) : [],
-    [activeDistrict, allCities]
-  );
 
   const cityCountByDistrict = useMemo(() => {
     const counts: Record<string, number> = {};
     for (const c of allCities) counts[c.districtId] = (counts[c.districtId] ?? 0) + 1;
     return counts;
   }, [allCities]);
+
+  const objectCountByDistrict = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const o of allObjects) counts[o.districtId] = (counts[o.districtId] ?? 0) + 1;
+    return counts;
+  }, [allObjects]);
+
+  // Райони — за наповненістю (більше населених пунктів → вище; при рівності —
+  // за кількістю об'єктів, далі за назвою), а не за алфавітом.
+  const districts = useMemo(() =>
+    [...(snapshot?.districts ?? [])].sort((a, b) =>
+      (cityCountByDistrict[b.id] ?? 0) - (cityCountByDistrict[a.id] ?? 0)
+      || (objectCountByDistrict[b.id] ?? 0) - (objectCountByDistrict[a.id] ?? 0)
+      || a.name.localeCompare(b.name)),
+    [snapshot, cityCountByDistrict, objectCountByDistrict]);
+
+  const districtCities = useMemo(() =>
+    activeDistrict ? allCities.filter(c => c.districtId === activeDistrict.id) : [],
+    [activeDistrict, allCities]
+  );
+
+  // Об'єкти, прив'язані лише до району (без населеного пункту) — інакше вони
+  // не з'являлись ніде в цьому каталозі.
+  const districtOnlyObjects = useMemo(() =>
+    activeDistrict ? allObjects.filter(o => o.districtId === activeDistrict.id && !o.cityId) : [],
+    [activeDistrict, allObjects]
+  );
 
   const objectCountByCity = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -84,13 +107,24 @@ export default function DistrictsPage() {
     return cityObjects.filter(o => o.type === activeType);
   }, [cityObjects, activeType]);
 
+  // Клік по району тепер веде одразу на його власну сторінку (/raion/:slug),
+  // а не в інлайн-дрилдаун "міста → об'єкти" всередині цієї сторінки. Сам
+  // дрилдаун (activeDistrict/selectCity і рендер нижче) лишили в коді
+  // непідключеним — про всяк випадок, якщо знадобиться повернути.
   const selectDistrict = (d: District) => {
-    setActiveDistrict(d);
-    setActiveCity(null);
-    setActiveType(null);
+    navigate(`/raion/${d.slug}`);
   };
 
   const selectCity = (c: City) => {
+    // Немає жодного тур-об'єкта в місті — крок "оберіть тип об'єкта" тут
+    // порожній і безглуздий, тож одразу ведемо на сторінку самого міста.
+    if ((objectCountByCity[c.id] ?? 0) === 0) {
+      // Ми прийшли сюди зі списку районів/міст, а не через сторінку району —
+      // тож кнопка "назад" на сторінці міста має повертати саме сюди
+      // (/districts), а не до району, до якого місто прив'язане.
+      navigate(`/napryamky/${c.slug}`, { state: { backTo: "/districts", backLabel: t("districts") } });
+      return;
+    }
     setActiveCity(c);
     setActiveType(null);
   };
@@ -119,6 +153,8 @@ export default function DistrictsPage() {
       ? (tl(activeDistrict.subtitle, activeDistrict.subtitleEn) || tl("оберіть населений пункт", "select a settlement"))
       : t("districtsPageDesc");
 
+  useSeo({ title: titleHeading, description: titleDescription, image: (activeCity ?? activeDistrict)?.imageUrl, lang });
+
   return (
     <div className="relative min-h-screen bg-[#fff2e8] font-odesa-regular text-[#002f5e]">
       {/* Легкий фоновий патерн (роза вітрів — тема районів/дослідження).
@@ -131,32 +167,11 @@ export default function DistrictsPage() {
         style={{ backgroundImage: "url(/districtspattern.svg)", backgroundSize: "200px 200px", backgroundRepeat: "repeat", opacity: 0.1 }}
       />
 
-      {/* ── Шапка-«бровь» (як на головній), мінімальна: тільки назад ───────── */}
-      <div className="container-edge pt-safe relative z-10">
-        <div
-          className="mt-4 rounded-b-[36px] bg-[#fff2e8] px-4 pb-2.5 pt-2.5"
-          style={{ boxShadow: "0 8px 24px -18px rgba(0,47,94,0.35)" }}
-        >
-          <div className="relative flex items-center justify-center">
-            <Link
-              to="/"
-              aria-label={t("backHome")}
-              className="tap absolute left-0 flex h-9 w-9 items-center justify-center rounded-full text-[#002f5e] transition-opacity hover:opacity-70"
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </Link>
-            <h1
-              className="px-2 text-center text-[30px] leading-[0.95] text-[#00376c] font-odesa-medium font-odesa-ss02"
-              style={{ letterSpacing: "0.04em" }}
-            >
-              ОДЕЩИНА
-            </h1>
-          </div>
-        </div>
-      </div>
+      {/* ── Шапка-«бровь»: мобільно — назад, на md+ — повна навігація ──────── */}
+      <PageBrow />
 
       {/* ── Заголовок сторінки (змінюється залежно від рівня) ──────────────── */}
-      <div className="container-edge relative z-10 pb-6 pt-8">
+      <div className="container-edge relative z-10 pb-6 pt-8 md:pb-8 md:pt-12">
         <motion.div
           key={activeCity?.id ?? activeDistrict?.id ?? "root"}
           initial={{ opacity: 0, y: 8 }}
@@ -164,18 +179,18 @@ export default function DistrictsPage() {
           transition={{ duration: 0.25 }}
         >
           <div className="flex items-center gap-3">
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#002f5e] text-[#fff2e8]">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#002f5e] text-[#fff2e8] md:h-12 md:w-12">
               {titleIcon}
             </span>
-            <h2 className="text-[34px] leading-[0.95] text-[#002f5e] font-odesa-bold">{titleHeading}</h2>
+            <h1 className="text-[34px] leading-[0.95] text-[#002f5e] font-odesa-bold md:text-[46px]">{titleHeading}</h1>
           </div>
-          <p className="mt-3 max-w-[520px] text-[15px] leading-[1.5] text-[#002f5e]/60 font-odesa-regular">
+          <p className="mt-3 max-w-[520px] text-[15px] leading-[1.5] text-[#002f5e]/70 font-odesa-regular md:max-w-[640px] md:text-[16px]">
             {titleDescription}
           </p>
         </motion.div>
       </div>
 
-      <main className="container-edge relative z-10 pb-tabbar md:pb-16">
+      <main id="main-content" tabIndex={-1} className="container-edge relative z-10 pb-tabbar md:pb-16">
         {/* initial={false}: на першому відкритті сторінки контейнер не програє
             власну анімацію входу — анімуються лише картки (один прохід, без
             ефекту «подвійного завантаження»). Перемикання рівнів анімується. */}
@@ -189,7 +204,7 @@ export default function DistrictsPage() {
                   <span className="h-8 w-8 animate-spin rounded-full border-2 border-[#002f5e] border-t-transparent" />
                 </div>
               ) : (
-                <div className="space-y-7">
+                <div className="flex flex-col gap-7 md:grid md:grid-cols-2 md:gap-6 xl:grid-cols-3">
                   {districts.map((d, idx) => {
                     const count = cityCountByDistrict[d.id] ?? 0;
                     return (
@@ -215,7 +230,7 @@ export default function DistrictsPage() {
                               />
                             ) : (
                               <div className="flex h-full w-full items-center justify-center">
-                                <MapPinned className="h-8 w-8 text-[#002f5e]/30" />
+                                <MapPinned className="h-8 w-8 text-[#002f5e]/70" />
                               </div>
                             )}
                             <div className="absolute inset-0 bg-gradient-to-t from-[#002f5e]/85 via-[#002f5e]/15 to-transparent" />
@@ -249,16 +264,16 @@ export default function DistrictsPage() {
               initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
               transition={{ duration: 0.2 }}>
               <button type="button" onClick={goBack}
-                className="mb-6 inline-flex items-center gap-2 rounded-full border border-[#002f5e]/20 px-4 py-1.5 text-[13px] font-odesa-semi text-[#002f5e]/60 transition hover:border-[#002f5e]/40 hover:text-[#002f5e]">
+                className="mb-6 inline-flex items-center gap-2 rounded-full border border-[#002f5e]/20 px-4 py-1.5 text-[13px] font-odesa-semi text-[#002f5e]/70 transition hover:border-[#002f5e]/40 hover:text-[#002f5e]">
                 <ChevronLeft className="h-4 w-4" /> {tl("Всі райони", "All districts")}
               </button>
 
-              {districtCities.length === 0 ? (
+              {districtCities.length === 0 && districtOnlyObjects.length === 0 ? (
                 <div className="flex items-center justify-center rounded-[26px] border border-dashed border-[#002f5e]/20 py-24">
-                  <p className="text-[16px] text-[#002f5e]/40 font-odesa-regular">{tl("Населених пунктів поки немає", "No settlements yet")}</p>
+                  <p className="text-[16px] text-[#002f5e]/70 font-odesa-regular">{tl("Населених пунктів поки немає", "No settlements yet")}</p>
                 </div>
               ) : (
-                <div className="space-y-5">
+                <div className="flex flex-col gap-5 md:grid md:grid-cols-2 md:gap-6 xl:grid-cols-3">
                   {districtCities.map((c, idx) => (
                     <motion.div key={c.id}
                       initial={{ opacity: 0, y: 24 }}
@@ -274,7 +289,7 @@ export default function DistrictsPage() {
                             <Img w={700} src={c.imageUrl} alt={c.name} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
                           ) : (
                             <div className="flex h-full w-full items-center justify-center">
-                              <Landmark className="h-8 w-8 text-[#002f5e]/30" />
+                              <Landmark className="h-8 w-8 text-[#002f5e]/70" />
                             </div>
                           )}
                           <div className="absolute inset-0 bg-gradient-to-t from-[#002f5e]/85 via-[#002f5e]/15 to-transparent" />
@@ -299,6 +314,25 @@ export default function DistrictsPage() {
                   ))}
                 </div>
               )}
+
+              {/* Об'єкти, прив'язані до району напряму (без населеного пункту) */}
+              {districtOnlyObjects.length > 0 && (
+                <div className="mt-12">
+                  <div className="mb-4 flex items-center gap-3">
+                    <h2 className="text-[22px] leading-none text-[#002f5e] font-odesa-bold">
+                      {tl("Об'єкти району", "District objects")}
+                    </h2>
+                    <span className="rounded-full bg-[#002f5e]/8 px-2.5 py-1 text-[12px] leading-none text-[#002f5e]/70 font-odesa-medium">
+                      {districtOnlyObjects.length}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                    {districtOnlyObjects.map((obj, idx) => (
+                      <ObjectCard key={obj.id} obj={obj} idx={idx} lang={lang} />
+                    ))}
+                  </div>
+                </div>
+              )}
             </motion.div>
           )}
 
@@ -308,13 +342,13 @@ export default function DistrictsPage() {
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.4 }}>
               <button type="button" onClick={goBack}
-                className="mb-6 inline-flex items-center gap-2 rounded-full border border-[#002f5e]/20 px-4 py-1.5 text-[13px] font-odesa-semi text-[#002f5e]/60 transition hover:border-[#002f5e]/40 hover:text-[#002f5e]">
+                className="mb-6 inline-flex items-center gap-2 rounded-full border border-[#002f5e]/20 px-4 py-1.5 text-[13px] font-odesa-semi text-[#002f5e]/70 transition hover:border-[#002f5e]/40 hover:text-[#002f5e]">
                 <ChevronLeft className="h-4 w-4" /> {activeDistrict?.name}
               </button>
 
-              {/* Фільтр по типах: горизонтальна прокрутка, без стрілок */}
+              {/* Фільтр по типах: мобільно — прокрутка, на md+ — перенос */}
               {objectsByType.length > 0 && (
-                <div className="mb-6 flex gap-2 overflow-x-auto p-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                <DragScrollRow wrapperClassName="mb-6" className="flex gap-2 overflow-x-auto p-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:flex-wrap md:overflow-visible">
                   <button type="button" onClick={() => setActiveType(null)}
                     className="shrink-0 rounded-full px-4 py-1.5 text-[13px] font-odesa-semi transition-all duration-200"
                     style={{
@@ -338,14 +372,14 @@ export default function DistrictsPage() {
                       </button>
                     );
                   })}
-                </div>
+                </DragScrollRow>
               )}
 
               {cityObjects.length === 0 ? (
                 <div className="flex flex-col items-center justify-center rounded-[26px] border border-dashed border-[#002f5e]/20 py-24">
-                  <p className="text-[16px] text-[#002f5e]/40 font-odesa-regular">{tl("Об'єктів поки немає", "No objects yet")}</p>
+                  <p className="text-[16px] text-[#002f5e]/70 font-odesa-regular">{tl("Об'єктів поки немає", "No objects yet")}</p>
                   <Link to={`/napryamky/${activeCity.slug}`}
-                    className="mt-4 inline-flex items-center gap-2 text-[14px] font-odesa-medium text-[#df9b3b] transition-opacity hover:opacity-70">
+                    className="mt-4 inline-flex items-center gap-2 text-[14px] font-odesa-medium text-[#9c6200] transition-opacity hover:opacity-70">
                     {tl("Перейти на сторінку міста", "Go to the city page")} <ArrowRight className="h-4 w-4" />
                   </Link>
                 </div>
@@ -360,7 +394,7 @@ export default function DistrictsPage() {
                             <h2 className="text-[22px] leading-none text-[#002f5e] font-odesa-bold">
                               {SECTION_LABEL[type]}
                             </h2>
-                            <span className="rounded-full bg-[#002f5e]/8 px-2.5 py-1 text-[12px] leading-none text-[#002f5e]/60 font-odesa-medium">
+                            <span className="rounded-full bg-[#002f5e]/8 px-2.5 py-1 text-[12px] leading-none text-[#002f5e]/70 font-odesa-medium">
                               {items.length}
                             </span>
                           </div>

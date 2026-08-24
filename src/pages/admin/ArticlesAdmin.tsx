@@ -50,8 +50,8 @@ const VideoListEditor = ({
 
       {videos.length === 0 && (
         <div className="rounded-xl border border-dashed border-[#002f5e]/15 py-6 text-center">
-          <p className="text-[13px] text-[#002f5e]/35">Відео не додані</p>
-          <p className="mt-0.5 text-[11px] text-[#002f5e]/25">Натисніть «Додати відео», щоб вставити відео в статтю</p>
+          <p className="text-[13px] text-[#002f5e]/70">Відео не додані</p>
+          <p className="mt-0.5 text-[11px] text-[#002f5e]/70">Натисніть «Додати відео», щоб вставити відео в статтю</p>
         </div>
       )}
 
@@ -82,7 +82,7 @@ const VideoListEditor = ({
           />
 
           <div className="mt-3 flex flex-wrap items-center gap-3 rounded-lg border border-[#002f5e]/10 bg-white/60 px-3 py-2.5">
-            <span className="text-[12px] font-medium text-[#002f5e]/55">Позиція в статті:</span>
+            <span className="text-[12px] font-medium text-[#002f5e]/70">Позиція в статті:</span>
             <label className="flex cursor-pointer items-center gap-1.5">
               <input
                 type="radio"
@@ -233,7 +233,7 @@ export const ArticlesAdmin = ({ showToast }: { showToast: (msg: string, ok?: boo
             </div>
             {editingId && (
               <button type="button" onClick={() => { setEditingId(null); setForm(emptyArticle()); }}
-                className="rounded-xl border border-[#002f5e]/15 px-3 py-1.5 text-[13px] text-[#002f5e]/50 hover:text-[#002f5e] transition">
+                className="rounded-xl border border-[#002f5e]/15 px-3 py-1.5 text-[13px] text-[#002f5e]/70 hover:text-[#002f5e] transition">
                 ✕ Скасувати
               </button>
             )}
@@ -278,7 +278,7 @@ export const ArticlesAdmin = ({ showToast }: { showToast: (msg: string, ok?: boo
             {/* ── English version ─────────────────────────────────── */}
             <div className="rounded-xl border border-[#002f5e]/12 bg-[#002f5e]/3 p-4 flex flex-col gap-3">
               <div className="flex items-center justify-between">
-                <span className="flex items-center gap-2 text-[13px] font-semibold text-[#002f5e]/60 uppercase tracking-wide">
+                <span className="flex items-center gap-2 text-[13px] font-semibold text-[#002f5e]/70 uppercase tracking-wide">
                   🇬🇧 English version
                 </span>
                 <button
@@ -294,19 +294,19 @@ export const ArticlesAdmin = ({ showToast }: { showToast: (msg: string, ok?: boo
                 </button>
               </div>
               <div>
-                <span className="mb-1 block text-[12px] font-medium text-[#002f5e]/50 uppercase tracking-wide">Title (EN)</span>
+                <span className="mb-1 block text-[12px] font-medium text-[#002f5e]/70 uppercase tracking-wide">Title (EN)</span>
                 <input value={form.titleEn} onChange={e => setForm(p => ({ ...p, titleEn: e.target.value }))}
                   placeholder="Article title in English"
                   className="w-full rounded-xl border border-[#002f5e]/15 bg-white px-4 py-2.5 text-[14px] text-[#002f5e] focus:border-[#002f5e]/40 focus:outline-none focus:ring-2 focus:ring-[#002f5e]/10 transition" />
               </div>
               <div>
-                <span className="mb-1 block text-[12px] font-medium text-[#002f5e]/50 uppercase tracking-wide">Subtitle (EN)</span>
+                <span className="mb-1 block text-[12px] font-medium text-[#002f5e]/70 uppercase tracking-wide">Subtitle (EN)</span>
                 <input value={form.subtitleEn} onChange={e => setForm(p => ({ ...p, subtitleEn: e.target.value }))}
                   placeholder="Short description in English"
                   className="w-full rounded-xl border border-[#002f5e]/15 bg-white px-4 py-2.5 text-[14px] text-[#002f5e] focus:border-[#002f5e]/40 focus:outline-none focus:ring-2 focus:ring-[#002f5e]/10 transition" />
               </div>
               <div>
-                <span className="mb-1 block text-[12px] font-medium text-[#002f5e]/50 uppercase tracking-wide">Content (EN)</span>
+                <span className="mb-1 block text-[12px] font-medium text-[#002f5e]/70 uppercase tracking-wide">Content (EN)</span>
                 <textarea value={form.contentEn} onChange={e => setForm(p => ({ ...p, contentEn: e.target.value }))}
                   placeholder="Article text in English..."
                   rows={5}
@@ -332,12 +332,12 @@ export const ArticlesAdmin = ({ showToast }: { showToast: (msg: string, ok?: boo
       {/* List */}
       <div className="w-[300px] shrink-0">
         <h3 className="mb-4 text-[16px] font-semibold text-[#002f5e]/70">
-          Всі статті <span className="text-[#002f5e]/40">({articles.length})</span>
+          Всі статті <span className="text-[#002f5e]/70">({articles.length})</span>
         </h3>
         {articles.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-[#002f5e]/20 py-16 text-center">
-            <Newspaper className="h-8 w-8 text-[#002f5e]/25" />
-            <p className="text-[14px] text-[#002f5e]/45">Статей поки немає</p>
+            <Newspaper className="h-8 w-8 text-[#002f5e]/70" />
+            <p className="text-[14px] text-[#002f5e]/70">Статей поки немає</p>
           </div>
         ) : (
           <div className="flex flex-col gap-2">
@@ -346,11 +346,11 @@ export const ArticlesAdmin = ({ showToast }: { showToast: (msg: string, ok?: boo
                 {a.imageUrl && <img loading="lazy" decoding="async" src={a.imageUrl} alt="" className="h-12 w-12 shrink-0 rounded-xl object-cover" />}
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[13px] font-semibold text-[#002f5e]">{a.title}</p>
-                  <p className="text-[11px] text-[#002f5e]/40">{String(a.payload?.publishedAt ?? "")}</p>
+                  <p className="text-[11px] text-[#002f5e]/70">{String(a.payload?.publishedAt ?? "")}</p>
                 </div>
                 <div className="flex shrink-0 gap-1 opacity-0 transition group-hover:opacity-100">
                   <button type="button" onClick={() => startEdit(a)}
-                    className="rounded-lg p-1.5 text-[#002f5e]/40 hover:bg-[#002f5e]/8 hover:text-[#002f5e]">
+                    className="rounded-lg p-1.5 text-[#002f5e]/70 hover:bg-[#002f5e]/8 hover:text-[#002f5e]">
                     <Pencil className="h-3.5 w-3.5" />
                   </button>
                   <button type="button" onClick={() => void handleDelete(a.id)}

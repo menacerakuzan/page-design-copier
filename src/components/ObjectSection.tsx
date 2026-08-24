@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { ArrowRight, Calendar, ChevronLeft, ChevronRight, Clock, MapPin, Moon } from "lucide-react";
 import { Img } from "@/components/Img";
+import { DragScrollRow } from "@/components/DragScrollRow";
 import { useLang } from "@/lib/langContext";
 import { objectDetailPath, objectTypeLabel, objectTypeColor } from "@/lib/entityLinks";
 import type { TourismObject, TourismObjectType } from "@/types/hierarchy";
@@ -104,7 +105,7 @@ const SectionTitle = ({ variant, title, subtitle }: {
 const CarouselItems = ({ items, bg, sectionId, scrollRefs }: Pick<ObjectSectionProps, "items" | "bg" | "sectionId" | "scrollRefs">) => {
   const { t, lang } = useLang();
   return (
-    <div ref={(el) => { scrollRefs.current[sectionId] = el; }}
+    <DragScrollRow hint scrollRef={(el) => { scrollRefs.current[sectionId] = el; }}
       className="snap-x snap-mandatory scroll-px-4 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
       <div className="flex gap-4 pb-2 pt-1 md:gap-5" style={{ width: "max-content" }}>
         {items.map((obj, idx) => (
@@ -118,8 +119,8 @@ const CarouselItems = ({ items, bg, sectionId, scrollRefs }: Pick<ObjectSectionP
                 <Img w={500} src={obj.imageUrl ?? "https://images.unsplash.com/photo-1552083375-1447ce886485?auto=format&fit=crop&w=800&q=80"}
                   alt={obj.name} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" />
                 <div className="absolute inset-0" style={{ background: `linear-gradient(180deg, transparent 30%, ${bg}f5 100%)` }} />
-                <div className="absolute left-4 top-4">
-                  <span className="rounded-full px-3 py-1.5 text-[10px] uppercase tracking-widest font-odesa-medium text-[#fff2e8] backdrop-blur-md"
+                <div className="absolute left-4 right-14 top-4">
+                  <span className="inline-block max-w-full truncate rounded-full px-3 py-1.5 text-[10px] uppercase tracking-widest font-odesa-medium text-[#fff2e8] backdrop-blur-md"
                     style={{ backgroundColor: `${objectTypeColor[obj.type]}cc`, boxShadow: `0 0 12px ${objectTypeColor[obj.type]}55` }}>
                     {objectTypeLabel(obj.type, lang)}
                   </span>
@@ -148,7 +149,7 @@ const CarouselItems = ({ items, bg, sectionId, scrollRefs }: Pick<ObjectSectionP
           </motion.div>
         ))}
       </div>
-    </div>
+    </DragScrollRow>
   );
 };
 
@@ -156,7 +157,7 @@ const CarouselItems = ({ items, bg, sectionId, scrollRefs }: Pick<ObjectSectionP
 const TicketItems = ({ items, sectionId, scrollRefs }: Pick<ObjectSectionProps, "items" | "sectionId" | "scrollRefs">) => {
   const color = objectTypeColor.event;
   return (
-    <div ref={(el) => { scrollRefs.current[sectionId] = el; }}
+    <DragScrollRow hint scrollRef={(el) => { scrollRefs.current[sectionId] = el; }}
       className="snap-x snap-mandatory scroll-px-4 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
       <div className="flex gap-4 pb-2 pt-1 md:gap-5" style={{ width: "max-content" }}>
         {items.map((obj, idx) => (
@@ -186,7 +187,7 @@ const TicketItems = ({ items, sectionId, scrollRefs }: Pick<ObjectSectionProps, 
               <div className="flex min-h-[128px] flex-col p-4">
                 <p className="font-odesa-medium text-[16px] leading-[1.15] text-[#002f5e] line-clamp-2">{obj.name}</p>
                 {obj.address && (
-                  <p className="mt-1.5 flex items-center gap-1.5 text-[11px] font-odesa-regular text-[#002f5e]/55 line-clamp-1">
+                  <p className="mt-1.5 flex items-center gap-1.5 text-[11px] font-odesa-regular text-[#002f5e]/70 line-clamp-1">
                     <MapPin className="h-3 w-3 shrink-0" style={{ color }} /> {obj.address}
                   </p>
                 )}
@@ -198,7 +199,7 @@ const TicketItems = ({ items, sectionId, scrollRefs }: Pick<ObjectSectionProps, 
           </motion.div>
         ))}
       </div>
-    </div>
+    </DragScrollRow>
   );
 };
 
@@ -207,7 +208,7 @@ const StackedListItems = ({ items }: Pick<ObjectSectionProps, "items">) => {
   const { t, lang } = useLang();
   const color = objectTypeColor.hotel;
   return (
-    <div className="space-y-3">
+    <div className="mx-auto flex w-full max-w-[1100px] flex-col gap-3 lg:grid lg:grid-cols-2 lg:gap-4">
       {items.map((obj, idx) => (
         <motion.div key={obj.id} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.45, delay: idx * 0.05 }}>
@@ -221,10 +222,10 @@ const StackedListItems = ({ items }: Pick<ObjectSectionProps, "items">) => {
             <div className="flex min-w-0 flex-1 flex-col justify-center py-1">
               <span className="text-[10px] uppercase tracking-widest font-odesa-semi" style={{ color }}>{objectTypeLabel(obj.type, lang)}</span>
               <p className="mt-0.5 line-clamp-1 font-odesa-medium text-[17px] leading-tight text-[#002f5e]">{obj.name}</p>
-              {obj.subtitle && <p className="mt-0.5 line-clamp-1 text-[13px] font-odesa-regular text-[#002f5e]/55">{obj.subtitle}</p>}
+              {obj.subtitle && <p className="mt-0.5 line-clamp-1 text-[13px] font-odesa-regular text-[#002f5e]/70">{obj.subtitle}</p>}
               <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
                 {obj.address && (
-                  <span className="flex items-center gap-1 text-[12px] font-odesa-regular text-[#002f5e]/50">
+                  <span className="flex items-center gap-1 text-[12px] font-odesa-regular text-[#002f5e]/70">
                     <MapPin className="h-3 w-3 shrink-0" style={{ color }} /> <span className="line-clamp-1">{obj.address}</span>
                   </span>
                 )}
@@ -253,7 +254,7 @@ const CompactListItems = ({ items }: Pick<ObjectSectionProps, "items">) => {
   const { lang } = useLang();
   const color = objectTypeColor.restaurant;
   return (
-    <div className="overflow-hidden rounded-[22px] bg-white" style={{ boxShadow: "0 0 0 1px rgba(0,47,94,0.05), 0 12px 28px -18px rgba(0,47,94,0.3)" }}>
+    <div className="mx-auto w-full max-w-[880px] overflow-hidden rounded-[22px] bg-white" style={{ boxShadow: "0 0 0 1px rgba(0,47,94,0.05), 0 12px 28px -18px rgba(0,47,94,0.3)" }}>
       {items.map((obj, idx) => (
         <motion.div key={obj.id} initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}
           viewport={{ once: true, amount: 0.3 }} transition={{ duration: 0.35, delay: idx * 0.04 }}>
@@ -264,13 +265,13 @@ const CompactListItems = ({ items }: Pick<ObjectSectionProps, "items">) => {
             </div>
             <div className="min-w-0 flex-1">
               <p className="line-clamp-1 font-odesa-medium text-[15px] leading-tight text-[#002f5e]">{obj.name}</p>
-              <div className="mt-0.5 flex flex-wrap items-center gap-x-3 text-[11px] font-odesa-regular text-[#002f5e]/50">
+              <div className="mt-0.5 flex flex-wrap items-center gap-x-3 text-[11px] font-odesa-regular text-[#002f5e]/70">
                 {obj.address && <span className="line-clamp-1 flex items-center gap-1"><MapPin className="h-3 w-3 shrink-0" style={{ color }} />{obj.address}</span>}
                 {obj.hours && <span className="flex shrink-0 items-center gap-1"><Clock className="h-3 w-3 shrink-0" style={{ color }} />{obj.hours}</span>}
               </div>
             </div>
             <span className="shrink-0 text-[10px] uppercase tracking-widest font-odesa-semi" style={{ color }}>{objectTypeLabel(obj.type, lang)}</span>
-            <ArrowRight className="h-4 w-4 shrink-0 text-[#002f5e]/25 transition-transform group-hover:translate-x-0.5" />
+            <ArrowRight className="h-4 w-4 shrink-0 text-[#002f5e]/70 transition-transform group-hover:translate-x-0.5" />
           </Link>
         </motion.div>
       ))}

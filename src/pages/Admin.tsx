@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { CheckCircle2, MapPin, Building2, Landmark, Plus, Settings2, AlertCircle, LayoutDashboard, Calendar, UtensilsCrossed, BedDouble, ChevronRight, Palmtree, Newspaper, LogOut, Languages, Route } from "lucide-react";
+import { CheckCircle2, MapPin, Building2, Landmark, Plus, Settings2, AlertCircle, LayoutDashboard, Calendar, UtensilsCrossed, BedDouble, ChevronRight, Palmtree, Newspaper, LogOut, Languages, Route, UserRound, Headphones, ListChecks, X } from "lucide-react";
 import { translateFields } from "@/lib/translate";
 import AdminLoginGate from "@/components/AdminLoginGate";
 import { adminLogout } from "@/lib/adminAuth";
@@ -14,18 +14,20 @@ import AdminPageEditor from "./AdminPageEditor";
 import { TourismTypesAdmin } from "./admin/TourismTypesAdmin";
 import { ArticlesAdmin } from "./admin/ArticlesAdmin";
 import { RoutesAdmin } from "./admin/RoutesAdmin";
+import { GuidesAdmin } from "./admin/GuidesAdmin";
+import { PollsAdmin } from "./admin/PollsAdmin";
 import RichTextEditor from "@/components/RichTextEditor";
 import { slugify } from "@/lib/slug";
 import { uid } from "@/lib/id";
 import { uploadMedia } from "@/data/storage";
 import { TOURISM_TYPES, PLACE_TYPES } from "@/components/admin/constants";
-import { Label, Input, Textarea, MultiField, FormSelect, FieldGroup, SaveBtn, MediaField, VenuePicker, MediaGroup, MediaGroupPlace, EntityCard } from "@/components/admin/fields";
+import { Label, Input, Textarea, MultiField, FormSelect, FieldGroup, SaveBtn, MediaField, AudioField, VenuePicker, MediaGroup, MediaGroupPlace, EntityCard } from "@/components/admin/fields";
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
 type AdminSection =
   | "districts" | "cities" | "places" | "constructor"
-  | "tourism-types" | "articles" | "routes"
+  | "tourism-types" | "articles" | "routes" | "guides" | "polls"
   | "pages-district" | "pages-city" | "pages-place";
 
 type PlacePageType = TourismObjectType;
@@ -36,6 +38,7 @@ type DistrictForm = {
   id: string; name: string; subtitle: string; description: string;
   detailedInfo: string; imageUrl: string; videoUrl: string; reelUrl: string; regionId: string;
   nameEn: string; subtitleEn: string; descriptionEn: string;
+  audioUrl: string; audioUrlEn: string;
 };
 
 type CityForm = {
@@ -43,6 +46,7 @@ type CityForm = {
   detailedInfo: string; imageUrl: string; videoUrl: string; reelUrl: string; districtId: string;
   weatherCityName: string; settlementType: string;
   nameEn: string; subtitleEn: string; descriptionEn: string;
+  audioUrl: string; audioUrlEn: string;
 };
 
 type PlaceForm = {
@@ -56,11 +60,12 @@ type PlaceForm = {
   detailedInfoEn: string; addressEn: string; hoursEn: string; amenitiesEn: string;
   venueId: string; repertoire: string;
   heroFontSize: string;
+  audioUrl: string; audioUrlEn: string;
 };
 
-const emptyDistrict = (regionId: string): DistrictForm => ({ id: "", name: "", subtitle: "", description: "", detailedInfo: "", imageUrl: "", videoUrl: "", reelUrl: "", regionId, nameEn: "", subtitleEn: "", descriptionEn: "" });
-const emptyCity = (districtId: string): CityForm => ({ id: "", name: "", subtitle: "", description: "", detailedInfo: "", imageUrl: "", videoUrl: "", reelUrl: "", districtId, weatherCityName: "", settlementType: "місто", nameEn: "", subtitleEn: "", descriptionEn: "" });
-const emptyPlace = (cityId: string): PlaceForm => ({ id: "", slug: "", name: "", subtitle: "", description: "", detailedInfo: "", imageUrl: "", videoUrl: "", reelUrl: "", reelImageUrl: "", cityId, districtOnlyMode: false, type: "attraction", mapUrl: "", latitude: "", longitude: "", address: "", phone: "", website: "", eventDates: "", hours: "", amenities: "", published: true, tourismTypes: [], nameEn: "", subtitleEn: "", descriptionEn: "", detailedInfoEn: "", addressEn: "", hoursEn: "", amenitiesEn: "", venueId: "", repertoire: "", heroFontSize: "" });
+const emptyDistrict = (regionId: string): DistrictForm => ({ id: "", name: "", subtitle: "", description: "", detailedInfo: "", imageUrl: "", videoUrl: "", reelUrl: "", regionId, nameEn: "", subtitleEn: "", descriptionEn: "", audioUrl: "", audioUrlEn: "" });
+const emptyCity = (districtId: string): CityForm => ({ id: "", name: "", subtitle: "", description: "", detailedInfo: "", imageUrl: "", videoUrl: "", reelUrl: "", districtId, weatherCityName: "", settlementType: "місто", nameEn: "", subtitleEn: "", descriptionEn: "", audioUrl: "", audioUrlEn: "" });
+const emptyPlace = (cityId: string): PlaceForm => ({ id: "", slug: "", name: "", subtitle: "", description: "", detailedInfo: "", imageUrl: "", videoUrl: "", reelUrl: "", reelImageUrl: "", cityId, districtOnlyMode: false, type: "attraction", mapUrl: "", latitude: "", longitude: "", address: "", phone: "", website: "", eventDates: "", hours: "", amenities: "", published: true, tourismTypes: [], nameEn: "", subtitleEn: "", descriptionEn: "", detailedInfoEn: "", addressEn: "", hoursEn: "", amenitiesEn: "", venueId: "", repertoire: "", heroFontSize: "", audioUrl: "", audioUrlEn: "" });
 
 
 const Admin = () => {
@@ -141,9 +146,11 @@ const Admin = () => {
     finally { setPlaceTranslating(false); }
   };
 
+  // WCAG: повідомлення про статус/помилку не має зникати саме по таймеру —
+  // користувач зі скринрідером або той, хто читає повільніше, просто не
+  // встигне його прочитати. Закриває його явно кнопкою «Закрити».
   const showToast = (msg: string, ok = true) => {
     setToast({ msg, ok });
-    setTimeout(() => setToast(null), 3500);
   };
 
   // Keep the city/place form's default parent id valid once data loads.
@@ -178,6 +185,8 @@ const Admin = () => {
         nameEn: districtForm.nameEn || undefined,
         subtitleEn: districtForm.subtitleEn || undefined,
         descriptionEn: districtForm.descriptionEn || undefined,
+        audioUrl: districtForm.audioUrl || undefined,
+        audioUrlEn: districtForm.audioUrlEn || undefined,
       };
       await upsertDistrict(district);
       refresh();      setDistrictForm(emptyDistrict(districtForm.regionId));
@@ -192,7 +201,7 @@ const Admin = () => {
 
   const editDistrict = (d: District) => {
     setEditingDistrictId(d.id);
-    setDistrictForm({ id: d.id, name: d.name, subtitle: d.subtitle ?? "", description: d.description ?? "", detailedInfo: d.detailedInfo ?? "", imageUrl: d.imageUrl ?? "", videoUrl: d.videoUrl ?? "", reelUrl: d.reelUrl ?? "", regionId: d.regionId, nameEn: d.nameEn ?? "", subtitleEn: d.subtitleEn ?? "", descriptionEn: d.descriptionEn ?? "" });
+    setDistrictForm({ id: d.id, name: d.name, subtitle: d.subtitle ?? "", description: d.description ?? "", detailedInfo: d.detailedInfo ?? "", imageUrl: d.imageUrl ?? "", videoUrl: d.videoUrl ?? "", reelUrl: d.reelUrl ?? "", regionId: d.regionId, nameEn: d.nameEn ?? "", subtitleEn: d.subtitleEn ?? "", descriptionEn: d.descriptionEn ?? "", audioUrl: d.audioUrl ?? "", audioUrlEn: d.audioUrlEn ?? "" });
   };
 
   const handleDeleteDistrict = async (id: string) => {
@@ -231,6 +240,8 @@ const Admin = () => {
         nameEn: cityForm.nameEn || undefined,
         subtitleEn: cityForm.subtitleEn || undefined,
         descriptionEn: cityForm.descriptionEn || undefined,
+        audioUrl: cityForm.audioUrl || undefined,
+        audioUrlEn: cityForm.audioUrlEn || undefined,
       };
       await upsertCity(city);
       refresh();      setCityForm(emptyCity(cityForm.districtId));
@@ -245,7 +256,7 @@ const Admin = () => {
 
   const editCity = (c: City) => {
     setEditingCityId(c.id);
-    setCityForm({ id: c.id, name: c.name, subtitle: c.subtitle ?? "", description: c.description ?? "", detailedInfo: c.detailedInfo ?? "", imageUrl: c.imageUrl ?? "", videoUrl: c.videoUrl ?? "", reelUrl: c.reelUrl ?? "", districtId: c.districtId, weatherCityName: c.weatherCityName ?? "", settlementType: c.settlementType ?? "місто", nameEn: c.nameEn ?? "", subtitleEn: c.subtitleEn ?? "", descriptionEn: c.descriptionEn ?? "" });
+    setCityForm({ id: c.id, name: c.name, subtitle: c.subtitle ?? "", description: c.description ?? "", detailedInfo: c.detailedInfo ?? "", imageUrl: c.imageUrl ?? "", videoUrl: c.videoUrl ?? "", reelUrl: c.reelUrl ?? "", districtId: c.districtId, weatherCityName: c.weatherCityName ?? "", settlementType: c.settlementType ?? "місто", nameEn: c.nameEn ?? "", subtitleEn: c.subtitleEn ?? "", descriptionEn: c.descriptionEn ?? "", audioUrl: c.audioUrl ?? "", audioUrlEn: c.audioUrlEn ?? "" });
   };
 
   const handleDeleteCity = async (id: string) => {
@@ -306,6 +317,8 @@ const Admin = () => {
         venueId: placeForm.venueId || undefined,
         repertoire: placeForm.repertoire || undefined,
         heroFontSize: placeForm.heroFontSize || undefined,
+        audioUrl: placeForm.audioUrl || undefined,
+        audioUrlEn: placeForm.audioUrlEn || undefined,
       };
       await upsertTourismObject(place);
       refresh();      setPlaceForm(emptyPlace(placeForm.cityId));
@@ -321,7 +334,7 @@ const Admin = () => {
   const editPlace = (p: TourismObject) => {
     setEditingPlaceId(p.id);
     const isDistrictOnly = !p.cityId;
-    setPlaceForm({ id: p.id, slug: p.slug, name: p.name, subtitle: p.subtitle ?? "", description: p.description ?? "", detailedInfo: p.detailedInfo ?? "", imageUrl: p.imageUrl ?? "", videoUrl: p.videoUrl ?? "", reelUrl: p.reelUrl ?? "", reelImageUrl: p.reelImageUrl ?? "", cityId: isDistrictOnly ? p.districtId : (p.cityId ?? ""), districtOnlyMode: isDistrictOnly, type: p.type, mapUrl: p.mapUrl ?? "", latitude: p.latitude != null ? String(p.latitude) : "", longitude: p.longitude != null ? String(p.longitude) : "", address: p.address ?? "", phone: p.phone ?? "", website: p.website ?? "", eventDates: p.eventDates ?? "", hours: p.hours ?? "", amenities: p.amenities ?? "", published: p.published, tourismTypes: p.tourismTypes ?? [], nameEn: p.nameEn ?? "", subtitleEn: p.subtitleEn ?? "", descriptionEn: p.descriptionEn ?? "", detailedInfoEn: p.detailedInfoEn ?? "", addressEn: p.addressEn ?? "", hoursEn: p.hoursEn ?? "", amenitiesEn: p.amenitiesEn ?? "", venueId: p.venueId ?? "", repertoire: p.repertoire ?? "", heroFontSize: p.heroFontSize ?? "" });
+    setPlaceForm({ id: p.id, slug: p.slug, name: p.name, subtitle: p.subtitle ?? "", description: p.description ?? "", detailedInfo: p.detailedInfo ?? "", imageUrl: p.imageUrl ?? "", videoUrl: p.videoUrl ?? "", reelUrl: p.reelUrl ?? "", reelImageUrl: p.reelImageUrl ?? "", cityId: isDistrictOnly ? p.districtId : (p.cityId ?? ""), districtOnlyMode: isDistrictOnly, type: p.type, mapUrl: p.mapUrl ?? "", latitude: p.latitude != null ? String(p.latitude) : "", longitude: p.longitude != null ? String(p.longitude) : "", address: p.address ?? "", phone: p.phone ?? "", website: p.website ?? "", eventDates: p.eventDates ?? "", hours: p.hours ?? "", amenities: p.amenities ?? "", published: p.published, tourismTypes: p.tourismTypes ?? [], nameEn: p.nameEn ?? "", subtitleEn: p.subtitleEn ?? "", descriptionEn: p.descriptionEn ?? "", detailedInfoEn: p.detailedInfoEn ?? "", addressEn: p.addressEn ?? "", hoursEn: p.hoursEn ?? "", amenitiesEn: p.amenitiesEn ?? "", venueId: p.venueId ?? "", repertoire: p.repertoire ?? "", heroFontSize: p.heroFontSize ?? "", audioUrl: p.audioUrl ?? "", audioUrlEn: p.audioUrlEn ?? "" });
   };
 
   const handleDeletePlace = async (id: string) => {
@@ -359,9 +372,25 @@ const Admin = () => {
     <div className="min-h-screen bg-[#fff2e8] text-[#002f5e]">
       {/* Toast */}
       {toast && (
-        <div className={`fixed right-5 top-5 z-50 flex items-center gap-2 rounded-2xl px-5 py-3 text-[14px] font-medium text-white shadow-xl transition-all ${toast.ok ? "bg-[#002f5e]" : "bg-[#9f1f47]"}`}>
-          {toast.ok ? <CheckCircle2 className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}
+        <div
+          // role=alert + aria-live: скринрідер озвучує результат дії одразу,
+          // не чекаючи, поки користувач сам дійде фокусом до повідомлення.
+          role={toast.ok ? "status" : "alert"}
+          aria-live={toast.ok ? "polite" : "assertive"}
+          className={`fixed right-5 top-5 z-50 flex items-center gap-2 rounded-2xl px-5 py-3 text-[14px] font-medium text-white shadow-xl transition-all ${toast.ok ? "bg-[#002f5e]" : "bg-[#9f1f47]"}`}
+        >
+          {toast.ok
+            ? <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
+            : <AlertCircle className="h-4 w-4" aria-hidden="true" />}
           {toast.msg}
+          <button
+            type="button"
+            onClick={() => setToast(null)}
+            aria-label="Закрити повідомлення"
+            className="ml-2 rounded-full p-1 transition hover:bg-white/20"
+          >
+            <X className="h-4 w-4" aria-hidden="true" />
+          </button>
         </div>
       )}
 
@@ -374,7 +403,7 @@ const Admin = () => {
               <div className="h-6 w-px bg-[#002f5e]/15" />
               <div>
                 <h1 className="font-odesa-medium text-[28px] leading-none">Адміністрування</h1>
-                <p className="mt-0.5 text-[12px] text-[#002f5e]/50">Одеська область · туристичний контент</p>
+                <p className="mt-0.5 text-[12px] text-[#002f5e]/70">Одеська область · туристичний контент</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -393,7 +422,7 @@ const Admin = () => {
               <button
                   type="button"
                   onClick={() => { adminLogout(); window.location.reload(); }}
-                  className="flex items-center gap-1.5 rounded-xl border border-[#002f5e]/15 bg-white px-3 py-1.5 text-[13px] font-medium text-[#002f5e]/50 transition hover:bg-[#9f1f47]/8 hover:text-[#9f1f47] hover:border-[#9f1f47]/20"
+                  className="flex items-center gap-1.5 rounded-xl border border-[#002f5e]/15 bg-white px-3 py-1.5 text-[13px] font-medium text-[#002f5e]/70 transition hover:bg-[#9f1f47]/8 hover:text-[#9f1f47] hover:border-[#9f1f47]/20"
                   title="Вийти"
                 >
                   <LogOut className="h-3.5 w-3.5" />
@@ -406,7 +435,7 @@ const Admin = () => {
           {/* Sidebar */}
           <aside className="w-56 shrink-0 px-3 pt-6 pb-6">
             <div className="rounded-2xl border border-[#002f5e]/10 bg-white/40 px-2 py-3">
-              <p className="mb-2 px-2 text-[11px] font-semibold uppercase tracking-widest text-[#002f5e]/40">Об'єкти</p>
+              <p className="mb-2 px-2 text-[11px] font-semibold uppercase tracking-widest text-[#002f5e]/70">Об'єкти</p>
               <nav className="flex flex-col gap-1">
                 {navItems.map(item => (
                   <button
@@ -421,7 +450,7 @@ const Admin = () => {
                   >
                     {item.icon}
                     {item.label}
-                    <span className={`ml-auto rounded-full px-2 py-0.5 text-[11px] font-semibold ${section === item.id ? "bg-white/20 text-white" : "bg-[#002f5e]/8 text-[#002f5e]/60"}`}>
+                    <span className={`ml-auto rounded-full px-2 py-0.5 text-[11px] font-semibold ${section === item.id ? "bg-white/20 text-white" : "bg-[#002f5e]/8 text-[#002f5e]/70"}`}>
                       {item.count}
                     </span>
                   </button>
@@ -429,7 +458,7 @@ const Admin = () => {
               </nav>
 
               <div className="my-3 h-px bg-[#002f5e]/10" />
-              <p className="mb-2 px-2 text-[11px] font-semibold uppercase tracking-widest text-[#002f5e]/40">Сайт</p>
+              <p className="mb-2 px-2 text-[11px] font-semibold uppercase tracking-widest text-[#002f5e]/70">Сайт</p>
               <nav className="flex flex-col gap-1">
                 {[constructorItem].map(item => (
                   <button
@@ -444,7 +473,7 @@ const Admin = () => {
                   >
                     {item.icon}
                     {item.label}
-                    <span className={`ml-auto rounded-full px-2 py-0.5 text-[11px] font-semibold ${section === item.id ? "bg-white/20 text-white" : "bg-[#002f5e]/8 text-[#002f5e]/60"}`}>
+                    <span className={`ml-auto rounded-full px-2 py-0.5 text-[11px] font-semibold ${section === item.id ? "bg-white/20 text-white" : "bg-[#002f5e]/8 text-[#002f5e]/70"}`}>
                       {item.count}
                     </span>
                   </button>
@@ -452,7 +481,7 @@ const Admin = () => {
               </nav>
 
               <div className="my-3 h-px bg-[#002f5e]/10" />
-              <p className="mb-2 px-2 text-[11px] font-semibold uppercase tracking-widest text-[#002f5e]/40">Сторінки</p>
+              <p className="mb-2 px-2 text-[11px] font-semibold uppercase tracking-widest text-[#002f5e]/70">Сторінки</p>
               <nav className="flex flex-col gap-1">
                 {pageNavItems.map(item => (
                   <button
@@ -467,18 +496,20 @@ const Admin = () => {
                   >
                     {item.icon}
                     {item.label}
-                    <ChevronRight className={`ml-auto h-3.5 w-3.5 ${section === item.id ? "text-[#fff2e8]/50" : "text-[#002f5e]/25"}`} />
+                    <ChevronRight className={`ml-auto h-3.5 w-3.5 ${section === item.id ? "text-[#fff2e8]/50" : "text-[#002f5e]/70"}`} />
                   </button>
                 ))}
               </nav>
 
               <div className="my-3 h-px bg-[#002f5e]/10" />
-              <p className="mb-2 px-2 text-[11px] font-semibold uppercase tracking-widest text-[#002f5e]/40">Контент</p>
+              <p className="mb-2 px-2 text-[11px] font-semibold uppercase tracking-widest text-[#002f5e]/70">Контент</p>
               <nav className="flex flex-col gap-1">
                 {[
                   { id: "tourism-types" as AdminSection, label: "Види туризму", icon: <Palmtree className="h-4 w-4" /> },
                   { id: "articles" as AdminSection, label: "Статті", icon: <Newspaper className="h-4 w-4" /> },
                   { id: "routes" as AdminSection, label: "Маршрути", icon: <Route className="h-4 w-4" /> },
+                  { id: "guides" as AdminSection, label: "Гіди", icon: <UserRound className="h-4 w-4" /> },
+                  { id: "polls" as AdminSection, label: "Опитування", icon: <ListChecks className="h-4 w-4" /> },
                 ].map(item => (
                   <button key={item.id} type="button" onClick={() => setSection(item.id)}
                     className={`flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-[14px] font-medium transition ${
@@ -486,7 +517,7 @@ const Admin = () => {
                     }`}>
                     {item.icon}
                     {item.label}
-                    <ChevronRight className={`ml-auto h-3.5 w-3.5 ${section === item.id ? "text-[#fff2e8]/50" : "text-[#002f5e]/25"}`} />
+                    <ChevronRight className={`ml-auto h-3.5 w-3.5 ${section === item.id ? "text-[#fff2e8]/50" : "text-[#002f5e]/70"}`} />
                   </button>
                 ))}
               </nav>
@@ -510,7 +541,7 @@ const Admin = () => {
                         <h2 className="text-[18px] font-semibold">{editingDistrictId ? "Редагувати район" : "Новий район"}</h2>
                       </div>
                       {editingDistrictId && (
-                        <button type="button" onClick={() => { setEditingDistrictId(null); setDistrictForm(emptyDistrict(defaultRegionId)); }} className="rounded-xl border border-[#002f5e]/15 px-3 py-1.5 text-[13px] text-[#002f5e]/50 hover:border-[#002f5e]/30 hover:text-[#002f5e] transition">
+                        <button type="button" onClick={() => { setEditingDistrictId(null); setDistrictForm(emptyDistrict(defaultRegionId)); }} className="rounded-xl border border-[#002f5e]/15 px-3 py-1.5 text-[13px] text-[#002f5e]/70 hover:border-[#002f5e]/30 hover:text-[#002f5e] transition">
                           ✕ Скасувати
                         </button>
                       )}
@@ -537,9 +568,15 @@ const Admin = () => {
                         imageUrl={districtForm.imageUrl} videoUrl={districtForm.videoUrl} reelUrl={districtForm.reelUrl}
                         onImage={v => setDistrictForm(p => ({ ...p, imageUrl: v }))} onVideo={v => setDistrictForm(p => ({ ...p, videoUrl: v }))} onReel={v => setDistrictForm(p => ({ ...p, reelUrl: v }))}
                       />
+                      <div className="rounded-xl border border-[#002f5e]/12 bg-[#002f5e]/3 p-3">
+                        <AudioField label="Аудіогід (UA)" value={districtForm.audioUrl} onChange={v => setDistrictForm(p => ({ ...p, audioUrl: v }))} />
+                        <div className="mt-3">
+                          <AudioField label="Аудіогід (EN)" value={districtForm.audioUrlEn} onChange={v => setDistrictForm(p => ({ ...p, audioUrlEn: v }))} />
+                        </div>
+                      </div>
                       <div className="rounded-xl border border-[#002f5e]/15 bg-[#002f5e]/3 p-4 flex flex-col gap-3">
                         <div className="flex items-center justify-between">
-                          <span className="text-[13px] font-semibold text-[#002f5e]/50 uppercase tracking-wide">🇬🇧 English version</span>
+                          <span className="text-[13px] font-semibold text-[#002f5e]/70 uppercase tracking-wide">🇬🇧 English version</span>
                           <button type="button" onClick={() => void handleDistrictTranslate()} disabled={districtTranslating}
                             className="flex items-center gap-2 rounded-xl border border-[#002f5e]/20 bg-white px-3 py-1.5 text-[12px] font-medium text-[#002f5e] transition hover:bg-[#002f5e]/8 disabled:opacity-50">
                             {districtTranslating ? <><span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-[#002f5e]/40 border-t-[#002f5e]" /> Перекладаємо...</> : <><Languages className="h-3.5 w-3.5" /> Перекласти автоматично</>}
@@ -560,19 +597,19 @@ const Admin = () => {
                 <section className="w-[300px] shrink-0 flex flex-col gap-3 sticky top-0 self-start">
                   <div className="flex items-center justify-between">
                     <h3 className="text-[16px] font-semibold text-[#002f5e]/70">
-                      Райони <span className="text-[#002f5e]/40">({districts.length})</span>
+                      Райони <span className="text-[#002f5e]/70">({districts.length})</span>
                     </h3>
                   </div>
                   <input
                     value={districtQuery}
                     onChange={e => setDistrictQuery(e.target.value)}
                     placeholder="Пошук районів..."
-                    className="w-full rounded-xl border border-[#002f5e]/15 bg-white px-3 py-2 text-[13px] text-[#002f5e] placeholder:text-[#002f5e]/30 focus:border-[#002f5e]/30 focus:outline-none"
+                    className="w-full rounded-xl border border-[#002f5e]/15 bg-white px-3 py-2 text-[13px] text-[#002f5e] placeholder:text-[#002f5e]/70 focus:border-[#002f5e]/30 focus:outline-none"
                   />
                   {districts.length === 0 ? (
                     <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-[#002f5e]/20 py-16 text-center">
-                      <Plus className="h-8 w-8 text-[#002f5e]/25" />
-                      <p className="text-[14px] text-[#002f5e]/45">Ще немає районів. Створіть перший!</p>
+                      <Plus className="h-8 w-8 text-[#002f5e]/70" />
+                      <p className="text-[14px] text-[#002f5e]/70">Ще немає районів. Створіть перший!</p>
                     </div>
                   ) : (
                     <div className="flex flex-col gap-2 overflow-y-auto max-h-[calc(100vh-280px)]">
@@ -582,7 +619,7 @@ const Admin = () => {
                           title={d.name}
                           subtitle={d.subtitle ?? regions.find(r => r.id === d.regionId)?.name}
                           imageUrl={d.imageUrl}
-                          icon={<MapPin className="h-5 w-5 text-[#002f5e]/40" />}
+                          icon={<MapPin className="h-5 w-5 text-[#002f5e]/70" />}
                           isEditing={editingDistrictId === d.id}
                           onEdit={() => editDistrict(d)}
                           onDelete={() => void handleDeleteDistrict(d.id)}
@@ -607,7 +644,7 @@ const Admin = () => {
                         <h2 className="text-[18px] font-semibold">{editingCityId ? "Редагувати населений пункт" : "Новий населений пункт"}</h2>
                       </div>
                       {editingCityId && (
-                        <button type="button" onClick={() => { setEditingCityId(null); setCityForm(emptyCity(cityForm.districtId)); }} className="rounded-xl border border-[#002f5e]/15 px-3 py-1.5 text-[13px] text-[#002f5e]/50 hover:border-[#002f5e]/30 hover:text-[#002f5e] transition">
+                        <button type="button" onClick={() => { setEditingCityId(null); setCityForm(emptyCity(cityForm.districtId)); }} className="rounded-xl border border-[#002f5e]/15 px-3 py-1.5 text-[13px] text-[#002f5e]/70 hover:border-[#002f5e]/30 hover:text-[#002f5e] transition">
                           ✕ Скасувати
                         </button>
                       )}
@@ -643,12 +680,18 @@ const Admin = () => {
                         imageUrl={cityForm.imageUrl} videoUrl={cityForm.videoUrl} reelUrl={cityForm.reelUrl}
                         onImage={v => setCityForm(p => ({ ...p, imageUrl: v }))} onVideo={v => setCityForm(p => ({ ...p, videoUrl: v }))} onReel={v => setCityForm(p => ({ ...p, reelUrl: v }))}
                       />
-                      <FieldGroup label={<>WeatherName <span className="normal-case text-[11px] text-[#002f5e]/40 font-normal">(необов&apos;язково — англ. назва для OpenWeather, напр. &ldquo;Odessa&rdquo;)</span></>}>
+                      <div className="rounded-xl border border-[#002f5e]/12 bg-[#002f5e]/3 p-3">
+                        <AudioField label="Аудіогід (UA)" value={cityForm.audioUrl} onChange={v => setCityForm(p => ({ ...p, audioUrl: v }))} />
+                        <div className="mt-3">
+                          <AudioField label="Аудіогід (EN)" value={cityForm.audioUrlEn} onChange={v => setCityForm(p => ({ ...p, audioUrlEn: v }))} />
+                        </div>
+                      </div>
+                      <FieldGroup label={<>WeatherName <span className="normal-case text-[11px] text-[#002f5e]/70 font-normal">(необов&apos;язково — англ. назва для OpenWeather, напр. &ldquo;Odessa&rdquo;)</span></>}>
                         <Input value={cityForm.weatherCityName} onChange={v => setCityForm(p => ({ ...p, weatherCityName: v }))} placeholder="напр. Odessa, Bolhrad..." />
                       </FieldGroup>
                       <div className="rounded-xl border border-[#002f5e]/15 bg-[#002f5e]/3 p-4 flex flex-col gap-3">
                         <div className="flex items-center justify-between">
-                          <span className="text-[13px] font-semibold text-[#002f5e]/50 uppercase tracking-wide">🇬🇧 English version</span>
+                          <span className="text-[13px] font-semibold text-[#002f5e]/70 uppercase tracking-wide">🇬🇧 English version</span>
                           <button type="button" onClick={() => void handleCityTranslate()} disabled={cityTranslating}
                             className="flex items-center gap-2 rounded-xl border border-[#002f5e]/20 bg-white px-3 py-1.5 text-[12px] font-medium text-[#002f5e] transition hover:bg-[#002f5e]/8 disabled:opacity-50">
                             {cityTranslating ? <><span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-[#002f5e]/40 border-t-[#002f5e]" /> Перекладаємо...</> : <><Languages className="h-3.5 w-3.5" /> Перекласти автоматично</>}
@@ -668,19 +711,19 @@ const Admin = () => {
                 <section className="w-[300px] shrink-0 flex flex-col gap-3 sticky top-0 self-start">
                   <div className="flex items-center justify-between">
                     <h3 className="text-[16px] font-semibold text-[#002f5e]/70">
-                      Нас. пункти <span className="text-[#002f5e]/40">({cities.length})</span>
+                      Нас. пункти <span className="text-[#002f5e]/70">({cities.length})</span>
                     </h3>
                   </div>
                   <input
                     value={cityQuery}
                     onChange={e => setCityQuery(e.target.value)}
                     placeholder="Пошук міст і сіл..."
-                    className="w-full rounded-xl border border-[#002f5e]/15 bg-white px-3 py-2 text-[13px] text-[#002f5e] placeholder:text-[#002f5e]/30 focus:border-[#002f5e]/30 focus:outline-none"
+                    className="w-full rounded-xl border border-[#002f5e]/15 bg-white px-3 py-2 text-[13px] text-[#002f5e] placeholder:text-[#002f5e]/70 focus:border-[#002f5e]/30 focus:outline-none"
                   />
                   {cities.length === 0 ? (
                     <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-[#002f5e]/20 py-16 text-center">
-                      <Plus className="h-8 w-8 text-[#002f5e]/25" />
-                      <p className="text-[14px] text-[#002f5e]/45">Ще немає населених пунктів. Спочатку створіть район!</p>
+                      <Plus className="h-8 w-8 text-[#002f5e]/70" />
+                      <p className="text-[14px] text-[#002f5e]/70">Ще немає населених пунктів. Спочатку створіть район!</p>
                     </div>
                   ) : (
                     <div className="flex flex-col gap-2 overflow-y-auto max-h-[calc(100vh-280px)]">
@@ -692,7 +735,7 @@ const Admin = () => {
                             title={c.name}
                             subtitle={dist?.name ?? c.districtId}
                             imageUrl={c.imageUrl}
-                            icon={<Building2 className="h-5 w-5 text-[#002f5e]/40" />}
+                            icon={<Building2 className="h-5 w-5 text-[#002f5e]/70" />}
                             isEditing={editingCityId === c.id}
                             onEdit={() => editCity(c)}
                             onDelete={() => void handleDeleteCity(c.id)}
@@ -718,7 +761,7 @@ const Admin = () => {
                         <h2 className="text-[18px] font-semibold">{editingPlaceId ? "Редагувати місце" : "Нове місце"}</h2>
                       </div>
                       {editingPlaceId && (
-                        <button type="button" onClick={() => { setEditingPlaceId(null); setPlaceForm(emptyPlace(placeForm.cityId)); }} className="rounded-xl border border-[#002f5e]/15 px-3 py-1.5 text-[13px] text-[#002f5e]/50 hover:border-[#002f5e]/30 hover:text-[#002f5e] transition">
+                        <button type="button" onClick={() => { setEditingPlaceId(null); setPlaceForm(emptyPlace(placeForm.cityId)); }} className="rounded-xl border border-[#002f5e]/15 px-3 py-1.5 text-[13px] text-[#002f5e]/70 hover:border-[#002f5e]/30 hover:text-[#002f5e] transition">
                           ✕ Скасувати
                         </button>
                       )}
@@ -736,7 +779,7 @@ const Admin = () => {
                               className={`rounded-xl border px-3 py-2.5 text-[13px] font-medium transition ${
                                 placeForm.type === pt.value
                                   ? "border-transparent text-white"
-                                  : "border-[#002f5e]/12 bg-white text-[#002f5e]/60 hover:border-[#002f5e]/25"
+                                  : "border-[#002f5e]/12 bg-white text-[#002f5e]/70 hover:border-[#002f5e]/25"
                               }`}
                               style={placeForm.type === pt.value ? { backgroundColor: pt.color } : {}}
                             >
@@ -753,12 +796,12 @@ const Admin = () => {
                           <div className="flex rounded-lg border border-[#002f5e]/12 bg-white/60 p-0.5 text-[12px]">
                             <button type="button"
                               onClick={() => setPlaceForm(p => ({ ...p, districtOnlyMode: false }))}
-                              className={`rounded-md px-3 py-1 transition ${!placeForm.districtOnlyMode ? "bg-[#002f5e] text-white" : "text-[#002f5e]/50 hover:text-[#002f5e]"}`}>
+                              className={`rounded-md px-3 py-1 transition ${!placeForm.districtOnlyMode ? "bg-[#002f5e] text-white" : "text-[#002f5e]/70 hover:text-[#002f5e]"}`}>
                               До населеного пункту
                             </button>
                             <button type="button"
                               onClick={() => setPlaceForm(p => ({ ...p, districtOnlyMode: true, cityId: districts[0]?.id ?? "" }))}
-                              className={`rounded-md px-3 py-1 transition ${placeForm.districtOnlyMode ? "bg-[#002f5e] text-white" : "text-[#002f5e]/50 hover:text-[#002f5e]"}`}>
+                              className={`rounded-md px-3 py-1 transition ${placeForm.districtOnlyMode ? "bg-[#002f5e] text-white" : "text-[#002f5e]/70 hover:text-[#002f5e]"}`}>
                               Тільки до району
                             </button>
                           </div>
@@ -785,11 +828,11 @@ const Admin = () => {
                           "Наприклад: Готель Золота підкова"
                         } />
                         <div className="mt-2 flex items-center gap-1.5">
-                          <span className="text-[11px] text-[#002f5e]/40 font-medium">Розмір назви на сторінці:</span>
+                          <span className="text-[11px] text-[#002f5e]/70 font-medium">Розмір назви на сторінці:</span>
                           {([["", "Авто"], ["sm", "Малий"], ["md", "Середній"], ["lg", "Великий"]] as const).map(([val, label]) => (
                             <button key={val} type="button"
                               onClick={() => setPlaceForm(p => ({ ...p, heroFontSize: val }))}
-                              className={`rounded-lg px-2.5 py-1 text-[11px] font-medium transition ${placeForm.heroFontSize === val ? "bg-[#002f5e] text-white" : "border border-[#002f5e]/15 text-[#002f5e]/50 hover:border-[#002f5e]/30 hover:text-[#002f5e]"}`}>
+                              className={`rounded-lg px-2.5 py-1 text-[11px] font-medium transition ${placeForm.heroFontSize === val ? "bg-[#002f5e] text-white" : "border border-[#002f5e]/15 text-[#002f5e]/70 hover:border-[#002f5e]/30 hover:text-[#002f5e]"}`}>
                               {label}
                             </button>
                           ))}
@@ -808,7 +851,7 @@ const Admin = () => {
                       {/* English version */}
                       <div className="rounded-xl border border-[#002f5e]/15 bg-[#002f5e]/3 p-4 flex flex-col gap-3">
                         <div className="flex items-center justify-between">
-                          <span className="text-[13px] font-semibold text-[#002f5e]/50 uppercase tracking-wide">🇬🇧 English version</span>
+                          <span className="text-[13px] font-semibold text-[#002f5e]/70 uppercase tracking-wide">🇬🇧 English version</span>
                           <button
                             type="button"
                             onClick={() => void handlePlaceTranslate()}
@@ -855,7 +898,7 @@ const Admin = () => {
                           <MultiField label="Посилання на карту" value={placeForm.mapUrl} onChange={v => setPlaceForm(p => ({ ...p, mapUrl: v }))} placeholder="https://maps.google.com/..." />
                           <div>
                             <Label>Координати (для карти маршруту)</Label>
-                            <p className="mb-1 text-[11px] text-[#002f5e]/40">Широта / довгота. У Google Maps: ПКМ по точці → перше число широта, друге довгота.</p>
+                            <p className="mb-1 text-[11px] text-[#002f5e]/70">Широта / довгота. У Google Maps: ПКМ по точці → перше число широта, друге довгота.</p>
                             <div className="grid grid-cols-2 gap-2">
                               <Input value={placeForm.latitude} onChange={v => setPlaceForm(p => ({ ...p, latitude: v }))} placeholder="46.4825 (широта)" />
                               <Input value={placeForm.longitude} onChange={v => setPlaceForm(p => ({ ...p, longitude: v }))} placeholder="30.7233 (довгота)" />
@@ -878,13 +921,13 @@ const Admin = () => {
                           </FieldGroup>
                           <div>
                             <Label>Репертуар (місячний розклад)</Label>
-                            <p className="mb-1 text-[11px] text-[#002f5e]/40">Формат: дата — назва — час, кожна вистава з нового рядка</p>
+                            <p className="mb-1 text-[11px] text-[#002f5e]/70">Формат: дата — назва — час, кожна вистава з нового рядка</p>
                             <textarea
                               value={placeForm.repertoire}
                               onChange={e => setPlaceForm(p => ({ ...p, repertoire: e.target.value }))}
                               placeholder={"01.07 — Наталка Полтавка — 18:00\n05.07 — Лісова пісня — 19:30"}
                               rows={6}
-                              className="w-full rounded-xl border border-[#002f5e]/15 bg-white px-4 py-2.5 text-[13px] text-[#002f5e] placeholder:text-[#002f5e]/30 focus:border-[#002f5e]/40 focus:outline-none focus:ring-2 focus:ring-[#002f5e]/10 transition font-mono"
+                              className="w-full rounded-xl border border-[#002f5e]/15 bg-white px-4 py-2.5 text-[13px] text-[#002f5e] placeholder:text-[#002f5e]/70 focus:border-[#002f5e]/40 focus:outline-none focus:ring-2 focus:ring-[#002f5e]/10 transition font-mono"
                             />
                           </div>
                         </>
@@ -909,6 +952,14 @@ const Admin = () => {
                         imageUrl={placeForm.imageUrl} videoUrl={placeForm.videoUrl} reelUrl={placeForm.reelUrl} reelImageUrl={placeForm.reelImageUrl}
                         onImage={v => setPlaceForm(p => ({ ...p, imageUrl: v }))} onVideo={v => setPlaceForm(p => ({ ...p, videoUrl: v }))} onReel={v => setPlaceForm(p => ({ ...p, reelUrl: v }))} onReelImage={v => setPlaceForm(p => ({ ...p, reelImageUrl: v }))}
                       />
+
+                      {/* Аудіогід: озвучення сторінки диктором */}
+                      <div className="rounded-xl border border-[#002f5e]/12 bg-[#002f5e]/3 p-3">
+                        <AudioField label="Аудіогід (UA)" value={placeForm.audioUrl} onChange={v => setPlaceForm(p => ({ ...p, audioUrl: v }))} />
+                        <div className="mt-3">
+                          <AudioField label="Аудіогід (EN)" value={placeForm.audioUrlEn} onChange={v => setPlaceForm(p => ({ ...p, audioUrlEn: v }))} />
+                        </div>
+                      </div>
 
                       {/* Тип туризму */}
                       <div>
@@ -952,21 +1003,39 @@ const Admin = () => {
                 </section>
 
                 <section className="w-[300px] shrink-0 flex flex-col gap-3 sticky top-0 self-start">
+                  {places.length > 0 && (() => {
+                    const withAudio = places.filter(p => p.audioUrl).length;
+                    const pct = Math.round((withAudio / places.length) * 100);
+                    return (
+                      <div className="rounded-2xl border border-[#002f5e]/12 bg-white p-4">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="flex items-center gap-1.5 text-[12px] font-medium uppercase tracking-wide text-[#002f5e]/70">
+                            <Headphones className="h-3.5 w-3.5" /> Аудіогід
+                          </span>
+                          <span className="text-[13px] font-semibold text-[#002f5e]">{withAudio}/{places.length}</span>
+                        </div>
+                        <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-[#002f5e]/8">
+                          <div className="h-full rounded-full bg-[#df9b3b] transition-all" style={{ width: `${pct}%` }} />
+                        </div>
+                        <p className="mt-1.5 text-[11px] text-[#002f5e]/70">{pct}% об'єктів озвучено</p>
+                      </div>
+                    );
+                  })()}
                   <div className="flex items-center justify-between">
                     <h3 className="text-[16px] font-semibold text-[#002f5e]/70">
-                      Всі місця <span className="text-[#002f5e]/40">({places.length})</span>
+                      Всі місця <span className="text-[#002f5e]/70">({places.length})</span>
                     </h3>
                   </div>
                   <input
                     value={placeQuery}
                     onChange={e => setPlaceQuery(e.target.value)}
                     placeholder="Пошук місць..."
-                    className="w-full rounded-xl border border-[#002f5e]/15 bg-white px-3 py-2 text-[13px] text-[#002f5e] placeholder:text-[#002f5e]/30 focus:border-[#002f5e]/30 focus:outline-none"
+                    className="w-full rounded-xl border border-[#002f5e]/15 bg-white px-3 py-2 text-[13px] text-[#002f5e] placeholder:text-[#002f5e]/70 focus:border-[#002f5e]/30 focus:outline-none"
                   />
                   {places.length === 0 ? (
                     <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-[#002f5e]/20 py-16 text-center">
-                      <Plus className="h-8 w-8 text-[#002f5e]/25" />
-                      <p className="text-[14px] text-[#002f5e]/45">Ще немає місць. Спочатку створіть місто!</p>
+                      <Plus className="h-8 w-8 text-[#002f5e]/70" />
+                      <p className="text-[14px] text-[#002f5e]/70">Ще немає місць. Спочатку створіть місто!</p>
                     </div>
                   ) : (
                     <div className="flex flex-col gap-2 overflow-y-auto max-h-[calc(100vh-280px)]">
@@ -979,7 +1048,7 @@ const Admin = () => {
                             title={p.name}
                             subtitle={city?.name}
                             imageUrl={p.imageUrl}
-                            icon={<Landmark className="h-5 w-5 text-[#002f5e]/40" />}
+                            icon={<Landmark className="h-5 w-5 text-[#002f5e]/70" />}
                             badge={typeInfo ? { label: typeInfo.label, color: typeInfo.color } : undefined}
                             isEditing={editingPlaceId === p.id}
                             onEdit={() => editPlace(p)}
@@ -1014,7 +1083,7 @@ const Admin = () => {
                   </div>
                   <div>
                     <h2 className="text-[18px] font-semibold text-[#002f5e]">Сторінки районів</h2>
-                    <p className="text-[12px] text-[#002f5e]/45">Налаштуйте блоки та розділи для сторінок районів</p>
+                    <p className="text-[12px] text-[#002f5e]/70">Налаштуйте блоки та розділи для сторінок районів</p>
                   </div>
                 </div>
                 <div className="flex-1 min-h-0">
@@ -1040,7 +1109,7 @@ const Admin = () => {
                   </div>
                   <div>
                     <h2 className="text-[18px] font-semibold text-[#002f5e]">Сторінки міст</h2>
-                    <p className="text-[12px] text-[#002f5e]/45">Налаштуйте блоки та розділи для сторінок міст</p>
+                    <p className="text-[12px] text-[#002f5e]/70">Налаштуйте блоки та розділи для сторінок міст</p>
                   </div>
                 </div>
                 <div className="flex-1 min-h-0">
@@ -1067,7 +1136,7 @@ const Admin = () => {
                     </div>
                     <div>
                       <h2 className="text-[18px] font-semibold text-[#002f5e]">Сторінки місць</h2>
-                      <p className="text-[12px] text-[#002f5e]/45">Налаштуйте блоки для кожного типу місця</p>
+                      <p className="text-[12px] text-[#002f5e]/70">Налаштуйте блоки для кожного типу місця</p>
                     </div>
                   </div>
                   {/* Sub-type tabs */}
@@ -1080,7 +1149,7 @@ const Admin = () => {
                         className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[13px] font-medium transition ${
                           placePageType === pt.value
                             ? "text-white"
-                            : "text-[#002f5e]/60 hover:bg-[#002f5e]/8 hover:text-[#002f5e]"
+                            : "text-[#002f5e]/70 hover:bg-[#002f5e]/8 hover:text-[#002f5e]"
                         }`}
                         style={placePageType === pt.value ? { backgroundColor: pt.color } : {}}
                       >
@@ -1117,6 +1186,14 @@ const Admin = () => {
 
             {section === "routes" && (
               <RoutesAdmin showToast={showToast} />
+            )}
+
+            {section === "guides" && (
+              <GuidesAdmin showToast={showToast} />
+            )}
+
+            {section === "polls" && (
+              <PollsAdmin showToast={showToast} />
             )}
 
           </main>

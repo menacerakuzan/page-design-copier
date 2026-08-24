@@ -17,7 +17,15 @@
 -- scripts/apply-secure-auth.sh) so no plaintext lives in this file.
 -- ─────────────────────────────────────────────────────────────────────────────
 
-CREATE EXTENSION IF NOT EXISTS pgcrypto;   -- crypt(), gen_salt(), hmac()
+CREATE EXTENSION IF NOT EXISTS pgcrypto;   -- crypt(), gen_salt(), hmac() (lives in schema "extensions" here)
+
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'authenticated') THEN
+    CREATE ROLE authenticated NOLOGIN;
+  END IF;
+END $$;
+GRANT authenticated TO authenticator;
 
 CREATE SCHEMA IF NOT EXISTS basic_auth;
 REVOKE ALL ON SCHEMA basic_auth FROM PUBLIC;
@@ -43,7 +51,7 @@ CREATE OR REPLACE FUNCTION basic_auth.algorithm_sign(signables text, secret text
       WHEN 'HS384' THEN 'sha384'
       WHEN 'HS512' THEN 'sha512'
       ELSE '' END AS id)
-  SELECT basic_auth.url_encode(public.hmac(signables, secret, alg.id)) FROM alg;
+  SELECT basic_auth.url_encode(extensions.hmac(signables, secret, alg.id)) FROM alg;
 $$;
 
 CREATE OR REPLACE FUNCTION basic_auth.sign(payload json, secret text, algorithm text DEFAULT 'HS256')
@@ -74,7 +82,7 @@ BEGIN
 
   SELECT * INTO usr FROM basic_auth.users AS u WHERE u.email = login.email;
 
-  IF usr.email IS NULL OR usr.pass <> public.crypt(login.password, usr.pass) THEN
+  IF usr.email IS NULL OR usr.pass <> extensions.crypt(login.password, usr.pass) THEN
     RAISE EXCEPTION 'Невірний email або пароль' USING errcode = 'PT401';
   END IF;
 
@@ -115,6 +123,8 @@ BEGIN
     -- table-level: anon may only read
     EXECUTE format('REVOKE INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER ON public.%I FROM anon', t);
     EXECUTE format('GRANT SELECT ON public.%I TO anon', t);
+    -- table-level: authenticated needs the underlying grants; RLS above only filters rows
+    EXECUTE format('GRANT SELECT, INSERT, UPDATE, DELETE ON public.%I TO authenticated', t);
   END LOOP;
 END $$;
 

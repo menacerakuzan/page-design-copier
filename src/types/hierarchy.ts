@@ -22,6 +22,8 @@ export type District = {
   videoUrl?: string;
   reelUrl?: string;
   sortOrder?: number;
+  audioUrl?: string;
+  audioUrlEn?: string;
 };
 
 export type SettlementType = "місто" | "село" | "селище" | "селище міського типу";
@@ -43,6 +45,8 @@ export type City = {
   videoUrl?: string;
   reelUrl?: string;
   sortOrder?: number;
+  audioUrl?: string;
+  audioUrlEn?: string;
 };
 
 export type TourismObjectType = "event" | "hotel" | "restaurant" | "attraction";
@@ -82,4 +86,6 @@ export type TourismObject = {
   venueId?: string;
   repertoire?: string;
   heroFontSize?: string;
+  audioUrl?: string;
+  audioUrlEn?: string;
 };

@@ -53,7 +53,7 @@ export const TourismTypesAdmin = ({ showToast }: { showToast: (msg: string, ok?:
         </div>
         <div>
           <h2 className="text-[18px] font-semibold text-[#002f5e]">Види туризму</h2>
-          <p className="text-[12px] text-[#002f5e]/45">Додайте фото для кожного виду туризму</p>
+          <p className="text-[12px] text-[#002f5e]/70">Додайте фото для кожного виду туризму</p>
         </div>
       </div>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -64,7 +64,7 @@ export const TourismTypesAdmin = ({ showToast }: { showToast: (msg: string, ok?:
               {typeImages[typeName] ? (
                 <img loading="lazy" decoding="async" src={typeImages[typeName]} alt={typeName} className="h-full w-full object-cover" />
               ) : (
-                <div className="flex h-full flex-col items-center justify-center gap-2 text-[#002f5e]/30">
+                <div className="flex h-full flex-col items-center justify-center gap-2 text-[#002f5e]/70">
                   <Upload className="h-6 w-6" />
                   <span className="text-[12px]">Додати фото</span>
                 </div>
@@ -80,7 +80,7 @@ export const TourismTypesAdmin = ({ showToast }: { showToast: (msg: string, ok?:
             <div className="px-3 py-2.5">
               <p className="text-[13px] font-medium text-[#002f5e]">{typeName}</p>
               <button type="button" onClick={() => fileRefs.current[typeName]?.click()}
-                className="mt-1 text-[12px] text-[#002f5e]/40 transition hover:text-[#002f5e]">
+                className="mt-1 text-[12px] text-[#002f5e]/70 transition hover:text-[#002f5e]">
                 {typeImages[typeName] ? "Змінити фото" : "Завантажити фото"}
               </button>
             </div>

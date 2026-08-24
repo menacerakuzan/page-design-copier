@@ -104,7 +104,7 @@ const StopRow = ({
         type="button"
         onPointerDown={(e) => controls.start(e)}
         aria-label="Перетягнути"
-        className="tap flex shrink-0 cursor-grab touch-none items-center justify-center text-[#002f5e]/30 active:cursor-grabbing"
+        className="tap flex shrink-0 cursor-grab touch-none items-center justify-center text-[#002f5e]/70 active:cursor-grabbing"
       >
         <GripVertical className="h-5 w-5" />
       </button>
@@ -226,15 +226,15 @@ const RouteMapPage = () => {
           </Link>
         </div>
         <h1 className="text-[30px] leading-none text-[#002f5e] font-odesa-bold">{t("yourRoute")}</h1>
-        <p className="mt-2 max-w-[520px] text-[15px] leading-[1.5] text-[#002f5e]/60 font-odesa-regular">
+        <p className="mt-2 max-w-[520px] text-[15px] leading-[1.5] text-[#002f5e]/70 font-odesa-regular">
           {t("yourRouteDesc")}
         </p>
       </header>
 
-      <main className="container-edge pt-6 relative z-10" style={{ paddingBottom: "calc(184px + env(safe-area-inset-bottom))" }}>
+      <main id="main-content" tabIndex={-1} className="container-edge pt-6 relative z-10" style={{ paddingBottom: "calc(184px + env(safe-area-inset-bottom))" }}>
         {!enoughStops ? (
           <div className="flex flex-col items-center justify-center rounded-[26px] border border-[#002f5e]/10 bg-white px-6 py-16 text-center shadow-[0_18px_40px_-30px_rgba(0,47,94,0.4)]">
-            <span className="flex h-16 w-16 items-center justify-center rounded-full bg-[#002f5e]/5 text-[#002f5e]/40">
+            <span className="flex h-16 w-16 items-center justify-center rounded-full bg-[#002f5e]/5 text-[#002f5e]/70">
               <MapPinOff className="h-7 w-7" />
             </span>
             <p className="mt-5 text-[18px] text-[#002f5e] font-odesa-semi">{t("needTwoStops")}</p>
@@ -260,13 +260,13 @@ const RouteMapPage = () => {
                 <Sparkles className="h-4 w-4" style={{ color: GOLD }} /> {t("optimizeRoute")}
               </button>
               {approxKm > 0 && (
-                <span className="text-[13px] text-[#002f5e]/50 font-odesa-regular">≈ {approxKm.toFixed(0)} км</span>
+                <span className="text-[13px] text-[#002f5e]/70 font-odesa-regular">≈ {approxKm.toFixed(0)} км</span>
               )}
             </div>
 
             {/* Зупинки (перетягуванням) */}
             <div className="mt-6">
-              <p className="mb-3 text-[13px] uppercase tracking-wider text-[#002f5e]/45 font-odesa-semi">
+              <p className="mb-3 text-[13px] uppercase tracking-wider text-[#002f5e]/70 font-odesa-semi">
                 {t("routeStops")} · {coords.length}
               </p>
               <Reorder.Group axis="y" values={order} onReorder={setOrder} className="flex flex-col gap-2">
@@ -284,7 +284,7 @@ const RouteMapPage = () => {
             <p className="flex items-center gap-2 text-[14px] text-[#9f1f47] font-odesa-semi">
               <MapPinOff className="h-4 w-4" /> {t("noCoords")}
             </p>
-            <p className="mt-1 text-[13px] leading-[1.4] text-[#002f5e]/55 font-odesa-regular">{t("noCoordsDesc")}</p>
+            <p className="mt-1 text-[13px] leading-[1.4] text-[#002f5e]/70 font-odesa-regular">{t("noCoordsDesc")}</p>
             <ul className="mt-3 flex flex-col gap-1.5">
               {missing.map((o) => (
                 <li key={o.id}>

@@ -1,13 +1,14 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLang } from "@/lib/langContext";
-import { Link } from "react-router-dom";
 import {
-  ChevronLeft, Layers, Check,
+  Layers, Check,
   UtensilsCrossed, Landmark, HeartPulse, Waves, Church, PartyPopper, Leaf, Mountain,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import SiteFooter from "@/components/SiteFooter";
+import PageBrow from "@/components/PageBrow";
+import { useSeo } from "@/hooks/useSeo";
 import { useHierarchySnapshot } from "@/hooks/useHierarchySnapshot";
 import { usePageContentCards } from "@/hooks/usePageContentCards";
 import { ObjectCard } from "@/components/ObjectCard";
@@ -51,6 +52,7 @@ const TYPE_META: Record<string, { color: string; Icon: LucideIcon }> = {
 
 export default function TourismTypesPage() {
   const { t, tl, lang } = useLang();
+  useSeo({ title: t("typesTitle"), description: t("typesDesc"), lang });
   const [activeType, setActiveType] = useState<string | null>(null);
   const { data: snapshot } = useHierarchySnapshot();
   const { data: cardsData } = usePageContentCards("tourism-types");
@@ -84,50 +86,29 @@ export default function TourismTypesPage() {
         style={{ backgroundImage: "url(/typespattern.svg)", backgroundSize: "200px 200px", backgroundRepeat: "repeat", opacity: 0.1 }}
       />
 
-      {/* ── Шапка-«бровь» (як на головній), мінімальна: тільки назад ───────── */}
-      <div className="container-edge pt-safe relative z-10">
-        <div
-          className="mt-4 rounded-b-[36px] bg-[#fff2e8] px-4 pb-2.5 pt-2.5"
-          style={{ boxShadow: "0 8px 24px -18px rgba(0,47,94,0.35)" }}
-        >
-          <div className="relative flex items-center justify-center">
-            <Link
-              to="/"
-              aria-label={t("backHome")}
-              className="tap absolute left-0 flex h-9 w-9 items-center justify-center rounded-full text-[#002f5e] transition-opacity hover:opacity-70"
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </Link>
-            <h1
-              className="px-2 text-center text-[30px] leading-[0.95] text-[#00376c] font-odesa-medium font-odesa-ss02"
-              style={{ letterSpacing: "0.04em" }}
-            >
-              ОДЕЩИНА
-            </h1>
-          </div>
-        </div>
-      </div>
+      {/* ── Шапка-«бровь»: мобільно — назад, на md+ — повна навігація ──────── */}
+      <PageBrow />
 
       {/* ── Заголовок сторінки ──────────────────────────────────────────── */}
-      <div className="container-edge relative z-10 pb-6 pt-8">
+      <div className="container-edge relative z-10 pb-6 pt-8 md:pb-8 md:pt-12">
         <div className="flex items-center gap-3">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#002f5e] text-[#fff2e8]">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#002f5e] text-[#fff2e8] md:h-12 md:w-12">
             <Layers className="h-5 w-5" />
           </span>
-          <h2 className="text-[34px] leading-[0.95] text-[#002f5e] font-odesa-bold">{t("typesTitle")}</h2>
+          <h1 className="text-[34px] leading-[0.95] text-[#002f5e] font-odesa-bold md:text-[46px]">{t("typesTitle")}</h1>
         </div>
-        <p className="mt-3 max-w-[520px] text-[15px] leading-[1.5] text-[#002f5e]/60 font-odesa-regular">
+        <p className="mt-3 max-w-[520px] text-[15px] leading-[1.5] text-[#002f5e]/70 font-odesa-regular md:max-w-[640px] md:text-[16px]">
           {t("typesDesc")}
         </p>
       </div>
 
-      <main className="container-edge relative z-10 pb-tabbar md:pb-16">
+      <main id="main-content" tabIndex={-1} className="container-edge relative z-10 pb-tabbar md:pb-16">
         {!ready ? (
           <div className="flex items-center justify-center py-32">
             <span className="h-8 w-8 animate-spin rounded-full border-2 border-[#002f5e] border-t-transparent" />
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 md:gap-4">
             {TOURISM_TYPES.map((type, idx) => {
               const meta = TYPE_META[type];
               const Icon = meta.Icon;
@@ -142,38 +123,38 @@ export default function TourismTypesPage() {
                   initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4, delay: idx * 0.04 }}
-                  className="group relative overflow-hidden rounded-[24px] p-4 text-left transition-transform active:scale-[0.97]"
+                  className="group relative overflow-hidden rounded-[24px] bg-[#002f5e]/8 text-left transition-transform active:scale-[0.97]"
                   style={{
                     aspectRatio: "1/1",
-                    background: `linear-gradient(150deg, ${meta.color}e6, ${meta.color}b3)`,
                     boxShadow: isActive
-                      ? `0 0 0 3px ${GOLD}, 0 14px 30px -12px ${meta.color}90`
-                      : `0 10px 26px -16px ${meta.color}70`,
+                      ? `0 0 0 3px ${GOLD}, 0 14px 30px -12px rgba(0,47,94,0.45)`
+                      : "0 10px 26px -16px rgba(0,47,94,0.3)",
                   }}
                 >
-                  {img && (
+                  {img ? (
                     <img
                       src={img}
                       alt=""
                       aria-hidden
-                      className="absolute inset-0 h-full w-full object-cover opacity-25 mix-blend-overlay"
+                      className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                     />
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center bg-[#002f5e]/10">
+                      <Icon className="h-10 w-10 text-[#002f5e]/70" strokeWidth={1.5} />
+                    </div>
                   )}
-                  <Icon className="absolute -bottom-3 -right-3 h-24 w-24 text-white/20" strokeWidth={1.5} />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
                   {isActive && (
                     <span
                       className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-full bg-white"
-                      style={{ color: meta.color }}
+                      style={{ color: "#002f5e" }}
                     >
                       <Check className="h-4 w-4" strokeWidth={3} />
                     </span>
                   )}
-                  <div className="relative z-10 flex h-full flex-col justify-between">
-                    <Icon className="h-7 w-7 text-white" />
-                    <div className="mb-1.5">
-                      <p className="text-[15px] leading-tight text-white font-odesa-semi">{type}</p>
-                      <p className="mt-0.5 text-[11px] text-white/70 font-odesa-regular">{count} {tl("об'єктів", "objects")}</p>
-                    </div>
+                  <div className="relative z-10 flex h-full flex-col justify-end p-4">
+                    <p className="text-[15px] leading-tight text-white font-odesa-semi">{type}</p>
+                    <p className="mt-0.5 text-[11px] text-white/70 font-odesa-regular">{count} {tl("об'єктів", "objects")}</p>
                   </div>
                 </motion.button>
               );
@@ -194,7 +175,7 @@ export default function TourismTypesPage() {
             >
               <div className="mb-5 flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-[12px] uppercase tracking-[0.08em] text-[#df9b3b] font-odesa-medium">{activeType}</p>
+                  <p className="text-[12px] uppercase tracking-[0.08em] text-[#9c6200] font-odesa-medium">{activeType}</p>
                   <h2 className="mt-1 text-[24px] leading-none text-[#002f5e] font-odesa-bold">
                     {filteredObjects.length} {tl("об'єктів", "objects")}
                   </h2>
@@ -202,7 +183,7 @@ export default function TourismTypesPage() {
                 <button
                   type="button"
                   onClick={() => setActiveType(null)}
-                  className="shrink-0 rounded-full border border-[#002f5e]/20 px-4 py-1.5 text-[13px] font-odesa-semi text-[#002f5e]/60 transition hover:border-[#002f5e]/40 hover:text-[#002f5e]"
+                  className="shrink-0 rounded-full border border-[#002f5e]/20 px-4 py-1.5 text-[13px] font-odesa-semi text-[#002f5e]/70 transition hover:border-[#002f5e]/40 hover:text-[#002f5e]"
                 >
                   {tl("Скинути", "Reset")}
                 </button>
@@ -210,7 +191,7 @@ export default function TourismTypesPage() {
 
               {filteredObjects.length === 0 ? (
                 <div className="flex items-center justify-center rounded-[26px] border border-dashed border-[#002f5e]/20 py-24">
-                  <p className="text-[16px] text-[#002f5e]/40 font-odesa-regular">
+                  <p className="text-[16px] text-[#002f5e]/70 font-odesa-regular">
                     {tl("Об'єктів цього типу поки немає", "No objects of this type yet")}
                   </p>
                 </div>

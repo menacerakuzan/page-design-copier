@@ -112,16 +112,16 @@ export type PageConfig = {
 export const DEFAULT_SECTIONS: Record<PageEntityType, Omit<PageSection, "id">[]> = {
   district: [
     { kind: "description",       title: "Про район",            visible: true, sortOrder: 1 },
-    { kind: "cities_list",       title: "Міста",                visible: true, sortOrder: 2, bgColor: "#ffdfc6" },
+    { kind: "cities_list",       title: "Населені пункти",      visible: true, sortOrder: 2, bgColor: "#ffdfc6" },
     { kind: "places_attraction", title: "Туристичні об'єкти",   visible: true, sortOrder: 3, bgColor: "#001a3d" },
-    { kind: "places_event",      title: "Події",                visible: true, sortOrder: 4, bgColor: "#3d0820" },
+    { kind: "places_event",      title: "Події",                visible: false, sortOrder: 4, bgColor: "#3d0820" },
     { kind: "places_restaurant", title: "Ресторани",            visible: true, sortOrder: 5, bgColor: "#2a1200" },
     { kind: "places_hotel",      title: "Готелі",               visible: true, sortOrder: 6, bgColor: "#062820" },
   ],
   city: [
     { kind: "description",       title: "Про місто",            visible: true, sortOrder: 1 },
     { kind: "places_attraction", title: "Туристичні об'єкти",   visible: true, sortOrder: 2, bgColor: "#001a3d" },
-    { kind: "places_event",      title: "Події",                visible: true, sortOrder: 3, bgColor: "#3d0820" },
+    { kind: "places_event",      title: "Події",                visible: false, sortOrder: 3, bgColor: "#3d0820" },
     { kind: "places_restaurant", title: "Ресторани",            visible: true, sortOrder: 4, bgColor: "#2a1200" },
     { kind: "places_hotel",      title: "Готелі",               visible: true, sortOrder: 5, bgColor: "#062820" },
   ],
@@ -130,7 +130,7 @@ export const DEFAULT_SECTIONS: Record<PageEntityType, Omit<PageSection, "id">[]>
     { kind: "contact_info",      title: "Контакти",             visible: true, sortOrder: 2 },
     { kind: "map",               title: "Карта",                visible: true, sortOrder: 3 },
     { kind: "gallery",           title: "Галерея",              visible: true, sortOrder: 4 },
-    { kind: "related_events",    title: "Пов'язані події",      visible: true, sortOrder: 5, bgColor: "#3d0820" },
+    { kind: "related_events",    title: "Пов'язані події",      visible: false, sortOrder: 5, bgColor: "#3d0820" },
     { kind: "related_restaurants",title: "Ресторани поруч",     visible: true, sortOrder: 6, bgColor: "#2a1200" },
     { kind: "related_hotels",    title: "Готелі поруч",         visible: true, sortOrder: 7, bgColor: "#062820" },
   ],

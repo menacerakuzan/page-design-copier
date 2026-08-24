@@ -16,7 +16,7 @@ const ToolbarBtn = ({ onClick, active = false, title, children }: {
 }) => (
   <button type="button" onClick={onClick} title={title}
     className={`flex h-8 w-8 items-center justify-center rounded-lg transition ${
-      active ? "bg-[#002f5e] text-[#fff2e8]" : "text-[#002f5e]/60 hover:bg-[#002f5e]/8 hover:text-[#002f5e]"
+      active ? "bg-[#002f5e] text-[#fff2e8]" : "text-[#002f5e]/70 hover:bg-[#002f5e]/8 hover:text-[#002f5e]"
     }`}>
     {children}
   </button>

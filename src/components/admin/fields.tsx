@@ -16,7 +16,7 @@ export const Input = ({ value, onChange, placeholder = "", className = "", onFoc
     onChange={e => onChange(e.target.value)}
     onFocus={onFocus}
     placeholder={placeholder}
-    className={`w-full rounded-xl border border-[#002f5e]/15 bg-white px-4 py-2.5 text-[14px] text-[#002f5e] placeholder:text-[#002f5e]/30 focus:border-[#002f5e]/40 focus:outline-none focus:ring-2 focus:ring-[#002f5e]/10 transition ${className}`}
+    className={`w-full rounded-xl border border-[#002f5e]/15 bg-white px-4 py-2.5 text-[14px] text-[#002f5e] placeholder:text-[#002f5e]/70 focus:border-[#002f5e]/40 focus:outline-none focus:ring-2 focus:ring-[#002f5e]/10 transition ${className}`}
   />
 );
 
@@ -26,7 +26,7 @@ export const Textarea = ({ value, onChange, placeholder = "", rows = 3 }: { valu
     onChange={e => onChange(e.target.value)}
     placeholder={placeholder}
     rows={rows}
-    className="w-full resize-none rounded-xl border border-[#002f5e]/15 bg-white px-4 py-2.5 text-[14px] text-[#002f5e] placeholder:text-[#002f5e]/30 focus:border-[#002f5e]/40 focus:outline-none focus:ring-2 focus:ring-[#002f5e]/10 transition"
+    className="w-full resize-none rounded-xl border border-[#002f5e]/15 bg-white px-4 py-2.5 text-[14px] text-[#002f5e] placeholder:text-[#002f5e]/70 focus:border-[#002f5e]/40 focus:outline-none focus:ring-2 focus:ring-[#002f5e]/10 transition"
   />
 );
 
@@ -52,7 +52,7 @@ export const MultiField = ({ label, value, onChange, placeholder }: {
               value={item}
               onChange={e => update(idx, e.target.value)}
               placeholder={placeholder}
-              className="w-full rounded-xl border border-[#002f5e]/15 bg-white px-4 py-2.5 text-[14px] text-[#002f5e] placeholder:text-[#002f5e]/30 focus:border-[#002f5e]/40 focus:outline-none focus:ring-2 focus:ring-[#002f5e]/10 transition"
+              className="w-full rounded-xl border border-[#002f5e]/15 bg-white px-4 py-2.5 text-[14px] text-[#002f5e] placeholder:text-[#002f5e]/70 focus:border-[#002f5e]/40 focus:outline-none focus:ring-2 focus:ring-[#002f5e]/10 transition"
             />
             {items.length > 1 && (
               <button type="button" onClick={() => remove(idx)}
@@ -62,7 +62,7 @@ export const MultiField = ({ label, value, onChange, placeholder }: {
             )}
             {idx === items.length - 1 && (
               <button type="button" onClick={add}
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[#002f5e]/20 text-[#002f5e]/50 transition hover:border-[#002f5e]/40 hover:bg-[#002f5e]/8 hover:text-[#002f5e]">
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[#002f5e]/20 text-[#002f5e]/70 transition hover:border-[#002f5e]/40 hover:bg-[#002f5e]/8 hover:text-[#002f5e]">
                 <span className="text-[18px] leading-none">+</span>
               </button>
             )}
@@ -137,13 +137,13 @@ export const MediaField = ({ label, value, onChange, accept, isVideo }: {
         <div className="flex rounded-lg border border-[#002f5e]/12 bg-white/60 p-0.5 text-[11px]">
           <button type="button" onClick={() => setMode("url")}
             className={`flex items-center gap-1 rounded-md px-2 py-1 transition ${
-              mode === "url" ? "bg-[#002f5e] text-white" : "text-[#002f5e]/50 hover:text-[#002f5e]"
+              mode === "url" ? "bg-[#002f5e] text-white" : "text-[#002f5e]/70 hover:text-[#002f5e]"
             }`}>
             <Link className="h-3 w-3" /> URL
           </button>
           <button type="button" onClick={() => { setMode("upload"); setTimeout(() => fileRef.current?.click(), 50); }}
             className={`flex items-center gap-1 rounded-md px-2 py-1 transition ${
-              mode === "upload" ? "bg-[#002f5e] text-white" : "text-[#002f5e]/50 hover:text-[#002f5e]"
+              mode === "upload" ? "bg-[#002f5e] text-white" : "text-[#002f5e]/70 hover:text-[#002f5e]"
             }`}>
             <Upload className="h-3 w-3" /> Файл
           </button>
@@ -154,7 +154,7 @@ export const MediaField = ({ label, value, onChange, accept, isVideo }: {
       ) : (
         <div
           onClick={() => !uploading && fileRef.current?.click()}
-          className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-[#002f5e]/20 bg-white py-3 text-[13px] text-[#002f5e]/50 transition hover:border-[#002f5e]/35 hover:text-[#002f5e]/70"
+          className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-[#002f5e]/20 bg-white py-3 text-[13px] text-[#002f5e]/70 transition hover:border-[#002f5e]/35 hover:text-[#002f5e]/70"
         >
           {uploading ? (
             <>
@@ -199,6 +199,85 @@ export const MediaField = ({ label, value, onChange, accept, isVideo }: {
   );
 };
 
+export const AudioField = ({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) => {
+  const [mode, setMode] = useState<MediaMode>("url");
+  const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    setProgress(0);
+    try {
+      const url = await uploadMedia(file, setProgress);
+      onChange(url);
+    } catch (err: any) {
+      alert(err?.message ?? "Помилка завантаження файлу");
+    } finally {
+      setUploading(false);
+      setProgress(0);
+      e.target.value = "";
+    }
+  };
+
+  return (
+    <div>
+      <div className="mb-1.5 flex items-center justify-between">
+        <Label>{label}</Label>
+        <div className="flex rounded-lg border border-[#002f5e]/12 bg-white/60 p-0.5 text-[11px]">
+          <button type="button" onClick={() => setMode("url")}
+            className={`flex items-center gap-1 rounded-md px-2 py-1 transition ${
+              mode === "url" ? "bg-[#002f5e] text-white" : "text-[#002f5e]/70 hover:text-[#002f5e]"
+            }`}>
+            <Link className="h-3 w-3" /> URL
+          </button>
+          <button type="button" onClick={() => { setMode("upload"); setTimeout(() => fileRef.current?.click(), 50); }}
+            className={`flex items-center gap-1 rounded-md px-2 py-1 transition ${
+              mode === "upload" ? "bg-[#002f5e] text-white" : "text-[#002f5e]/70 hover:text-[#002f5e]"
+            }`}>
+            <Upload className="h-3 w-3" /> Файл
+          </button>
+        </div>
+      </div>
+      {mode === "url" ? (
+        <Input value={value} onChange={onChange} placeholder="https://..." />
+      ) : (
+        <div
+          onClick={() => !uploading && fileRef.current?.click()}
+          className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-[#002f5e]/20 bg-white py-3 text-[13px] text-[#002f5e]/70 transition hover:border-[#002f5e]/35 hover:text-[#002f5e]/70"
+        >
+          {uploading ? (
+            <>
+              <div className="flex items-center gap-2">
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-[#002f5e]/40 border-t-[#002f5e]" />
+                {progress > 0 ? `${progress}%` : "Завантаження..."}
+              </div>
+              {progress > 0 && (
+                <div className="h-1.5 w-48 overflow-hidden rounded-full bg-[#002f5e]/10">
+                  <div className="h-full rounded-full bg-[#002f5e] transition-all" style={{ width: `${progress}%` }} />
+                </div>
+              )}
+            </>
+          ) : (
+            <><Upload className="h-4 w-4" /> Обрати аудіофайл</>
+          )}
+        </div>
+      )}
+      <input ref={fileRef} type="file" accept="audio/*" className="hidden" onChange={handleFile} />
+      {value && (
+        <div className="relative mt-2 flex items-center gap-2 rounded-lg border border-[#002f5e]/10 bg-white p-2">
+          <audio src={value} controls className="h-9 flex-1" />
+          <button type="button" onClick={() => onChange("")}
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-black/60 text-white transition hover:bg-[#9f1f47]"
+            title="Видалити">✕</button>
+        </div>
+      )}
+    </div>
+  );
+};
+
 export const VenuePicker = ({ value, onChange, places }: { value: string; onChange: (v: string) => void; places: TourismObject[] }) => {
   const [query, setQuery] = useState("");
   const filtered = places.filter(p => p.type !== "event" && (!query || p.name.toLowerCase().includes(query.toLowerCase())));
@@ -208,25 +287,25 @@ export const VenuePicker = ({ value, onChange, places }: { value: string; onChan
       {selected && (
         <div className="flex items-center justify-between rounded-xl bg-[#002f5e]/6 px-3 py-2">
           <span className="text-[13px] font-medium text-[#002f5e]">{selected.name}</span>
-          <button type="button" onClick={() => onChange("")} className="text-[#002f5e]/40 hover:text-[#9f1f47] transition text-[11px]">✕ зняти</button>
+          <button type="button" onClick={() => onChange("")} className="text-[#002f5e]/70 hover:text-[#9f1f47] transition text-[11px]">✕ зняти</button>
         </div>
       )}
       <input
         value={query}
         onChange={e => setQuery(e.target.value)}
         placeholder="Пошук закладу..."
-        className="w-full rounded-xl border border-[#002f5e]/15 bg-white px-3 py-2 text-[13px] text-[#002f5e] placeholder:text-[#002f5e]/30 focus:border-[#002f5e]/40 focus:outline-none"
+        className="w-full rounded-xl border border-[#002f5e]/15 bg-white px-3 py-2 text-[13px] text-[#002f5e] placeholder:text-[#002f5e]/70 focus:border-[#002f5e]/40 focus:outline-none"
       />
       {query && (
         <div className="flex flex-col gap-1 max-h-48 overflow-y-auto rounded-xl border border-[#002f5e]/12 bg-white">
           {filtered.length === 0 ? (
-            <p className="px-3 py-2 text-[13px] text-[#002f5e]/40">Нічого не знайдено</p>
+            <p className="px-3 py-2 text-[13px] text-[#002f5e]/70">Нічого не знайдено</p>
           ) : filtered.map(p => (
             <button key={p.id} type="button"
               onClick={() => { onChange(p.id); setQuery(""); }}
               className={`flex items-center gap-2 px-3 py-2 text-left text-[13px] transition hover:bg-[#002f5e]/5 ${p.id === value ? "bg-[#002f5e]/8 font-medium" : "text-[#002f5e]"}`}>
               <span className="truncate">{p.name}</span>
-              <span className="shrink-0 text-[11px] text-[#002f5e]/40">{PLACE_TYPES.find(t => t.value === p.type)?.label}</span>
+              <span className="shrink-0 text-[11px] text-[#002f5e]/70">{PLACE_TYPES.find(t => t.value === p.type)?.label}</span>
             </button>
           ))}
         </div>
@@ -278,7 +357,7 @@ export const EntityCard = ({ title, subtitle, imageUrl, onDelete, onEdit, badge,
       <img loading="lazy" decoding="async" src={imageUrl} alt="" className="h-12 w-12 flex-shrink-0 rounded-xl object-cover" onError={e => (e.currentTarget.style.display = "none")} />
     ) : (
       <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-[#002f5e]/8">
-        {icon ?? <Landmark className="h-5 w-5 text-[#002f5e]/40" />}
+        {icon ?? <Landmark className="h-5 w-5 text-[#002f5e]/70" />}
       </div>
     )}
     <div className="min-w-0 flex-1">
@@ -288,7 +367,7 @@ export const EntityCard = ({ title, subtitle, imageUrl, onDelete, onEdit, badge,
           <span className="shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium text-white" style={{ backgroundColor: badge.color }}>{badge.label}</span>
         )}
       </div>
-      {subtitle && <p className="truncate text-[12px] text-[#002f5e]/55">{subtitle}</p>}
+      {subtitle && <p className="truncate text-[12px] text-[#002f5e]/70">{subtitle}</p>}
     </div>
     <button
       type="button"

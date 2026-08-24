@@ -12,10 +12,10 @@ interface Props {
 }
 
 export function Breadcrumbs({ crumbs, light = false }: Props) {
-  const base = light ? "text-[#fff2e8]/60" : "text-[#002f5e]/40";
+  const base = light ? "text-[#fff2e8]/60" : "text-[#002f5e]/70";
   const active = light ? "text-[#fff2e8]/90" : "text-[#002f5e]/80";
   const hover = light ? "hover:text-[#fff2e8]" : "hover:text-[#002f5e]";
-  const sep = light ? "text-[#fff2e8]/30" : "text-[#002f5e]/20";
+  const sep = light ? "text-[#fff2e8]/60" : "text-[#002f5e]/70";
 
   return (
     <nav aria-label="breadcrumb" className="flex items-center gap-1 flex-wrap text-[13px] font-odesa-medium">

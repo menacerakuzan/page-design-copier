@@ -27,14 +27,22 @@ const connectionString =
   process.env.DATABASE_URL || "postgresql://authenticator:changeme123@localhost:5432/tourism";
 
 // ── Витяг координат з рядка URL (портовано з src/lib/geo.ts + додаткові патерни) ──
+//
+// ВАЖЛИВО: !3d!4d (координати самого маркера місця) МАЄ перевірятись ПЕРШИМ,
+// перед @lat,lng (це лише центр видимого вьюпорта карти на момент, коли лінк
+// розшарили — може бути де завгодно, якщо людина перед копіюванням посилання
+// прокрутила/віддалила карту). Раніше порядок був зворотний, і саме тому один
+// об'єкт (EquiLife, Чорноморськ) отримав координати в Угорщині — !3d!4d у його
+// URL вказував на правильне місце (46.32, 30.63), а @lat,lng випадково влучив
+// у 47.98, 22.73. Аудит (2026-07-25) знайшов 42 таких розбіжності по всій базі.
 function extractCoords(url) {
   if (!url) return null;
   const patterns = [
-    /@(-?\d+\.\d+),(-?\d+\.\d+)/, //  /@lat,lng
-    /!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/, //  !3dLAT!4dLNG
+    /!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/, //  !3dLAT!4dLNG — маркер місця, пріоритетний
     /[?&]q=(-?\d+\.\d+),(-?\d+\.\d+)/, //  ?q=lat,lng
     /[?&]ll=(-?\d+\.\d+),(-?\d+\.\d+)/, //  ll=lat,lng
     /[?&]destination=(-?\d+\.\d+),(-?\d+\.\d+)/, //  destination=lat,lng
+    /@(-?\d+\.\d+),(-?\d+\.\d+)/, //  /@lat,lng — viewport, лише як запасний варіант
     /\/(-?\d+\.\d+),(-?\d+\.\d+)/, //  /lat,lng
   ];
   for (const re of patterns) {
@@ -42,8 +50,9 @@ function extractCoords(url) {
     if (m) {
       const lat = parseFloat(m[1]);
       const lng = parseFloat(m[2]);
-      // Санітарна перевірка діапазону (Одещина ~ lat 45–48, lng 28–32).
-      if (Math.abs(lat) <= 90 && Math.abs(lng) <= 180) return { lat, lng };
+      // Реальна санітарна перевірка діапазону — Одещина й сусідні області
+      // (не "будь-яка точка Землі", як було раніше: Math.abs(lat) <= 90).
+      if (lat >= 44 && lat <= 49 && lng >= 26 && lng <= 32) return { lat, lng };
     }
   }
   return null;
@@ -76,6 +85,10 @@ async function resolveCoords(mapUrl) {
 async function main() {
   const client = new Client({ connectionString });
   await client.connect();
+  // authenticator є NOINHERIT-членом authenticated (secure-auth.sql) — без
+  // явного SET ROLE політика RLS "authenticated write tourism_objects" не діє
+  // на цю сесію: UPDATE мовчки зачепить 0 рядків замість помилки.
+  await client.query("SET ROLE authenticated");
 
   const { rows } = await client.query(
     `select id, name, type, slug, map_url

@@ -2,11 +2,14 @@ import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { useState, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { ChevronLeft, Clock, Navigation, MapPin, ArrowRight, Route as RouteIcon } from "lucide-react";
+import { Clock, Navigation, MapPin, ArrowRight, Route as RouteIcon } from "lucide-react";
 import { Img } from "@/components/Img";
 import { loadRoutes, type Route, ROUTE_TAG_OPTIONS, loadRouteTagOrder } from "@/lib/routesRepository";
 import { useLang } from "@/lib/langContext";
 import SiteFooter from "@/components/SiteFooter";
+import PageBrow from "@/components/PageBrow";
+import { DragScrollRow } from "@/components/DragScrollRow";
+import { useSeo } from "@/hooks/useSeo";
 
 const GOLD = "#df9b3b";
 
@@ -32,13 +35,14 @@ const RouteCard = ({ route, idx }: { route: Route; idx: number }) => {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.1 }}
       transition={{ duration: 0.5, delay: idx * 0.06 }}
+      className="h-full"
     >
       <Link
         to={`/marshruty/${route.id}`}
-        className="group block overflow-hidden rounded-[26px] bg-[#fffaf3]"
+        className="group flex h-full flex-col overflow-hidden rounded-[26px] bg-[#fffaf3]"
         style={{ boxShadow: "0 0 0 1px rgba(0,47,94,0.05), 0 12px 32px -10px rgba(0,47,94,0.22)" }}
       >
-        <div className="relative h-[170px] overflow-hidden bg-[#002f5e]/10 xs:h-[198px]">
+        <div className="relative h-[170px] shrink-0 overflow-hidden bg-[#002f5e]/10 xs:h-[198px] md:h-[210px]">
           {route.imageUrl ? (
             <Img
               w={700}
@@ -48,7 +52,7 @@ const RouteCard = ({ route, idx }: { route: Route; idx: number }) => {
             />
           ) : (
             <div className="flex h-full w-full items-center justify-center">
-              <RouteIcon className="h-8 w-8 text-[#002f5e]/30" />
+              <RouteIcon className="h-8 w-8 text-[#002f5e]/70" />
             </div>
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-[#002f5e]/85 via-[#002f5e]/15 to-transparent" />
@@ -80,7 +84,7 @@ const RouteCard = ({ route, idx }: { route: Route; idx: number }) => {
           </div>
         </div>
 
-        <div className="p-3.5">
+        <div className="flex flex-1 flex-col p-3.5">
           {route.tags && route.tags.length > 0 && (
             <div className="flex flex-wrap gap-1.5">
               {route.tags.map((tagId) => {
@@ -98,11 +102,11 @@ const RouteCard = ({ route, idx }: { route: Route; idx: number }) => {
             </div>
           )}
           {desc && (
-            <p className="mt-2 line-clamp-2 text-[14px] leading-[1.55] text-[#002f5e]/65 font-odesa-regular">
+            <p className="mt-2 line-clamp-2 text-[14px] leading-[1.55] text-[#002f5e]/70 font-odesa-regular">
               {desc}
             </p>
           )}
-          <span className="mt-2 inline-flex items-center gap-1.5 text-[13px] text-[#df9b3b] font-odesa-medium">
+          <span className="mt-auto inline-flex items-center gap-1.5 pt-2 text-[13px] text-[#9c6200] font-odesa-medium">
             Детальніше <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
           </span>
         </div>
@@ -112,7 +116,8 @@ const RouteCard = ({ route, idx }: { route: Route; idx: number }) => {
 };
 
 const RoutesPage = () => {
-  const { t } = useLang();
+  const { t, lang } = useLang();
+  useSeo({ title: t("routes"), description: t("routesPageDesc"), lang });
   const { data: routes = [], isLoading } = useQuery({
     queryKey: ["routes-published"],
     queryFn: () => loadRoutes(true),
@@ -157,47 +162,26 @@ const RoutesPage = () => {
         style={{ backgroundImage: "url(/routespattern.svg)", backgroundSize: "200px 200px", backgroundRepeat: "repeat", opacity: 0.1 }}
       />
 
-      {/* ── Шапка-«бровь» (як на головній), мінімальна: тільки назад ───────── */}
-      <div className="container-edge pt-safe relative z-10">
-        <div
-          className="mt-4 rounded-b-[36px] bg-[#fff2e8] px-4 pb-2.5 pt-2.5"
-          style={{ boxShadow: "0 8px 24px -18px rgba(0,47,94,0.35)" }}
-        >
-          <div className="relative flex items-center justify-center">
-            <Link
-              to="/"
-              aria-label={t("backHome")}
-              className="tap absolute left-0 flex h-9 w-9 items-center justify-center rounded-full text-[#002f5e] transition-opacity hover:opacity-70"
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </Link>
-            <h1
-              className="px-2 text-center text-[30px] leading-[0.95] text-[#00376c] font-odesa-medium font-odesa-ss02"
-              style={{ letterSpacing: "0.04em" }}
-            >
-              ОДЕЩИНА
-            </h1>
-          </div>
-        </div>
-      </div>
+      {/* ── Шапка-«бровь»: мобільно — назад, на md+ — повна навігація ──────── */}
+      <PageBrow />
 
       {/* ── Заголовок сторінки ──────────────────────────────────────────── */}
-      <div className="container-edge relative z-10 pb-6 pt-8">
+      <div className="container-edge relative z-10 pb-6 pt-8 md:pb-8 md:pt-12">
         <div className="flex items-center gap-3">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#002f5e] text-[#fff2e8]">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#002f5e] text-[#fff2e8] md:h-12 md:w-12">
             <RouteIcon className="h-5 w-5" />
           </span>
-          <h2 className="text-[34px] leading-[0.95] text-[#002f5e] font-odesa-bold">{t("routes")}</h2>
+          <h1 className="text-[34px] leading-[0.95] text-[#002f5e] font-odesa-bold md:text-[46px]">{t("routes")}</h1>
         </div>
-        <p className="mt-3 max-w-[520px] text-[15px] leading-[1.5] text-[#002f5e]/60 font-odesa-regular">
+        <p className="mt-3 max-w-[520px] text-[15px] leading-[1.5] text-[#002f5e]/70 font-odesa-regular md:max-w-[640px] md:text-[16px]">
           {t("routesPageDesc")}
         </p>
       </div>
 
-      {/* ── Фільтр за тегами: горизонтальна прокрутка, без стрілок ─────────── */}
+      {/* ── Фільтр за тегами: мобільно — прокрутка, на md+ — перенос ────────── */}
       {availableTags.length > 0 && (
         <div className="container-edge relative z-10 pb-6">
-          <div className="flex gap-2 overflow-x-auto p-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <DragScrollRow className="flex gap-2 overflow-x-auto p-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:flex-wrap md:overflow-visible">
             <button
               type="button"
               onClick={() => setActiveTag(null)}
@@ -230,33 +214,33 @@ const RoutesPage = () => {
                 </button>
               );
             })}
-          </div>
+          </DragScrollRow>
         </div>
       )}
 
       {/* ── Список маршрутів ────────────────────────────────────────────── */}
-      <main className="container-edge relative z-10 pb-tabbar md:pb-10">
+      <main id="main-content" tabIndex={-1} className="container-edge relative z-10 pb-tabbar md:pb-10">
         {isLoading ? (
           <div className="flex justify-center py-24">
             <span className="h-10 w-10 animate-spin rounded-full border-4 border-[#002f5e]/15 border-t-[#002f5e]" />
           </div>
         ) : routes.length === 0 ? (
-          <div className="py-24 text-center text-[16px] text-[#002f5e]/45 font-odesa-regular">
+          <div className="py-24 text-center text-[16px] text-[#002f5e]/70 font-odesa-regular">
             {t("noRoutesYet")}
           </div>
         ) : filtered.length === 0 ? (
           <div className="py-24 text-center">
-            <p className="text-[16px] text-[#002f5e]/45 font-odesa-regular">{t("noRoutesInCategory")}</p>
+            <p className="text-[16px] text-[#002f5e]/70 font-odesa-regular">{t("noRoutesInCategory")}</p>
             <button
               type="button"
               onClick={() => setActiveTag(null)}
-              className="mt-4 rounded-full border border-[#002f5e]/20 px-5 py-2 text-[13px] text-[#002f5e]/65 font-odesa-medium transition hover:border-[#002f5e]/40"
+              className="mt-4 rounded-full border border-[#002f5e]/20 px-5 py-2 text-[13px] text-[#002f5e]/70 font-odesa-medium transition hover:border-[#002f5e]/40"
             >
               {t("viewAll")}
             </button>
           </div>
         ) : (
-          <div className="space-y-5">
+          <div className="flex flex-col gap-5 md:grid md:grid-cols-2 xl:grid-cols-3">
             {filtered.map((route, idx) => (
               <RouteCard key={route.id} route={route} idx={idx} />
             ))}

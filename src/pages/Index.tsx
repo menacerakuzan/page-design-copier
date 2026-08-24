@@ -9,11 +9,11 @@ import SiteFooter from "@/components/SiteFooter";
 import { AccessibilityMenu } from "@/components/AccessibilityMenu";
 import { usePageContentCards } from "@/hooks/usePageContentCards";
 import { useLang } from "@/lib/langContext";
-import RoutesOverlay from "@/components/RoutesOverlay";
+import { useSeo } from "@/hooks/useSeo";
+import PollWidget from "@/components/PollWidget";
+import PageBrow from "@/components/PageBrow";
+import { HeroBackgroundVideo } from "@/components/HeroBackgroundVideo";
 import { CompassRose } from "@/components/decor";
-
-const navLeft = ["Туристичні об'єкти"];
-const navRight = ["Гіди", "Контакти"];
 
 const featureCards = [
   { number: "01", first: "Види", second: "туризму", href: "/types" },
@@ -47,19 +47,36 @@ const ArrowGlyph = ({ direction }: { direction: "up" | "down" }) => (
 const star = "✦";
 
 const Index = () => {
-  const { t, tl } = useLang();
+  const { t, tl, lang } = useLang();
+  useSeo({
+    title: "Одещина",
+    description:
+      lang === "en"
+        ? "Explore Odesa region — a tourist guide to attractions, events, restaurants and hotels in Odeshchyna, Ukraine."
+        : "Досліджуй Одещину — туристичний гід по Одеській області: пам'ятки, події, ресторани та готелі.",
+    lang,
+  });
   const { data: indexCardsData } = usePageContentCards("index");
   const sectionRefs = useRef<Array<HTMLElement | null>>([]);
   const destinationsScrollerRef = useRef<HTMLDivElement | null>(null);
   const interestingScrollerRef = useRef<HTMLDivElement | null>(null);
   const interestingDragRef = useRef(0);
   const footerRef = useRef<HTMLElement | null>(null);
-  const heroVideoRef = useRef<HTMLVideoElement | null>(null);
 
   const scrollToFooter = () => footerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   const [activeAttraction, setActiveAttraction] = useState(0);
+
+  // Реальна висота скролера «Цікаве» (замір, а не вгадування px із заголовків/
+  // відступів — ті ламаються від найменшої зміни шрифту чи перекладу).
+  const [interestingRowsHeight, setInterestingRowsHeight] = useState(0);
+  useEffect(() => {
+    const el = interestingScrollerRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([entry]) => setInterestingRowsHeight(entry.contentRect.height));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
   const [eventsPage, setEventsPage] = useState(0);
-  const [routesOpen, setRoutesOpen] = useState(false);
   const [interestingIndex, setInterestingIndex] = useState(0);
   const [interestingDragProgress, setInterestingDragProgress] = useState(0);
   const [isInterestingPanning, setIsInterestingPanning] = useState(false);
@@ -171,7 +188,7 @@ const Index = () => {
     return () => clearInterval(id);
   }, [activeAttraction, safeTopAttractions.length]);
 
-  const eventsPerPage = 2;
+  const eventsPerPage = 3;
   const totalEventPages = Math.max(1, Math.ceil(events.length / eventsPerPage));
   const pagedEvents = events.slice(eventsPage * eventsPerPage, (eventsPage + 1) * eventsPerPage);
 
@@ -226,17 +243,7 @@ const Index = () => {
       </div>
 
       <section ref={setSectionRef(0)} className="relative min-h-screen overflow-hidden text-[#fff2e8]">
-        <video
-          ref={heroVideoRef}
-          className="absolute inset-0 h-full w-full object-cover"
-          autoPlay
-          loop
-          muted
-          playsInline
-          preload="auto"
-        >
-          <source src={heroVideo} type="video/mp4" />
-        </video>
+        <HeroBackgroundVideo src={heroVideo} />
         <div className="absolute inset-0 hidden md:block bg-[linear-gradient(180deg,rgba(0,12,33,0.28),rgba(0,12,33,0.82))]" />
         <div className="absolute inset-0 md:hidden bg-[linear-gradient(180deg,rgba(0,12,33,0.5),rgba(0,12,33,0.82))]" />
 
@@ -244,53 +251,12 @@ const Index = () => {
           initial={{ opacity: 0, y: -24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
-          className="relative z-20 mx-auto w-full max-w-[1180px] px-4 pt-0 md:px-5"
+          className="relative z-20"
         >
-          <div className="rounded-b-[36px] bg-[#fff2e8] px-4 pb-2.5 pt-2.5 text-[#00376c] md:rounded-b-[58px] md:px-8 md:pb-4 md:pt-4">
-            {/* ── Мобільна шапка: як десктопна за стилем, але компактніша (без "Контакти", щоб влізти в один рядок) ── */}
-            <div className="md:hidden">
-              <h1 className="px-2 text-center text-[30px] leading-[0.95] font-odesa-medium font-odesa-ss02" style={{ letterSpacing: "0.04em" }}>
-                ОДЕЩИНА
-              </h1>
-              <nav className="mt-1.5 flex items-center justify-center gap-2.5 text-[11px] leading-none font-odesa-medium">
-                <span className="text-[12px]">{star}</span>
-                <Link to="/districts" className="transition-opacity hover:opacity-75">Туристичні об'єкти</Link>
-                <span className="text-[12px]">{star}</span>
-                <Link to="/poblizu" className="transition-opacity hover:opacity-75">Поблизу</Link>
-                <span className="text-[12px]">{star}</span>
-                <a href="#" className="transition-opacity hover:opacity-75">Гіди</a>
-              </nav>
-            </div>
-
-            {/* ── Десктопна шапка: три колонки, як і раніше ── */}
-            <div className="hidden md:grid md:grid-cols-[1fr_auto_1fr] md:items-center md:gap-5">
-              <nav className="flex items-center justify-start gap-4 text-[14px] leading-none font-odesa-medium">
-                <span className="text-[15px]">{star}</span>
-                <Link to="/districts" className="transition-opacity hover:opacity-75">Туристичні об'єкти</Link>
-              </nav>
-
-              <h1 className="px-2 text-center text-[42px] leading-[0.95] font-odesa-medium font-odesa-ss02" style={{ letterSpacing: "0.04em" }}>
-                ОДЕЩИНА
-              </h1>
-
-              <nav className="flex items-center justify-end gap-4 text-[14px] leading-none font-odesa-medium">
-                <span className="text-[15px]">{star}</span>
-                <Link to="/poblizu" className="transition-opacity hover:opacity-75">Поблизу</Link>
-                <span className="text-[15px]">{star}</span>
-                {navRight.map((item, index) => (
-                  <a key={item} href="#"
-                    onClick={item === "Контакти" ? (e) => { e.preventDefault(); scrollToFooter(); } : undefined}
-                    className="transition-opacity hover:opacity-75">
-                    {item}
-                    {index === 0 ? <span className="ml-4 text-[15px]">{star}</span> : null}
-                  </a>
-                ))}
-              </nav>
-            </div>
-          </div>
+          <PageBrow home />
         </motion.header>
 
-        <main className="relative z-10 mx-auto flex min-h-[calc(100vh-96px)] w-full max-w-[1320px] flex-col items-center px-4 pb-tabbar pt-0 text-center md:px-6 md:pb-0 md:pt-0">
+        <main id="main-content" tabIndex={-1} className="relative z-10 mx-auto flex min-h-[calc(100vh-96px)] w-full max-w-[1320px] flex-col items-center px-4 pb-tabbar pt-0 text-center md:px-6 md:pb-0 md:pt-0">
           <div className="relative flex items-center justify-center">
             <motion.div
               initial={{ opacity: 0, scale: 0.92 }}
@@ -335,16 +301,21 @@ const Index = () => {
             transition={{ duration: 0.75, delay: 0.4 }}
             className="mt-6 md:mt-10"
           >
-            <button
-              onClick={() => setRoutesOpen(true)}
+            <Link
+              to="/marshruty"
               className="inline-block rounded-full border border-[#fff2e8] bg-[#fff2e8] px-9 py-2 text-[12px] leading-none text-[#00376c] font-odesa-semi transition-opacity hover:opacity-85">
               {t("routes")}
-            </button>
+            </Link>
           </motion.div>
 
-          <section className="mt-auto w-full pb-7 pt-0 md:pb-0">
-            <div className="mx-auto flex max-w-[1060px] flex-col items-center gap-3 md:relative md:min-h-[120px] md:block">
-              <div className="inline-flex items-center gap-3 rounded-full bg-[#fff2e8] px-5 py-2.5 text-[#00376c] md:absolute md:bottom-0 md:left-1/2 md:-translate-x-1/2 md:px-6 md:py-3">
+          {/* Соцмережі й "01/02" картки: раніше вставали в один рядок абсолютним
+              позиціонуванням вже з md (768px) — на планшетах (768–1023px) їм
+              бракувало ширини, і вони наїжджали одне на одне. Ця "поруч,
+              абсолютно" верстка тепер тільки з lg (1024px+, реальний
+              десктоп); на планшетах лишається проста колонка, як на мобілі. */}
+          <section className="mt-auto w-full pb-7 pt-0 lg:pb-0">
+            <div className="mx-auto flex max-w-[1060px] flex-col items-center gap-3 lg:relative lg:min-h-[120px] lg:block">
+              <div className="inline-flex items-center gap-3 rounded-full bg-[#fff2e8] px-5 py-2.5 text-[#00376c] lg:absolute lg:bottom-0 lg:left-1/2 lg:-translate-x-1/2 lg:px-6 lg:py-3">
                 {socialLinks.map(({ label, href, Icon }) => (
                   <a
                     key={label}
@@ -359,23 +330,23 @@ const Index = () => {
                 ))}
               </div>
 
-              <div className="grid w-full grid-cols-2 items-stretch gap-3 md:absolute md:bottom-0 md:right-0 md:w-auto md:items-end md:gap-8">
+              <div className="grid w-full grid-cols-2 items-stretch gap-3 lg:absolute lg:bottom-0 lg:right-0 lg:w-auto lg:items-end lg:gap-8">
                 {featureCards.map((item) => (
                   <Link key={item.number} to={item.href}
-                    className="group cursor-pointer text-left transition-colors md:max-w-[170px]"
+                    className="group cursor-pointer text-left transition-colors lg:max-w-[170px]"
                     style={{ textDecoration: "none" }}>
                     <div className="flex items-end gap-2 transition-colors duration-500"
                       style={{ color: "inherit" }}>
-                      <span className="text-[30px] leading-none font-odesa-regular transition-colors duration-500 group-hover:text-[#df9b3b] group-active:text-[#df9b3b] md:text-[40px]"
+                      <span className="text-[30px] leading-none font-odesa-regular transition-colors duration-500 group-hover:text-[#df9b3b] group-active:text-[#df9b3b] lg:text-[40px]"
                         style={{ transitionProperty: "color" }}>
                         {item.number}
                       </span>
-                      <div className="flex min-h-[40px] flex-row items-end gap-1.5 pb-[3px] text-[17px] leading-[0.95] font-odesa-medium transition-colors duration-500 group-hover:text-[#df9b3b] group-active:text-[#df9b3b] md:min-h-[44px] md:flex-col md:items-start md:justify-end md:gap-0 md:pb-[5px] md:text-[22px]">
+                      <div className="flex min-h-[40px] flex-row items-end gap-1.5 pb-[3px] text-[17px] leading-[0.95] font-odesa-medium transition-colors duration-500 group-hover:text-[#df9b3b] group-active:text-[#df9b3b] lg:min-h-[44px] lg:flex-col lg:items-start lg:justify-end lg:gap-0 lg:pb-[5px] lg:text-[22px]">
                         <div className="whitespace-nowrap">{item.first}</div>
                         {item.second ? <div className="whitespace-nowrap">{item.second}</div> : null}
                       </div>
                     </div>
-                    <div className="relative mt-2 h-[5px] w-full overflow-hidden rounded-full bg-[#fff2e8]/30 md:h-[6px] md:rounded-none md:bg-[#fff2e8]/40">
+                    <div className="relative mt-2 h-[5px] w-full overflow-hidden rounded-full bg-[#fff2e8]/30 lg:h-[6px] lg:rounded-none lg:bg-[#fff2e8]/40">
                       <div className="absolute inset-y-0 left-0 w-0 bg-[#df9b3b] transition-all duration-500 ease-in-out group-hover:w-full group-active:w-full" />
                     </div>
                   </Link>
@@ -559,7 +530,7 @@ const Index = () => {
 
           <div
             ref={interestingScrollerRef}
-            className="relative z-10 hidden md:block overflow-x-auto [overflow-y:clip] pt-3 pb-2 pl-3 md:pl-20 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden cursor-grab active:cursor-grabbing select-none touch-pan-x"
+            className="relative z-10 hidden md:block md:flex-1 md:min-h-0 overflow-x-auto [overflow-y:clip] pt-3 pb-2 pl-3 md:pl-20 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden cursor-grab active:cursor-grabbing select-none touch-pan-x"
             onMouseDown={(e) => {
               const el = e.currentTarget;
               let x = e.pageX;
@@ -595,16 +566,23 @@ const Index = () => {
             }}
           >
             {interestingCards.length === 0 ? (
-              <p className="text-[#002f5e]/30 text-[15px] font-odesa-regular py-8">
+              <p className="text-[#002f5e]/70 text-[15px] font-odesa-regular py-8">
                 Картки ще не додано — налаштуйте розділ в адмінці
               </p>
             ) : (() => {
               const GAP = 20;
-              // CARD_H = (100vh - vertical padding - gap) / 2
-              const CARD_H_CSS = "calc((100vh - 56px - 20px) / 2)";
+              // Висота картки — з РЕАЛЬНОГО заміру контейнера (ResizeObserver вище,
+              // contentRect вже виключає padding), а не вгаданих px відступів шапки
+              // секції: ті ламались від будь-якої зміни шрифту/перекладу/зуму. Поки
+              // заміру ще немає (перший рендер) — прийнятний фолбек через vh, щоб не
+              // блимало порожнім.
+              const rowH = interestingRowsHeight > 0
+                ? (interestingRowsHeight - GAP) / 2
+                : (window.innerHeight - 260) / 2;
+              const CARD_H_CSS = `${rowH}px`;
               const cardW_CSS = (colSpan: number) =>
-                colSpan === 3 ? `calc(${CARD_H_CSS} * 3 + 40px)`
-                : colSpan === 2 ? `calc(${CARD_H_CSS} * 2 + 20px)`
+                colSpan === 3 ? `${rowH * 3 + 40}px`
+                : colSpan === 2 ? `${rowH * 2 + 20}px`
                 : CARD_H_CSS;
 
               const topCards = interestingCards.filter(c => (c.row ?? 1) !== 2);
@@ -634,7 +612,7 @@ const Index = () => {
                       <div>
                         <h4 className={`leading-[0.93] font-odesa-bold ${textSizeClass}`}>{item.title}</h4>
                         {item.description && (
-                          <p className={`mt-4 leading-[1.65] text-[#002f5e]/60 font-odesa-regular ${descSizeClass}`}>{item.description.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim()}</p>
+                          <p className={`mt-4 leading-[1.65] text-[#002f5e]/70 font-odesa-regular ${descSizeClass}`}>{item.description.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim()}</p>
                         )}
                       </div>
                       <div className="h-[2.5px] w-full bg-gradient-to-l from-[#df9b3b]/50 to-transparent" />
@@ -693,7 +671,7 @@ const Index = () => {
           {/* ── Мобільна fan-карусель ─────────────────────────────────── */}
           <div className="relative z-10 md:hidden">
             {interestingCards.length === 0 ? (
-              <p className="px-4 py-8 text-[15px] text-[#002f5e]/30 font-odesa-regular">
+              <p className="px-4 py-8 text-[15px] text-[#002f5e]/70 font-odesa-regular">
                 Картки ще не додано — налаштуйте розділ в адмінці
               </p>
             ) : (
@@ -754,7 +732,7 @@ const Index = () => {
                             <div>
                               <h4 className="text-[22px] leading-[1.05] font-odesa-bold">{item.title}</h4>
                               {description && (
-                                <p className="mt-2 line-clamp-4 text-[16px] leading-[1.5] text-[#002f5e]/65 font-odesa-regular">
+                                <p className="mt-2 line-clamp-4 text-[16px] leading-[1.5] text-[#002f5e]/70 font-odesa-regular">
                                   {description}
                                 </p>
                               )}
@@ -766,7 +744,7 @@ const Index = () => {
                             <Img w={400} src={item.imageUrl} alt={item.title} className="h-full w-full object-cover" />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
                             <div className="absolute inset-x-0 bottom-0 p-4">
-                              <h4 className="line-clamp-2 text-[16px] leading-[1.15] font-odesa-medium text-[#fff2e8] drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)] [overflow-wrap:anywhere]">
+                              <h4 className="line-clamp-2 text-[16px] leading-[1.15] font-odesa-medium text-[#fff2e8] drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)] [overflow-wrap:break-word]">
                                 {item.title}
                               </h4>
                               <div className="mt-2 h-[3px] w-8 rounded-full bg-[#df9b3b]" />
@@ -813,7 +791,7 @@ const Index = () => {
                   >
                     <ChevronLeft className="h-7 w-7" strokeWidth={3} />
                   </button>
-                  <span className="text-[13px] text-[#002f5e]/55">
+                  <span className="text-[13px] text-[#002f5e]/70">
                     {String(interestingIndex + 1).padStart(2, "0")} / {String(interestingCards.length).padStart(2, "0")}
                   </span>
                   <button
@@ -880,7 +858,7 @@ const Index = () => {
                 {String(activeAttraction + 1).padStart(2, "0")}
               </motion.span>
             </AnimatePresence>
-            <span className="text-[18px] text-[#fff2e8]/45 md:text-[22px]">/ {String(safeTopAttractions.length).padStart(2, "0")}</span>
+            <span className="text-[18px] text-[#fff2e8]/60 md:text-[22px]">/ {String(safeTopAttractions.length).padStart(2, "0")}</span>
           </motion.div>
         </div>
 
@@ -936,7 +914,7 @@ const Index = () => {
                   </Link>
                 ) : (
                   <button
-                    className="inline-flex items-center gap-2 rounded-full border border-[#fff2e8]/20 px-6 py-2.5 text-[14px] text-[#fff2e8]/40 font-odesa-medium cursor-default"
+                    className="inline-flex items-center gap-2 rounded-full border border-[#fff2e8]/20 px-6 py-2.5 text-[14px] text-[#fff2e8]/60 font-odesa-medium cursor-default"
                     type="button" disabled
                   >
                     Детальніше <ArrowRight className="h-4 w-4" />
@@ -1027,7 +1005,7 @@ const Index = () => {
 
           {/* min-h тримає висоту сталою на 2 рядки — інакше заголовки різної довжини
               «стрибають» і зсувають опис/кнопки нижче при зміні атракції */}
-          <h3 className="mt-5 line-clamp-2 min-h-[62px] text-[32px] leading-[0.95] font-odesa-bold [overflow-wrap:anywhere]">
+          <h3 className="mt-5 line-clamp-2 min-h-[62px] text-[32px] leading-[0.95] font-odesa-bold [overflow-wrap:break-word]">
             {safeTopAttractions[activeAttraction].title}
           </h3>
           <div className="mt-3 h-[3px] w-14 rounded-full bg-[#df9b3b]" />
@@ -1049,9 +1027,9 @@ const Index = () => {
                 </span>
               </Link>
             ) : (
-              <span className="inline-flex flex-1 items-center justify-between gap-3 rounded-full border border-[#fff2e8]/20 py-1.5 pl-6 pr-1.5 text-[15px] font-odesa-bold text-[#fff2e8]/40">
+              <span className="inline-flex flex-1 items-center justify-between gap-3 rounded-full border border-[#fff2e8]/20 py-1.5 pl-6 pr-1.5 text-[15px] font-odesa-bold text-[#fff2e8]/60">
                 Детальніше
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#fff2e8]/20 text-[#fff2e8]/40">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#fff2e8]/20 text-[#fff2e8]/60">
                   <ArrowRight className="h-4 w-4" />
                 </span>
               </span>
@@ -1091,13 +1069,13 @@ const Index = () => {
             <div>
               <h3 className="text-[36px] leading-none md:text-[64px] font-odesa-bold">{t("events")}</h3>
             </div>
-            <button className="group/all inline-flex items-center gap-3 text-[18px] text-[#9f1f47] font-odesa-medium" type="button">
+            <Link to="/podiyi" className="group/all inline-flex items-center gap-3 text-[18px] text-[#9f1f47] font-odesa-medium">
               <span className="relative">
                 {t("viewAll")}
                 <span className="absolute -bottom-1 left-0 h-[2px] w-full origin-left scale-x-0 bg-[#9f1f47] transition-transform duration-300 group-hover/all:scale-x-100" />
               </span>
               <ArrowRight className="h-5 w-5 transition-transform duration-300 group-hover/all:translate-x-1" />
-            </button>
+            </Link>
           </motion.div>
 
           <AnimatePresence mode="wait">
@@ -1107,7 +1085,7 @@ const Index = () => {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -12 }}
               transition={{ duration: 0.35 }}
-              className="mt-10 grid grid-cols-1 gap-x-4 gap-y-7 sm:grid-cols-2 sm:gap-x-6 sm:gap-y-9 md:gap-x-8 md:gap-y-10"
+              className="mt-10 grid grid-cols-1 gap-x-4 gap-y-7 xs:grid-cols-2 sm:gap-x-6 sm:gap-y-9 md:gap-x-8 md:gap-y-10 lg:grid-cols-3"
             >
               {pagedEvents.map((event) => {
                 // «Квиток»: фото + дата-стаб, перфорація, нижня частина з назвою.
@@ -1162,7 +1140,7 @@ const Index = () => {
                     <Link
                       key={event.title}
                       to={event.href}
-                      className="group mx-auto block h-full w-full max-w-[300px] sm:max-w-none"
+                      className="group mx-auto block h-full w-full max-w-[300px] xs:max-w-[380px]"
                     >
                       {eventCard}
                     </Link>
@@ -1170,7 +1148,7 @@ const Index = () => {
                 }
 
                 return (
-                  <article key={event.title} className="group mx-auto h-full w-full max-w-[300px] sm:max-w-none">
+                  <article key={event.title} className="group mx-auto h-full w-full max-w-[300px] xs:max-w-[380px]">
                     {eventCard}
                   </article>
                 );
@@ -1218,7 +1196,7 @@ const Index = () => {
       </div>
     </div>
 
-    <RoutesOverlay open={routesOpen} onClose={() => setRoutesOpen(false)} />
+    <PollWidget />
     </>
   );
 };

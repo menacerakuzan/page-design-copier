@@ -6,10 +6,11 @@ import { config } from "./config.mjs";
 import OpenAI from "openai";
 import { getCatalog } from "./catalog.mjs";
 import { buildSystemPrompt } from "./prompt.mjs";
-import { toolDefs } from "./tools.mjs";
+import { buildToolDefs } from "./tools.mjs";
 
 const cat = await getCatalog();
 const sys = buildSystemPrompt(cat, "uk");
+const toolDefs = buildToolDefs(cat);
 console.log("system prompt length:", sys.length, "| tools:", toolDefs.length, "| model:", config.model);
 console.log();
 

@@ -16,7 +16,7 @@ export function objectDetailPath(type: TourismObjectType, slug: string): string 
 /** Людські підписи типів (uk / en). */
 export function objectTypeLabel(type: TourismObjectType, lang: "uk" | "en" = "uk"): string {
   const uk: Record<TourismObjectType, string> = {
-    attraction: "Тур. об'єкт",
+    attraction: "Туристичний об'єкт",
     event: "Подія",
     restaurant: "Ресторан",
     hotel: "Готель",

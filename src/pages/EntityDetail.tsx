@@ -4,9 +4,13 @@ import { useLang } from "@/lib/langContext";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowRight, ArrowUpRight, Calendar, Check, CheckCircle2, ChevronLeft,
-  Clock, Globe, MapPin, Navigation, Phone, Share2, ShoppingCart, Tag, Ticket, BookOpen, Volume2, VolumeX, X, Maximize2,
+  Clock, Globe, MapPin, Navigation, Phone, Share2, ShoppingCart, Tag, Ticket, BookOpen, X,
 } from "lucide-react";
 import { GalleryVideoCard } from "@/components/GalleryVideoCard";
+import { ReelVideo } from "@/components/ReelVideo";
+import { HeroBackgroundVideo } from "@/components/HeroBackgroundVideo";
+import { GalleryLightbox, type LightboxImage } from "@/components/GalleryLightbox";
+import { DragScrollRow } from "@/components/DragScrollRow";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { Link, useParams } from "react-router-dom";
 import SiteFooter from "@/components/SiteFooter";
@@ -21,6 +25,9 @@ import { getObjectCoords, haversineKm } from "@/lib/geo";
 import { useBasket } from "@/lib/basketContext";
 import { ObjectSection, DEFAULT_BG, SECTION_PATTERN } from "@/components/ObjectSection";
 import { CollapsibleRichText } from "@/components/CollapsibleRichText";
+import { AudioGuidePlayer } from "@/components/AudioGuidePlayer";
+import { DistrictDiscoverMore } from "@/components/DistrictDiscoverMore";
+import { useSeo } from "@/hooks/useSeo";
 import { objectDetailPath, objectTypeColor } from "@/lib/entityLinks";
 import { CompassRose } from "@/components/decor";
 
@@ -64,6 +71,7 @@ const EntityDetail = ({ type }: { type: PageType }) => {
   const [reelImageOpen, setReelImageOpen] = useState(false);
   const [reelVideoOpen, setReelVideoOpen] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
+  const [galleryLightbox, setGalleryLightbox] = useState<{ images: LightboxImage[]; index: number } | null>(null);
   const { data: snapshot, isLoading } = useHierarchySnapshot();
   const { data: cardsData } = usePageContentCards(pageKey);
   const m = meta[type];
@@ -89,10 +97,60 @@ const EntityDetail = ({ type }: { type: PageType }) => {
   );
 
   const { config } = usePageConfig(type, object?.id ?? null);
-  const { tl, t } = useLang();
+  const { tl, t, lang } = useLang();
   const { has: inBasket, toggle: toggleBasket } = useBasket();
 
+  const objectCity = useMemo(() => snapshot?.cities.find(c => c.id === object?.cityId), [snapshot, object]);
+  const objectDistrict = useMemo(() => snapshot?.districts.find(d => d.id === object?.districtId), [snapshot, object]);
+
   useEffect(() => { window.scrollTo({ top: 0, behavior: "auto" }); }, [slug]);
+
+  const objectName = object ? tl(object.name, object.nameEn) : m.label;
+  const objectDesc = object
+    ? tl(object.subtitle, object.subtitleEn) || tl(object.description, object.descriptionEn).replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 200)
+    : undefined;
+
+  // Google формує "багаті" картки для туристичних об'єктів саме за такими
+  // типами schema.org (адреса/координати прямо у видачі). Для готелю навмисно
+  // узагальнений LodgingBusiness, а не строгий "Hotel" — той вимагає рейтинги/
+  // ціни, яких у нас немає, і без них Google показав би помилку в GSC.
+  const ENTITY_SCHEMA_TYPE: Record<PageType, string> = {
+    attraction: "TouristAttraction",
+    restaurant: "Restaurant",
+    hotel: "LodgingBusiness",
+    event: "TouristAttraction",
+  };
+
+  useSeo({
+    title: objectName,
+    description: objectDesc,
+    image: object?.imageUrl,
+    lang,
+    videoUrl: object?.reelUrl,
+    breadcrumbs: object
+      ? [
+          { name: t("home"), path: "/" },
+          { name: t("districts"), path: "/districts" },
+          ...(objectDistrict ? [{ name: tl(objectDistrict.name, objectDistrict.nameEn), path: `/raion/${objectDistrict.slug}` }] : []),
+          ...(objectCity ? [{ name: tl(objectCity.name, objectCity.nameEn), path: `/napryamky/${objectCity.slug}` }] : []),
+          { name: objectName, path: objectDetailPath(type, slug) },
+        ]
+      : undefined,
+    entitySchema: object
+      ? {
+          "@type": ENTITY_SCHEMA_TYPE[type],
+          name: objectName,
+          description: objectDesc || objectName,
+          image: object.imageUrl,
+          url: `https://tourism.od.gov.ua${objectDetailPath(type, slug)}`,
+          ...(object.address ? { address: { "@type": "PostalAddress", streetAddress: tl(object.address, object.addressEn), addressCountry: "UA" } } : {}),
+          ...(object.phone ? { telephone: object.phone } : {}),
+          ...(object.latitude != null && object.longitude != null
+            ? { geo: { "@type": "GeoCoordinates", latitude: object.latitude, longitude: object.longitude } }
+            : {}),
+        }
+      : undefined,
+  });
 
   if (isLoading) return (
     <div className="min-h-screen bg-[#001a3d] flex items-center justify-center">
@@ -102,8 +160,8 @@ const EntityDetail = ({ type }: { type: PageType }) => {
   if (!object) return <NotFound />;
 
   const accent = objectTypeColor[type];
-  const city     = snapshot?.cities.find(c => c.id === object.cityId);
-  const district = snapshot?.districts.find(d => d.id === object.districtId);
+  const city     = objectCity;
+  const district = objectDistrict;
 
   const heroCard     = cards.find(c => c.sectionKey === "hero");
   const overviewCard = cards.find(c => c.sectionKey === "overview");
@@ -185,53 +243,18 @@ const EntityDetail = ({ type }: { type: PageType }) => {
   };
 
   const setRef   = (id: string) => (el: HTMLElement | null) => { refs.current[id] = el; };
-  const goTo     = (id: string) => refs.current[id]?.scrollIntoView({ behavior: "smooth", block: "start" });
   const scroll   = (key: string, dir: 1 | -1) => scrollRefs.current[key]?.scrollBy({ left: dir * 380, behavior: "smooth" });
 
-  // ── hero quick-jump pills: derived from whichever sections actually render ──
-  const jumpPills: { id: string; label: string; color: string }[] = [];
-  const descSection = findSection("description");
-  if (descSection && sectionVisible("description")) jumpPills.push({ id: "about", label: descSection.title || m.label, color: accent });
-
-  const scheduleSection = findSection("hours") ?? findSection("event_dates") ?? findSection("amenities");
-  const scheduleHasData =
-    !!(findSection("hours") && sectionVisible("hours") && (hours || infoCards.length)) ||
-    !!(findSection("event_dates") && sectionVisible("event_dates") && (object.eventDates || infoCards.length || object.repertoire)) ||
-    !!(findSection("amenities") && sectionVisible("amenities") && (amenities || infoCards.length));
-  if (scheduleSection && scheduleHasData) jumpPills.push({ id: "schedule", label: scheduleSection.title, color: accent });
-
-  const contactSection = findSection("contact_info");
-  if (contactSection && sectionVisible("contact_info")) jumpPills.push({ id: "contacts", label: contactSection.title, color: accent });
-
-  const mapSection = findSection("map");
-  if (mapSection && sectionVisible("map") && mapSection.payload?.embedUrl) jumpPills.push({ id: `map-${mapSection.id}`, label: mapSection.title, color: GOLD });
-
-  const gallerySection = findSection("gallery");
-  if (gallerySection && sectionVisible("gallery")) {
-    const sectionKey = `gallery-${gallerySection.id}`;
-    if (galleryCards.some(c => c.sectionKey === sectionKey)) jumpPills.push({ id: `gallery-${gallerySection.id}`, label: gallerySection.title, color: GOLD });
-  }
-
-  const ticketSection = findSection("ticket_info");
-  if (ticketSection && sectionVisible("ticket_info") && (ticketSection.payload?.ticketUrl || ticketSection.payload?.text))
-    jumpPills.push({ id: `ticket-${ticketSection.id}`, label: ticketSection.title, color: objectTypeColor.event });
-
-  const menuSection = findSection("menu_link");
-  if (menuSection && sectionVisible("menu_link") && menuSection.payload?.menuUrl)
-    jumpPills.push({ id: `menu-${menuSection.id}`, label: menuSection.title, color: objectTypeColor.restaurant });
-
-  (["related_events", "related_attractions", "related_restaurants", "related_hotels"] as const).forEach(kind => {
-    const s = findSection(kind);
-    if (!s || !sectionVisible(kind)) return;
-    const relType = kind.replace("related_", "").replace(/s$/, "") as TourismObjectType;
-    if (relatedByType(relType, s.filter).length) jumpPills.push({ id: `related-${relType}`, label: s.title, color: objectTypeColor[relType] });
-  });
-
+  // Рілс — зліва від тексту опису (як на сторінці району), а не під карткою
+  // контактів: вертикальне відео поруч із текстом читається природніше.
   const renderReel = () => {
     if (!object.reelUrl && !object.reelImageUrl) return null;
     return (
-      <div className="mx-auto w-full max-w-[200px] lg:mx-0">
-        <div className="relative overflow-hidden rounded-[20px] shadow-xl" style={{ aspectRatio: "9/16" }}>
+      <motion.div
+        initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }}
+        viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.7 }}
+        className="mx-auto w-full max-w-[280px] shrink-0 self-start lg:mx-0">
+        <div className="relative overflow-hidden rounded-[24px] shadow-xl" style={{ aspectRatio: "9/16" }}>
           {object.reelImageUrl ? (
             <Img w={500}
               src={object.reelImageUrl}
@@ -240,35 +263,15 @@ const EntityDetail = ({ type }: { type: PageType }) => {
               className="h-full w-full object-cover cursor-zoom-in transition-transform duration-300 hover:scale-105"
             />
           ) : (
-            <>
-              <video
-                src={object.reelUrl}
-                autoPlay muted={reelMuted} loop playsInline
-                onClick={() => setReelVideoOpen(true)}
-                className="h-full w-full object-cover cursor-zoom-in"
-              />
-              <div className="absolute bottom-3 right-3 flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setReelMuted((mutedVal) => !mutedVal)}
-                  className="flex items-center justify-center rounded-full border border-white/30 bg-black/50 p-2 text-white backdrop-blur-sm transition-all hover:bg-black/70"
-                  aria-label={reelMuted ? "Увімкнути звук" : "Вимкнути звук"}
-                >
-                  {reelMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setReelVideoOpen(true)}
-                  className="flex items-center justify-center rounded-full border border-white/30 bg-black/50 p-2 text-white backdrop-blur-sm transition-all hover:bg-black/70"
-                  aria-label="На весь екран"
-                >
-                  <Maximize2 className="h-4 w-4" />
-                </button>
-              </div>
-            </>
+            <ReelVideo
+              src={object.reelUrl!}
+              muted={reelMuted}
+              onToggleMute={() => setReelMuted((mutedVal) => !mutedVal)}
+              onExpand={() => setReelVideoOpen(true)}
+            />
           )}
         </div>
-      </div>
+      </motion.div>
     );
   };
 
@@ -293,8 +296,15 @@ const EntityDetail = ({ type }: { type: PageType }) => {
                   {type === "event" ? "Про подію" : type === "hotel" ? "Про готель" : type === "restaurant" ? "Про ресторан" : "Про місце"}
                 </h2>
               </motion.div>
+              {tl(object.audioUrl, object.audioUrlEn) && (
+                <div className="mt-8 max-w-[720px]">
+                  <AudioGuidePlayer src={tl(object.audioUrl, object.audioUrlEn)} accent={accent} />
+                </div>
+              )}
               <div className="mt-12 grid gap-10 lg:grid-cols-[1fr_380px] xl:grid-cols-[1fr_420px]">
-                <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
+                <div className="flex min-w-0 flex-col gap-10 lg:flex-row lg:items-start lg:gap-12">
+                {renderReel()}
+                <motion.div className="min-w-0 flex-1" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.7, delay: 0.05 }}>
                   <CollapsibleRichText
                     html={description}
@@ -336,6 +346,7 @@ const EntityDetail = ({ type }: { type: PageType }) => {
                     </div>
                   )}
                 </motion.div>
+                </div>
                 {showContacts && (
                   <motion.aside ref={setRef("contacts")}
                     initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
@@ -349,7 +360,6 @@ const EntityDetail = ({ type }: { type: PageType }) => {
                       onShare={handleShare} linkCopied={linkCopied} t={t}
                       cityLink={city ? { slug: city.slug, name: city.name } : undefined}
                     />
-                    {renderReel()}
                   </motion.aside>
                 )}
               </div>
@@ -565,7 +575,7 @@ const EntityDetail = ({ type }: { type: PageType }) => {
                     <BookOpen className="h-8 w-8 shrink-0" style={{ color: restaurantColor }} />
                     <div>
                       <p className="font-odesa-medium text-[20px] text-[#002f5e]">{section.title}</p>
-                      {section.subtitle && <p className="text-[14px] font-odesa-regular text-[#002f5e]/55">{section.subtitle}</p>}
+                      {section.subtitle && <p className="text-[14px] font-odesa-regular text-[#002f5e]/70">{section.subtitle}</p>}
                     </div>
                   </div>
                   <a href={menuUrl} target="_blank" rel="noreferrer"
@@ -645,9 +655,9 @@ const EntityDetail = ({ type }: { type: PageType }) => {
               )}
               {isOsm && (
                 <div className="mt-3 flex items-center justify-between">
-                  <p className="text-[12px] text-[#002f5e]/35">© OpenStreetMap contributors</p>
+                  <p className="text-[12px] text-[#002f5e]/70">© OpenStreetMap contributors</p>
                   <a href={rawUrl} target="_blank" rel="noreferrer"
-                    className="text-[12px] text-[#002f5e]/40 underline underline-offset-2 hover:text-[#002f5e]/70 transition-colors">
+                    className="text-[12px] text-[#002f5e]/70 underline underline-offset-2 hover:text-[#002f5e]/70 transition-colors">
                     Відкрити в Google Maps →
                   </a>
                 </div>
@@ -784,13 +794,14 @@ const EntityDetail = ({ type }: { type: PageType }) => {
         const CARD_H = "calc((100vh - 56px - 20px) / 2)";
         const cardW = (colSpan: number) =>
           colSpan === 3 ? `calc(${CARD_H} * 3 + 40px)` : colSpan === 2 ? `calc(${CARD_H} * 2 + 20px)` : CARD_H;
+        const imageItems = items.filter((item) => !item.payload?.videoUrl && item.imageUrl);
         return (
           <section key={section.id} ref={setRef(`gallery-${section.id}`)} className="scroll-mt-6 py-14" style={{ backgroundColor: bg }}>
             <div className="container-edge mb-6">
               {section.title && <h2 className="font-odesa-medium text-[44px] leading-none md:text-[64px]" style={{ color: tc }}>{section.title}</h2>}
               {section.subtitle && <p className="mt-2 text-[18px] font-odesa-regular md:text-[22px]" style={{ color: `${tc}99` }}>{section.subtitle}</p>}
             </div>
-            <div className="flex gap-5 overflow-x-auto px-4 pb-4 md:px-10 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <DragScrollRow hint className="flex gap-5 overflow-x-auto px-4 pb-4 md:px-10 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {items.map((item) => {
                 const isVideo = !!item.payload?.videoUrl;
                 const colSpan = (item.payload?.colSpan as number) ?? 1;
@@ -809,7 +820,19 @@ const EntityDetail = ({ type }: { type: PageType }) => {
                   );
                 }
                 return (
-                  <div key={item.id} className="relative shrink-0 overflow-hidden rounded-[22px]" style={{ width: w, height: CARD_H, minHeight: 280 }}>
+                  <div
+                    key={item.id}
+                    onClick={() => {
+                      if (!item.imageUrl) return;
+                      const idx = imageItems.findIndex((i) => i.id === item.id);
+                      setGalleryLightbox({
+                        images: imageItems.map((i) => ({ url: i.imageUrl as string, title: i.title || undefined })),
+                        index: Math.max(0, idx),
+                      });
+                    }}
+                    className="relative shrink-0 cursor-pointer overflow-hidden rounded-[22px]"
+                    style={{ width: w, height: CARD_H, minHeight: 280 }}
+                  >
                     {item.imageUrl ? (
                       <Img w={500} src={item.imageUrl} alt={item.title} className="h-full w-full object-cover" />
                     ) : (
@@ -824,7 +847,7 @@ const EntityDetail = ({ type }: { type: PageType }) => {
                   </div>
                 );
               })}
-            </div>
+            </DragScrollRow>
           </section>
         );
       }
@@ -839,14 +862,18 @@ const EntityDetail = ({ type }: { type: PageType }) => {
   };
 
   return (
-    <div className="bg-[#fff2e8] text-[#002f5e]">
+    // key={object.id}: перехід з одного об'єкта на інший — це той самий
+    // роут-компонент, і без ремоунта <img> hero тримає ФОТО ПОПЕРЕДНЬОГО
+    // об'єкта, доки не довантажиться нове. Свіжий вузол показує темний
+    // плейсхолдер замість чужої картинки (і заодно скидає стан
+    // рілса/лайтбоксів/скрол-рефів минулої сторінки).
+    <div key={object.id} className="bg-[#fff2e8] text-[#002f5e]">
+     <main id="main-content" tabIndex={-1}>
 
       {/* ══════════════════  HERO  ══════════════════════════════════════ */}
-      <section className="relative min-h-screen overflow-hidden">
+      <section className="relative min-h-screen overflow-hidden bg-[#001a3d]">
         {heroVideo ? (
-          <video className="absolute inset-0 h-full w-full object-cover" autoPlay loop muted playsInline>
-            <source src={heroVideo} type="video/mp4" />
-          </video>
+          <HeroBackgroundVideo src={heroVideo} poster={heroImage} />
         ) : (
           <Img priority w={1600} src={heroImage} alt={tl(object.name, object.nameEn)} className="absolute inset-0 h-full w-full object-cover" />
         )}
@@ -857,7 +884,7 @@ const EntityDetail = ({ type }: { type: PageType }) => {
           <div className="rounded-b-[36px] bg-[#fff2e8] px-5 pb-3 pt-3 text-[#002f5e] md:rounded-b-[48px] md:px-6 md:pb-4 md:pt-4">
             <div className="flex items-center gap-3">
               <Link to={backTo} className="flex shrink-0 items-center gap-1.5 text-[14px] font-odesa-medium transition-opacity hover:opacity-70">
-                <ChevronLeft className="h-4 w-4" /> <span className="hidden sm:inline">{t("backHome")}</span>
+                <ChevronLeft className="h-4 w-4" /> <span className="hidden sm:inline">{t("back")}</span>
               </Link>
               <div className="h-4 w-px shrink-0 bg-[#002f5e]/15" />
               <div className="min-w-0 flex-1">
@@ -878,7 +905,7 @@ const EntityDetail = ({ type }: { type: PageType }) => {
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.05 }}
             className="mb-4 flex flex-wrap items-center gap-2 text-[14px] font-odesa-regular text-[#fff2e8]/65">
             {city && <Link to={`/napryamky/${city.slug}`} className="hover:text-[#fff2e8]">{city.name}</Link>}
-            {city && district && <span className="text-[#fff2e8]/30">/</span>}
+            {city && district && <span className="text-[#fff2e8]/60">/</span>}
             {district && <Link to={`/raion/${district.slug}`} className="hover:text-[#fff2e8]">{district.name}</Link>}
           </motion.div>
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.65, delay: 0.1 }}>
@@ -890,7 +917,7 @@ const EntityDetail = ({ type }: { type: PageType }) => {
           </motion.div>
           <motion.h1 initial={{ opacity: 0, y: 28 }} animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.85, ease: [0.22, 1, 0.36, 1] }}
-            className={`mt-4 font-odesa-medium leading-[0.95] [hyphens:auto] [overflow-wrap:anywhere] md:leading-[0.93] ${
+            className={`mt-4 font-odesa-medium leading-[0.95] [hyphens:none] [overflow-wrap:break-word] md:leading-[0.93] ${
               object.heroFontSize === "sm" ? "text-[30px] xs:text-[36px] md:text-[56px] lg:text-[72px]" :
               object.heroFontSize === "md" ? "text-[34px] xs:text-[44px] md:text-[76px] lg:text-[96px]" :
               object.heroFontSize === "lg" ? "text-[38px] xs:text-[50px] md:text-[100px] lg:text-[130px]" :
@@ -937,26 +964,25 @@ const EntityDetail = ({ type }: { type: PageType }) => {
               )}
             </motion.div>
           )}
-          {jumpPills.length > 0 && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1, delay: 0.45 }}
-              className="mt-5 flex flex-wrap gap-3">
-              {jumpPills.map((pill) => (
-                <button key={pill.id} type="button" onClick={() => goTo(pill.id)}
-                  className="rounded-full border px-5 py-2 text-[13px] font-odesa-medium text-[#fff2e8] backdrop-blur-md transition-all hover:brightness-125"
-                  style={{ borderColor: `${pill.color}90`, backgroundColor: `${pill.color}40` }}>
-                  <span className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full" style={{ backgroundColor: pill.color }} />
-                  {pill.label}
-                </button>
-              ))}
-            </motion.div>
-          )}
         </div>
       </section>
 
       {/* ══════════════════  DYNAMIC SECTIONS  ══════════════════════════ */}
-      <div className="pb-tabbar">
+      <div className="pb-tabbar md:pb-0">
         {activeSections.map(renderSection)}
+
+        {district && (
+          <DistrictDiscoverMore
+            currentObjectId={object.id}
+            districtId={district.id}
+            districtSlug={district.slug}
+            districtName={district.name}
+            districtNameEn={district.nameEn}
+            allObjects={allObjects}
+          />
+        )}
       </div>
+     </main>
 
       <SiteFooter />
 
@@ -988,9 +1014,10 @@ const EntityDetail = ({ type }: { type: PageType }) => {
               <button
                 type="button"
                 onClick={() => setReelImageOpen(false)}
+                aria-label={t("close")}
                 className="absolute right-5 top-5 flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur-sm transition hover:bg-white/30"
               >
-                <X className="h-5 w-5" />
+                <X className="h-5 w-5" aria-hidden="true" />
               </button>
             </motion.div>
           </>
@@ -1030,6 +1057,13 @@ const EntityDetail = ({ type }: { type: PageType }) => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <GalleryLightbox
+        images={galleryLightbox?.images ?? []}
+        index={galleryLightbox ? galleryLightbox.index : null}
+        onClose={() => setGalleryLightbox(null)}
+        onNavigate={(index) => setGalleryLightbox((cur) => (cur ? { ...cur, index } : cur))}
+      />
     </div>
   );
 };
@@ -1172,10 +1206,10 @@ const ContactCard = ({
         className="group flex items-center justify-between rounded-[20px] border bg-white/70 px-6 py-4 backdrop-blur-md transition-transform duration-300 hover:-translate-y-1"
         style={{ borderColor: `${accent}35` }}>
         <div>
-          <p className="text-[12px] font-odesa-medium uppercase tracking-widest text-[#002f5e]/50">Місто</p>
+          <p className="text-[12px] font-odesa-medium uppercase tracking-widest text-[#002f5e]/70">Місто</p>
           <p className="mt-0.5 font-odesa-medium text-[20px] text-[#002f5e]">{cityLink.name}</p>
         </div>
-        <ArrowRight className="h-5 w-5 text-[#002f5e]/40 transition-transform duration-300 group-hover:translate-x-1" />
+        <ArrowRight className="h-5 w-5 text-[#002f5e]/70 transition-transform duration-300 group-hover:translate-x-1" />
       </Link>
     )}
   </div>

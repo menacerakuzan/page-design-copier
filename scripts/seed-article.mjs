@@ -80,7 +80,11 @@ const setCols = cols.filter((c) => c !== "id").map((c) => `${c} = EXCLUDED.${c}`
 
 const client = new Client({ connectionString });
 await client.connect();
-await client.query("SET ROLE service_role");
+// "service_role" — залишок ще з Supabase-часів цього проєкту (до self-hosted
+// PostgREST), такої ролі тут немає. authenticator є NOINHERIT-членом
+// authenticated (secure-auth.sql), тож без явного SET ROLE політики RLS
+// на цю сесію не діють.
+await client.query("SET ROLE authenticated");
 await client.query(
   `INSERT INTO content_cards (${cols.join(", ")}) VALUES (${placeholders.join(", ")})
    ON CONFLICT (id) DO UPDATE SET ${setCols.join(", ")}`,
