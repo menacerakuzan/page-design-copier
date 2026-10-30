@@ -1,10 +1,12 @@
 import { motion } from "framer-motion";
+import { useLang } from "@/lib/langContext";
 
 /**
  * Красива анімація «обдумування» асистента: пульсуючі крапки + опційний
  * статус-лейбл зі стріму (напр. «Шукаю варіанти… 🔎»).
  */
 export function ThinkingIndicator({ label }: { label?: string | null }) {
+  const { t } = useLang();
   return (
     <div className="flex items-center gap-2.5 rounded-[18px] rounded-tl-md bg-white px-4 py-3 shadow-[0_10px_26px_-22px_rgba(0,47,94,0.45)]">
       <div className="flex items-center gap-1">
@@ -23,7 +25,7 @@ export function ThinkingIndicator({ label }: { label?: string | null }) {
         animate={{ opacity: 1 }}
         className="text-[13px] text-[#002f5e]/70 font-odesa-medium"
       >
-        {label || "Обдумую… 🤔"}
+        {label || t("thinking")}
       </motion.span>
     </div>
   );

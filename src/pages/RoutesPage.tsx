@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { orderedRouteObjectIds } from "@/lib/routeGeometry";
 import { motion } from "framer-motion";
 import { useState, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
@@ -8,15 +9,22 @@ import { loadRoutes, type Route, ROUTE_TAG_OPTIONS, loadRouteTagOrder } from "@/
 import { useLang } from "@/lib/langContext";
 import SiteFooter from "@/components/SiteFooter";
 import PageBrow from "@/components/PageBrow";
-import { DragScrollRow } from "@/components/DragScrollRow";
 import { useSeo } from "@/hooks/useSeo";
 
 const GOLD = "#df9b3b";
 
-const BadgePill = ({ children }: { children: React.ReactNode }) => (
+/**
+ * Бейдж характеристики маршруту.
+ * Аудит 17.0.2: візуально це іконка + число, тож скринридер озвучував голе
+ * "2" без будь-якого контексту — `label` додає приховане пояснювальне слово.
+ * Аудит 1.2.4: фон бейджа був bg-[#002f5e]/30 поверх фото, через що золоті
+ * піктограми не дотягували до 3:1 — робимо підкладку щільнішою.
+ */
+const BadgePill = ({ label, children }: { label: string; children: React.ReactNode }) => (
   <span
-    className="flex items-center gap-1.5 rounded-full border border-[#fff2e8]/30 bg-[#002f5e]/30 px-3 py-1 text-[12px] leading-none text-[#fff2e8] backdrop-blur-md font-odesa-medium"
+    className="flex items-center gap-1.5 rounded-full border border-[#fff2e8]/50 bg-[#002f5e]/80 px-3 py-1 text-[12px] leading-none text-[#fff2e8] backdrop-blur-md font-odesa-medium"
   >
+    <span className="sr-only-a11y">{label}: </span>
     {children}
   </span>
 );
@@ -25,9 +33,7 @@ const RouteCard = ({ route, idx }: { route: Route; idx: number }) => {
   const { tl } = useLang();
   const name = tl(route.name, route.nameEn);
   const desc = tl(route.description, route.descriptionEn);
-  const stopsCount = (route.objectIds?.length ?? 0) > 0
-    ? route.objectIds!.length
-    : (route.waypointObjectIds ?? []).filter(Boolean).length;
+  const stopsCount = orderedRouteObjectIds(route).length;
 
   return (
     <motion.div
@@ -37,42 +43,53 @@ const RouteCard = ({ route, idx }: { route: Route; idx: number }) => {
       transition={{ duration: 0.5, delay: idx * 0.06 }}
       className="h-full"
     >
-      <Link
-        to={`/marshruty/${route.id}`}
-        className="group flex h-full flex-col overflow-hidden rounded-[26px] bg-[#fffaf3]"
+      {/* Аудит 3.2.1: раніше ВСЯ картка була одним <a>. Через це скринридер
+          озвучував роль "посилання" на кожному вкладеному елементі, а при
+          фокусі Tab читав весь текст картки як одне гігантське ім'я посилання.
+          Тепер картка — <article>, а посилання одне: прозорий шар поверх неї
+          з коротким доступним іменем (назва маршруту). Вміст лишається
+          звичайним текстом, доступним для читання стрілками, і більше не
+          вимовляється як набір посилань. */}
+      <article
+        className="group relative flex h-full flex-col overflow-hidden rounded-[26px] bg-[#fffaf3]"
         style={{ boxShadow: "0 0 0 1px rgba(0,47,94,0.05), 0 12px 32px -10px rgba(0,47,94,0.22)" }}
       >
+        <Link
+          to={`/marshruty/${route.id}`}
+          aria-label={name}
+          className="absolute inset-0 z-10 rounded-[26px]"
+        />
         <div className="relative h-[170px] shrink-0 overflow-hidden bg-[#002f5e]/10 xs:h-[198px] md:h-[210px]">
           {route.imageUrl ? (
             <Img
               w={700}
               src={route.imageUrl}
-              alt={name}
+              alt=""
               className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
             />
           ) : (
             <div className="flex h-full w-full items-center justify-center">
-              <RouteIcon className="h-8 w-8 text-[#002f5e]/70" />
+              <RouteIcon className="h-8 w-8 text-[#002f5e]/70" aria-hidden="true" />
             </div>
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-[#002f5e]/85 via-[#002f5e]/15 to-transparent" />
           {(route.duration || route.distance || stopsCount > 0) && (
             <div className="absolute left-4 top-4 flex flex-wrap gap-2">
               {route.duration && (
-                <BadgePill>
-                  <Clock className="h-3 w-3" style={{ color: GOLD }} />
+                <BadgePill label={tl("Тривалість", "Duration")}>
+                  <Clock className="h-3 w-3" style={{ color: GOLD }} aria-hidden="true" />
                   {route.duration}
                 </BadgePill>
               )}
               {route.distance && (
-                <BadgePill>
-                  <Navigation className="h-3 w-3" style={{ color: GOLD }} />
+                <BadgePill label={tl("Відстань", "Distance")}>
+                  <Navigation className="h-3 w-3" style={{ color: GOLD }} aria-hidden="true" />
                   {route.distance}
                 </BadgePill>
               )}
               {stopsCount > 0 && (
-                <BadgePill>
-                  <MapPin className="h-3 w-3" style={{ color: GOLD }} />
+                <BadgePill label={tl("Зупинок", "Stops")}>
+                  <MapPin className="h-3 w-3" style={{ color: GOLD }} aria-hidden="true" />
                   {stopsCount}
                 </BadgePill>
               )}
@@ -95,7 +112,7 @@ const RouteCard = ({ route, idx }: { route: Route; idx: number }) => {
                     key={tagId}
                     className="flex items-center gap-1 rounded-full bg-[#df9b3b] px-2.5 py-1 text-[11px] text-[#002f5e] font-odesa-semi"
                   >
-                    {meta.emoji} {meta.label}
+                    <span aria-hidden="true">{meta.emoji}</span> {tl(meta.label, meta.labelEn)}
                   </span>
                 );
               })}
@@ -107,16 +124,17 @@ const RouteCard = ({ route, idx }: { route: Route; idx: number }) => {
             </p>
           )}
           <span className="mt-auto inline-flex items-center gap-1.5 pt-2 text-[13px] text-[#9c6200] font-odesa-medium">
-            Детальніше <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
+            {tl("Детальніше", "More details")}
+            <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" aria-hidden="true" />
           </span>
         </div>
-      </Link>
+      </article>
     </motion.div>
   );
 };
 
 const RoutesPage = () => {
-  const { t, lang } = useLang();
+  const { t, tl, lang } = useLang();
   useSeo({ title: t("routes"), description: t("routesPageDesc"), lang });
   const { data: routes = [], isLoading } = useQuery({
     queryKey: ["routes-published"],
@@ -181,14 +199,24 @@ const RoutesPage = () => {
       {/* ── Фільтр за тегами: мобільно — прокрутка, на md+ — перенос ────────── */}
       {availableTags.length > 0 && (
         <div className="container-edge relative z-10 pb-6">
-          <DragScrollRow className="flex gap-2 overflow-x-auto p-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:flex-wrap md:overflow-visible">
+          {/* Аудит 11.2.1 / 13.2.1: при масштабі 175% і при ширині 320px
+              горизонтальна стрічка ховала кнопки фільтрів. flex-wrap на всіх
+              ширинах прибирає горизонтальну прокрутку — вміст просто
+              перекомпоновується в кілька рядів, як і рекомендує аудит. */}
+          <div className="flex flex-wrap gap-2 p-0.5">
             <button
               type="button"
               onClick={() => setActiveTag(null)}
-              className="shrink-0 rounded-full px-4 py-1.5 text-[13px] font-odesa-semi transition-all duration-200"
+              /* Аудит 4.2.1: стан обраності фільтра має бути програмно доступним. */
+              aria-pressed={activeTag === null}
+              className="rounded-full px-4 py-1.5 text-[13px] font-odesa-semi transition-all duration-200"
               style={{
                 backgroundColor: activeTag === null ? GOLD : "rgba(0,47,94,0.07)",
-                color: activeTag === null ? "#002f5e" : "rgba(0,47,94,0.6)",
+                /* Аудит 1.2.2: було rgba(0,47,94,0.6) = 3.9:1 при нормі 4.5:1. */
+                color: activeTag === null ? "#002f5e" : "rgba(0,47,94,0.75)",
+                /* Аудит 1.2.5: тіло неактивної кнопки майже зливалося з фоном —
+                   обвід дає їй потрібні 3:1 і читається як інтерактивний елемент. */
+                border: activeTag === null ? "1px solid transparent" : "1px solid rgba(0,47,94,0.55)",
                 boxShadow: activeTag === null ? "0 6px 14px -6px rgba(223,155,59,0.7)" : "none",
               }}
             >
@@ -202,19 +230,23 @@ const RoutesPage = () => {
                   key={tag.id}
                   type="button"
                   onClick={() => setActiveTag(isActive ? null : tag.id)}
-                  className="flex shrink-0 items-center gap-1.5 rounded-full px-4 py-1.5 text-[13px] font-odesa-semi transition-all duration-200"
+                  aria-pressed={isActive}
+                  className="flex items-center gap-1.5 rounded-full px-4 py-1.5 text-[13px] font-odesa-semi transition-all duration-200"
                   style={{
                     backgroundColor: isActive ? GOLD : "rgba(0,47,94,0.07)",
-                    color: isActive ? "#002f5e" : "rgba(0,47,94,0.6)",
+                    color: isActive ? "#002f5e" : "rgba(0,47,94,0.75)",
+                    border: isActive ? "1px solid transparent" : "1px solid rgba(0,47,94,0.55)",
                     boxShadow: isActive ? "0 6px 14px -6px rgba(223,155,59,0.7)" : "none",
                   }}
                 >
-                  {tag.emoji} {tag.label}
-                  <span className="ml-0.5 text-[11px] opacity-60">({count})</span>
+                  {/* Аудит 17.2.3: емодзі суто декоративне, скринридер озвучував
+                      його як зайве слово перед назвою фільтра. */}
+                  <span aria-hidden="true">{tag.emoji}</span> {tl(tag.label, tag.labelEn)}
+                  <span className="ml-0.5 text-[11px]">({count})</span>
                 </button>
               );
             })}
-          </DragScrollRow>
+          </div>
         </div>
       )}
 

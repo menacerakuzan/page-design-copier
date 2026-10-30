@@ -50,7 +50,7 @@ export default function RichTextEditor({ value, onChange }: Props) {
     // live editor gets synced.
     if (!editor || editor.isDestroyed) return;
     if (value !== editor.getHTML()) {
-      editor.commands.setContent(value, false);
+      editor.commands.setContent(value, { emitUpdate: false });
     }
   }, [value, editor]);
 

@@ -1,0 +1,346 @@
+[
+  {
+    "n": 1,
+    "file": "01-baltskyy-istorychnyy-muzey-3y5opy.png",
+    "name": "Балтський історичний музей",
+    "place": "Балта · Подільський район",
+    "url": "https://tourism.od.gov.ua/mistse/baltskyy-istorychnyy-muzey-3y5opy",
+    "schedule": [
+      {
+        "days": "Ср–Нд",
+        "time": "10:00–17:00"
+      },
+      {
+        "days": "Пн–Вт",
+        "time": "зачинено"
+      }
+    ]
+  },
+  {
+    "n": 2,
+    "file": "02-bilhorod-dnistrovskyy-krayeznavchyy-muzey-gmh1xy.png",
+    "name": "Білгород-Дністровський краєзнавчий музей",
+    "place": "Білгород-Дністровський · Білгород-Дністровський район",
+    "url": "https://tourism.od.gov.ua/mistse/bilhorod-dnistrovskyy-krayeznavchyy-muzey-gmh1xy",
+    "schedule": [
+      {
+        "days": "Пн–Чт",
+        "time": "08:00–17:00"
+      },
+      {
+        "days": "Пт",
+        "time": "08:00–16:00"
+      },
+      {
+        "days": "Сб–Нд",
+        "time": "зачинено"
+      }
+    ]
+  },
+  {
+    "n": 3,
+    "file": "03-muzey-chystoyi-vody-s9a4p0.png",
+    "name": "Музей чистої води",
+    "place": "Біляївка · Одеський район",
+    "url": "https://tourism.od.gov.ua/mistse/muzey-chystoyi-vody-s9a4p0",
+    "schedule": [
+      {
+        "days": "Пн–Пт",
+        "time": "09:00–17:00"
+      },
+      {
+        "days": "Сб–Нд",
+        "time": "зачинено"
+      }
+    ]
+  },
+  {
+    "n": 4,
+    "file": "04-bolhradskyy-istoryko-etnohrafichnyy-muzey-dgtv21.png",
+    "name": "Болградський історико-етнографічний музей",
+    "place": "Болград · Болградський район",
+    "url": "https://tourism.od.gov.ua/mistse/bolhradskyy-istoryko-etnohrafichnyy-muzey-dgtv21",
+    "schedule": [
+      {
+        "days": "Вт–Пт",
+        "time": "10:00–15:00"
+      },
+      {
+        "days": "Сб–Пн",
+        "time": "зачинено"
+      }
+    ]
+  },
+  {
+    "n": 5,
+    "file": "05-krayeznavchyy-muzey-oleksandra-sharonova-vxhzae.png",
+    "name": "Краєзнавчий музей Олександра Шаронова",
+    "place": "Вилкове · Ізмаїльський район",
+    "url": "https://tourism.od.gov.ua/mistse/krayeznavchyy-muzey-oleksandra-sharonova-vxhzae",
+    "schedule": [
+      {
+        "days": "Понеділок–неділя",
+        "time": "10:00–17:00"
+      }
+    ]
+  },
+  {
+    "n": 6,
+    "file": "06-izmayilskyy-istoryko-krayeznavchyy-muzey-prydunav-ya-mm2q2t.png",
+    "name": "Ізмаїльський історико-краєзнавчий музей Придунав'я",
+    "place": "Ізмаїл · Ізмаїльський район",
+    "url": "https://tourism.od.gov.ua/mistse/izmayilskyy-istoryko-krayeznavchyy-muzey-prydunav-ya-mm2q2t",
+    "schedule": [
+      {
+        "days": "Пн–Пт",
+        "time": "09:00–16:00"
+      },
+      {
+        "days": "Сб–Нд",
+        "time": "зачинено"
+      }
+    ]
+  },
+  {
+    "n": 7,
+    "file": "07-kodymskyy-istoryko-krayeznavchyy-muzey-v8b2fl.png",
+    "name": "Кодимський історико-краєзнавчий музей",
+    "place": "Кодима · Подільський район",
+    "url": "https://tourism.od.gov.ua/mistse/kodymskyy-istoryko-krayeznavchyy-muzey-v8b2fl",
+    "schedule": [
+      {
+        "days": "Понеділок–п’ятниця",
+        "time": "08:00–12:00 · 13:00–17:00"
+      },
+      {
+        "days": "Субота",
+        "time": "10:00–14:00"
+      },
+      {
+        "days": "Неділя",
+        "time": "зачинено"
+      }
+    ]
+  },
+  {
+    "n": 8,
+    "file": "08-podilskyy-miskyy-krayeznavchyy-muzey-x81kp4.png",
+    "name": "Подільський міський краєзнавчий музей",
+    "place": "Подільськ · Подільський район",
+    "url": "https://tourism.od.gov.ua/mistse/podilskyy-miskyy-krayeznavchyy-muzey-x81kp4",
+    "schedule": [
+      {
+        "days": "Понеділок–четвер",
+        "time": "08:30–17:15"
+      },
+      {
+        "days": "П’ятниця",
+        "time": "08:30–16:00"
+      },
+      {
+        "days": "Субота–неділя",
+        "time": "зачинено"
+      }
+    ]
+  },
+  {
+    "n": 9,
+    "file": "09-rozdilnyanskyy-narodnyy-istoryko-krayeznavchyy-muzey-4tgw52.png",
+    "name": "Роздільнянський народний історико-краєзнавчий музей",
+    "place": "Роздільна · Роздільнянський район",
+    "url": "https://tourism.od.gov.ua/mistse/rozdilnyanskyy-narodnyy-istoryko-krayeznavchyy-muzey-4tgw52",
+    "schedule": [
+      {
+        "days": "Пн–Чт",
+        "time": "08:30–17:30"
+      },
+      {
+        "days": "Пт",
+        "time": "08:30–16:30"
+      },
+      {
+        "days": "Сб–Нд",
+        "time": "зачинено"
+      }
+    ]
+  },
+  {
+    "n": 10,
+    "file": "10-shabivskyy-krayeznavchyy-muzey-3ix8eu.png",
+    "name": "Шабівський краєзнавчий музей",
+    "place": "Шабо · Білгород-Дністровський район",
+    "url": "https://tourism.od.gov.ua/mistse/shabivskyy-krayeznavchyy-muzey-3ix8eu",
+    "schedule": [
+      {
+        "days": "Пн–Нд",
+        "time": "09:00–17:00"
+      }
+    ]
+  },
+  {
+    "n": 11,
+    "file": "11-izmayilska-kartynna-halereya-714x73.png",
+    "name": "Ізмаїльська Картинна Галерея",
+    "place": "Ізмаїл · Ізмаїльський район",
+    "url": "https://tourism.od.gov.ua/mistse/izmayilska-kartynna-halereya-714x73",
+    "schedule": [
+      {
+        "days": "Пн–Пт",
+        "time": "10:00–17:00"
+      },
+      {
+        "days": "Сб–Нд",
+        "time": "зачинено"
+      }
+    ]
+  },
+  {
+    "n": 12,
+    "file": "12-nerubayski-katakomby-638h15.png",
+    "name": "Нерубайські катакомби",
+    "place": "Нерубайське · Одеський район",
+    "url": "https://tourism.od.gov.ua/mistse/nerubayski-katakomby-638h15",
+    "schedule": [
+      {
+        "days": "Вівторок–неділя",
+        "time": "10:00–17:00"
+      },
+      {
+        "days": "Понеділок",
+        "time": "зачинено"
+      }
+    ]
+  },
+  {
+    "n": 13,
+    "file": "13-park-miniatyur-x50ucr.png",
+    "name": "Парк мініатюр",
+    "place": "Ізмаїл · Ізмаїльський район",
+    "url": "https://tourism.od.gov.ua/mistse/park-miniatyur-x50ucr",
+    "schedule": [
+      {
+        "days": "Пн–Пт",
+        "time": "09:00–17:00"
+      },
+      {
+        "days": "Сб–Нд",
+        "time": "10:30–15:00"
+      }
+    ]
+  },
+  {
+    "n": 14,
+    "file": "14-tsentr-kultury-vyna-shabo-bqalqv.png",
+    "name": "Центр культури вина “Шабо”",
+    "place": "Шабо · Білгород-Дністровський район",
+    "url": "https://tourism.od.gov.ua/mistse/tsentr-kultury-vyna-shabo-bqalqv",
+    "schedule": [
+      {
+        "days": "П’ятниця–неділя",
+        "time": "10:00–16:00"
+      },
+      {
+        "days": "Понеділок–четвер",
+        "time": "зачинено"
+      }
+    ]
+  },
+  {
+    "n": 15,
+    "file": "15-akkermanska-fortetsya-8xgh8g.png",
+    "name": "Аккерманська фортеця",
+    "place": "Білгород-Дністровський · Білгород-Дністровський район",
+    "url": "https://tourism.od.gov.ua/mistse/akkermanska-fortetsya-8xgh8g",
+    "schedule": [
+      {
+        "days": "Понеділок–неділя",
+        "time": "08:00–20:00"
+      }
+    ]
+  },
+  {
+    "n": 16,
+    "file": "16-kostol-sv-stanislava-bf5xhf.png",
+    "name": "Костьол св. Станіслава",
+    "place": "Балта · Подільський район",
+    "url": "https://tourism.od.gov.ua/mistse/kostol-sv-stanislava-bf5xhf",
+    "schedule": [
+      {
+        "days": "Пн–Нд",
+        "time": "07:30–20:00"
+      }
+    ]
+  },
+  {
+    "n": 17,
+    "file": "17-spaso-preobrazhenskyy-sobor-shnu1g.png",
+    "name": "Спасо-Преображенський собор",
+    "place": "Болград · Болградський район",
+    "url": "https://tourism.od.gov.ua/mistse/spaso-preobrazhenskyy-sobor-shnu1g",
+    "schedule": [
+      {
+        "days": "Пн–Пт, Нд",
+        "time": "07:00–16:00"
+      },
+      {
+        "days": "Сб",
+        "time": "06:00–19:00"
+      }
+    ]
+  },
+  {
+    "n": 18,
+    "file": "18-sobor-svyatytelya-i-chudotvortsya-mykolaya-v-bolhradi-sndlr2.png",
+    "name": "Собор Святителя і Чудотворця Миколая",
+    "place": "Болград · Болградський район",
+    "url": "https://tourism.od.gov.ua/mistse/sobor-svyatytelya-i-chudotvortsya-mykolaya-v-bolhradi-sndlr2",
+    "schedule": [
+      {
+        "days": "Пн–Сб",
+        "time": "08:00–17:00"
+      },
+      {
+        "days": "Нд",
+        "time": "08:00–20:00"
+      }
+    ]
+  },
+  {
+    "n": 19,
+    "file": "19-svyato-mykolayivska-tserkva-busd4v.png",
+    "name": "Свято-Миколаївська церква",
+    "place": "Кілія · Ізмаїльський район",
+    "url": "https://tourism.od.gov.ua/mistse/svyato-mykolayivska-tserkva-busd4v",
+    "schedule": [
+      {
+        "days": "Вт–Чт",
+        "time": "09:00–16:00"
+      },
+      {
+        "days": "Сб",
+        "time": "09:00–17:00"
+      },
+      {
+        "days": "Нд",
+        "time": "07:30–13:00"
+      },
+      {
+        "days": "Пн",
+        "time": "зачинено"
+      }
+    ]
+  },
+  {
+    "n": 20,
+    "file": "20-pelikan-siti-llmzbk.png",
+    "name": "Пелікан Сіті",
+    "place": "Вилкове · Ізмаїльський район",
+    "url": "https://tourism.od.gov.ua/mistse/pelikan-siti-llmzbk",
+    "schedule": [
+      {
+        "days": "Пн–Нд",
+        "time": "09:00–19:00"
+      }
+    ]
+  }
+]

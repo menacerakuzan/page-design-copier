@@ -76,6 +76,8 @@ export type TourismObject = {
   phone?: string;
   website?: string;
   eventDates?: string;
+  /** YYYY-MM-DD: останній день, коли подія актуальна; наступного дня — в архів. */
+  archiveAfter?: string;
   hours?: string;
   hoursEn?: string;
   amenities?: string;

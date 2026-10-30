@@ -22,7 +22,7 @@ export function HeroBackgroundVideo({
   className?: string;
   poster?: string;
 }) {
-  const { lang } = useLang();
+  const { t } = useLang();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [paused, setPaused] = useState(false);
 
@@ -61,9 +61,7 @@ export function HeroBackgroundVideo({
     else v.pause();
   }, []);
 
-  const label = paused
-    ? (lang === "en" ? "Play background video" : "Відтворити фонове відео")
-    : (lang === "en" ? "Pause background video" : "Зупинити фонове відео");
+  const label = paused ? t("playHeroVideo") : t("pauseHeroVideo");
 
   return (
     <>

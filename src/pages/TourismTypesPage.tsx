@@ -12,6 +12,7 @@ import { useSeo } from "@/hooks/useSeo";
 import { useHierarchySnapshot } from "@/hooks/useHierarchySnapshot";
 import { usePageContentCards } from "@/hooks/usePageContentCards";
 import { ObjectCard } from "@/components/ObjectCard";
+import { tourismTypeLabel } from "@/lib/sectionTitles";
 
 const GOLD = "#df9b3b";
 
@@ -153,7 +154,7 @@ export default function TourismTypesPage() {
                     </span>
                   )}
                   <div className="relative z-10 flex h-full flex-col justify-end p-4">
-                    <p className="text-[15px] leading-tight text-white font-odesa-semi">{type}</p>
+                    <p className="text-[15px] leading-tight text-white font-odesa-semi">{tourismTypeLabel(type, lang)}</p>
                     <p className="mt-0.5 text-[11px] text-white/70 font-odesa-regular">{count} {tl("об'єктів", "objects")}</p>
                   </div>
                 </motion.button>
@@ -175,7 +176,7 @@ export default function TourismTypesPage() {
             >
               <div className="mb-5 flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-[12px] uppercase tracking-[0.08em] text-[#9c6200] font-odesa-medium">{activeType}</p>
+                  <p className="text-[12px] uppercase tracking-[0.08em] text-[#9c6200] font-odesa-medium">{tourismTypeLabel(activeType, lang)}</p>
                   <h2 className="mt-1 text-[24px] leading-none text-[#002f5e] font-odesa-bold">
                     {filteredObjects.length} {tl("об'єктів", "objects")}
                   </h2>

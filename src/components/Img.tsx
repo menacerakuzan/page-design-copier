@@ -10,20 +10,28 @@ type ImgProps = Omit<React.ImgHTMLAttributes<HTMLImageElement>, "src"> & {
   priority?: boolean;
 };
 
+/** Брендована заглушка, коли фото немає або воно не завантажилось. */
+export const PHOTO_FALLBACK = "/photo-fallback.svg";
+
 /**
  * Drop-in <img> that requests a resized variant from the storage transform
  * endpoint and falls back to the original on error. Defaults to lazy loading
  * and async decoding.
+ *
+ * Якщо не вантажиться й оригінал (зовнішній сайт видалив фото, закрив
+ * хотлінк чи впав — так «зникали» фото частини об'єктів), показуємо
+ * PHOTO_FALLBACK замість іконки битого зображення.
  */
 export function Img({ src, w = 600, quality = 70, priority = false, alt = "", onError, ...rest }: ImgProps) {
-  const original = src ?? "";
+  const original = src || PHOTO_FALLBACK;
   const [useOriginal, setUseOriginal] = useState(false);
-  const shown = useOriginal ? original : resizedImageUrl(original, w, quality);
+  const [broken, setBroken] = useState(false);
+  const shown = broken ? PHOTO_FALLBACK : useOriginal ? original : resizedImageUrl(original, w, quality);
   // Retina/HiDPI: also offer a 2× variant so the browser picks a crisp image on
   // dense screens instead of upscaling the 1× one (which looks soft/pixelated).
   // Only when a resize actually applied (shown differs from the original URL).
-  const src2x = useOriginal ? "" : resizedImageUrl(original, w * 2, quality);
-  const srcSet = !useOriginal && shown !== original && src2x !== shown
+  const src2x = useOriginal || broken ? "" : resizedImageUrl(original, w * 2, quality);
+  const srcSet = !useOriginal && !broken && shown !== original && src2x !== shown
     ? `${shown} 1x, ${src2x} 2x`
     : undefined;
 
@@ -42,6 +50,8 @@ export function Img({ src, w = 600, quality = 70, priority = false, alt = "", on
         if (!useOriginal && shown !== original) {
           reportResizeFailure();
           setUseOriginal(true);
+        } else if (!broken && original !== PHOTO_FALLBACK) {
+          setBroken(true);
         }
         onError?.(e);
       }}

@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from "react";
+import { withoutArchivedEvents } from "@/lib/eventArchive";
 import { Img } from "@/components/Img";
 import { motion } from "framer-motion";
 import { useLang } from "@/lib/langContext";
@@ -24,6 +25,7 @@ import { AudioGuidePlayer } from "@/components/AudioGuidePlayer";
 import { useSeo } from "@/hooks/useSeo";
 import { ObjectSection, DEFAULT_BG } from "@/components/ObjectSection";
 import { objectTypeColor } from "@/lib/entityLinks";
+import { sectionTitle } from "@/lib/sectionTitles";
 
 const NAVY = "#002f5e";
 const GOLD = "#df9b3b";
@@ -38,13 +40,6 @@ const DESCRIPTION_TITLE_BY_SETTLEMENT: Record<string, string> = {
   "село": "Про село",
   "селище": "Про селище",
   "селище міського типу": "Про селище",
-};
-
-const LABEL_SHORT: Record<TourismObjectType, string> = {
-  attraction: "Туристичні об'єкти",
-  event: "Події",
-  hotel: "Готелі",
-  restaurant: "Ресторани",
 };
 
 /** Легкий фоновий патерн (компас — тема районів/міст), тільки для кремових секцій. */
@@ -75,7 +70,7 @@ const CityPage = () => {
     [snapshot, citySlug],
   );
   const allObjects = useMemo(
-    () => (snapshot?.objects ?? []).filter((o) => o.cityId === city?.id && o.published),
+    () => withoutArchivedEvents((snapshot?.objects ?? []).filter((o) => o.cityId === city?.id && o.published)),
     [snapshot, city],
   );
   const parentDistrict = useMemo(
@@ -130,22 +125,28 @@ const CityPage = () => {
   for (const s of activeSections) {
     if (s.kind === "places_attraction") {
       if (applyFilter(allObjects.filter(o => o.type === "attraction"), s.filter).length > 0)
-        jumpPills.push({ id: "attraction", label: LABEL_SHORT.attraction, color: objectTypeColor.attraction });
+        jumpPills.push({ id: "attraction", label: t("tourismObjects"), color: objectTypeColor.attraction });
     } else if (s.kind === "places_event") {
       if (applyFilter(allObjects.filter(o => o.type === "event"), s.filter).length > 0)
-        jumpPills.push({ id: "event", label: LABEL_SHORT.event, color: objectTypeColor.event });
+        jumpPills.push({ id: "event", label: t("events"), color: objectTypeColor.event });
     } else if (s.kind === "places_hotel") {
       if (applyFilter(allObjects.filter(o => o.type === "hotel"), s.filter).length > 0)
-        jumpPills.push({ id: "hotel", label: LABEL_SHORT.hotel, color: objectTypeColor.hotel });
+        jumpPills.push({ id: "hotel", label: t("hotels"), color: objectTypeColor.hotel });
     } else if (s.kind === "places_restaurant") {
       if (applyFilter(allObjects.filter(o => o.type === "restaurant"), s.filter).length > 0)
-        jumpPills.push({ id: "restaurant", label: LABEL_SHORT.restaurant, color: objectTypeColor.restaurant });
+        jumpPills.push({ id: "restaurant", label: t("restaurants"), color: objectTypeColor.restaurant });
     }
   }
 
   // ─── section renderer ─────────────────────────────────────────────────────
 
   const renderSection = (section: PageSection) => {
+    // "Про місто" підміняється на "Про село"/"Про селище" за типом пункту,
+    // і вже результат перекладається (у словнику є всі три варіанти).
+    const adjusted = section.title === "Про місто"
+      ? (DESCRIPTION_TITLE_BY_SETTLEMENT[city.settlementType ?? "місто"] ?? section.title)
+      : section.title;
+    const sTitle = sectionTitle(adjusted, lang);
     switch (section.kind) {
 
       case "description": {
@@ -168,9 +169,7 @@ const CityPage = () => {
                 <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.7 }} className="flex-1">
                   <h2 className="font-odesa-medium text-[32px] leading-none text-[#002f5e] md:text-[56px]">
-                    {section.title === "Про місто"
-                      ? (DESCRIPTION_TITLE_BY_SETTLEMENT[city.settlementType ?? "місто"] ?? "Про місто")
-                      : section.title}
+                    {sTitle}
                   </h2>
                   {section.subtitle && <p className="mt-3 text-[16px] font-odesa-regular text-[#002f5e]/70 md:text-[20px]">{section.subtitle}</p>}
                   {tl(city.audioUrl, city.audioUrlEn) && (
@@ -208,7 +207,7 @@ const CityPage = () => {
         if (!items.length) return null;
         const bg = section.bgColor ?? DEFAULT_BG[type];
         return (
-          <ObjectSection key={section.id} sectionId={type} title={section.title} subtitle={section.subtitle}
+          <ObjectSection key={section.id} sectionId={type} title={sTitle} subtitle={section.subtitle}
             items={items} bg={bg}
             setRef={setRef} scroll={scroll} scrollRefs={scrollRefs} />
         );
@@ -222,7 +221,7 @@ const CityPage = () => {
         return (
           <section key={section.id} className="py-14" style={{ backgroundColor: bg }}>
             <div className="container-edge">
-              {section.title && <h2 className="mb-2 font-odesa-medium text-[32px] leading-none text-[#fff2e8] md:text-[44px]">{section.title}</h2>}
+              {sTitle && <h2 className="mb-2 font-odesa-medium text-[32px] leading-none text-[#fff2e8] md:text-[44px]">{sTitle}</h2>}
               {section.subtitle && <p className="mb-6 text-[16px] font-odesa-regular text-[#fff2e8]/55">{section.subtitle}</p>}
               <div className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
                 {stats.map(({ val, lbl }, i) => (
@@ -269,7 +268,7 @@ const CityPage = () => {
             <div className="container-edge relative z-10">
               <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.7 }}>
-                {section.title && <h2 className="mb-2 font-odesa-medium text-[32px] leading-none text-[#002f5e] md:text-[44px]">{section.title}</h2>}
+                {sTitle && <h2 className="mb-2 font-odesa-medium text-[32px] leading-none text-[#002f5e] md:text-[44px]">{sTitle}</h2>}
                 {section.subtitle && <p className="mb-4 text-[16px] font-odesa-regular text-[#002f5e]/70">{section.subtitle}</p>}
                 <p className="text-[17px] leading-[1.6] font-odesa-regular text-[#002f5e]/80 md:text-[22px]">{text}</p>
               </motion.div>
@@ -285,10 +284,10 @@ const CityPage = () => {
         return (
           <section key={section.id} className="py-14" style={{ backgroundColor: bg }}>
             <div className="container-edge max-w-[1200px]">
-              {section.title && <h2 className="mb-2 font-odesa-medium text-[32px] leading-none text-[#fff2e8] md:text-[44px]">{section.title}</h2>}
+              {sTitle && <h2 className="mb-2 font-odesa-medium text-[32px] leading-none text-[#fff2e8] md:text-[44px]">{sTitle}</h2>}
               {section.subtitle && <p className="mb-4 text-[16px] font-odesa-regular text-[#fff2e8]/55">{section.subtitle}</p>}
               <div className="overflow-hidden rounded-[28px]" style={{ aspectRatio: "16/9" }}>
-                <iframe src={videoUrl} title={section.title} allow="autoplay; encrypted-media" allowFullScreen
+                <iframe src={videoUrl} title={sTitle} allow="autoplay; encrypted-media" allowFullScreen
                   className="h-full w-full border-0" />
               </div>
             </div>
@@ -304,10 +303,10 @@ const CityPage = () => {
           <section key={section.id} className="relative overflow-hidden py-14" style={{ backgroundColor: bg }}>
             <SectionPattern />
             <div className="container-edge relative z-10">
-              {section.title && <h2 className="mb-2 font-odesa-medium text-[32px] leading-none text-[#002f5e] md:text-[44px]">{section.title}</h2>}
+              {sTitle && <h2 className="mb-2 font-odesa-medium text-[32px] leading-none text-[#002f5e] md:text-[44px]">{sTitle}</h2>}
               {section.subtitle && <p className="mb-4 text-[16px] font-odesa-regular text-[#002f5e]/70">{section.subtitle}</p>}
               <div className="overflow-hidden rounded-[28px]" style={{ height: "480px" }}>
-                <iframe src={embedUrl} title="Карта" loading="lazy" className="h-full w-full border-0" />
+                <iframe src={embedUrl} title={tl("Карта", "Map")} loading="lazy" className="h-full w-full border-0" />
               </div>
             </div>
           </section>
@@ -330,7 +329,7 @@ const CityPage = () => {
         return (
           <section key={section.id} className="py-14" style={{ backgroundColor: bg }}>
             <div className="container-edge mb-6">
-              {section.title && <h2 className="font-odesa-medium text-[34px] leading-none md:text-[56px]" style={{ color: textColor }}>{section.title}</h2>}
+              {sTitle && <h2 className="font-odesa-medium text-[34px] leading-none md:text-[56px]" style={{ color: textColor }}>{sTitle}</h2>}
               {section.subtitle && <p className="mt-2 text-[16px] font-odesa-regular md:text-[20px]" style={{ color: `${textColor}99` }}>{section.subtitle}</p>}
             </div>
             <DragScrollRow hint className="flex gap-5 overflow-x-auto px-4 pb-4 md:px-10 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -372,7 +371,7 @@ const CityPage = () => {
                     )}
                     {item.title && (
                       <>
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
                         <p className={`absolute bottom-5 left-5 right-5 font-odesa-medium leading-tight text-[#fff2e8] ${textSizeCls}`}>{item.title}</p>
                       </>
                     )}
@@ -408,7 +407,10 @@ const CityPage = () => {
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,12,33,0.28)_0%,rgba(0,12,33,0.0)_38%,rgba(0,12,33,0.9)_100%)]" />
 
         {/* ── Єдина шапка-«бровь»: назад + один breadcrumb + головна ─────── */}
-        <div className="relative z-20 mx-auto w-full max-w-[1180px] px-4 pt-0 md:px-5">
+        {/* Аудит 17.2.2: верхня панель (назад + хлібні крихти) — це шапка сторінки,
+            тож має бути landmark <header>, інакше скринридер не пропонує швидкий
+            перехід до неї. Ці сторінки не використовують спільний PageBrow. */}
+        <header className="relative z-20 mx-auto w-full max-w-[1180px] px-4 pt-0 md:px-5">
           <div className="rounded-b-[36px] bg-[#fff2e8] px-5 pb-3 pt-3 text-[#002f5e] md:rounded-b-[48px] md:px-6 md:pb-4 md:pt-4">
             <div className="flex items-center gap-3">
               {backOverride?.backTo ? (
@@ -436,7 +438,7 @@ const CityPage = () => {
               <Link to="/" className="hidden shrink-0 text-[14px] font-odesa-medium transition-opacity hover:opacity-70 sm:inline">{t("home")}</Link>
             </div>
           </div>
-        </div>
+        </header>
 
         <div className="relative z-10 flex min-h-[calc(100vh-80px)] flex-col justify-end px-6 pb-24 text-[#fff2e8] md:px-14 md:pb-14">
           {/* weather widget — above the title */}

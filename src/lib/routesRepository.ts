@@ -23,17 +23,17 @@ export type Route = {
 };
 
 export const ROUTE_TAG_OPTIONS = [
-  { id: "sport",    label: "Спортивний",     emoji: "🏃" },
-  { id: "culture",  label: "Культурний",     emoji: "🎨" },
-  { id: "religion", label: "Релігійний",     emoji: "⛪" },
-  { id: "odesa",    label: "По Одесі",       emoji: "🌊" },
-  { id: "nature",   label: "Природний",      emoji: "🌿" },
-  { id: "gastro",   label: "Гастрономічний", emoji: "🍷" },
-  { id: "history",  label: "Історичний",     emoji: "🏛" },
-  { id: "beach",    label: "Пляжний",        emoji: "🏖" },
-  { id: "wine",     label: "Винний",         emoji: "🍇" },
-  { id: "eco",      label: "Еко",            emoji: "🌱" },
-  { id: "veteran",  label: "Ветеранський",   emoji: "" },
+  { id: "sport",    label: "Спортивний",     emoji: "🏃", labelEn: "Sports" },
+  { id: "culture",  label: "Культурний",     emoji: "🎨", labelEn: "Cultural" },
+  { id: "religion", label: "Релігійний",     emoji: "⛪", labelEn: "Religious" },
+  { id: "odesa",    label: "По Одесі",       emoji: "🌊", labelEn: "Around Odesa" },
+  { id: "nature",   label: "Природний",      emoji: "🌿", labelEn: "Nature" },
+  { id: "gastro",   label: "Гастрономічний", emoji: "🍷", labelEn: "Gastronomic" },
+  { id: "history",  label: "Історичний",     emoji: "🏛", labelEn: "Historical" },
+  { id: "beach",    label: "Пляжний",        emoji: "🏖", labelEn: "Beach" },
+  { id: "wine",     label: "Винний",         emoji: "🍇", labelEn: "Wine" },
+  { id: "eco",      label: "Еко",            emoji: "🌱", labelEn: "Eco" },
+  { id: "veteran",  label: "Ветеранський",   emoji: "", labelEn: "Veteran" },
 ] as const;
 
 const mapRow = (row: any): Route => ({

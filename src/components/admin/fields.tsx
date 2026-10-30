@@ -1,8 +1,9 @@
 import { useRef, useState } from "react";
-import { CheckCircle2, Landmark, Link, Trash2, Upload } from "lucide-react";
+import { CheckCircle2, Landmark, Link, Loader2, QrCode, Trash2, Upload } from "lucide-react";
 import { uploadMedia } from "@/data/storage";
 import { TourismObject } from "@/types/hierarchy";
 import { PLACE_TYPES } from "@/components/admin/constants";
+import { eventArchiveDate, formatIsoDate, kyivToday } from "@/lib/eventArchive";
 
 // Shared presentational primitives for the admin screens.
 
@@ -90,6 +91,48 @@ export const FieldGroup = ({ label, children }: { label: React.ReactNode; childr
     {children}
   </div>
 );
+
+/** Дата, після якої подія зникає зі списків і переходить в архів (/podiyi?arkhiv). */
+export const EventArchiveField = ({ value, onChange, repertoire, eventDates }: {
+  value: string; onChange: (v: string) => void; repertoire: string; eventDates: string;
+}) => {
+  const today = kyivToday();
+  const auto = eventArchiveDate({ type: "event", repertoire, eventDates }, today);
+  const effective = value || auto?.date;
+  const archived = !!effective && today > effective;
+  return (
+    <div>
+      <Label>Перенести в архів після</Label>
+      <p className="mb-1 text-[11px] text-[#002f5e]/70">
+        Останній день, коли подія актуальна. Наступного дня вона зникне зі списків і перейде в «Архів подій».
+      </p>
+      <div className="flex flex-wrap items-center gap-2">
+        <input
+          type="date"
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          className="rounded-xl border border-[#002f5e]/15 bg-white px-4 py-2.5 text-[14px] text-[#002f5e] focus:border-[#002f5e]/40 focus:outline-none focus:ring-2 focus:ring-[#002f5e]/10 transition"
+        />
+        {value ? (
+          <button type="button" onClick={() => onChange("")} className="rounded-lg px-3 py-2 text-[12px] text-[#9f1f47] hover:bg-[#9f1f47]/10">
+            Скинути
+          </button>
+        ) : auto ? (
+          <button type="button" onClick={() => onChange(auto.date)} className="rounded-lg bg-[#002f5e]/5 px-3 py-2 text-[12px] text-[#002f5e] hover:bg-[#002f5e]/10">
+            Взяти з розкладу: {formatIsoDate(auto.date)}
+          </button>
+        ) : null}
+      </div>
+      <p className={`mt-1 text-[12px] ${archived ? "text-[#9f1f47]" : "text-[#002f5e]/60"}`}>
+        {!effective
+          ? "Дату не вказано і в розкладі її немає — подія лишатиметься на сайті, доки ви її не знімете."
+          : archived
+            ? `Подія вже в архіві (з ${formatIsoDate(effective)}${value ? "" : ", дата з розкладу"}).`
+            : `На сайті до ${formatIsoDate(effective)} включно${value ? "" : " — автоматично за останньою датою розкладу"}.`}
+      </p>
+    </div>
+  );
+};
 
 export const SaveBtn = ({ saving, label = "Зберегти" }: { saving: boolean; label?: string }) => (
   <button
@@ -341,7 +384,7 @@ export const MediaGroupPlace = ({ imageUrl, videoUrl, reelUrl, reelImageUrl, onI
   </div>
 );
 
-export const EntityCard = ({ title, subtitle, imageUrl, onDelete, onEdit, badge, isEditing, icon }: { title: string; subtitle?: string; imageUrl?: string; onDelete: () => void; onEdit: () => void; badge?: { label: string; color: string }; isEditing?: boolean; icon?: React.ReactNode }) => (
+export const EntityCard = ({ title, subtitle, imageUrl, onDelete, onEdit, badge, isEditing, icon, onQr, qrBusy }: { title: string; subtitle?: string; imageUrl?: string; onDelete: () => void; onEdit: () => void; badge?: { label: string; color: string }; isEditing?: boolean; icon?: React.ReactNode; onQr?: () => void; qrBusy?: boolean }) => (
   <div
     role="button"
     tabIndex={0}
@@ -369,6 +412,19 @@ export const EntityCard = ({ title, subtitle, imageUrl, onDelete, onEdit, badge,
       </div>
       {subtitle && <p className="truncate text-[12px] text-[#002f5e]/70">{subtitle}</p>}
     </div>
+    {onQr && (
+      <button
+        type="button"
+        onClick={e => { e.stopPropagation(); onQr(); }}
+        onKeyDown={e => e.stopPropagation()}
+        disabled={qrBusy}
+        title="Завантажити QR-постер (PNG, A4)"
+        aria-label={`Завантажити QR-постер: ${title}`}
+        className={`ml-1 shrink-0 rounded-lg p-1.5 text-[#002f5e]/60 transition hover:bg-[#002f5e]/8 hover:text-[#002f5e] focus-visible:opacity-100 ${qrBusy ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}
+      >
+        {qrBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <QrCode className="h-4 w-4" />}
+      </button>
+    )}
     <button
       type="button"
       onClick={e => { e.stopPropagation(); onDelete(); }}

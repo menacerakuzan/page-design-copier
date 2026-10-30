@@ -76,12 +76,12 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/napryamky/bilyayivka</loc>
+    <loc>https://tourism.od.gov.ua/napryamky/karolino-buhaz</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/napryamky/karolino-buhaz</loc>
+    <loc>https://tourism.od.gov.ua/napryamky/bilyayivka</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -126,7 +126,12 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/napryamky/podilsk</loc>
+    <loc>https://tourism.od.gov.ua/napryamky/kruti</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/napryamky/hrybivka</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -176,12 +181,12 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/napryamky/artsyz</loc>
+    <loc>https://tourism.od.gov.ua/napryamky/puzhaykove</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/napryamky/puzhaykove</loc>
+    <loc>https://tourism.od.gov.ua/napryamky/artsyz</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -211,7 +216,107 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/mistse/nyzhnodnistrovskyy-natsionalnyy-pryrodnyy-park-eda3w3</loc>
+    <loc>https://tourism.od.gov.ua/napryamky/kotlovyna</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/napryamky/pyrizhna</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/napryamky/severynivka</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/napryamky/budeyi</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/napryamky/smolyanka</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/napryamky/ivashkiv</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/napryamky/kazbeky</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/napryamky/serby</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/napryamky/shershentsi</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/napryamky/hrabove</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/napryamky/zahnitkiv</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/napryamky/labushne</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/napryamky/fedorivka</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/napryamky/oleksiyivka</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/napryamky/kosy</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/napryamky/podilsk</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/napryamky/oleksandrivka</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/napryamky/lypetske</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/napryamky/pivdenne</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/napryamky/bashtankiv</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/ozero-yalpuh-c0amf8</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -221,12 +326,12 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/mistse/ozero-yalpuh-c0amf8</loc>
+    <loc>https://tourism.od.gov.ua/mistse/savranskyy-lis-99y6m6</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/mistse/savranskyy-lis-99y6m6</loc>
+    <loc>https://tourism.od.gov.ua/mistse/stavok-korsuntsi-wxrhsz</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -236,12 +341,22 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/mistse/muzey-suchasnoho-mystetstva-odesy-naww1u</loc>
+    <loc>https://tourism.od.gov.ua/mistse/zoryanskyy-narodnyy-etnohrafichnyy-muzey-holyamata-k-shcha-5t4d61</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/mistse/rehionalnyy-landshaftnyy-park-tylihulskyy-2fop19</loc>
+    <loc>https://tourism.od.gov.ua/mistse/pidzemnyy-monastyr-rayskyy-sad-jwfes1</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/pam-yatnyk-dyuku-de-rishelye-g0d41s</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/muzey-obrazotvorchykh-mystetstv-im-o-biloho-1rdb8d</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -251,7 +366,17 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/mistse/don-alejandro-winery-yvje2j</loc>
+    <loc>https://tourism.od.gov.ua/mistse/bashka-nyd9id</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/yahorlyk-k5woge</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/palats-kultury-a1s5yy</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -271,6 +396,11 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://tourism.od.gov.ua/mistse/lyampa-u067uu</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://tourism.od.gov.ua/mistse/kafedralnyy-sobor-uspinnya-presvyatoyi-divy-mariyi-onxt2x</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -281,7 +411,12 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/mistse/odeskyy-akademichnyy-oblasnyy-teatr-lyalok-wpmgev</loc>
+    <loc>https://tourism.od.gov.ua/mistse/kalancha-for7z2</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/moncastro-glamping-sd7v0q</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -301,7 +436,7 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/mistse/svyato-panteleymonivskyy-monastyr-lq6gjv</loc>
+    <loc>https://tourism.od.gov.ua/mistse/tserkva-svyato-paraskevynska-fabtii</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -311,7 +446,12 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/mistse/odeskyy-akademichnyy-teatr-muzychnoyi-komediyi-im-m-vodyanoho-kr2384</loc>
+    <loc>https://tourism.od.gov.ua/mistse/trypilska-khata-qh8viq</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/svyato-pokrovska-tserkva-boure8</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -326,17 +466,17 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://tourism.od.gov.ua/mistse/hrabivski-izvory-s5phhe</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://tourism.od.gov.ua/mistse/my-wine-by-eduard-gorodetsky-sgbsjf</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/mistse/muzey-konyachnoyi-spravy-mykoly-shustova-ie7zma</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://tourism.od.gov.ua/mistse/muzey-chystoyi-vody-s9a4p0</loc>
+    <loc>https://tourism.od.gov.ua/mistse/tserkva-svyato-troyitska-bcgs85</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -346,7 +486,12 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/mistse/tsentralnyy-miskyy-plyazh-chornomorska-g3w9vz</loc>
+    <loc>https://tourism.od.gov.ua/mistse/miskyy-palats-kultury-druzhba-o65sxk</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/pidzemni-pryrodni-dzherela-u03n0o</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -356,7 +501,12 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/mistse/akvapark-hawaii-y9td6m</loc>
+    <loc>https://tourism.od.gov.ua/podiyi/odeskyy-akademichnyy-oblasnyy-teatr-lyalok-5zu2bc</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/memorialnyy-kompleks-412-berehovoyi-batareyi-1o9jo3</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -376,12 +526,17 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/mistse/budynok-stina-bk8r4w</loc>
+    <loc>https://tourism.od.gov.ua/mistse/svyato-uspenska-tserkva-vkjmxx</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/mistse/oblasnyy-tsentr-natsionalnykh-kultur-m-izmayil-n3q056</loc>
+    <loc>https://tourism.od.gov.ua/podiyi/teatr-na-chayniy-5qbzbu</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/budynok-stina-bk8r4w</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -391,12 +546,17 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://tourism.od.gov.ua/mistse/prymorskyy-park-mista-chornomorska-ew02e8</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://tourism.od.gov.ua/mistse/biopark-zygxil</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/mistse/park-miniatyur-x50ucr</loc>
+    <loc>https://tourism.od.gov.ua/mistse/vulytsya-derybasivska-g3t3pd</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -406,12 +566,12 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/mistse/budynok-rusova-utk997</loc>
+    <loc>https://tourism.od.gov.ua/mistse/nyzhnodnistrovskyy-natsionalnyy-pryrodnyy-park-eda3w3</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/podiyi/odeskyy-akademichnyy-oblasnyy-teatr-lyalok-5zu2bc</loc>
+    <loc>https://tourism.od.gov.ua/mistse/budynok-rusova-utk997</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -421,22 +581,22 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://tourism.od.gov.ua/podiyi/odeskyy-akademichnyy-teatr-muzychnoyi-komediyi-im-m-vodyanoho-c27db3</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://tourism.od.gov.ua/mistse/dunay-c2uxrz</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/mistse/odeskyy-akademichnyy-ukrayinskyy-muzychno-dramatychnyy-teatr-im-v-vasylka-60imq7</loc>
+    <loc>https://tourism.od.gov.ua/mistse/dzherelo-myrne-gxxftf</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://tourism.od.gov.ua/mistse/vodospad-na-fontantsi-q4iy9v</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://tourism.od.gov.ua/mistse/dzherelo-myrne-gxxftf</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -456,7 +616,7 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/mistse/ozeko-kahul-l3xmvt</loc>
+    <loc>https://tourism.od.gov.ua/mistse/pidzemnyy-monastyr-hetsymanskyy-sad-rykj6i</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -476,16 +636,6 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/mistse/sadyba-kurysiv-r59s8o</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://tourism.od.gov.ua/podiyi/odeskyy-akademichnyy-ukrayinskyy-muzychno-dramatychnyy-teatr-im-v-vasylka-lry63n</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
     <loc>https://tourism.od.gov.ua/mistse/dunayskyy-biosfernyy-zapovidnyk-8yg3t2</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -496,27 +646,22 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/podiyi/odeskyy-natsionalnyy-akademichnyy-teatr-opery-ta-baletu-jisng2</loc>
+    <loc>https://tourism.od.gov.ua/mistse/manzul-winehouse-votbp3</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/mistse/odeskyy-muzey-zakhidnoho-ta-skhidnoho-mystetstva-3m9ox5</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://tourism.od.gov.ua/mistse/lymanskyy-hdzicr</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://tourism.od.gov.ua/podiyi/odeskyy-akademichnyy-teatr-muzychnoyi-komediyi-im-m-vodyanoho-70fk6z</loc>
+    <loc>https://tourism.od.gov.ua/mistse/sportyvno-ozdorovchyy-kompleks-olimp-s4m7id</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://tourism.od.gov.ua/mistse/odesos-zadvg0</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/khram-svyatoho-arkhanhela-mykhayila-v2g212</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -536,6 +681,16 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://tourism.od.gov.ua/mistse/rozdilnyanskyy-narodnyy-istoryko-krayeznavchyy-muzey-4tgw52</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/dashkyni-stavky-75bhmf</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://tourism.od.gov.ua/mistse/akvapark-odesa-nws2js</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -546,17 +701,7 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/podiyi/blahodiynyy-festyval-pan-borshch-qw8gwx</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://tourism.od.gov.ua/mistse/u-nedeva-9evfi1</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://tourism.od.gov.ua/podiyi/ii-vidkrytyy-molodizhnyy-festyval-zoryanyy-kod-xg8w92</loc>
+    <loc>https://tourism.od.gov.ua/mistse/kosyvskyy-plyazh-pca4kc</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -566,7 +711,7 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/podiyi/dva-polyusa-odnoho-mista-istoriya-ta-suchasnist-8ofr27</loc>
+    <loc>https://tourism.od.gov.ua/mistse/baltskyy-miskyy-park-s8pkle</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -576,7 +721,12 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/mistse/vinaria-pa1mhm</loc>
+    <loc>https://tourism.od.gov.ua/mistse/svyato-kostyantyno-olenivska-tserkva-eathp3</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/muzey-mista-yuzhnoho-1owamu</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -586,12 +736,7 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/podiyi/den-molodi-f6bt2l</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://tourism.od.gov.ua/mistse/yahorlyk-k5woge</loc>
+    <loc>https://tourism.od.gov.ua/mistse/rehionalnyy-landshaftnyy-park-tylihulskyy-2fop19</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -601,7 +746,7 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/mistse/uspenskyy-sobor-bozhoyi-materi-do82bi</loc>
+    <loc>https://tourism.od.gov.ua/mistse/odeskyy-muzey-kino-8iru7c</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -611,17 +756,27 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/mistse/khram-uspinnya-presvyatoyi-bohorodytsi-sq57mr</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
     <loc>https://tourism.od.gov.ua/mistse/baltskyy-istorychnyy-muzey-3y5opy</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/mistse/natsionalnyy-pryrodnyy-park-tuzlovski-lymany-bl1h1c</loc>
+    <loc>https://tourism.od.gov.ua/mistse/kostol-sv-stanislava-bf5xhf</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/khudozhnya-halereya-mista-pivdennoho-8hejtp</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/nyzhniy-troyaniv-val-lhvn7r</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/richka-kodyma-haov6s</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -631,12 +786,12 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/podiyi/odeska-oblasna-filarmoniya-nkbis8</loc>
+    <loc>https://tourism.od.gov.ua/mistse/lyuteranska-kirkha-v-tryhradakh-u6zpwd</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/mistse/sadyba-kurysiv-cndd8t</loc>
+    <loc>https://tourism.od.gov.ua/podiyi/odeska-oblasna-filarmoniya-nkbis8</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -646,7 +801,17 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/mistse/mala-mechet-0k7ild</loc>
+    <loc>https://tourism.od.gov.ua/mistse/uspenskyy-sobor-bozhoyi-materi-do82bi</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/palats-sadyba-dubetskykh-pankeyevykh-5ilu55</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/khram-uspinnya-presvyatoyi-bohorodytsi-sq57mr</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -656,12 +821,12 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/mistse/svyato-voznesenskyy-sobor-rrwsbn</loc>
+    <loc>https://tourism.od.gov.ua/mistse/natsionalnyy-pryrodnyy-park-tuzlovski-lymany-bl1h1c</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/mistse/zoryanskyy-narodnyy-etnohrafichnyy-muzey-holyamata-k-shcha-5t4d61</loc>
+    <loc>https://tourism.od.gov.ua/mistse/svyato-voznesenskyy-sobor-rrwsbn</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -671,12 +836,12 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/mistse/moncastro-glamping-sd7v0q</loc>
+    <loc>https://tourism.od.gov.ua/mistse/villa-tinta-ahfwx5</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/mistse/villa-tinta-ahfwx5</loc>
+    <loc>https://tourism.od.gov.ua/mistse/skver-malenka-hruziya-tzrts8</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -691,17 +856,27 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://tourism.od.gov.ua/mistse/rybalske-kandel-w5h62d</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/kotlovynskyy-krayeznavchyy-muzey-yondg8</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://tourism.od.gov.ua/mistse/kodymskyy-istoryko-krayeznavchyy-muzey-v8b2fl</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/mistse/manzul-winehouse-votbp3</loc>
+    <loc>https://tourism.od.gov.ua/podiyi/odeskyy-natsionalnyy-akademichnyy-teatr-opery-ta-baletu-jisng2</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/mistse/spaso-preobrazhenskyy-sobor-shnu1g</loc>
+    <loc>https://tourism.od.gov.ua/mistse/prymorskyy-park-2igip7</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -711,17 +886,27 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://tourism.od.gov.ua/podiyi/odeskyy-akademichnyy-ukrayinskyy-muzychno-dramatychnyy-teatr-im-v-vasylka-lry63n</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/sobor-uspinnya-presvyatoyi-bohorodytsi-naybilshyy-katolytskyy-khram-pivdnya-s0qxfw</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://tourism.od.gov.ua/mistse/svyato-mykolayivska-tserkva-lc6r4m</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/mistse/oblasnyy-tsentr-hahauzkoyi-kultury-1hd327</loc>
+    <loc>https://tourism.od.gov.ua/mistse/horodyshche-kartal-9m66h7</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/mistse/svyato-mykolayivska-tserkva-4d1iyy</loc>
+    <loc>https://tourism.od.gov.ua/mistse/istoryko-krayeznavchyy-muzey-sntji2</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -731,7 +916,22 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/mistse/rybalske-kandel-w5h62d</loc>
+    <loc>https://tourism.od.gov.ua/mistse/oblasnyy-tsentr-hahauzkoyi-kultury-1hd327</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/svyato-ioanno-bohoslovska-tserkva-jxngym</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/svyato-mykolayivska-tserkva-4d1iyy</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/vitryak-mno0rb</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -756,22 +956,27 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/mistse/sobor-svyatytelya-i-chudotvortsya-mykolaya-v-bolhradi-sndlr2</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
     <loc>https://tourism.od.gov.ua/mistse/dendropark-peremohy-gn4hjl</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/mistse/khram-pokrova-presvyatoyi-bohorodytsi-bgzi6h</loc>
+    <loc>https://tourism.od.gov.ua/mistse/sobor-svyatytelya-i-chudotvortsya-mykolaya-v-bolhradi-sndlr2</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/mistse/kostol-sv-stanislava-bf5xhf</loc>
+    <loc>https://tourism.od.gov.ua/mistse/skver-kytayskyy-sad-e6m4qj</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/vulytsya-hoholya-fwtcy1</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/tserkva-rizdva-presvyatoyi-bohorodytsi-xc01v7</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -786,17 +991,7 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/mistse/tserkva-rizdva-presvyatoyi-bohorodytsi-xc01v7</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
     <loc>https://tourism.od.gov.ua/mistse/frumushyka-nova-vpw27c</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://tourism.od.gov.ua/mistse/kam-yanyy-vitryak-4xo84j</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -806,7 +1001,7 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/mistse/virmenska-tserkva-uspinnya-prechystoyi-bohorodytsi-qrdytq</loc>
+    <loc>https://tourism.od.gov.ua/mistse/kam-yanyy-vitryak-4xo84j</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -816,7 +1011,17 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/mistse/odeskyy-teatr-yunoho-hlyadacha-im-yuriya-oleshi-qp7pf5</loc>
+    <loc>https://tourism.od.gov.ua/mistse/virmenska-tserkva-uspinnya-prechystoyi-bohorodytsi-qrdytq</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/lymanskyy-hdzicr</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/zahnitkivski-katakomby-6x3jqg</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -826,12 +1031,12 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/mistse/nikolska-tserkva-g7st4o</loc>
+    <loc>https://tourism.od.gov.ua/mistse/odeskyy-oblasnyy-tsentr-ukrayinskoyi-kultury-m0uepx</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/mistse/odeskyy-oblasnyy-tsentr-ukrayinskoyi-kultury-m0uepx</loc>
+    <loc>https://tourism.od.gov.ua/mistse/likhtenfeld-k30w7r</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -866,7 +1071,12 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/mistse/art-halereya-s8yyb7</loc>
+    <loc>https://tourism.od.gov.ua/mistse/simeyna-vynorobnya-v-petrov-m3h3u3</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/etnokulturna-turystychna-destynatsiya-kotlovyna-f5vaq7</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -876,12 +1086,12 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/mistse/pravoslavna-bazylika-u-vizantiyskomu-styli-as5go0</loc>
+    <loc>https://tourism.od.gov.ua/mistse/mala-mechet-0k7ild</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/mistse/potomkinski-skhody-bbftof</loc>
+    <loc>https://tourism.od.gov.ua/mistse/bolharskyy-skver-oyenyy</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -891,7 +1101,27 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://tourism.od.gov.ua/mistse/muzey-chystoyi-vody-s9a4p0</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/potomkinski-skhody-bbftof</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://tourism.od.gov.ua/mistse/muzey-vohnyu-m70mbd</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/skver-nadiya-508yb4</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/akvapark-hawaii-y9td6m</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -901,7 +1131,7 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/mistse/sobor-uspinnya-presvyatoyi-bohorodytsi-naybilshyy-katolytskyy-khram-pivdnya-s0qxfw</loc>
+    <loc>https://tourism.od.gov.ua/mistse/skver-kovanykh-skulptur-g1gaw2</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -916,7 +1146,7 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/mistse/rozdilnyanskyy-narodnyy-istoryko-krayeznavchyy-muzey-4tgw52</loc>
+    <loc>https://tourism.od.gov.ua/mistse/budynok-vchenykh-8jio7z</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -926,12 +1156,12 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/mistse/faynyy-med-w2wof7</loc>
+    <loc>https://tourism.od.gov.ua/mistse/tserkva-sv-paraskevy-rlsllk</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/mistse/chayka-qkkq4w</loc>
+    <loc>https://tourism.od.gov.ua/mistse/svyato-mykolayivska-tserkva-8ooigh</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -941,12 +1171,17 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/mistse/plyazh-delfin-71crgl</loc>
+    <loc>https://tourism.od.gov.ua/mistse/bohnatovo-asazg4</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/mistse/persha-vynorobna-stantsiya-clu5nf</loc>
+    <loc>https://tourism.od.gov.ua/mistse/khram-svyatoho-arkhystratyha-mykhayila-uuexlz</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/chayka-qkkq4w</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -956,7 +1191,17 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://tourism.od.gov.ua/mistse/svyato-uspenska-tserkva-4guzvi</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://tourism.od.gov.ua/mistse/svyato-mykolayivska-tserkva-busd4v</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/u-nedeva-9evfi1</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -971,17 +1216,12 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/mistse/balkanski-yastiya-m714e2</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://tourism.od.gov.ua/mistse/bohnatovo-asazg4</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
     <loc>https://tourism.od.gov.ua/mistse/yevropeyska-syrovarnya-yec8ok</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/budynok-falts-feyna-3wff0i</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -991,12 +1231,12 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/mistse/kiliyskyy-istoryko-krayeznavchyy-muzey-31zo1m</loc>
+    <loc>https://tourism.od.gov.ua/mistse/sadyba-kozatska-rodyna-xyw2it</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/mistse/sadyba-kozatska-rodyna-xyw2it</loc>
+    <loc>https://tourism.od.gov.ua/mistse/danube-hq-syipjo</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -1021,11 +1261,6 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/mistse/muzey-kp-odesmiskelektrotrans-3faijk</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
     <loc>https://tourism.od.gov.ua/mistse/novoselivskyy-silskyy-narodoznavchyy-muzey-kasa-p-ryntyask-du3428</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -1036,7 +1271,7 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/mistse/odeska-oblasna-filarmoniya-imeni-davyda-oystrakha-z1wm92</loc>
+    <loc>https://tourism.od.gov.ua/mistse/palats-bzhozovskoho-evk755</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -1046,17 +1281,12 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/mistse/odeskyy-literaturnyy-muzey-tgk65s</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://tourism.od.gov.ua/mistse/odeskyy-muzey-kino-8iru7c</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
     <loc>https://tourism.od.gov.ua/mistse/odeskyy-muzey-stepova-ukrayina-g06150</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/odeskyy-literaturnyy-muzey-tgk65s</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -1066,12 +1296,7 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/mistse/odeskyy-natsionalnyy-khudozhniy-muzey-onfam-o4n2wn</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://tourism.od.gov.ua/mistse/odeskyy-oblasnyy-akademichnyy-dramatychnyy-teatr-wfjo4a</loc>
+    <loc>https://tourism.od.gov.ua/mistse/izmayilskyy-viyskovo-istorychnyy-muzeynyy-kompleks-vmzypk</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -1116,12 +1341,332 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://tourism.od.gov.ua/mistse/khram-uspinnya-presvyatoyi-bohorodytsi-53b9kq</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/dunayskyy-ahrariy-l6ov36</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/krynytsya-3tcspv</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/podiyi/odeskyy-akademichnyy-teatr-yunoho-hlyadacha-6n19hh</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/kinnyy-dvir-pavla-hafintsya-tdmw3a</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/skver-im-t-h-shevchenka-fpzt5p</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/svyato-heorhiyivska-tserkva-8zbdwf</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/tserkva-usiknovinnya-holovy-ioanna-predtechi-ihcklf</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/naberezhna-dunayu-kl07ar</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/velosypedna-infrastruktura-xojafa</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/tserkva-svyatykh-rivnoapostolnykh-tsariv-kostyantyna-ta-oleny-ar9b7o</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/kiliyskyy-istoryko-krayeznavchyy-muzey-31zo1m</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/khram-pokrova-presvyatoyi-bohorodytsi-bgzi6h</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/dzherelo-divochi-slozy-tqiex9</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/tserkva-sela-plavni-j2g7xr</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/kafedralnyy-sobor-pokrova-presvyatoyi-bohorodytsi-2ky3on</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/memorial-pam-yati-mynulym-pokolinnyam-m-tatarbunary-62ii7t</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/tatarbunarska-fortetsya-az6d94</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/spaso-preobrazhenskyy-zhinochyy-monastyr-ci975b</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/dzherelo-ohrud-ufozut</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/savranskyy-istoryko-krayeznavchyy-muzey-4tw13g</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/podiyi/odeskyy-akademichnyy-teatr-muzychnoyi-komediyi-im-m-vodyanoho-q4nst4</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/podiyi/odeskyy-natsionalnyy-akademichnyy-teatr-opery-ta-baletu-3a2gd5</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/podiyi/odeskyy-oblasnyy-akademichnyy-dramatychnyy-teatr-nd5jgl</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/podiyi/odeska-oblasna-filarmoniya-toelv8</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/podiyi/odeskyy-akademichnyy-oblasnyy-teatr-lyalok-hnfgi3</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/podiyi/odeskyy-akademichnyy-teatr-yunoho-hlyadacha-j6hgps</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/podiyi/teatr-na-chayniy-iionjv</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/ozeko-kahul-l3xmvt</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/plyazh-delfin-71crgl</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/baltskyy-miskyy-plyazh-vce5ct</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/tsentralnyy-miskyy-plyazh-chornomorska-g3w9vz</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/bulvar-prymorskyy-chk29e</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/muzey-konyachnoyi-spravy-mykoly-shustova-ie7zma</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/birzheva-ploshcha-nwd4t5</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/muzey-suchasnoho-mystetstva-odesy-naww1u</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/odeska-oblasna-filarmoniya-imeni-davyda-oystrakha-z1wm92</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/odeskyy-akademichnyy-oblasnyy-teatr-lyalok-wpmgev</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/odeskyy-akademichnyy-teatr-muzychnoyi-komediyi-im-m-vodyanoho-kr2384</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/odeskyy-muzey-zakhidnoho-ta-skhidnoho-mystetstva-3m9ox5</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/odeskyy-natsionalnyy-khudozhniy-muzey-onfam-o4n2wn</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/odeskyy-oblasnyy-akademichnyy-dramatychnyy-teatr-wfjo4a</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/odeskyy-akademichnyy-ukrayinskyy-muzychno-dramatychnyy-teatr-im-v-vasylka-60imq7</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/odeskyy-teatr-yunoho-hlyadacha-im-yuriya-oleshi-qp7pf5</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/prymorski-skhody-m4qetb</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://tourism.od.gov.ua/mistse/tvorchiy-prostir-dialohy-cjhy1t</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/mistse/khram-uspinnya-presvyatoyi-bohorodytsi-53b9kq</loc>
+    <loc>https://tourism.od.gov.ua/mistse/don-alejandro-winery-yvje2j</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/vinaria-pa1mhm</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/balkanski-yastiya-m714e2</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/ploshcha-soborna-r4uint</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/snailfarmu-53s4st</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/pan-bilan-b9fsyx</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/sadyba-kurysiv-r59s8o</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/tserkva-svyatoho-yosypa-tu1k1e</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/sadyba-kurysiv-cndd8t</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/spaso-preobrazhenskyy-sobor-shnu1g</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/turetskyy-skver-1nyywz</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/nikolska-tserkva-g7st4o</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/mayetok-haharina-g5ppkn</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/svyato-panteleymonivskyy-monastyr-lq6gjv</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/art-halereya-s8yyb7</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/pravoslavna-bazylika-u-vizantiyskomu-styli-as5go0</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/faynyy-med-w2wof7</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/park-miniatyur-x50ucr</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/persha-vynorobna-stantsiya-clu5nf</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/muzey-kp-odesmiskelektrotrans-3faijk</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -1131,7 +1676,22 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/podiyi/odeskyy-akademichnyy-teatr-yunoho-hlyadacha-6n19hh</loc>
+    <loc>https://tourism.od.gov.ua/mistse/kostel-svyatoho-petra-apostola-sobor-sv-petra-9vf5gw</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/podiyi/odeskyy-akademichnyy-ukrayinskyy-muzychno-dramatychnyy-teatr-im-v-vasylka-oc92sa</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/botanichnyy-sad-onu-im-i-i-mechnykova-1xatvj</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/mistse/trasa-zdorov-ya-a5nj0v</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -1142,11 +1702,6 @@
   </url>
   <url>
     <loc>https://tourism.od.gov.ua/marshruty/fdyumvt8</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://tourism.od.gov.ua/marshruty/52r8xe10</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -1191,12 +1746,12 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/marshruty/bdrr35lf</loc>
+    <loc>https://tourism.od.gov.ua/marshruty/j4lwbi9z</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/marshruty/j4lwbi9z</loc>
+    <loc>https://tourism.od.gov.ua/marshruty/bdrr35lf</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -1231,12 +1786,22 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/marshruty/2tzb6hx8</loc>
+    <loc>https://tourism.od.gov.ua/marshruty/tnel43kc</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/marshruty/ofq8zfib</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://tourism.od.gov.ua/marshruty/hf9kre01</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/marshruty/2tzb6hx8</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -1251,6 +1816,16 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://tourism.od.gov.ua/marshruty/cep1cdk6</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/marshruty/uzax7b3a</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://tourism.od.gov.ua/marshruty/k67itcn4</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -1261,12 +1836,22 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/marshruty/fqw07jjg</loc>
+    <loc>https://tourism.od.gov.ua/marshruty/qkpm037l</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/marshruty/ebm3mlka</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://tourism.od.gov.ua/marshruty/0zmj8ukm</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/marshruty/6fkibnez</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -1286,7 +1871,7 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/marshruty/6tpzw2mk</loc>
+    <loc>https://tourism.od.gov.ua/marshruty/7rb6j7oy</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -1296,7 +1881,97 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://tourism.od.gov.ua/marshruty/7rb6j7oy</loc>
+    <loc>https://tourism.od.gov.ua/marshruty/lngagpo4</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/marshruty/6tpzw2mk</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/marshruty/oua0m761</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/marshruty/fqw07jjg</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/marshruty/u7gbxd1l</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/marshruty/52r8xe10</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/marshruty/z3zivij0</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/marshruty/bnzzu8g8</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/marshruty/a6mktojk</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/marshruty/2bc8og7p</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/marshruty/lsubkbrl</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/marshruty/bc1oyvj6</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/marshruty/qt7fqast</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/marshruty/v28dnt80</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/marshruty/vcnieo5v</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/marshruty/cehzjey5</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/marshruty/hdrocq88</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/marshruty/p1iokgd9</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tourism.od.gov.ua/marshruty/dwb0ga7e</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>

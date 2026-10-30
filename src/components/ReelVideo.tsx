@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState } from "react";
 import { Maximize2, Volume2, VolumeX } from "lucide-react";
 import { SpinningEmblem } from "@/components/SpinningEmblem";
+import { useLang } from "@/lib/langContext";
 
 /**
  * Вертикальне рілс-відео (район/місто/об'єкт): не вмикається само — тільки
@@ -27,6 +28,7 @@ export function ReelVideo({
   emblemSize?: number;
   className?: string;
 }) {
+  const { t } = useLang();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [paused, setPaused] = useState(true);
 
@@ -76,7 +78,7 @@ export function ReelVideo({
           type="button"
           onClick={handleToggleMute}
           className="flex items-center justify-center rounded-full border border-white/30 bg-black/50 p-2 text-white backdrop-blur-sm transition-all hover:bg-black/70"
-          aria-label={muted ? "Увімкнути звук" : "Вимкнути звук"}
+          aria-label={muted ? t("soundOn") : t("soundOff")}
         >
           {muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
         </button>
@@ -85,7 +87,7 @@ export function ReelVideo({
             type="button"
             onClick={handleExpand}
             className="flex items-center justify-center rounded-full border border-white/30 bg-black/50 p-2 text-white backdrop-blur-sm transition-all hover:bg-black/70"
-            aria-label="На весь екран"
+            aria-label={t("fullscreen")}
           >
             <Maximize2 className="h-4 w-4" />
           </button>

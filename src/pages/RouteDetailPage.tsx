@@ -19,7 +19,7 @@ import type { TourismObject } from "@/types/hierarchy";
 import SiteFooter from "@/components/SiteFooter";
 import PageBrow from "@/components/PageBrow";
 import { useSeo } from "@/hooks/useSeo";
-import { extractCoords, type WaypointObject } from "@/components/RouteMap";
+import { routeGeometry } from "@/lib/routeGeometry";
 
 // Той самий інтерактивний MapLibre-компонент, що й в оверлеї маршрутів
 // (кнопка "Маршрути" в геро головної) — lazy, щоб MapLibre (~1 МБ) не тягнувся
@@ -89,6 +89,15 @@ const RouteDetailPage = () => {
 
   const route = routes.find((r) => r.id === id);
 
+  // Усі хуки — до ранніх return (правила хуків). useMemo тримає стабільні
+  // масиви: новий масив на кожен рендер зносив би й перебудовував MapLibre-карту.
+  // Якщо в посиланні Google Maps немає точок (коротке посилання, «Мої карти»),
+  // маршрут будується за координатами прикріплених об'єктів.
+  const geometry = useMemo(
+    () => (route ? routeGeometry(route, snapshot?.objects ?? []) : null),
+    [route, snapshot],
+  );
+
   useSeo({
     title: route ? tl(route.name, route.nameEn) : t("routes"),
     description: route ? tl(route.description, route.descriptionEn) : undefined,
@@ -126,26 +135,8 @@ const RouteDetailPage = () => {
   const desc = tl(route.description, route.descriptionEn);
   const content = tl(route.content, route.contentEn);
 
-  const linkedObjects = (route.objectIds ?? [])
-    .map((oid) => snapshot?.objects.find((o) => o.id === oid && o.published))
-    .filter(Boolean) as TourismObject[];
-
-  // useMemo — без нього новий масив на кожен рендер зносив би й перебудовував
-  // MapLibre-карту щоразу (та сама причина, що й у RoutesOverlay).
-  const waypointsForMap: WaypointObject[] = useMemo(
-    () => (route.waypointObjectIds ?? [])
-      .map((oid, i) => {
-        if (!oid) return null;
-        const obj = snapshot?.objects.find((o) => o.id === oid && o.published);
-        return obj ? { coordIndex: i, object: obj } : null;
-      })
-      .filter(Boolean) as WaypointObject[],
-    [route.waypointObjectIds, snapshot],
-  );
-
-  const stops = linkedObjects.length > 0 ? linkedObjects : waypointsForMap.map((w) => w.object);
-
-  const showMap = extractCoords(route.mapUrl ?? "").length > 0;
+  const stops = geometry?.stops ?? [];
+  const showMap = !!geometry && geometry.source !== "none";
 
   const linksList = (route.links ?? "")
     .split("\n")
@@ -189,7 +180,7 @@ const RouteDetailPage = () => {
                 if (!meta) return null;
                 return (
                   <span key={tagId} className="flex items-center gap-1 rounded-full bg-[#df9b3b] px-3 py-1.5 text-[13px] text-[#002f5e] font-odesa-semi">
-                    {meta.emoji} {meta.label}
+                    <span aria-hidden="true">{meta.emoji}</span> {tl(meta.label, meta.labelEn)}
                   </span>
                 );
               })}
@@ -221,7 +212,11 @@ const RouteDetailPage = () => {
                 {t("routeOnMap")}
               </p>
               <Suspense fallback={<div className="h-[320px] w-full rounded-[20px] bg-[#002f5e]/5 md:h-[460px]" />}>
-                <RouteMap mapUrl={route.mapUrl} waypoints={waypointsForMap} />
+                <RouteMap
+                  mapUrl={geometry!.source === "link" ? route.mapUrl : undefined}
+                  coords={geometry!.source === "objects" ? geometry!.coords : undefined}
+                  waypoints={geometry!.waypoints}
+                />
               </Suspense>
             </section>
           )}

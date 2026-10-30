@@ -44,7 +44,9 @@ function loadConversations(): Conversation[] {
 
 function titleFrom(text: string): string {
   const clean = text.replace(/\s+/g, " ").trim();
-  return clean.length > 42 ? `${clean.slice(0, 42)}…` : clean || "Новий чат";
+  // Це не React-модуль, тому мову беремо з <html lang>, який виставляє useSeo.
+  const fallback = document.documentElement.lang === "en" ? "New chat" : "Новий чат";
+  return clean.length > 42 ? `${clean.slice(0, 42)}…` : clean || fallback;
 }
 
 export function useAssistantChats() {

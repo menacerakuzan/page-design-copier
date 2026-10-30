@@ -39,7 +39,7 @@ async function uploadChunked(file: File, filePath: string, onProgress?: (pct: nu
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ filename: filePath, totalChunks: total }),
   });
-  if (!done.ok) throw new Error("Помилка збирання файлу");
+  if (!done.ok) throw new Error(document.documentElement.lang === "en" ? "File assembly error" : "Помилка збирання файлу");
 }
 
 async function uploadDirect(file: File, filePath: string): Promise<void> {
@@ -53,7 +53,7 @@ async function uploadDirect(file: File, filePath: string): Promise<void> {
     },
     body: file,
   });
-  if (!res.ok) throw new Error("Помилка завантаження файлу");
+  if (!res.ok) throw new Error(document.documentElement.lang === "en" ? "File upload error" : "Помилка завантаження файлу");
 }
 
 /** Upload a media file (auto chunked for large files); returns its public URL. */

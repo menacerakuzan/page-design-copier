@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { Img } from "@/components/Img";
 import { useDialogA11y } from "@/hooks/useDialogA11y";
+import { useLang } from "@/lib/langContext";
 
 export type LightboxImage = { url: string; title?: string };
 
@@ -23,6 +24,7 @@ export const GalleryLightbox = ({
   onClose: () => void;
   onNavigate: (index: number) => void;
 }) => {
+  const { t } = useLang();
   const open = index !== null;
   const current = open ? images[index] : null;
   const hasMultiple = images.length > 1;
@@ -64,7 +66,7 @@ export const GalleryLightbox = ({
             ref={dialogRef}
             role="dialog"
             aria-modal="true"
-            aria-label={current.title ? `Фото: ${current.title}` : "Перегляд фото"}
+            aria-label={current.title ? `${t("viewPhoto")}: ${current.title}` : t("viewPhoto")}
             className="fixed inset-0 z-[91] flex items-center justify-center p-4 cursor-zoom-out md:p-10"
           >
             <AnimatePresence mode="wait" initial={false}>
@@ -92,7 +94,7 @@ export const GalleryLightbox = ({
             <button
               type="button"
               onClick={onClose}
-              aria-label="Закрити"
+              aria-label={t("close")}
               className="absolute right-5 top-5 flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur-sm transition hover:bg-white/30"
             >
               <X className="h-5 w-5" />
@@ -103,7 +105,7 @@ export const GalleryLightbox = ({
                 <button
                   type="button"
                   onClick={(e) => { e.stopPropagation(); onNavigate(((index as number) - 1 + images.length) % images.length); }}
-                  aria-label="Попереднє фото"
+                  aria-label={t("prevPhoto")}
                   className="absolute left-3 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur-sm transition hover:bg-white/30 md:left-6"
                 >
                   <ChevronLeft className="h-5 w-5" />
@@ -111,7 +113,7 @@ export const GalleryLightbox = ({
                 <button
                   type="button"
                   onClick={(e) => { e.stopPropagation(); onNavigate(((index as number) + 1) % images.length); }}
-                  aria-label="Наступне фото"
+                  aria-label={t("nextPhoto")}
                   className="absolute right-3 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur-sm transition hover:bg-white/30 md:right-6"
                 >
                   <ChevronRight className="h-5 w-5" />

@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { isEventArchived, withoutArchivedEvents } from "@/lib/eventArchive";
 import { Img } from "@/components/Img";
 import { useLang } from "@/lib/langContext";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowRight, ArrowUpRight, Calendar, Check, CheckCircle2, ChevronLeft,
-  Clock, Globe, MapPin, Navigation, Phone, Share2, ShoppingCart, Tag, Ticket, BookOpen, X,
+  Clock, Globe, Loader2, MapPin, Navigation, Phone, QrCode, Share2, ShoppingCart, Tag, Ticket, BookOpen, X,
 } from "lucide-react";
 import { GalleryVideoCard } from "@/components/GalleryVideoCard";
 import { ReelVideo } from "@/components/ReelVideo";
@@ -29,6 +30,8 @@ import { AudioGuidePlayer } from "@/components/AudioGuidePlayer";
 import { DistrictDiscoverMore } from "@/components/DistrictDiscoverMore";
 import { useSeo } from "@/hooks/useSeo";
 import { objectDetailPath, objectTypeColor } from "@/lib/entityLinks";
+import { parseRepertoire } from "@/lib/repertoire";
+import { sectionTitle } from "@/lib/sectionTitles";
 import { CompassRose } from "@/components/decor";
 
 /* ── palette ─────────────────────────────────────────────────────── */
@@ -36,11 +39,11 @@ const BG   = "#fff2e8";
 const NAVY = "#002f5e";
 const GOLD = "#df9b3b";
 
-const meta: Record<string, { label: string; schedBg: string }> = {
-  attraction: { label: "Місце",    schedBg: "#001a3d" },
-  event:      { label: "Подія",    schedBg: "#3d0820" },
-  hotel:      { label: "Готель",   schedBg: "#062820" },
-  restaurant: { label: "Ресторан", schedBg: "#2a1200" },
+const meta: Record<string, { label: string; labelEn: string; schedBg: string }> = {
+  attraction: { label: "Місце",    labelEn: "Place",      schedBg: "#001a3d" },
+  event:      { label: "Подія",    labelEn: "Event",      schedBg: "#3d0820" },
+  hotel:      { label: "Готель",   labelEn: "Hotel",      schedBg: "#062820" },
+  restaurant: { label: "Ресторан", labelEn: "Restaurant", schedBg: "#2a1200" },
 };
 
 type PageType = "event" | "hotel" | "restaurant" | "attraction";
@@ -54,12 +57,6 @@ const SectionPattern = () => (
   />
 );
 
-function parseRepertoire(text: string): { date: string; title: string; time: string }[] {
-  return text.split("\n").map(line => {
-    const parts = line.split("—").map(s => s.trim());
-    return { date: parts[0] ?? "", title: parts[1] ?? line.trim(), time: parts[2] ?? "" };
-  }).filter(r => r.title);
-}
 
 const EntityDetail = ({ type }: { type: PageType }) => {
   const params = useParams();
@@ -71,6 +68,7 @@ const EntityDetail = ({ type }: { type: PageType }) => {
   const [reelImageOpen, setReelImageOpen] = useState(false);
   const [reelVideoOpen, setReelVideoOpen] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
+  const [qrBusy, setQrBusy] = useState(false);
   const [galleryLightbox, setGalleryLightbox] = useState<{ images: LightboxImage[]; index: number } | null>(null);
   const { data: snapshot, isLoading } = useHierarchySnapshot();
   const { data: cardsData } = usePageContentCards(pageKey);
@@ -81,7 +79,8 @@ const EntityDetail = ({ type }: { type: PageType }) => {
     [snapshot, slug, type],
   );
 
-  const allObjects = useMemo(() => (snapshot?.objects ?? []).filter(o => o.published), [snapshot]);
+  // Архівні події не пропонуємо в «Поряд»/«Пов'язані», але сама сторінка події відкривається.
+  const allObjects = useMemo(() => withoutArchivedEvents((snapshot?.objects ?? []).filter(o => o.published)), [snapshot]);
 
   const cards = useMemo(
     () => (cardsData ?? []).filter(c => c.pageKey === pageKey),
@@ -242,6 +241,20 @@ const EntityDetail = ({ type }: { type: PageType }) => {
     } catch { /* буфер недоступний */ }
   };
 
+  // Друкований QR-постер цього місця (той самий, що в адмінці «QR-коди»).
+  // Генератор вантажиться лише після кліку — на сторінку він ваги не додає.
+  const handleDownloadQr = async () => {
+    if (qrBusy) return;
+    setQrBusy(true);
+    try {
+      const [{ posterItemFromObject }, { downloadPosterPng }] = await Promise.all([
+        import("@/lib/qrPoster/item"), import("@/lib/qrPoster/export"),
+      ]);
+      await downloadPosterPng(posterItemFromObject(object, snapshot?.cities, snapshot?.districts));
+    } catch { /* без мережі чи canvas — кнопка просто повернеться у вихідний стан */ }
+    finally { setQrBusy(false); }
+  };
+
   const setRef   = (id: string) => (el: HTMLElement | null) => { refs.current[id] = el; };
   const scroll   = (key: string, dir: 1 | -1) => scrollRefs.current[key]?.scrollBy({ left: dir * 380, behavior: "smooth" });
 
@@ -277,6 +290,7 @@ const EntityDetail = ({ type }: { type: PageType }) => {
 
   /* ── section renderer ─────────────────────────────────────────── */
   const renderSection = (section: PageSection) => {
+    const sTitle = sectionTitle(section.title, lang);
     switch (section.kind) {
 
       // ── description (about block) ─────────────────────────────
@@ -291,9 +305,9 @@ const EntityDetail = ({ type }: { type: PageType }) => {
             <div className="relative z-10 mx-auto max-w-[1400px]">
               <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.7 }}>
-                <p className="text-[12px] uppercase tracking-[0.25em] font-odesa-medium" style={{ color: accent }}>{m.label}</p>
+                <p className="text-[12px] uppercase tracking-[0.25em] font-odesa-medium" style={{ color: accent }}>{tl(m.label, m.labelEn)}</p>
                 <h2 className="mt-2 text-[44px] leading-none font-odesa-medium md:text-[64px]" style={{ color: textColor }}>
-                  {type === "event" ? "Про подію" : type === "hotel" ? "Про готель" : type === "restaurant" ? "Про ресторан" : "Про місце"}
+                  {sectionTitle(type === "event" ? "Про подію" : type === "hotel" ? "Про готель" : type === "restaurant" ? "Про заклад" : "Про об'єкт", lang)}
                 </h2>
               </motion.div>
               {tl(object.audioUrl, object.audioUrlEn) && (
@@ -328,7 +342,7 @@ const EntityDetail = ({ type }: { type: PageType }) => {
                     return (
                       <div className="mt-6 flex items-center gap-2 text-[15px] font-odesa-regular" style={{ color: `${textColor}99` }}>
                         <MapPin className="h-4 w-4 shrink-0" style={{ color: accent }} />
-                        <span>Локація:</span>
+                        <span>{tl("Локація:", "Location:")}</span>
                         <Link to={objectDetailPath(venue.type, venue.slug)}
                           className="font-odesa-medium underline underline-offset-2 transition-opacity hover:opacity-70"
                           style={{ color: accent }}>
@@ -358,6 +372,7 @@ const EntityDetail = ({ type }: { type: PageType }) => {
                       phone={phone} website={website} mapUrl={mapUrl} accent={accent}
                       inBasket={inBasket(object.id)} onToggleBasket={() => toggleBasket(object.id)}
                       onShare={handleShare} linkCopied={linkCopied} t={t}
+                onDownloadQr={handleDownloadQr} qrBusy={qrBusy}
                       cityLink={city ? { slug: city.slug, name: city.name } : undefined}
                     />
                   </motion.aside>
@@ -381,11 +396,12 @@ const EntityDetail = ({ type }: { type: PageType }) => {
             <SectionPattern />
             <div className="relative z-10 mx-auto max-w-[600px]">
               <ContactCard
-                name={section.title || tl(object.name, object.nameEn)}
+                name={sTitle || tl(object.name, object.nameEn)}
                 address={address} hours={hours} eventDates={object.eventDates}
                 phone={phone} website={website} mapUrl={mapUrl} accent={accent}
                 inBasket={inBasket(object.id)} onToggleBasket={() => toggleBasket(object.id)}
                 onShare={handleShare} linkCopied={linkCopied} t={t}
+                onDownloadQr={handleDownloadQr} qrBusy={qrBusy}
                 cityLink={city ? { slug: city.slug, name: city.name } : undefined}
               />
             </div>
@@ -415,7 +431,7 @@ const EntityDetail = ({ type }: { type: PageType }) => {
                       <Clock className="h-7 w-7" style={{ color: accent }} />
                     </div>
                     <div>
-                      <p className="text-[11px] uppercase tracking-widest font-odesa-medium" style={{ color: `${accent}bb` }}>Години роботи</p>
+                      <p className="text-[11px] uppercase tracking-widest font-odesa-medium" style={{ color: `${accent}bb` }}>{tl("Години роботи", "Opening hours")}</p>
                       <p className="mt-1 text-[19px] font-odesa-medium leading-[1.3] text-[#fff2e8]">{hours}</p>
                     </div>
                   </motion.div>
@@ -469,7 +485,7 @@ const EntityDetail = ({ type }: { type: PageType }) => {
               </div>
               {object.repertoire && (
                 <div className="mt-14">
-                  <h3 className="mb-5 text-center font-odesa-medium text-[28px]" style={{ color: accent }}>Репертуар</h3>
+                  <h3 className="mb-5 text-center font-odesa-medium text-[28px]" style={{ color: accent }}>{tl("Репертуар", "Repertoire")}</h3>
                   <div className="mx-auto flex max-w-[700px] flex-col gap-2">
                     {parseRepertoire(object.repertoire).map((r, i) => (
                       <div key={i} className="flex items-center gap-3 rounded-[14px] border border-white/15 bg-white/10 px-4 py-3 backdrop-blur-sm">
@@ -541,7 +557,7 @@ const EntityDetail = ({ type }: { type: PageType }) => {
                 className="rounded-[28px] border-2 border-dashed px-8 py-10 text-center"
                 style={{ borderColor: `${eventColor}55`, backgroundColor: `${eventColor}14` }}>
                 <Ticket className="mx-auto mb-4 h-10 w-10" style={{ color: eventColor }} />
-                <h2 className="font-odesa-medium text-[36px] leading-none text-[#fff2e8]">{section.title}</h2>
+                <h2 className="font-odesa-medium text-[36px] leading-none text-[#fff2e8]">{sTitle}</h2>
                 {ticketText && <p className="mt-4 text-[17px] font-odesa-regular text-[#fff2e8]/70">{ticketText}</p>}
                 {ticketUrl && (
                   <a href={ticketUrl} target="_blank" rel="noreferrer"
@@ -574,7 +590,7 @@ const EntityDetail = ({ type }: { type: PageType }) => {
                   <div className="flex items-center gap-4">
                     <BookOpen className="h-8 w-8 shrink-0" style={{ color: restaurantColor }} />
                     <div>
-                      <p className="font-odesa-medium text-[20px] text-[#002f5e]">{section.title}</p>
+                      <p className="font-odesa-medium text-[20px] text-[#002f5e]">{sTitle}</p>
                       {section.subtitle && <p className="text-[14px] font-odesa-regular text-[#002f5e]/70">{section.subtitle}</p>}
                     </div>
                   </div>
@@ -629,7 +645,7 @@ const EntityDetail = ({ type }: { type: PageType }) => {
         return (
           <section key={section.id} className="px-4 py-14 md:px-10" style={{ backgroundColor: bg }}>
             <div className="container-edge">
-              {section.title && <h2 className="mb-6 font-odesa-medium text-[40px] leading-none" style={{ color: titleColor }}>{section.title}</h2>}
+              {sTitle && <h2 className="mb-6 font-odesa-medium text-[40px] leading-none" style={{ color: titleColor }}>{sTitle}</h2>}
               {section.subtitle && <p className="mb-4 text-[17px] font-odesa-regular" style={{ color: `${titleColor}88` }}>{section.subtitle}</p>}
               {noCoords ? (
                 <a href={rawUrl} target="_blank" rel="noreferrer"
@@ -639,13 +655,13 @@ const EntityDetail = ({ type }: { type: PageType }) => {
                     <CompassRose className="h-full w-full" />
                   </div>
                   <MapPin className="relative z-10 h-6 w-6" style={{ color: GOLD }} />
-                  <span className="relative z-10">Відкрити на карті →</span>
+                  <span className="relative z-10">{tl("Відкрити на карті →", "Open on map →")}</span>
                 </a>
               ) : (
                 <div className="h-[320px] overflow-hidden rounded-[28px] md:h-[480px]">
                   <iframe
                     src={embedUrl}
-                    title="Карта"
+                    title={tl("Карта", "Map")}
                     loading="lazy"
                     allow="fullscreen"
                     referrerPolicy="no-referrer-when-downgrade"
@@ -676,10 +692,10 @@ const EntityDetail = ({ type }: { type: PageType }) => {
           <section key={section.id} className="px-4 py-14 md:px-10" style={{ backgroundColor: bg }}>
             <div className="container-edge">
               <div className="mx-auto max-w-[1200px]">
-                {section.title && <h2 className="mb-2 font-odesa-medium text-[40px] leading-none text-[#fff2e8]">{section.title}</h2>}
+                {sTitle && <h2 className="mb-2 font-odesa-medium text-[40px] leading-none text-[#fff2e8]">{sTitle}</h2>}
                 {section.subtitle && <p className="mb-4 text-[17px] font-odesa-regular text-[#fff2e8]/55">{section.subtitle}</p>}
                 <div className="overflow-hidden rounded-[28px]" style={{ aspectRatio: "16/9" }}>
-                  <iframe src={videoUrl} title={section.title} allow="autoplay; encrypted-media" allowFullScreen
+                  <iframe src={videoUrl} title={sTitle} allow="autoplay; encrypted-media" allowFullScreen
                     className="h-full w-full border-0" />
                 </div>
               </div>
@@ -697,7 +713,7 @@ const EntityDetail = ({ type }: { type: PageType }) => {
         return (
           <section key={section.id} className="px-4 py-14 md:px-10" style={{ backgroundColor: bg }}>
             <div className="container-edge">
-              {section.title && <h2 className="mb-2 font-odesa-medium text-[40px] leading-none text-[#fff2e8]">{section.title}</h2>}
+              {sTitle && <h2 className="mb-2 font-odesa-medium text-[40px] leading-none text-[#fff2e8]">{sTitle}</h2>}
               {section.subtitle && <p className="mb-6 text-[17px] font-odesa-regular text-[#fff2e8]/55">{section.subtitle}</p>}
               <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
                 {stats.map(({ val, lbl }, i) => (
@@ -752,7 +768,7 @@ const EntityDetail = ({ type }: { type: PageType }) => {
             <div className="container-edge relative z-10">
               <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.7 }}>
-                {section.title && <h2 className="mb-2 font-odesa-medium text-[40px] leading-none" style={{ color: textColor }}>{section.title}</h2>}
+                {sTitle && <h2 className="mb-2 font-odesa-medium text-[40px] leading-none" style={{ color: textColor }}>{sTitle}</h2>}
                 {section.subtitle && <p className="mb-4 text-[17px] font-odesa-regular" style={{ color: `${textColor}88` }}>{section.subtitle}</p>}
                 <CollapsibleRichText
                   html={text}
@@ -776,7 +792,7 @@ const EntityDetail = ({ type }: { type: PageType }) => {
         if (!items.length) return null;
         const bg = section.bgColor ?? DEFAULT_BG[relType];
         return (
-          <ObjectSection key={section.id} sectionId={`related-${relType}`} title={section.title} subtitle={section.subtitle}
+          <ObjectSection key={section.id} sectionId={`related-${relType}`} title={sTitle} subtitle={section.subtitle}
             items={items} bg={bg} setRef={setRef} scroll={scroll} scrollRefs={scrollRefs} />
         );
       }
@@ -798,7 +814,7 @@ const EntityDetail = ({ type }: { type: PageType }) => {
         return (
           <section key={section.id} ref={setRef(`gallery-${section.id}`)} className="scroll-mt-6 py-14" style={{ backgroundColor: bg }}>
             <div className="container-edge mb-6">
-              {section.title && <h2 className="font-odesa-medium text-[44px] leading-none md:text-[64px]" style={{ color: tc }}>{section.title}</h2>}
+              {sTitle && <h2 className="font-odesa-medium text-[44px] leading-none md:text-[64px]" style={{ color: tc }}>{sTitle}</h2>}
               {section.subtitle && <p className="mt-2 text-[18px] font-odesa-regular md:text-[22px]" style={{ color: `${tc}99` }}>{section.subtitle}</p>}
             </div>
             <DragScrollRow hint className="flex gap-5 overflow-x-auto px-4 pb-4 md:px-10 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -840,7 +856,7 @@ const EntityDetail = ({ type }: { type: PageType }) => {
                     )}
                     {item.title && (
                       <>
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
                         <p className={`absolute bottom-5 left-5 right-5 font-odesa-medium leading-tight text-[#fff2e8] ${textSizeCls}`}>{item.title}</p>
                       </>
                     )}
@@ -869,6 +885,12 @@ const EntityDetail = ({ type }: { type: PageType }) => {
     // рілса/лайтбоксів/скрол-рефів минулої сторінки).
     <div key={object.id} className="bg-[#fff2e8] text-[#002f5e]">
      <main id="main-content" tabIndex={-1}>
+      {isEventArchived(object) && (
+        <div role="note" className="relative z-30 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 bg-[#9f1f47] px-4 py-2.5 text-center text-[14px] text-[#fff2e8] font-odesa-medium">
+          <span>{tl("Ця подія вже відбулась і перенесена в архів.", "This event has passed and was moved to the archive.")}</span>
+          <Link to="/podiyi" className="underline underline-offset-4 hover:text-[#df9b3b]">{tl("Актуальні події", "Upcoming events")}</Link>
+        </div>
+      )}
 
       {/* ══════════════════  HERO  ══════════════════════════════════════ */}
       <section className="relative min-h-screen overflow-hidden bg-[#001a3d]">
@@ -880,7 +902,10 @@ const EntityDetail = ({ type }: { type: PageType }) => {
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,12,33,0.28)_0%,rgba(0,12,33,0.0)_40%,rgba(0,12,33,0.85)_100%)]" />
 
         {/* ── Єдина шапка-«бровь»: назад + один breadcrumb + головна ─────── */}
-        <div className="relative z-20 mx-auto w-full max-w-[1180px] px-4 pt-0 md:px-5">
+        {/* Аудит 17.2.2: верхня панель (назад + хлібні крихти) — це шапка сторінки,
+            тож має бути landmark <header>, інакше скринридер не пропонує швидкий
+            перехід до неї. Ці сторінки не використовують спільний PageBrow. */}
+        <header className="relative z-20 mx-auto w-full max-w-[1180px] px-4 pt-0 md:px-5">
           <div className="rounded-b-[36px] bg-[#fff2e8] px-5 pb-3 pt-3 text-[#002f5e] md:rounded-b-[48px] md:px-6 md:pb-4 md:pt-4">
             <div className="flex items-center gap-3">
               <Link to={backTo} className="flex shrink-0 items-center gap-1.5 text-[14px] font-odesa-medium transition-opacity hover:opacity-70">
@@ -899,7 +924,7 @@ const EntityDetail = ({ type }: { type: PageType }) => {
               <Link to="/" className="hidden shrink-0 text-[14px] font-odesa-medium transition-opacity hover:opacity-70 sm:inline">{t("home")}</Link>
             </div>
           </div>
-        </div>
+        </header>
 
         <div className="relative z-10 flex min-h-[calc(100vh-80px)] flex-col justify-end px-6 pb-24 text-[#fff2e8] md:px-14 md:pb-14">
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.05 }}
@@ -1050,7 +1075,7 @@ const EntityDetail = ({ type }: { type: PageType }) => {
               type="button"
               onClick={() => setReelVideoOpen(false)}
               className="absolute right-5 top-5 flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur-sm transition hover:bg-white/30"
-              aria-label="Закрити"
+              aria-label={t("close")}
             >
               <X className="h-5 w-5" />
             </button>
@@ -1069,17 +1094,24 @@ const EntityDetail = ({ type }: { type: PageType }) => {
 };
 
 /* ── ScheduleHeader ─────────────────────────────────────────────── */
-const ScheduleHeader = ({ type, accent }: { type: string; accent: string }) => (
-  <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }}
-    viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.7 }}>
-    <p className="text-[12px] uppercase tracking-[0.25em] font-odesa-medium" style={{ color: accent }}>
-      {type === "hotel" ? "Сервіс та зручності" : type === "event" ? "Розклад" : type === "restaurant" ? "Режим роботи" : "Відвідування"}
-    </p>
-    <h2 className="mt-2 font-odesa-medium text-[44px] leading-none md:text-[64px]">
-      {type === "hotel" ? "Зручності" : type === "event" ? "Деталі" : type === "restaurant" ? "Графік" : "Інформація"}
-    </h2>
-  </motion.div>
-);
+const ScheduleHeader = ({ type, accent }: { type: string; accent: string }) => {
+  const { tl } = useLang();
+  const eyebrow = type === "hotel" ? tl("Сервіс та зручності", "Services and amenities")
+    : type === "event" ? tl("Розклад", "Schedule")
+    : type === "restaurant" ? tl("Режим роботи", "Opening hours")
+    : tl("Відвідування", "Visiting");
+  const heading = type === "hotel" ? tl("Зручності", "Amenities")
+    : type === "event" ? tl("Деталі", "Details")
+    : type === "restaurant" ? tl("Графік", "Schedule")
+    : tl("Інформація", "Information");
+  return (
+    <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.2 }} transition={{ duration: 0.7 }}>
+      <p className="text-[12px] uppercase tracking-[0.25em] font-odesa-medium" style={{ color: accent }}>{eyebrow}</p>
+      <h2 className="mt-2 font-odesa-medium text-[44px] leading-none md:text-[64px]">{heading}</h2>
+    </motion.div>
+  );
+};
 
 /* ── InfoChip ────────────────────────────────────────────────────── */
 const InfoChip = ({ icon, label, value, accent }: { icon: React.ReactNode; label: string; value: string; accent: string }) => (
@@ -1107,14 +1139,18 @@ type ContactCardProps = {
   onToggleBasket: () => void;
   onShare: () => void;
   linkCopied: boolean;
+  onDownloadQr: () => void;
+  qrBusy: boolean;
   t: (key: "inBasket" | "addToBasket") => string;
   cityLink?: { slug: string; name: string };
 };
 
 const ContactCard = ({
   name, address, hours, eventDates, phone, website, mapUrl, accent,
-  inBasket, onToggleBasket, onShare, linkCopied, t, cityLink,
-}: ContactCardProps) => (
+  inBasket, onToggleBasket, onShare, linkCopied, onDownloadQr, qrBusy, t, cityLink,
+}: ContactCardProps) => {
+  const { tl } = useLang();
+  return (
   <div className="space-y-4">
     <div className="rounded-[28px] border p-7"
       style={{ backgroundColor: NAVY, color: BG, borderColor: `${accent}35`, boxShadow: `0 4px 30px ${accent}20` }}>
@@ -1149,8 +1185,8 @@ const ContactCard = ({
           <a key={i} href={w} target="_blank" rel="noreferrer"
             className="flex items-center gap-3 transition-opacity hover:opacity-75">
             <Globe className="h-5 w-5 shrink-0" style={{ color: GOLD }} />
-            <span className="text-[17px] font-odesa-regular text-[#fff2e8]/90 underline underline-offset-2">Офіційний сайт</span>
-            <ArrowUpRight className="h-4 w-4 text-[#fff2e8]/50" />
+            <span className="text-[17px] font-odesa-regular text-[#fff2e8]/90 underline underline-offset-2">{tl("Офіційний сайт", "Official website")}</span>
+            <ArrowUpRight className="h-4 w-4 text-[#fff2e8]/50" aria-hidden="true" />
           </a>
         ))}
       </div>
@@ -1161,7 +1197,7 @@ const ContactCard = ({
               className="inline-flex items-center gap-2 rounded-full px-7 py-3 text-[15px] font-odesa-medium transition-opacity hover:opacity-90"
               style={{ backgroundColor: GOLD, color: NAVY }}>
               <MapPin className="h-4 w-4" />
-              {arr.length > 1 ? `Карта ${i + 1}` : "На карті"} <ArrowRight className="h-4 w-4" />
+              {arr.length > 1 ? `${tl("Карта", "Map")} ${i + 1}` : tl("На карті", "On the map")} <ArrowRight className="h-4 w-4" />
             </a>
           ))}
         </div>
@@ -1187,7 +1223,7 @@ const ContactCard = ({
             target="_blank" rel="noreferrer"
             className="inline-flex items-center gap-2 rounded-full border border-[#fff2e8]/25 px-5 py-2.5 text-[13px] font-odesa-medium text-[#fff2e8] transition-colors hover:bg-white/10"
           >
-            <Navigation className="h-4 w-4" style={{ color: GOLD }} /> Прокласти маршрут
+            <Navigation className="h-4 w-4" style={{ color: GOLD }} aria-hidden="true" /> {tl("Прокласти маршрут", "Get directions")}
           </a>
         )}
         <button
@@ -1196,8 +1232,21 @@ const ContactCard = ({
           className="inline-flex items-center gap-2 rounded-full border border-[#fff2e8]/25 px-5 py-2.5 text-[13px] font-odesa-medium text-[#fff2e8] transition-colors hover:bg-white/10"
         >
           {linkCopied
-            ? <><Check className="h-4 w-4 text-emerald-400" /> Скопійовано!</>
-            : <><Share2 className="h-4 w-4" style={{ color: GOLD }} /> Поділитися</>}
+            ? <><Check className="h-4 w-4 text-emerald-400" /> {tl("Скопійовано!", "Copied!")}</>
+            : <><Share2 className="h-4 w-4" style={{ color: GOLD }} /> {tl("Поділитися", "Share")}</>}
+        </button>
+        <button
+          type="button"
+          onClick={onDownloadQr}
+          disabled={qrBusy}
+          aria-busy={qrBusy}
+          title={tl("Постер A4 з QR-кодом цієї сторінки — для друку", "A4 poster with this page's QR code, ready to print")}
+          className="inline-flex items-center gap-2 rounded-full border border-[#fff2e8]/25 px-5 py-2.5 text-[13px] font-odesa-medium text-[#fff2e8] transition-colors hover:bg-white/10 disabled:opacity-60"
+        >
+          {qrBusy
+            ? <Loader2 className="h-4 w-4 animate-spin" style={{ color: GOLD }} aria-hidden="true" />
+            : <QrCode className="h-4 w-4" style={{ color: GOLD }} aria-hidden="true" />}
+          {tl("Завантажити QR-код", "Download QR code")}
         </button>
       </div>
     </div>
@@ -1206,7 +1255,7 @@ const ContactCard = ({
         className="group flex items-center justify-between rounded-[20px] border bg-white/70 px-6 py-4 backdrop-blur-md transition-transform duration-300 hover:-translate-y-1"
         style={{ borderColor: `${accent}35` }}>
         <div>
-          <p className="text-[12px] font-odesa-medium uppercase tracking-widest text-[#002f5e]/70">Місто</p>
+          <p className="text-[12px] font-odesa-medium uppercase tracking-widest text-[#002f5e]/70">{tl("Місто", "Settlement")}</p>
           <p className="mt-0.5 font-odesa-medium text-[20px] text-[#002f5e]">{cityLink.name}</p>
         </div>
         <ArrowRight className="h-5 w-5 text-[#002f5e]/70 transition-transform duration-300 group-hover:translate-x-1" />
@@ -1214,5 +1263,5 @@ const ContactCard = ({
     )}
   </div>
 );
-
+};
 export default EntityDetail;

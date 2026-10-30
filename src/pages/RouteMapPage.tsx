@@ -103,7 +103,7 @@ const StopRow = ({
       <button
         type="button"
         onPointerDown={(e) => controls.start(e)}
-        aria-label="Перетягнути"
+        aria-label={lang === "en" ? "Drag" : "Перетягнути"}
         className="tap flex shrink-0 cursor-grab touch-none items-center justify-center text-[#002f5e]/70 active:cursor-grabbing"
       >
         <GripVertical className="h-5 w-5" />
@@ -193,7 +193,7 @@ const RouteMapPage = () => {
     const optimized = optimizeOrder(order, coordById);
     const changed = optimized.length !== order.length || optimized.some((id, i) => id !== order[i]);
     setOrder(optimized);
-    toast(changed ? "Маршрут оптимізовано" : "Маршрут вже оптимальний");
+    toast(changed ? t("routeOptimized") : t("routeAlreadyOptimal"));
   };
 
   if (isLoading) {

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Volume2, VolumeX } from "lucide-react";
+import { useLang } from "@/lib/langContext";
 
 const VIDEO_ID = "2OAj2Z1BkAM"; // «Одеса» — Євген Філатов
 const DEFAULT_VOLUME = 35; // 0–100, комфортний рівень для фонової музики
@@ -54,6 +55,7 @@ function loadYouTubeApi(): Promise<void> {
  * переході між сторінками не перестворюється і не починає грати заново.
  */
 export function BackgroundMusicPlayer() {
+  const { t } = useLang();
   const { pathname } = useLocation();
   // /koshyk і /marshrut мають власну липку CTA-кнопку внизу зліва-направо —
   // піднімаємо кнопку музики вище неї (той самий приём, що і в AssistantFab).
@@ -99,6 +101,20 @@ export function BackgroundMusicPlayer() {
             e.target.setVolume(0);
             e.target.mute();
             e.target.playVideo();
+            // Аудит 17.1.3: YouTube-API підміняє наш <div> на <iframe>, і хоч
+            // контейнер має aria-hidden та нульовий розмір, aria-hidden НЕ
+            // виводить елемент з порядку Tab — фокус клавіатури провалювався
+            // всередину плеєра, а в рядку стану браузера світились посилання
+            // на ютуб. tabindex="-1" на самому <iframe> прибирає і його, і
+            // весь його вміст із послідовної навігації в усіх браузерах.
+            const frame = hostRef.current instanceof HTMLIFrameElement
+              ? hostRef.current
+              : hostRef.current?.querySelector("iframe");
+            if (frame) {
+              frame.setAttribute("tabindex", "-1");
+              frame.setAttribute("aria-hidden", "true");
+              frame.setAttribute("title", "Background music player");
+            }
             setReady(true);
             setUnmuted(false);
             setVolume(initialVolume);
@@ -180,7 +196,7 @@ export function BackgroundMusicPlayer() {
               type="button"
               onClick={toggle}
               whileTap={{ scale: 0.9 }}
-              aria-label={unmuted ? "Вимкнути музику" : "Увімкнути музику"}
+              aria-label={unmuted ? t("musicOff") : t("musicOn")}
               aria-pressed={unmuted}
               className="tap flex h-11 w-11 shrink-0 items-center justify-center rounded-full"
             >
@@ -218,7 +234,7 @@ export function BackgroundMusicPlayer() {
                     max={100}
                     value={volume}
                     onChange={(e) => onSlide(Number(e.target.value))}
-                    aria-label="Гучність фонової музики"
+                    aria-label={t("musicVolume")}
                     className="volume-slider"
                     style={{ ["--pct" as any]: `${volume}%` }}
                   />
