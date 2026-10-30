@@ -38,7 +38,7 @@ export function AssistantFab() {
       className="fixed right-4 z-30 md:hidden"
       style={{ bottom, pointerEvents: hidden ? "none" : "auto" }}
       aria-hidden={hidden}
-      inert={hidden || undefined}
+      {...(hidden ? { inert: "" as unknown as boolean } : {})}
     >
       <motion.div whileTap={{ scale: 0.9 }}>
         <Link

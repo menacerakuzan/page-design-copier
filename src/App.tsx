@@ -5,6 +5,7 @@ import { loadHierarchySnapshot, loadPublishedContentCards } from "@/lib/adminRep
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { LangProvider } from "@/lib/langContext";
+import { WinterThemeProvider, useWinterTheme } from "@/lib/winterTheme";
 import { BasketProvider } from "@/lib/basketContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { SkipLink } from "@/components/SkipLink";
@@ -122,14 +123,21 @@ const RouteFallback = () => (
  * жодному роуту). resetKeys=[pathname] — щоб зловлена один раз помилка не
  * ховала компонент назавжди (без цього так зникала кнопка асистента).
  */
+// Зимові прикраси — окремим чанком, лише коли тема активна.
+const WinterLayer = lazy(() => import("./components/winter/WinterLayer"));
+
 const GlobalChrome = () => {
   const { pathname } = useLocation();
+  const { active: winter } = useWinterTheme();
   return (
     <>
       <ErrorBoundary fallback={null} resetKeys={[pathname]}><MobileNav /></ErrorBoundary>
       <ErrorBoundary fallback={null} resetKeys={[pathname]}><AssistantFab /></ErrorBoundary>
       <ErrorBoundary fallback={null} resetKeys={[pathname]}><BackgroundMusicPlayer /></ErrorBoundary>
       <ErrorBoundary fallback={null} resetKeys={[pathname]}><KonamiEasterEgg /></ErrorBoundary>
+      {winter && (
+        <ErrorBoundary fallback={null}><Suspense fallback={null}><WinterLayer /></Suspense></ErrorBoundary>
+      )}
     </>
   );
 };
@@ -152,6 +160,7 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <LangProvider>
+        <WinterThemeProvider>
         <BasketProvider>
         <TooltipProvider>
           <BrowserRouter>
@@ -191,6 +200,7 @@ const App = () => {
           </BrowserRouter>
         </TooltipProvider>
         </BasketProvider>
+        </WinterThemeProvider>
       </LangProvider>
     </QueryClientProvider>
   );

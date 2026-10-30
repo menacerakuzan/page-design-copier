@@ -191,7 +191,7 @@ export default function AssistantPage() {
                         type="button"
                         aria-label={t("assistantDelete")}
                         onClick={() => deleteChat(c.id)}
-                        className="tap flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[#9f1f47]/70 transition-colors hover:bg-[#9f1f47]/10"
+                        className="tap flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[#9f1f47] transition-colors hover:bg-[#9f1f47]/10"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>

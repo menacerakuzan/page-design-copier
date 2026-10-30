@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
 import { Img } from "@/components/Img";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowRight, ArrowUpRight, ChevronLeft, ChevronRight, Instagram, MapPin } from "lucide-react";
+import { ArrowRight, ArrowUpRight, ChevronLeft, ChevronRight, Instagram, MapPin, Pause, Play } from "lucide-react";
 import { Link } from "react-router-dom";
 import heroVideo from "@/assets/episode-01.mp4";
 import geminiLogo from "@/assets/gemini-svg-2.svg";
@@ -14,10 +14,15 @@ import PollWidget from "@/components/PollWidget";
 import PageBrow from "@/components/PageBrow";
 import { HeroBackgroundVideo } from "@/components/HeroBackgroundVideo";
 import { CompassRose } from "@/components/decor";
+import { useHierarchySnapshot } from "@/hooks/useHierarchySnapshot";
+import { isEventArchived, kyivToday } from "@/lib/eventArchive";
+import { useWinterTheme } from "@/lib/winterTheme";
 
-const featureCards = [
-  { number: "01", first: "Види", second: "туризму", href: "/types" },
-  { number: "02", first: "Інформація", second: "", href: "/info" },
+const WinterHeroDecor = lazy(() => import("@/components/winter/WinterHeroDecor"));
+
+const featureCards = (lang: "uk" | "en") => [
+  { first: lang === "en" ? "Tourism" : "Види", second: lang === "en" ? "types" : "туризму", href: "/types" },
+  { first: lang === "en" ? "Information" : "Інформація", second: "", href: "/info" },
 ];
 
 const TikTokIcon = ({ className = "h-6 w-6" }: { className?: string }) => (
@@ -57,6 +62,9 @@ const Index = () => {
     lang,
   });
   const { data: indexCardsData } = usePageContentCards("index");
+  // Той самий кешований знімок, що вже тягне підвал (пошук) — зайвого запиту нема.
+  const { data: snapshot } = useHierarchySnapshot();
+  const { active: winter } = useWinterTheme();
   const sectionRefs = useRef<Array<HTMLElement | null>>([]);
   const destinationsScrollerRef = useRef<HTMLDivElement | null>(null);
   const interestingScrollerRef = useRef<HTMLDivElement | null>(null);
@@ -81,9 +89,24 @@ const Index = () => {
   const [interestingDragProgress, setInterestingDragProgress] = useState(0);
   const [isInterestingPanning, setIsInterestingPanning] = useState(false);
 
+  // Картки, що ведуть на подію з минулою датою, ховаємо — подія вже в архіві.
+  const archivedEventIds = useMemo(() => {
+    const today = kyivToday();
+    const ids = new Set<string>();
+    for (const o of snapshot?.objects ?? []) {
+      if (isEventArchived(o, today)) { ids.add(o.id); ids.add(`/podiyi/${o.slug}`); }
+    }
+    return ids;
+  }, [snapshot]);
+
   const liveCards = useMemo(
-    () => (indexCardsData ?? []).filter((c) => c.pageKey === "index"),
-    [indexCardsData],
+    () => (indexCardsData ?? []).filter((c) => {
+      if (c.pageKey !== "index") return false;
+      if (!archivedEventIds.size) return true;
+      const p = c.payload ?? {};
+      return ![p.placeId, p.objectId, p.tourism_object_id, c.href].some((k) => typeof k === "string" && archivedEventIds.has(k));
+    }),
+    [indexCardsData, archivedEventIds],
   );
 
   const getSectionCards = (sectionKey: string) =>
@@ -93,6 +116,10 @@ const Index = () => {
     title: card.title,
     href: card.href ?? undefined,
     image: card.imageUrl ?? "",
+    // Описовий alt задає контент-менеджер в адмінці (Конструктор → Напрямки).
+    // Порожній рядок = декоративне зображення, і це коректно: назва району
+    // стоїть текстом поруч (див. коментар у розмітці картки).
+    imageAlt: String(card.payload?.imageAlt ?? ""),
   }));
 
   const interestingCards = (() => {
@@ -126,7 +153,7 @@ const Index = () => {
         {
           title: "Одещина",
           subtitle: "",
-          description: "Додайте картки у розділ attractions для головної сторінки",
+          description: "Add cards to the attractions section of the home page",
           image: "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=2200&q=80",
           href: undefined as string | undefined,
         },
@@ -180,13 +207,20 @@ const Index = () => {
 
   // Автозміна слайдів «Топ місць»; будь-яка ручна навігація скидає таймер,
   // бо ефект перезапускається при зміні activeAttraction
+  // Аудит 17.1.2: слайди перемикались самі, довше 5 секунд, без жодного
+  // способу це зупинити (WCAG 2.2.2). Поважаємо і системне «зменшити рух».
+  const [slidesPaused, setSlidesPaused] = useState(
+    () => typeof window !== "undefined"
+      && Boolean(window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches),
+  );
+
   useEffect(() => {
-    if (safeTopAttractions.length < 2) return;
+    if (safeTopAttractions.length < 2 || slidesPaused) return;
     const id = setInterval(() => {
       setActiveAttraction((prev) => (prev + 1) % safeTopAttractions.length);
     }, 6500);
     return () => clearInterval(id);
-  }, [activeAttraction, safeTopAttractions.length]);
+  }, [activeAttraction, safeTopAttractions.length, slidesPaused]);
 
   const eventsPerPage = 3;
   const totalEventPages = Math.max(1, Math.ceil(events.length / eventsPerPage));
@@ -226,7 +260,7 @@ const Index = () => {
       <div className="fixed right-8 top-1/2 z-50 hidden -translate-y-1/2 flex-col gap-4 md:flex">
         <button
           type="button"
-          aria-label="Вгору"
+          aria-label={t("scrollUp")}
           onClick={() => scrollByStep(-1)}
           className="flex h-12 w-12 items-center justify-center rounded-full bg-[#fff2e8]"
         >
@@ -234,7 +268,7 @@ const Index = () => {
         </button>
         <button
           type="button"
-          aria-label="Вниз"
+          aria-label={t("scrollDown")}
           onClick={() => scrollByStep(1)}
           className="flex h-12 w-12 items-center justify-center rounded-full bg-[#fff2e8]"
         >
@@ -246,6 +280,8 @@ const Index = () => {
         <HeroBackgroundVideo src={heroVideo} />
         <div className="absolute inset-0 hidden md:block bg-[linear-gradient(180deg,rgba(0,12,33,0.28),rgba(0,12,33,0.82))]" />
         <div className="absolute inset-0 md:hidden bg-[linear-gradient(180deg,rgba(0,12,33,0.5),rgba(0,12,33,0.82))]" />
+        {/* Зимова тема: іній по краях кадру і два вінки по боках. */}
+        {winter && <Suspense fallback={null}><WinterHeroDecor /></Suspense>}
 
         <motion.header
           initial={{ opacity: 0, y: -24 }}
@@ -262,6 +298,14 @@ const Index = () => {
               initial={{ opacity: 0, scale: 0.92 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1], delay: 0.05 }}
+              /* Аудит 2.1.4: емблема намальована CSS-маскою по <div>, тому для
+                 скринрідера її не існувало взагалі (це фон, а не зображення).
+                 До <div> не можна додати alt — стандартний еквівалент це
+                 role="img" + aria-label. */
+              role="img"
+              aria-label={lang === "en"
+                ? "Emblem: Odesa Region. The land that unites"
+                : "Емблема: Одеська область. Земля, що об'єднує"}
               className="relative h-[228px] w-[228px] xs:h-[270px] xs:w-[270px] md:h-[320px] md:w-[320px]"
               style={{
                 backgroundColor: "#fff2e8",
@@ -308,14 +352,17 @@ const Index = () => {
             </Link>
           </motion.div>
 
-          {/* Соцмережі й "01/02" картки: раніше вставали в один рядок абсолютним
-              позиціонуванням вже з md (768px) — на планшетах (768–1023px) їм
-              бракувало ширини, і вони наїжджали одне на одне. Ця "поруч,
-              абсолютно" верстка тепер тільки з lg (1024px+, реальний
-              десктоп); на планшетах лишається проста колонка, як на мобілі. */}
-          <section className="mt-auto w-full pb-7 pt-0 lg:pb-0">
-            <div className="mx-auto flex max-w-[1060px] flex-col items-center gap-3 lg:relative lg:min-h-[120px] lg:block">
-              <div className="inline-flex items-center gap-3 rounded-full bg-[#fff2e8] px-5 py-2.5 text-[#00376c] lg:absolute lg:bottom-0 lg:left-1/2 lg:-translate-x-1/2 lg:px-6 lg:py-3">
+          {/* Соцмережі й картки «Види туризму / Інформація». Історія: спочатку абсолютна верстка
+              вмикалась з md (768px) і елементи наїжджали на планшетах, потім
+              поріг підняли до lg (1024px). Аудит вебдоступності (11.1.1) знайшов
+              ту саму проблему знову: при масштабі 150% на широкому моніторі
+              вікно потрапляє саме в 1024–1279px, де абсолютна верстка вже
+              ввімкнена, а ширини ще бракує — центрована пігулка соцмереж і
+              притиснуті вправо картки перекривались. Тому поріг тепер xl
+              (1280px+), а нижче лишається безпечна колонка. */}
+          <section className="mt-auto w-full pb-7 pt-0 xl:pb-0">
+            <div className="mx-auto flex max-w-[1060px] flex-col items-center gap-3 xl:relative xl:min-h-[120px] xl:block">
+              <div className="inline-flex items-center gap-3 rounded-full bg-[#fff2e8] px-5 py-2.5 text-[#00376c] xl:absolute xl:bottom-0 xl:left-1/2 xl:-translate-x-1/2 xl:px-6 xl:py-3">
                 {socialLinks.map(({ label, href, Icon }) => (
                   <a
                     key={label}
@@ -330,17 +377,13 @@ const Index = () => {
                 ))}
               </div>
 
-              <div className="grid w-full grid-cols-2 items-stretch gap-3 lg:absolute lg:bottom-0 lg:right-0 lg:w-auto lg:items-end lg:gap-8">
-                {featureCards.map((item) => (
-                  <Link key={item.number} to={item.href}
-                    className="group cursor-pointer text-left transition-colors lg:max-w-[170px]"
+              <div className="grid w-full grid-cols-1 xs:grid-cols-2 items-stretch gap-3 xl:absolute xl:bottom-0 xl:right-0 xl:w-auto xl:items-end xl:gap-8">
+                {featureCards(lang).map((item) => (
+                  <Link key={item.href} to={item.href}
+                    className="group cursor-pointer text-left transition-colors xl:max-w-[170px]"
                     style={{ textDecoration: "none" }}>
                     <div className="flex items-end gap-2 transition-colors duration-500"
                       style={{ color: "inherit" }}>
-                      <span className="text-[30px] leading-none font-odesa-regular transition-colors duration-500 group-hover:text-[#df9b3b] group-active:text-[#df9b3b] lg:text-[40px]"
-                        style={{ transitionProperty: "color" }}>
-                        {item.number}
-                      </span>
                       <div className="flex min-h-[40px] flex-row items-end gap-1.5 pb-[3px] text-[17px] leading-[0.95] font-odesa-medium transition-colors duration-500 group-hover:text-[#df9b3b] group-active:text-[#df9b3b] lg:min-h-[44px] lg:flex-col lg:items-start lg:justify-end lg:gap-0 lg:pb-[5px] lg:text-[22px]">
                         <div className="whitespace-nowrap">{item.first}</div>
                         {item.second ? <div className="whitespace-nowrap">{item.second}</div> : null}
@@ -362,12 +405,14 @@ const Index = () => {
         </div>
       </section>
 
-      <section ref={setSectionRef(1)} className="relative z-10 px-4 pt-8 pb-6 md:pb-8 text-[#002f5e] md:px-10"
-        style={{ backgroundColor: "#fff2e8", backgroundImage: "url(/bgmainnapryam.svg)", backgroundSize: "cover", backgroundPosition: "center center", backgroundRepeat: "no-repeat" }}>
-        <div className="pointer-events-none absolute inset-0 z-0 bg-[#fff2e8]/90" />
+      {/* Зимова тема міняє кольори місцями: бежеві секції стають синьою (тут)
+          і червоною («Події»), синій підвал — бежевим. */}
+      <section ref={setSectionRef(1)} className={`relative z-10 px-4 pt-8 pb-6 md:pb-8 md:px-10 ${winter ? "text-[#fff2e8]" : "text-[#002f5e]"}`}
+        style={{ backgroundColor: winter ? "#002f5e" : "#fff2e8", backgroundImage: "url(/bgmainnapryam.svg)", backgroundSize: "cover", backgroundPosition: "center center", backgroundRepeat: "no-repeat" }}>
+        <div className={`pointer-events-none absolute inset-0 z-0 ${winter ? "bg-[#002f5e]/[0.93]" : "bg-[#fff2e8]/90"}`} />
         <div className="relative z-10 mx-auto max-w-[1400px]">
           {/* декор: роза вітрів за заголовком */}
-          <div className="pointer-events-none absolute -top-2 right-6 hidden text-[#002f5e]/10 lg:block" aria-hidden="true">
+          <div className={`pointer-events-none absolute -top-2 right-6 hidden lg:block ${winter ? "text-[#fff2e8]/10" : "text-[#002f5e]/10"}`} aria-hidden="true">
             <CompassRose className="h-44 w-44 animate-spin-slower" />
           </div>
 
@@ -382,7 +427,7 @@ const Index = () => {
               <h3 className="text-[36px] leading-none md:text-[64px] font-odesa-medium">{t("mainDirections")}</h3>
               <Link
                 to="/districts"
-                className="group/more mt-6 inline-flex items-center gap-3 text-[18px] font-odesa-medium text-[#002f5e]"
+                className={`group/more mt-6 inline-flex items-center gap-3 text-[18px] font-odesa-medium ${winter ? "text-[#fff2e8]" : "text-[#002f5e]"}`}
               >
                 <span className="relative">
                   {t("learnMore")}
@@ -394,20 +439,20 @@ const Index = () => {
               </Link>
             </div>
 
-            <div className="hidden items-center gap-3 text-[#002f5e] md:flex">
+            <div className={`hidden items-center gap-3 md:flex ${winter ? "text-[#fff2e8]" : "text-[#002f5e]"}`}>
               <button
                 type="button"
                 onClick={() => scrollDestinations(-1)}
-                className="flex h-12 w-12 items-center justify-center rounded-full border border-[#002f5e]/40 transition-all duration-300 hover:border-[#002f5e] hover:bg-[#002f5e] hover:text-[#fff2e8]"
-                aria-label="Попередній"
+                className={`flex h-12 w-12 items-center justify-center rounded-full border transition-all duration-300 ${winter ? "border-[#fff2e8]/40 hover:border-[#fff2e8] hover:bg-[#fff2e8] hover:text-[#002f5e]" : "border-[#002f5e]/40 hover:border-[#002f5e] hover:bg-[#002f5e] hover:text-[#fff2e8]"}`}
+                aria-label={t("prev")}
               >
                 <ChevronLeft className="h-6 w-6" />
               </button>
               <button
                 type="button"
                 onClick={() => scrollDestinations(1)}
-                className="flex h-12 w-12 items-center justify-center rounded-full border border-[#002f5e]/40 transition-all duration-300 hover:border-[#002f5e] hover:bg-[#002f5e] hover:text-[#fff2e8]"
-                aria-label="Наступний"
+                className={`flex h-12 w-12 items-center justify-center rounded-full border transition-all duration-300 ${winter ? "border-[#fff2e8]/40 hover:border-[#fff2e8] hover:bg-[#fff2e8] hover:text-[#002f5e]" : "border-[#002f5e]/40 hover:border-[#002f5e] hover:bg-[#002f5e] hover:text-[#fff2e8]"}`}
+                aria-label={t("next")}
               >
                 <ChevronRight className="h-6 w-6" />
               </button>
@@ -468,12 +513,17 @@ const Index = () => {
               {destinationCards.map((card, idx) => {
                 const cardBody = (
                   <>
-                    <Img w={500} src={card.image} alt={card.title} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                    {/* Аудит 2.1.1: alt дублював заголовок картки, і незрячий
+                        чув назву району двічі поспіль. Тепер описовий текст
+                        береться з поля "Опис зображення" в адмінці; якщо його
+                        ще не заповнили — alt="" (декоративне), бо назва району
+                        і так стоїть текстом поруч. */}
+                    <Img w={500} src={card.image} alt={card.imageAlt} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#002f5e]/85 via-[#002f5e]/15 to-transparent" />
-                    <span className="absolute left-6 top-6 rounded-full border border-[#fff2e8]/30 bg-[#002f5e]/30 px-4 py-2 text-[15px] leading-none text-[#fff2e8] backdrop-blur-md font-odesa-medium">
+                    <span aria-hidden="true" className="absolute left-6 top-6 rounded-full border border-[#fff2e8]/40 bg-[#002f5e]/70 px-4 py-2 text-[15px] leading-none text-[#fff2e8] backdrop-blur-md font-odesa-medium">
                       {String(idx + 1).padStart(2, "0")}
                     </span>
-                    <span className="absolute bottom-8 right-7 flex h-12 w-12 translate-y-3 items-center justify-center rounded-full bg-[#df9b3b] text-[#002f5e] opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
+                    <span aria-hidden="true" className="absolute bottom-8 right-7 flex h-12 w-12 translate-y-3 items-center justify-center rounded-full bg-[#df9b3b] text-[#002f5e] opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
                       <ArrowUpRight className="h-5 w-5" />
                     </span>
                     <div className="absolute bottom-6 left-6 right-20">
@@ -483,25 +533,19 @@ const Index = () => {
                   </>
                 );
 
-                if (card.href) {
-                  return (
-                    <Link
-                      key={card.title}
-                      to={card.href}
-                      className="group relative h-[370px] w-[72vw] shrink-0 snap-start rounded-[26px] transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_30px_60px_-24px_rgba(0,47,94,0.45)] xs:h-[420px] xs:w-[280px] md:h-[440px] md:w-[360px]"
-                    >
-                      <div className="relative h-full w-full overflow-hidden rounded-[26px] bg-[#002f5e]/10">
-                        {cardBody}
-                      </div>
-                    </Link>
-                  );
-                }
-
+                /* Аудит 3.1.1: раніше вся картка була одним <a> з купою
+                   вкладених тегів — скринридер розбивав її на фрагменти при
+                   навігації стрілками, а ім'я посилання склеювалось із номера,
+                   alt зображення і заголовка. Тепер картка — <article>, а
+                   посилання одне: прозорий шар з коротким доступним іменем. */
                 return (
-                  <article key={card.title} className="group relative h-[370px] w-[72vw] shrink-0 snap-start rounded-[26px] xs:h-[420px] xs:w-[280px] md:h-[440px] md:w-[360px]">
+                  <article key={card.title} className="group relative h-[370px] w-[72vw] shrink-0 snap-start rounded-[26px] transition-all duration-300 xs:h-[420px] xs:w-[280px] md:h-[440px] md:w-[360px] hover:-translate-y-2 hover:shadow-[0_30px_60px_-24px_rgba(0,47,94,0.45)]">
                     <div className="relative h-full w-full overflow-hidden rounded-[26px] bg-[#002f5e]/10">
                       {cardBody}
                     </div>
+                    {card.href && (
+                      <Link to={card.href} aria-label={card.title} className="absolute inset-0 z-10 rounded-[26px]" />
+                    )}
                   </article>
                 );
               })}
@@ -623,7 +667,7 @@ const Index = () => {
                 const inner = (
                   <>
                     <Img w={500} src={item.imageUrl} alt={item.title} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
                     <h4 className={`absolute bottom-5 left-5 right-5 leading-[0.95] font-odesa-medium text-[#fff2e8] ${textSizeClass}`}>
                       {item.title}
                     </h4>
@@ -786,8 +830,8 @@ const Index = () => {
                   <button
                     type="button"
                     onClick={goPrevInteresting}
-                    className="flex items-center justify-center p-1 text-[#002f5e] transition-opacity hover:opacity-55"
-                    aria-label="Попереднє"
+                    className={`flex items-center justify-center p-1 transition-opacity hover:opacity-55 ${winter ? "text-[#fff2e8]" : "text-[#002f5e]"}`}
+                    aria-label={t("prev")}
                   >
                     <ChevronLeft className="h-7 w-7" strokeWidth={3} />
                   </button>
@@ -797,8 +841,8 @@ const Index = () => {
                   <button
                     type="button"
                     onClick={goNextInteresting}
-                    className="flex items-center justify-center p-1 text-[#002f5e] transition-opacity hover:opacity-55"
-                    aria-label="Наступне"
+                    className={`flex items-center justify-center p-1 transition-opacity hover:opacity-55 ${winter ? "text-[#fff2e8]" : "text-[#002f5e]"}`}
+                    aria-label={t("next")}
                   >
                     <ChevronRight className="h-7 w-7" strokeWidth={3} />
                   </button>
@@ -871,20 +915,49 @@ const Index = () => {
                 key={idx}
                 type="button"
                 onClick={() => setActiveAttraction(idx)}
+                aria-pressed={idx === activeAttraction}
                 className={`relative h-[5px] overflow-hidden rounded-full transition-all duration-300 ${
                   idx === activeAttraction ? "w-14 bg-[#fff2e8]/25" : "w-7 bg-[#fff2e8]/25 hover:bg-[#fff2e8]/45"
                 }`}
-                aria-label={`Атракція ${idx + 1}`}
+                aria-label={`${tl("Слайд", "Slide")} ${idx + 1} ${tl("з", "of")} ${safeTopAttractions.length}`}
               >
-                {idx === activeAttraction && (
+                {idx === activeAttraction && !slidesPaused && (
                   <span
                     key={`fill-${activeAttraction}`}
                     className="absolute inset-y-0 left-0 rounded-full bg-[#df9b3b] animate-progress-grow"
                   />
                 )}
+                {idx === activeAttraction && slidesPaused && (
+                  <span className="absolute inset-0 rounded-full bg-[#df9b3b]" />
+                )}
               </button>
             ))}
+            {/* Аудит 17.1.2: кнопка паузи автоматичного перемикання слайдів. */}
+            {safeTopAttractions.length > 1 && (
+              <button
+                type="button"
+                onClick={() => setSlidesPaused((p) => !p)}
+                aria-label={slidesPaused
+                  ? tl("Відновити автоматичне перемикання слайдів", "Resume automatic slideshow")
+                  : tl("Поставити на паузу автоматичне перемикання слайдів", "Pause automatic slideshow")}
+                className="ml-2 flex h-9 w-9 items-center justify-center rounded-full border border-[#fff2e8]/50 bg-[#001a3d]/70 text-[#fff2e8] transition hover:bg-[#001a3d]/90"
+              >
+                {slidesPaused
+                  ? <Play className="h-3.5 w-3.5" aria-hidden="true" />
+                  : <Pause className="h-3.5 w-3.5" aria-hidden="true" />}
+              </button>
+            )}
           </div>
+
+          {/* Аудит 17.1.4: при натисканні кнопок-індикаторів блок ліворуч
+              оновлювався, але фокус лишався на кнопці, і незрячий не дізнавався
+              про зміну вмісту. Обрано варіант "Б" зі звіту: не смикаємо фокус
+              (це заважало б при швидкому перемиканні), а повідомляємо про новий
+              слайд через живу область. aria-live="polite" озвучує зміну після
+              завершення поточної фрази, не перебиваючи користувача. */}
+          <p className="sr-only-a11y" role="status" aria-live="polite">
+            {`${tl("Слайд", "Slide")} ${activeAttraction + 1} ${tl("з", "of")} ${safeTopAttractions.length}: ${safeTopAttractions[activeAttraction].title}`}
+          </p>
 
           <div className="flex flex-wrap items-end justify-between gap-6">
           <AnimatePresence mode="wait">
@@ -924,7 +997,7 @@ const Index = () => {
                   type="button"
                   onClick={goPrevAttraction}
                   className="flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-white/6 transition-all hover:bg-white/25"
-                  aria-label="Попередній"
+                  aria-label={t("prev")}
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </button>
@@ -932,7 +1005,7 @@ const Index = () => {
                   type="button"
                   onClick={goNextAttraction}
                   className="flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-white/6 transition-all hover:bg-white/25"
-                  aria-label="Наступний"
+                  aria-label={t("next")}
                 >
                   <ChevronRight className="h-4 w-4" />
                 </button>
@@ -1038,7 +1111,7 @@ const Index = () => {
               type="button"
               onClick={goPrevAttraction}
               className="flex items-center justify-center p-1 text-[#fff2e8] transition-opacity hover:opacity-55"
-              aria-label="Попередній"
+              aria-label={t("prev")}
             >
               <ChevronLeft className="h-6 w-6" strokeWidth={3} />
             </button>
@@ -1046,7 +1119,7 @@ const Index = () => {
               type="button"
               onClick={goNextAttraction}
               className="flex items-center justify-center p-1 text-[#fff2e8] transition-opacity hover:opacity-55"
-              aria-label="Наступний"
+              aria-label={t("next")}
             >
               <ChevronRight className="h-6 w-6" strokeWidth={3} />
             </button>
@@ -1055,9 +1128,9 @@ const Index = () => {
       </section>
 
       <div className="relative z-10">
-      <section ref={setSectionRef(4)} className="relative flex min-h-screen items-center px-4 py-12 text-[#002f5e] md:px-10"
-        style={{ backgroundColor: "#fff2e8", backgroundImage: "url(/bgpodii.svg)", backgroundSize: "cover", backgroundPosition: "center top", backgroundRepeat: "no-repeat" }}>
-        <div className="pointer-events-none absolute inset-0 z-0 bg-[#fff2e8]/90" />
+      <section ref={setSectionRef(4)} className={`relative flex min-h-screen items-center px-4 py-12 md:px-10 ${winter ? "text-[#fff2e8]" : "text-[#002f5e]"}`}
+        style={{ backgroundColor: winter ? "#9f1f47" : "#fff2e8", backgroundImage: "url(/bgpodii.svg)", backgroundSize: "cover", backgroundPosition: "center top", backgroundRepeat: "no-repeat" }}>
+        <div className={`pointer-events-none absolute inset-0 z-0 ${winter ? "bg-[#9f1f47]/[0.93]" : "bg-[#fff2e8]/90"}`} />
         <div className="relative z-10 mx-auto w-full max-w-[1400px]">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -1069,10 +1142,10 @@ const Index = () => {
             <div>
               <h3 className="text-[36px] leading-none md:text-[64px] font-odesa-bold">{t("events")}</h3>
             </div>
-            <Link to="/podiyi" className="group/all inline-flex items-center gap-3 text-[18px] text-[#9f1f47] font-odesa-medium">
+            <Link to="/podiyi" className={`group/all inline-flex items-center gap-3 text-[18px] font-odesa-medium ${winter ? "text-[#fff2e8]" : "text-[#9f1f47]"}`}>
               <span className="relative">
                 {t("viewAll")}
-                <span className="absolute -bottom-1 left-0 h-[2px] w-full origin-left scale-x-0 bg-[#9f1f47] transition-transform duration-300 group-hover/all:scale-x-100" />
+                <span className={`absolute -bottom-1 left-0 h-[2px] w-full origin-left scale-x-0 transition-transform duration-300 group-hover/all:scale-x-100 ${winter ? "bg-[#fff2e8]" : "bg-[#9f1f47]"}`} />
               </span>
               <ArrowRight className="h-5 w-5 transition-transform duration-300 group-hover/all:translate-x-1" />
             </Link>
@@ -1092,7 +1165,7 @@ const Index = () => {
                 // Заголовок/локація мають фіксовану висоту (line-clamp + min-h) — інакше
                 // картки з різною довжиною тексту виходять різного розміру.
                 const eventCard = (
-                  <div className="relative flex h-full flex-col overflow-hidden rounded-[22px] bg-white/75 shadow-[0_16px_34px_-20px_rgba(0,47,94,0.35)] backdrop-blur-sm transition-all duration-300 group-hover:-translate-y-2 group-hover:shadow-[0_26px_48px_-20px_rgba(159,31,71,0.4)]">
+                  <div className={`relative flex h-full flex-col overflow-hidden rounded-[22px] ${winter ? "bg-white" : "bg-white/75"} text-[#002f5e] shadow-[0_16px_34px_-20px_rgba(0,47,94,0.35)] backdrop-blur-sm transition-all duration-300 group-hover:-translate-y-2 group-hover:shadow-[0_26px_48px_-20px_rgba(159,31,71,0.4)]`}>
                     <div className="relative h-[185px] overflow-hidden md:h-[225px]">
                       <Img w={400}
                         src={event.image}
@@ -1113,8 +1186,9 @@ const Index = () => {
 
                     {/* перфорація квитка */}
                     <div className="relative px-4" aria-hidden="true">
-                      <div className="absolute -left-2.5 -top-2.5 h-5 w-5 rounded-full bg-[#fff2e8]" />
-                      <div className="absolute -right-2.5 -top-2.5 h-5 w-5 rounded-full bg-[#fff2e8]" />
+                      {/* «вирізи» квитка — колір тла секції */}
+                      <div className={`absolute -left-2.5 -top-2.5 h-5 w-5 rounded-full ${winter ? "bg-[#9f1f47]" : "bg-[#fff2e8]"}`} />
+                      <div className={`absolute -right-2.5 -top-2.5 h-5 w-5 rounded-full ${winter ? "bg-[#9f1f47]" : "bg-[#fff2e8]"}`} />
                       <div className="border-t-2 border-dashed border-[#002f5e]/15" />
                     </div>
 
@@ -1161,7 +1235,7 @@ const Index = () => {
               type="button"
               onClick={goPrevEventsPage}
               className="flex items-center justify-center p-1 text-[#002f5e] transition-opacity hover:opacity-55"
-              aria-label="Попередня сторінка подій"
+              aria-label={t("prevEventsPage")}
             >
               <ChevronLeft className="h-6 w-6" strokeWidth={3} />
             </button>
@@ -1171,7 +1245,7 @@ const Index = () => {
                   key={idx}
                   type="button"
                   onClick={() => setEventsPage(idx)}
-                  className={`h-2.5 rounded-full transition-all duration-300 ${idx === eventsPage ? "w-8 bg-[#9f1f47]" : "w-2.5 bg-[#002f5e]/30 hover:bg-[#9f1f47]/50"}`}
+                  className={`h-2.5 rounded-full transition-all duration-300 ${idx === eventsPage ? (winter ? "w-8 bg-[#fff2e8]" : "w-8 bg-[#9f1f47]") : (winter ? "w-2.5 bg-[#fff2e8]/35 hover:bg-[#fff2e8]/60" : "w-2.5 bg-[#002f5e]/30 hover:bg-[#9f1f47]/50")}`}
                   aria-label={`Сторінка подій ${idx + 1}`}
                 />
               ))}
@@ -1180,7 +1254,7 @@ const Index = () => {
               type="button"
               onClick={goNextEventsPage}
               className="flex items-center justify-center p-1 text-[#002f5e] transition-opacity hover:opacity-55"
-              aria-label="Наступна сторінка подій"
+              aria-label={t("nextEventsPage")}
             >
               <ChevronRight className="h-6 w-6" strokeWidth={3} />
             </button>

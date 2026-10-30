@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { CheckCircle2, MapPin, Building2, Landmark, Plus, Settings2, AlertCircle, LayoutDashboard, Calendar, UtensilsCrossed, BedDouble, ChevronRight, Palmtree, Newspaper, LogOut, Languages, Route, UserRound, Headphones, ListChecks, X } from "lucide-react";
+import { CheckCircle2, MapPin, Building2, Landmark, Plus, Settings2, AlertCircle, LayoutDashboard, Calendar, UtensilsCrossed, BedDouble, ChevronRight, Palmtree, Newspaper, LogOut, Languages, Route, UserRound, Headphones, ListChecks, QrCode, Snowflake, X } from "lucide-react";
 import { translateFields } from "@/lib/translate";
 import AdminLoginGate from "@/components/AdminLoginGate";
 import { adminLogout } from "@/lib/adminAuth";
@@ -16,18 +16,20 @@ import { ArticlesAdmin } from "./admin/ArticlesAdmin";
 import { RoutesAdmin } from "./admin/RoutesAdmin";
 import { GuidesAdmin } from "./admin/GuidesAdmin";
 import { PollsAdmin } from "./admin/PollsAdmin";
+import { QrCodesAdmin } from "./admin/QrCodesAdmin";
+import WinterThemeAdmin from "./admin/WinterThemeAdmin";
 import RichTextEditor from "@/components/RichTextEditor";
 import { slugify } from "@/lib/slug";
 import { uid } from "@/lib/id";
 import { uploadMedia } from "@/data/storage";
 import { TOURISM_TYPES, PLACE_TYPES } from "@/components/admin/constants";
-import { Label, Input, Textarea, MultiField, FormSelect, FieldGroup, SaveBtn, MediaField, AudioField, VenuePicker, MediaGroup, MediaGroupPlace, EntityCard } from "@/components/admin/fields";
+import { Label, Input, Textarea, MultiField, FormSelect, FieldGroup, SaveBtn, MediaField, AudioField, VenuePicker, EventArchiveField, MediaGroup, MediaGroupPlace, EntityCard } from "@/components/admin/fields";
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
 type AdminSection =
   | "districts" | "cities" | "places" | "constructor"
-  | "tourism-types" | "articles" | "routes" | "guides" | "polls"
+  | "tourism-types" | "articles" | "routes" | "guides" | "polls" | "qr-codes" | "winter"
   | "pages-district" | "pages-city" | "pages-place";
 
 type PlacePageType = TourismObjectType;
@@ -58,14 +60,14 @@ type PlaceForm = {
   published: boolean; tourismTypes: string[];
   nameEn: string; subtitleEn: string; descriptionEn: string;
   detailedInfoEn: string; addressEn: string; hoursEn: string; amenitiesEn: string;
-  venueId: string; repertoire: string;
+  venueId: string; repertoire: string; archiveAfter: string;
   heroFontSize: string;
   audioUrl: string; audioUrlEn: string;
 };
 
 const emptyDistrict = (regionId: string): DistrictForm => ({ id: "", name: "", subtitle: "", description: "", detailedInfo: "", imageUrl: "", videoUrl: "", reelUrl: "", regionId, nameEn: "", subtitleEn: "", descriptionEn: "", audioUrl: "", audioUrlEn: "" });
 const emptyCity = (districtId: string): CityForm => ({ id: "", name: "", subtitle: "", description: "", detailedInfo: "", imageUrl: "", videoUrl: "", reelUrl: "", districtId, weatherCityName: "", settlementType: "місто", nameEn: "", subtitleEn: "", descriptionEn: "", audioUrl: "", audioUrlEn: "" });
-const emptyPlace = (cityId: string): PlaceForm => ({ id: "", slug: "", name: "", subtitle: "", description: "", detailedInfo: "", imageUrl: "", videoUrl: "", reelUrl: "", reelImageUrl: "", cityId, districtOnlyMode: false, type: "attraction", mapUrl: "", latitude: "", longitude: "", address: "", phone: "", website: "", eventDates: "", hours: "", amenities: "", published: true, tourismTypes: [], nameEn: "", subtitleEn: "", descriptionEn: "", detailedInfoEn: "", addressEn: "", hoursEn: "", amenitiesEn: "", venueId: "", repertoire: "", heroFontSize: "", audioUrl: "", audioUrlEn: "" });
+const emptyPlace = (cityId: string): PlaceForm => ({ id: "", slug: "", name: "", subtitle: "", description: "", detailedInfo: "", imageUrl: "", videoUrl: "", reelUrl: "", reelImageUrl: "", cityId, districtOnlyMode: false, type: "attraction", mapUrl: "", latitude: "", longitude: "", address: "", phone: "", website: "", eventDates: "", hours: "", amenities: "", published: true, tourismTypes: [], nameEn: "", subtitleEn: "", descriptionEn: "", detailedInfoEn: "", addressEn: "", hoursEn: "", amenitiesEn: "", venueId: "", repertoire: "", archiveAfter: "", heroFontSize: "", audioUrl: "", audioUrlEn: "" });
 
 
 const Admin = () => {
@@ -316,6 +318,10 @@ const Admin = () => {
         reelImageUrl: placeForm.reelImageUrl || undefined,
         venueId: placeForm.venueId || undefined,
         repertoire: placeForm.repertoire || undefined,
+        // Порожнє поле шлемо лише тоді, коли треба стерти раніше збережену дату.
+        archiveAfter: placeForm.type === "event" && placeForm.archiveAfter
+          ? placeForm.archiveAfter
+          : places.find(p => p.id === editingPlaceId)?.archiveAfter ? "" : undefined,
         heroFontSize: placeForm.heroFontSize || undefined,
         audioUrl: placeForm.audioUrl || undefined,
         audioUrlEn: placeForm.audioUrlEn || undefined,
@@ -331,10 +337,37 @@ const Admin = () => {
     }
   };
 
+  // QR-постер окремого місця прямо з розділу «Місця». Для місця, що зараз
+  // редагується, беремо значення з форми — постер одразу відбиває незбережені
+  // правки назви, графіка чи адреси.
+  const [qrBusyId, setQrBusyId] = useState<string | null>(null);
+  const downloadPlaceQr = async (p: TourismObject) => {
+    if (qrBusyId) return;
+    setQrBusyId(p.id);
+    try {
+      const [{ posterItemFromObject }, { downloadPosterPng }] = await Promise.all([
+        import("@/lib/qrPoster/item"), import("@/lib/qrPoster/export"),
+      ]);
+      const obj: TourismObject = editingPlaceId === p.id
+        ? { ...p, name: placeForm.name || p.name, hours: placeForm.hours, eventDates: placeForm.eventDates,
+            address: placeForm.address,
+            // У режимі «лише район» поле cityId форми містить id району.
+            ...(placeForm.districtOnlyMode
+              ? { cityId: null, districtId: placeForm.cityId || p.districtId }
+              : { cityId: placeForm.cityId || p.cityId }) }
+        : p;
+      await downloadPosterPng(posterItemFromObject(obj, cities, districts));
+    } catch (e: any) {
+      showToast(e?.message ?? "Не вдалося згенерувати QR-постер", false);
+    } finally {
+      setQrBusyId(null);
+    }
+  };
+
   const editPlace = (p: TourismObject) => {
     setEditingPlaceId(p.id);
     const isDistrictOnly = !p.cityId;
-    setPlaceForm({ id: p.id, slug: p.slug, name: p.name, subtitle: p.subtitle ?? "", description: p.description ?? "", detailedInfo: p.detailedInfo ?? "", imageUrl: p.imageUrl ?? "", videoUrl: p.videoUrl ?? "", reelUrl: p.reelUrl ?? "", reelImageUrl: p.reelImageUrl ?? "", cityId: isDistrictOnly ? p.districtId : (p.cityId ?? ""), districtOnlyMode: isDistrictOnly, type: p.type, mapUrl: p.mapUrl ?? "", latitude: p.latitude != null ? String(p.latitude) : "", longitude: p.longitude != null ? String(p.longitude) : "", address: p.address ?? "", phone: p.phone ?? "", website: p.website ?? "", eventDates: p.eventDates ?? "", hours: p.hours ?? "", amenities: p.amenities ?? "", published: p.published, tourismTypes: p.tourismTypes ?? [], nameEn: p.nameEn ?? "", subtitleEn: p.subtitleEn ?? "", descriptionEn: p.descriptionEn ?? "", detailedInfoEn: p.detailedInfoEn ?? "", addressEn: p.addressEn ?? "", hoursEn: p.hoursEn ?? "", amenitiesEn: p.amenitiesEn ?? "", venueId: p.venueId ?? "", repertoire: p.repertoire ?? "", heroFontSize: p.heroFontSize ?? "", audioUrl: p.audioUrl ?? "", audioUrlEn: p.audioUrlEn ?? "" });
+    setPlaceForm({ id: p.id, slug: p.slug, name: p.name, subtitle: p.subtitle ?? "", description: p.description ?? "", detailedInfo: p.detailedInfo ?? "", imageUrl: p.imageUrl ?? "", videoUrl: p.videoUrl ?? "", reelUrl: p.reelUrl ?? "", reelImageUrl: p.reelImageUrl ?? "", cityId: isDistrictOnly ? p.districtId : (p.cityId ?? ""), districtOnlyMode: isDistrictOnly, type: p.type, mapUrl: p.mapUrl ?? "", latitude: p.latitude != null ? String(p.latitude) : "", longitude: p.longitude != null ? String(p.longitude) : "", address: p.address ?? "", phone: p.phone ?? "", website: p.website ?? "", eventDates: p.eventDates ?? "", hours: p.hours ?? "", amenities: p.amenities ?? "", published: p.published, tourismTypes: p.tourismTypes ?? [], nameEn: p.nameEn ?? "", subtitleEn: p.subtitleEn ?? "", descriptionEn: p.descriptionEn ?? "", detailedInfoEn: p.detailedInfoEn ?? "", addressEn: p.addressEn ?? "", hoursEn: p.hoursEn ?? "", amenitiesEn: p.amenitiesEn ?? "", venueId: p.venueId ?? "", repertoire: p.repertoire ?? "", archiveAfter: p.archiveAfter ?? "", heroFontSize: p.heroFontSize ?? "", audioUrl: p.audioUrl ?? "", audioUrlEn: p.audioUrlEn ?? "" });
   };
 
   const handleDeletePlace = async (id: string) => {
@@ -510,6 +543,8 @@ const Admin = () => {
                   { id: "routes" as AdminSection, label: "Маршрути", icon: <Route className="h-4 w-4" /> },
                   { id: "guides" as AdminSection, label: "Гіди", icon: <UserRound className="h-4 w-4" /> },
                   { id: "polls" as AdminSection, label: "Опитування", icon: <ListChecks className="h-4 w-4" /> },
+                  { id: "qr-codes" as AdminSection, label: "QR-коди", icon: <QrCode className="h-4 w-4" /> },
+                  { id: "winter" as AdminSection, label: "Зимова тема", icon: <Snowflake className="h-4 w-4" /> },
                 ].map(item => (
                   <button key={item.id} type="button" onClick={() => setSection(item.id)}
                     className={`flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-[14px] font-medium transition ${
@@ -760,6 +795,17 @@ const Admin = () => {
                         </div>
                         <h2 className="text-[18px] font-semibold">{editingPlaceId ? "Редагувати місце" : "Нове місце"}</h2>
                       </div>
+                      {editingPlaceId && (() => {
+                        const current = places.find(p => p.id === editingPlaceId);
+                        return current ? (
+                          <button type="button" onClick={() => void downloadPlaceQr(current)} disabled={!!qrBusyId}
+                            title="Постер A4 з QR-кодом сторінки цього місця"
+                            className="ml-auto mr-2 flex items-center gap-1.5 rounded-xl bg-[#002f5e] px-3 py-1.5 text-[13px] font-medium text-[#fff2e8] transition hover:opacity-85 disabled:opacity-50">
+                            <QrCode className="h-4 w-4" aria-hidden="true" />
+                            {qrBusyId === current.id ? "Генеруємо…" : "Завантажити QR-код"}
+                          </button>
+                        ) : null;
+                      })()}
                       {editingPlaceId && (
                         <button type="button" onClick={() => { setEditingPlaceId(null); setPlaceForm(emptyPlace(placeForm.cityId)); }} className="rounded-xl border border-[#002f5e]/15 px-3 py-1.5 text-[13px] text-[#002f5e]/70 hover:border-[#002f5e]/30 hover:text-[#002f5e] transition">
                           ✕ Скасувати
@@ -930,6 +976,12 @@ const Admin = () => {
                               className="w-full rounded-xl border border-[#002f5e]/15 bg-white px-4 py-2.5 text-[13px] text-[#002f5e] placeholder:text-[#002f5e]/70 focus:border-[#002f5e]/40 focus:outline-none focus:ring-2 focus:ring-[#002f5e]/10 transition font-mono"
                             />
                           </div>
+                          <EventArchiveField
+                            value={placeForm.archiveAfter}
+                            onChange={v => setPlaceForm(p => ({ ...p, archiveAfter: v }))}
+                            repertoire={placeForm.repertoire}
+                            eventDates={placeForm.eventDates}
+                          />
                         </>
                       )}
 
@@ -1053,6 +1105,8 @@ const Admin = () => {
                             isEditing={editingPlaceId === p.id}
                             onEdit={() => editPlace(p)}
                             onDelete={() => void handleDeletePlace(p.id)}
+                            onQr={() => void downloadPlaceQr(p)}
+                            qrBusy={qrBusyId === p.id}
                           />
                         );
                       })}
@@ -1194,6 +1248,14 @@ const Admin = () => {
 
             {section === "polls" && (
               <PollsAdmin showToast={showToast} />
+            )}
+
+            {section === "qr-codes" && (
+              <QrCodesAdmin showToast={showToast} />
+            )}
+
+            {section === "winter" && (
+              <WinterThemeAdmin showToast={showToast} />
             )}
 
           </main>

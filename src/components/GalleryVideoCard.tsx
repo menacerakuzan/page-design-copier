@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Loader2, Volume2, VolumeX, Maximize2, X } from "lucide-react";
 import { SpinningEmblem } from "@/components/SpinningEmblem";
 import { useDialogA11y } from "@/hooks/useDialogA11y";
+import { useLang } from "@/lib/langContext";
 
 interface Props {
   src: string;
@@ -20,6 +21,7 @@ const Spinner = () => (
 );
 
 export function GalleryVideoCard({ src, title, textSizeCls = "text-[20px]", style, className = "" }: Props) {
+  const { t } = useLang();
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [inView, setInView] = useState(false);
@@ -101,7 +103,7 @@ export function GalleryVideoCard({ src, title, textSizeCls = "text-[20px]", styl
         {/* gradient + title */}
         {title && (
           <>
-            <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent pointer-events-none" />
             <p className={`absolute bottom-5 left-5 right-5 font-odesa-medium leading-tight text-[#fff2e8] ${textSizeCls} pointer-events-none`}>{title}</p>
           </>
         )}
@@ -125,7 +127,7 @@ export function GalleryVideoCard({ src, title, textSizeCls = "text-[20px]", styl
             type="button"
             onClick={toggleMute}
             className="flex h-10 w-10 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm transition-colors hover:bg-black/70"
-            aria-label={muted ? "Увімкнути звук" : "Вимкнути звук"}
+            aria-label={muted ? t("soundOn") : t("soundOff")}
           >
             {muted ? <VolumeX className="h-[18px] w-[18px]" /> : <Volume2 className="h-[18px] w-[18px]" />}
           </button>
@@ -133,7 +135,7 @@ export function GalleryVideoCard({ src, title, textSizeCls = "text-[20px]", styl
             type="button"
             onClick={openExpanded}
             className="flex h-10 w-10 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm transition-colors hover:bg-black/70"
-            aria-label="На весь екран"
+            aria-label={t("fullscreen")}
           >
             <Maximize2 className="h-[18px] w-[18px]" />
           </button>
@@ -146,6 +148,7 @@ export function GalleryVideoCard({ src, title, textSizeCls = "text-[20px]", styl
 }
 
 function ReelLightbox({ src, title, open, onClose }: { src: string; title?: string; open: boolean; onClose: () => void }) {
+  const { t } = useLang();
   const videoRef = useRef<HTMLVideoElement>(null);
   // Стартуємо без звуку — так само, як картка-прев'ю: браузери надійно
   // дозволяють autoplay лише muted-відео. Раніше тут стартувало unmuted, і
@@ -198,7 +201,7 @@ function ReelLightbox({ src, title, open, onClose }: { src: string; title?: stri
             ref={dialogRef}
             role="dialog"
             aria-modal="true"
-            aria-label={title ? `Відео: ${title}` : "Перегляд відео"}
+            aria-label={title ? `${t("viewVideo")}: ${title}` : t("viewVideo")}
             className="relative flex max-h-[90vh] max-w-[92vw] items-center justify-center"
             onClick={e => e.stopPropagation()}
           >
@@ -243,7 +246,7 @@ function ReelLightbox({ src, title, open, onClose }: { src: string; title?: stri
                   type="button"
                   onClick={togglePlay}
                   className="group flex h-56 w-56 items-center justify-center"
-                  aria-label="Відтворити"
+                  aria-label={t("play")}
                 >
                   <SpinningEmblem size={224} />
                 </button>
@@ -256,7 +259,7 @@ function ReelLightbox({ src, title, open, onClose }: { src: string; title?: stri
                 type="button"
                 onClick={toggleMute}
                 className="flex h-11 w-11 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm transition-colors hover:bg-black/70"
-                aria-label={muted ? "Увімкнути звук" : "Вимкнути звук"}
+                aria-label={muted ? t("soundOn") : t("soundOff")}
               >
                 {muted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
               </button>
@@ -268,7 +271,7 @@ function ReelLightbox({ src, title, open, onClose }: { src: string; title?: stri
             type="button"
             onClick={onClose}
             className="absolute right-5 top-5 flex h-11 w-11 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-sm transition-colors hover:bg-black/70"
-            aria-label="Закрити"
+            aria-label={t("close")}
           >
             <X className="h-5 w-5" />
           </button>

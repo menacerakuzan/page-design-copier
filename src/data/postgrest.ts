@@ -35,7 +35,17 @@ function authHeaders(): Record<string, string> {
   };
 }
 
-class QueryBuilder<T = unknown> implements PromiseLike<PostgrestResult<T>> {
+/**
+ * Рядок таблиці PostgREST. Дефолт саме такий, а не `unknown`: відповідь —
+ * динамічний JSON, і кожен репозиторій сам мапить його своїм mapRow(). З
+ * `unknown` будь-який `data.map(...)` не компілювався, і саме через це в
+ * проєкті роками жили невидимі помилки типів (корінний tsconfig нічого не
+ * перевіряв, тому вони не спливали). `Record<string, unknown>` лишає доступ
+ * до полів типобезпечним (значення — `unknown`), але дозволяє ітерацію.
+ */
+export type PostgrestRow = Record<string, unknown>;
+
+class QueryBuilder<TRow = PostgrestRow, TData = TRow[]> implements PromiseLike<PostgrestResult<TData>> {
   private cols = "*";
   private filters: string[] = [];
   private orders: string[] = [];
@@ -64,13 +74,16 @@ class QueryBuilder<T = unknown> implements PromiseLike<PostgrestResult<T>> {
     this.limitN = n;
     return this;
   }
-  maybeSingle() {
+  // Після single()/maybeSingle() відповідь — один рядок, а не масив, тож
+  // повертаємо той самий об'єкт, але з іншим типом форми даних. Без цього
+  // `data.map(...)` компілювався і там, де map взагалі не існує.
+  maybeSingle(): QueryBuilder<TRow, TRow | null> {
     this.rowMode = "maybe";
-    return this;
+    return this as unknown as QueryBuilder<TRow, TRow | null>;
   }
-  single() {
+  single(): QueryBuilder<TRow, TRow> {
     this.rowMode = "one";
-    return this;
+    return this as unknown as QueryBuilder<TRow, TRow>;
   }
   insert(body: unknown) {
     this.method = "POST";
@@ -108,7 +121,7 @@ class QueryBuilder<T = unknown> implements PromiseLike<PostgrestResult<T>> {
     return `${REST}/${this.table}${qs ? `?${qs}` : ""}`;
   }
 
-  private async exec(): Promise<PostgrestResult<T>> {
+  private async exec(): Promise<PostgrestResult<TData>> {
     const headers = authHeaders();
     if (this.body !== undefined) headers["Content-Type"] = "application/json";
     if (this.prefer.length) headers["Prefer"] = this.prefer.join(",");
@@ -150,13 +163,13 @@ class QueryBuilder<T = unknown> implements PromiseLike<PostgrestResult<T>> {
       if (this.rowMode === "one" && row == null) {
         return { data: null, error: { code: "PGRST116", message: "No rows found" } };
       }
-      return { data: row as T, error: null };
+      return { data: row as TData, error: null };
     }
-    return { data: (json ?? []) as T, error: null };
+    return { data: (json ?? []) as TData, error: null };
   }
 
-  then<R1 = PostgrestResult<T>, R2 = never>(
-    onfulfilled?: ((v: PostgrestResult<T>) => R1 | PromiseLike<R1>) | null,
+  then<R1 = PostgrestResult<TData>, R2 = never>(
+    onfulfilled?: ((v: PostgrestResult<TData>) => R1 | PromiseLike<R1>) | null,
     onrejected?: ((reason: unknown) => R2 | PromiseLike<R2>) | null,
   ): PromiseLike<R1 | R2> {
     return this.exec().then(onfulfilled, onrejected);
@@ -164,9 +177,9 @@ class QueryBuilder<T = unknown> implements PromiseLike<PostgrestResult<T>> {
 }
 
 export interface PostgrestClient {
-  from<T = unknown>(table: string): QueryBuilder<T>;
+  from<TRow = PostgrestRow>(table: string): QueryBuilder<TRow>;
 }
 
 export function createPostgrestClient(): PostgrestClient {
-  return { from: <T = unknown>(table: string) => new QueryBuilder<T>(table) };
+  return { from: <TRow = PostgrestRow>(table: string) => new QueryBuilder<TRow>(table) };
 }

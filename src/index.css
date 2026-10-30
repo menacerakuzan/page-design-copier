@@ -128,9 +128,13 @@
      на світлому тлі, світлий ореол — на темному й бордовому. outline
      ніколи не обрізається overflow:hidden, тож навіть якщо ореол зріже
      контейнер картки, сам маркер лишиться видимим. */
+  /* Аудит 8.0.2: маркер щільно прилягав до елемента й погано читався —
+     збільшуємо відступ. Не 5px як у прикладі аудиту, а 4px: outline
+     обрізається предками з overflow:hidden (а картки на сайті саме такі),
+     тож надто великий відступ місцями зникав би зовсім. */
   :focus-visible {
     outline: 3px solid #002f5e;
-    outline-offset: 2px;
+    outline-offset: 4px;
     box-shadow: 0 0 0 2px #fff2e8;
     border-radius: 2px;
   }
@@ -330,6 +334,64 @@
   .animate-progress-grow {
     animation: none;
   }
+}
+
+/* Підвал: бліки піни пливуть уздовж хвилі (SiteFooter → Swell). */
+@keyframes footer-foam {
+  to { stroke-dashoffset: -480; }
+}
+.footer-foam { animation: footer-foam 11s linear infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .footer-foam { animation: none; }
+}
+
+/* ── Зимова тема (src/lib/winterTheme.tsx, src/components/winter/*) ──────
+   Класи діють лише в зимових компонентах; html[data-winter-fx="off"] —
+   відвідувач вимкнув ефекти шнурком гірлянди (WCAG 2.2.2). */
+@keyframes winter-twinkle {
+  0%, 100% { opacity: 1; }
+  45% { opacity: .35; }
+  60% { opacity: .9; }
+}
+@keyframes winter-star {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  50% { transform: scale(1.12) rotate(8deg); }
+}
+@keyframes winter-wave {
+  0%, 60%, 100% { transform: rotate(0deg); }
+  70% { transform: rotate(-14deg); }
+  80% { transform: rotate(8deg); }
+  90% { transform: rotate(-10deg); }
+}
+@keyframes winter-sway {
+  0%, 100% { transform: rotate(-1.1deg); }
+  50% { transform: rotate(1.1deg); }
+}
+@keyframes winter-fall {
+  from { transform: translate3d(0, -2vh, 0); }
+  to { transform: translate3d(3vw, 104vh, 0); }
+}
+@keyframes winter-bulb {
+  0%, 100% { opacity: 1; filter: brightness(1.15); }
+  50% { opacity: .55; filter: brightness(.8); }
+}
+.winter-twinkle { animation: winter-twinkle 2.4s ease-in-out infinite; }
+.winter-star { animation: winter-star 3.2s ease-in-out infinite; transform-box: view-box; }
+.winter-wave { animation: winter-wave 4s ease-in-out infinite; transform-box: view-box; }
+.winter-fall { animation: winter-fall 6s linear infinite; }
+.winter-sway { transform-origin: 50% 0; animation: winter-sway 7s ease-in-out infinite; }
+.winter-garland .wg-bulb { animation: winter-bulb 3.6s ease-in-out infinite; }
+.winter-garland .wg-glow { opacity: .4; animation: winter-twinkle 3.6s ease-in-out infinite; }
+.winter-garland[data-lights="off"] .wg-bulb { fill: #8fa3b8; animation: none; opacity: .55; }
+.winter-garland[data-lights="off"] .wg-glow { display: none; }
+html[data-winter-fx="off"] .winter-twinkle,
+html[data-winter-fx="off"] .winter-star,
+html[data-winter-fx="off"] .winter-wave,
+html[data-winter-fx="off"] .winter-sway { animation: none; }
+html[data-season="winter"] ::selection { background: #9f1f47; color: #fff2e8; }
+@media (prefers-reduced-motion: reduce) {
+  .winter-twinkle, .winter-star, .winter-wave, .winter-fall, .winter-sway,
+  .winter-garland .wg-bulb, .winter-garland .wg-glow { animation: none; }
 }
 
 /* Article rich-text content */

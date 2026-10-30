@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, ArrowRight, Maximize2, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { TourismObject } from "@/types/hierarchy";
+import { extractCoords } from "@/lib/routeGeometry";
+import { useLang } from "@/lib/langContext";
 
 export type WaypointObject = {
   coordIndex: number;
@@ -19,15 +21,7 @@ type Props = {
   waypoints?: WaypointObject[];
 };
 
-export function extractCoords(url: string): [number, number][] {
-  const pairs: [number, number][] = [];
-  const regex = /!1d(-?\d+\.\d+)!2d(-?\d+\.\d+)/g;
-  let m;
-  while ((m = regex.exec(url)) !== null) {
-    pairs.push([parseFloat(m[1]), parseFloat(m[2])]);
-  }
-  return pairs;
-}
+export { extractCoords };
 
 // ── Палітра ─────────────────────────────────────────────────────────────────
 const WINE = "#9f1f47";
@@ -40,8 +34,11 @@ const objectTypeSlug: Record<string, string> = {
   attraction: "mistse", event: "podiyi", restaurant: "restorany", hotel: "hoteli",
 };
 
-const typeLabel = (t: string) =>
-  t === "attraction" ? "Місце" : t === "event" ? "Подія" : t === "restaurant" ? "Ресторан" : "Готель";
+const typeLabel = (type: string, lang: "uk" | "en") => {
+  const uk: Record<string, string> = { attraction: "Місце", event: "Подія", restaurant: "Ресторан", hotel: "Готель" };
+  const en: Record<string, string> = { attraction: "Place", event: "Event", restaurant: "Restaurant", hotel: "Hotel" };
+  return (lang === "en" ? en : uk)[type] ?? type;
+};
 
 const lineFeature = (coords: [number, number][]): GeoJSON.Feature => ({
   type: "Feature",
@@ -67,6 +64,7 @@ async function fetchRoadRoute(coords: [number, number][]): Promise<[number, numb
 }
 
 export default function RouteMap({ mapUrl, coords: coordsProp, waypoints = [] }: Props) {
+  const { t, lang } = useLang();
   const containerRef = useRef<HTMLDivElement>(null);
   const [activeObj, setActiveObj] = useState<TourismObject | null>(null);
   const [routing, setRouting] = useState(true);
@@ -236,7 +234,7 @@ export default function RouteMap({ mapUrl, coords: coordsProp, waypoints = [] }:
           className="absolute inset-0 flex flex-col items-center justify-center gap-2 px-6 text-center"
           style={{ backgroundColor: NAVY, color: CREAM }}
         >
-          <p className="text-[15px] font-odesa-medium">Карту не вдалося завантажити</p>
+          <p className="text-[15px] font-odesa-medium">{t("mapLoadFailed")}</p>
           <p className="text-[13px] font-odesa-regular" style={{ color: `${CREAM}80` }}>
             Ваш браузер не підтримує WebGL. Скористайтесь кнопкою «Відкрити в Google Maps».
           </p>
@@ -289,7 +287,7 @@ export default function RouteMap({ mapUrl, coords: coordsProp, waypoints = [] }:
             <button
               type="button"
               onClick={() => setActiveObj(null)}
-              aria-label="Закрити картку об'єкта"
+              aria-label={t("closeObjectCard")}
               className="absolute right-2.5 top-2.5 flex h-6 w-6 items-center justify-center rounded-full transition-opacity hover:opacity-70"
               style={{ backgroundColor: "rgba(0,0,0,0.55)", backdropFilter: "blur(4px)", zIndex: 1 }}
             >
@@ -305,7 +303,7 @@ export default function RouteMap({ mapUrl, coords: coordsProp, waypoints = [] }:
 
             <div className="p-4">
               <p className="mb-1 text-[10px] uppercase tracking-wider font-odesa-medium" style={{ color: GOLD_SOFT }}>
-                {typeLabel(activeObj.type)}
+                {typeLabel(activeObj.type, lang)}
               </p>
               <p className="font-odesa-medium text-[15px] leading-[1.2]" style={{ color: CREAM }}>{activeObj.name}</p>
               {activeObj.subtitle && (

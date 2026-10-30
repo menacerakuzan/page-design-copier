@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { CheckCircle2, ChevronRight, Languages, Pencil, Plus, Trash2, X } from "lucide-react";
+import { AlertTriangle, ArrowDown, ArrowUp, CheckCircle2, ChevronRight, Languages, Pencil, Plus, Trash2, X } from "lucide-react";
 import {
   loadRoutes, upsertRoute, deleteRoute, type Route as RouteType,
   ROUTE_TAG_OPTIONS, loadRouteTagOrder, saveRouteTagOrder,
@@ -9,6 +9,8 @@ import { translateFields, translateHtml } from "@/lib/translate";
 import RichTextEditor from "@/components/RichTextEditor";
 import { FieldGroup, Input, Label, Textarea, MediaField } from "@/components/admin/fields";
 import { TourismObject } from "@/types/hierarchy";
+import { extractCoords, orderedRouteObjectIds } from "@/lib/routeGeometry";
+import { getObjectCoords } from "@/lib/geo";
 
 type RouteForm = {
   id: string; name: string; nameEn: string; description: string; descriptionEn: string;
@@ -263,13 +265,23 @@ export const RoutesAdmin = ({ showToast }: { showToast: (msg: string, ok?: boole
 
           {/* Unified object picker — waypoints + free attach */}
           {(() => {
-            const coords = (() => {
-              const pairs: [number,number][] = [];
-              const regex = /!1d(-?\d+\.\d+)!2d(-?\d+\.\d+)/g;
-              let m; while ((m = regex.exec(form.mapUrl)) !== null) pairs.push([parseFloat(m[1]), parseFloat(m[2])]);
-              return pairs;
-            })();
+            const coords = extractCoords(form.mapUrl);
             const hasWaypoints = coords.length > 0;
+
+            // Без точок у посиланні маршрут на сайті будується за координатами
+            // об'єктів — у цьому порядку (той самий, що в routeGeometry).
+            const ordered = orderedRouteObjectIds(form);
+            const reorder = (next: (ids: string[]) => string[]) => setForm(f => {
+              if (!f) return f;
+              // Старі прив'язки до точок без точок нічого не значать — порядок
+              // тепер повністю задає список об'єктів.
+              return { ...f, objectIds: next(orderedRouteObjectIds(f)), waypointObjectIds: [] };
+            });
+            const move = (from: number, to: number) => reorder(ids => {
+              const next = [...ids];
+              [next[from], next[to]] = [next[to], next[from]];
+              return next;
+            });
 
             // Всі прикріплені objectIds = union waypointObjectIds (non-null) + objectIds
             const waypointIds = form.waypointObjectIds.filter(Boolean) as string[];
@@ -355,9 +367,55 @@ export const RoutesAdmin = ({ showToast }: { showToast: (msg: string, ok?: boole
                   </div>
                 )}
 
+                {/* Без точок у посиланні — нумерований маршрут з об'єктів */}
+                {!hasWaypoints && (
+                  <div className="space-y-2">
+                    {form.mapUrl.trim() && (
+                      <div className="flex gap-2 rounded-xl border border-amber-300/60 bg-amber-50 p-3 text-[12px] leading-snug text-amber-900">
+                        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                        <p>
+                          У посиланні немає точок маршруту (коротке посилання maps.app.goo.gl, «Мої карти» або одна точка).
+                          Карту на сайті побудуємо <b>за координатами об'єктів у порядку нижче</b>. Щоб задати точний шлях,
+                          вставте повне посилання з Google Maps «Маршрути» — з адресного рядка, вигляду <code>google.com/maps/dir/…</code>.
+                        </p>
+                      </div>
+                    )}
+                    {ordered.length > 0 && (
+                      <ol className="space-y-1.5 rounded-xl border border-[#002f5e]/10 bg-[#002f5e]/3 p-3">
+                        <li className="text-[11px] uppercase tracking-wide text-[#002f5e]/70">Порядок зупинок ({ordered.length})</li>
+                        {ordered.map((id, i) => {
+                          const obj = allObjects.find(o => o.id === id);
+                          const noCoords = obj ? !getObjectCoords(obj) : true;
+                          const last = i === ordered.length - 1;
+                          return (
+                            <li key={id} className="flex items-center gap-2 rounded-xl border border-[#002f5e]/15 bg-white px-2 py-1.5">
+                              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white"
+                                style={{ backgroundColor: i === 0 ? "#9f1f47" : last ? "#002f5e" : "#df9b3b" }}>
+                                {i + 1}
+                              </span>
+                              {obj?.imageUrl && <img loading="lazy" decoding="async" src={obj.imageUrl} alt="" className="h-7 w-10 shrink-0 rounded-lg object-cover" />}
+                              <span className="min-w-0 flex-1">
+                                <span className="block truncate text-[13px] text-[#002f5e]">{obj?.name ?? id}</span>
+                                {noCoords && <span className="block text-[11px] text-amber-800">немає координат — на карті не з'явиться</span>}
+                                {obj && !obj.published && <span className="block text-[11px] text-[#9f1f47]">не опубліковано — на сайті не показується</span>}
+                              </span>
+                              <button type="button" disabled={i === 0} onClick={() => move(i, i - 1)} aria-label={`Перемістити вище: ${obj?.name ?? id}`}
+                                className="rounded-lg p-1 text-[#002f5e]/70 hover:bg-[#002f5e]/8 disabled:opacity-25"><ArrowUp className="h-3.5 w-3.5" /></button>
+                              <button type="button" disabled={last} onClick={() => move(i, i + 1)} aria-label={`Перемістити нижче: ${obj?.name ?? id}`}
+                                className="rounded-lg p-1 text-[#002f5e]/70 hover:bg-[#002f5e]/8 disabled:opacity-25"><ArrowDown className="h-3.5 w-3.5" /></button>
+                              <button type="button" onClick={() => reorder(ids => ids.filter(x => x !== id))} aria-label={`Прибрати з маршруту: ${obj?.name ?? id}`}
+                                className="rounded-lg p-1 text-[#002f5e]/70 hover:text-[#9f1f47]"><X className="h-3.5 w-3.5" /></button>
+                            </li>
+                          );
+                        })}
+                      </ol>
+                    )}
+                  </div>
+                )}
+
                 {/* Вільні об'єкти (не прив'язані до точок) */}
                 <div>
-                  {freeIds.length > 0 && (
+                  {hasWaypoints && freeIds.length > 0 && (
                     <div className="mb-2 flex flex-wrap gap-1.5">
                       {freeIds.map(id => {
                         const obj = allObjects.find(o => o.id === id);
@@ -370,7 +428,7 @@ export const RoutesAdmin = ({ showToast }: { showToast: (msg: string, ok?: boole
                       })}
                     </div>
                   )}
-                  <Input value={wpSearch} onChange={setWpSearch} placeholder="+ Додати об'єкт (без прив'язки до точки)..." />
+                  <Input value={wpSearch} onChange={setWpSearch} placeholder={hasWaypoints ? "+ Додати об'єкт (без прив'язки до точки)..." : "+ Додати об'єкт до маршруту..."} />
                   {wpSearch && (
                     <div className="mt-1 max-h-[180px] overflow-y-auto rounded-xl border border-[#002f5e]/10 bg-white shadow-lg">
                       {searchResults.length === 0

@@ -266,7 +266,23 @@ const DirectionsSection = ({
             />
             <div className="min-w-0 flex-1">
               <p className="truncate text-[14px] font-semibold text-[#002f5e]">{card.title}</p>
-              <p className="text-[12px] text-[#002f5e]/70">Сортування: {card.sortOrder}</p>
+              {/* Аудит вебдоступності 2.1.1: alt має ОПИСУВАТИ зображення, а не
+                  повторювати назву району. Заповнюється контент-менеджером. */}
+              <label className="mt-1 block">
+                <span className="sr-only-a11y">Опис зображення для незрячих — {card.title}</span>
+                <input
+                  type="text"
+                  defaultValue={String(card.payload?.imageAlt ?? "")}
+                  placeholder="Опис зображення для незрячих (що саме на фото)"
+                  onBlur={e => {
+                    const next = e.target.value.trim();
+                    if (next === String(card.payload?.imageAlt ?? "")) return;
+                    void onUpdate({ ...card, payload: { ...card.payload, imageAlt: next } });
+                  }}
+                  className="w-full rounded-lg border border-[#002f5e]/20 bg-white px-2.5 py-1.5 text-[12px] text-[#002f5e] placeholder:text-[#002f5e]/50 focus:border-[#002f5e]/45 focus:outline-none"
+                />
+              </label>
+              <p className="mt-0.5 text-[11px] text-[#002f5e]/70">Сортування: {card.sortOrder}</p>
             </div>
             <div className="flex shrink-0 items-center gap-1.5">
               <MiniBtn onClick={() => onMove(card.id, -1)} title="Вгору">

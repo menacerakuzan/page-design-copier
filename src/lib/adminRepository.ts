@@ -86,6 +86,7 @@ const mapDbObject = (row: any): TourismObject => ({
   phone: row.phone ?? undefined,
   website: row.website ?? undefined,
   eventDates: row.event_dates ?? undefined,
+  archiveAfter: row.archive_after ?? undefined,
   hours: row.hours ?? undefined,
   hoursEn: row.hours_en ?? undefined,
   amenities: row.amenities ?? undefined,
@@ -161,6 +162,9 @@ const toDbObject = (obj: TourismObject) => ({
   phone: obj.phone ?? null,
   website: obj.website ?? null,
   event_dates: obj.eventDates ?? null,
+  // Колонка з міграції 20261029; поки поле не чіпали — не шлемо його взагалі,
+  // щоб збереження не падало на базі, де міграцію ще не застосовано.
+  ...(obj.archiveAfter !== undefined ? { archive_after: obj.archiveAfter || null } : {}),
   hours: obj.hours ?? null,
   amenities: obj.amenities ?? null,
   tourism_types: obj.tourismTypes ?? [],
@@ -381,9 +385,23 @@ export async function loadChangeLogs(limit = 80) {
   return (data ?? []).map(mapDbChange);
 }
 
+/**
+ * Форма рядка журналу змін. Явний тип потрібен, бо клієнт PostgREST повертає
+ * динамічний JSON (`Record<string, unknown>`) — без цього кожне звернення до
+ * logRow.entity_type / .action давало `unknown` і не компілювалось.
+ */
+type ChangeLogRow = {
+  id: string;
+  entity_type: string;
+  entity_id: string;
+  action: string;
+  before_data: unknown;
+  after_data: unknown;
+};
+
 export async function rollbackChange(logId: string) {
   const { data: logRow, error: logError } = await db
-    .from(tableNames.changeLogs)
+    .from<ChangeLogRow>(tableNames.changeLogs)
     .select("*")
     .eq("id", logId)
     .maybeSingle();

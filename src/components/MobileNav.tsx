@@ -21,6 +21,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { AccessibilityMenu } from "@/components/AccessibilityMenu";
 import { useLang } from "@/lib/langContext";
 import { useBasket } from "@/lib/basketContext";
+import { useWinterTheme } from "@/lib/winterTheme";
 
 const TikTokIcon = ({ className = "h-5 w-5" }: { className?: string }) => (
   <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden="true">
@@ -44,6 +45,7 @@ const socials = [
 export function MobileNav() {
   const { pathname } = useLocation();
   const { t, lang, setLang } = useLang();
+  const { active: winter } = useWinterTheme();
   const { count } = useBasket();
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -69,7 +71,7 @@ export function MobileNav() {
     <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
       {/* ── Нижня таб-навігація: плаваючий док ──────────────────── */}
       <nav
-        aria-label="Головна навігація"
+        aria-label={t("mainNav")}
         className="fixed inset-x-0 bottom-0 z-30 md:hidden"
       >
         {/*
@@ -81,7 +83,7 @@ export function MobileNav() {
           абсолютно спозиційованих дітей Safari під час семплінгу ігнорує.
         */}
         <ul
-          className="absolute inset-x-4 mx-auto flex max-w-[420px] items-center justify-around rounded-full bg-[#fff2e8] px-2 py-1.5 text-[#00376c] shadow-[0_4px_14px_-6px_rgba(0,47,94,0.35)]"
+          className={`absolute inset-x-4 mx-auto flex max-w-[420px] items-center justify-around rounded-full px-2 py-1.5 shadow-[0_4px_14px_-6px_rgba(0,47,94,0.35)] ${winter ? "bg-[#002f5e] text-[#fff2e8]" : "bg-[#fff2e8] text-[#00376c]"}`}
           style={{ bottom: "max(0.6rem, env(safe-area-inset-bottom))" }}
         >
           {tabs.map(({ href, label, Icon, badge }) => {
@@ -96,7 +98,7 @@ export function MobileNav() {
                 >
                   <span
                     className={`flex flex-col items-center justify-center gap-1 transition-opacity hover:opacity-80 ${
-                      active ? "text-[#9c6200] opacity-100" : "text-[#00376c] opacity-75"
+                      active ? (winter ? "text-[#f4c878] opacity-100" : "text-[#9c6200] opacity-100") : (winter ? "text-[#fff2e8] opacity-80" : "text-[#00376c] opacity-75")
                     }`}
                   >
                     <Icon className="h-6 w-6" strokeWidth={active ? 2.2 : 1.8} />
@@ -126,8 +128,8 @@ export function MobileNav() {
               <motion.button
                 whileTap={{ scale: 0.9 }}
                 type="button"
-                className="tap flex w-full flex-col items-center justify-center gap-1 text-[#00376c] opacity-75 transition-opacity hover:opacity-80"
-                aria-label="Меню"
+                className={`tap flex w-full flex-col items-center justify-center gap-1 opacity-75 transition-opacity hover:opacity-80 ${winter ? "text-[#fff2e8]" : "text-[#00376c]"}`}
+                aria-label={lang === "en" ? "Menu" : "Меню"}
               >
                 <MenuIcon className="h-6 w-6" strokeWidth={1.8} />
                 <span className="text-[9px] leading-none font-odesa-medium">{lang === "en" ? "Menu" : "Меню"}</span>
@@ -149,7 +151,7 @@ export function MobileNav() {
             ОДЕЩИНА
           </h2>
 
-          <nav aria-label="Більше" className="mt-5 grid grid-cols-1 gap-1.5">
+          <nav aria-label={lang === "en" ? "More" : "Більше"} className="mt-5 grid grid-cols-1 gap-1.5">
             {secondaryLinks.map(({ href, label, Icon }) => {
               const active = isActive(href);
               return (

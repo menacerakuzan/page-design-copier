@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Check, Gauge, Headphones, Pause, Play } from "lucide-react";
+import { useLang } from "@/lib/langContext";
 
 const fmt = (s: number) => {
   if (!Number.isFinite(s) || s < 0) return "0:00";
@@ -18,6 +19,7 @@ const fmtSpeed = (v: number) => (Number.isInteger(v) ? `${v}` : v.toFixed(2).rep
  * prefers-reduced-motion), клікабельний прогрес-бар.
  */
 export const AudioGuidePlayer = ({ src, accent }: { src: string; accent: string }) => {
+  const { t } = useLang();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const barRef = useRef<HTMLDivElement | null>(null);
   const speedMenuRef = useRef<HTMLDivElement | null>(null);
@@ -103,7 +105,7 @@ export const AudioGuidePlayer = ({ src, accent }: { src: string; accent: string 
         type="button"
         onClick={toggle}
         whileTap={{ scale: 0.9 }}
-        aria-label={playing ? "Пауза" : "Слухати аудіогід"}
+        aria-label={playing ? t("pause") : t("listenAudioGuide")}
         className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-full text-white shadow-lg"
         style={{ backgroundColor: accent, boxShadow: `0 8px 24px -8px ${accent}90` }}
       >
@@ -154,7 +156,7 @@ export const AudioGuidePlayer = ({ src, accent }: { src: string; accent: string 
               type="button"
               whileTap={{ scale: 0.93 }}
               onClick={() => setSpeedMenuOpen((v) => !v)}
-              aria-label="Швидкість відтворення"
+              aria-label={t("playbackSpeed")}
               aria-expanded={speedMenuOpen}
               className="flex items-center gap-1 rounded-full border px-2 py-1 text-[11px] font-odesa-medium tabular-nums"
               style={{

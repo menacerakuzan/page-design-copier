@@ -2,6 +2,7 @@ import { Link, useLocation } from "react-router-dom";
 import { ChevronLeft } from "lucide-react";
 import { useLang } from "@/lib/langContext";
 import { useBasket } from "@/lib/basketContext";
+import { useWinterTheme } from "@/lib/winterTheme";
 
 const star = "✦";
 
@@ -26,6 +27,9 @@ export function PageBrow({ backTo = "/", backLabel, home = false }: {
   const { t } = useLang();
   const { count } = useBasket();
   const { pathname } = useLocation();
+  // Зимова тема: бежева «бровь» стає синьою з бежевим текстом.
+  const { active: winter } = useWinterTheme();
+  const ink = winter ? "text-[#fff2e8]" : "text-[#00376c]";
 
   const scrollToFooter = () =>
     document.querySelector("footer")?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -55,8 +59,8 @@ export function PageBrow({ backTo = "/", backLabel, home = false }: {
   return (
     <header className="container-edge pt-safe relative z-10">
       <div
-        className={`rounded-b-[36px] bg-[#fff2e8] px-4 pb-2.5 pt-2.5 md:overflow-hidden md:rounded-b-[48px] md:px-5 md:pb-3.5 md:pt-3.5 lg:px-8 ${home ? "" : "mt-4"}`}
-        style={{ boxShadow: "0 8px 24px -18px rgba(0,47,94,0.35)" }}
+        className={`rounded-b-[36px] ${winter ? "bg-[#002f5e]" : "bg-[#fff2e8]"} px-4 pb-2.5 pt-2.5 md:overflow-hidden md:rounded-b-[48px] md:px-5 md:pb-3.5 md:pt-3.5 lg:px-8 ${home ? "" : "mt-4"}`}
+        style={{ boxShadow: winter ? "0 10px 28px -16px rgba(0,10,30,0.7)" : "0 8px 24px -18px rgba(0,47,94,0.35)" }}
       >
         {/* ── Мобільний вигляд ── */}
         <div className="md:hidden">
@@ -65,17 +69,17 @@ export function PageBrow({ backTo = "/", backLabel, home = false }: {
               <Link
                 to={backTo}
                 aria-label={backLabel ?? t("backHome")}
-                className="tap absolute left-0 flex h-9 w-9 items-center justify-center rounded-full text-[#002f5e] transition-opacity hover:opacity-70"
+                className={`tap absolute left-0 flex h-9 w-9 items-center justify-center rounded-full ${winter ? "text-[#fff2e8]" : "text-[#002f5e]"} transition-opacity hover:opacity-70`}
               >
                 <ChevronLeft className="h-5 w-5" aria-hidden="true" />
               </Link>
             )}
             {home ? (
-              <h1 className={`${wordmarkCls("text-[30px]")} text-[#00376c]`} style={{ letterSpacing: "0.04em" }}>
+              <h1 className={`${wordmarkCls("text-[30px]")} ${ink}`} style={{ letterSpacing: "0.04em" }}>
                 ОДЕЩИНА
               </h1>
             ) : (
-              <span className={`${wordmarkCls("text-[30px]")} text-[#00376c]`} style={{ letterSpacing: "0.04em" }}>
+              <span className={`${wordmarkCls("text-[30px]")} ${ink}`} style={{ letterSpacing: "0.04em" }}>
                 ОДЕЩИНА
               </span>
             )}
@@ -83,7 +87,7 @@ export function PageBrow({ backTo = "/", backLabel, home = false }: {
           {home && (
             <nav
               aria-label={t("mainNav")}
-              className="mt-2 flex items-center justify-center gap-3 text-[13px] leading-none text-[#00376c] font-odesa-semi"
+              className={`mt-2 flex items-center justify-center gap-3 text-[13px] leading-none ${ink} font-odesa-semi`}
             >
               <span className="text-[13px]" aria-hidden="true">{star}</span>
               <Link to="/districts" aria-current={currentAttr("/districts")} className="transition-opacity hover:opacity-75">{t("districts")}</Link>
@@ -96,7 +100,7 @@ export function PageBrow({ backTo = "/", backLabel, home = false }: {
         </div>
 
         {/* ── Десктоп: три колонки, як на головній ── */}
-        <div className="hidden text-[#00376c] md:grid md:grid-cols-[1fr_auto_1fr] md:items-center md:gap-5">
+        <div className={`hidden ${ink} md:grid md:grid-cols-[1fr_auto_1fr] md:items-center md:gap-5`}>
           <nav className="flex items-center justify-start gap-3 text-[14px] leading-none font-odesa-medium lg:gap-6 lg:text-[16px] lg:font-odesa-semi" aria-label={t("mainNav")}>
             {navLeft.map(({ href, label, lgOnly }) => (
               <Link key={href} to={href} aria-current={currentAttr(href)} className={linkCls(lgOnly)}>{label}</Link>

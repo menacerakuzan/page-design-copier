@@ -290,6 +290,7 @@ export const ObjectSection = ({
   sectionId, title, subtitle, items, bg,
   setRef, scroll, scrollRefs,
 }: ObjectSectionProps) => {
+  const { t } = useLang();
   const type = items[0]?.type;
   const variant = SECTION_VARIANT[type] ?? "carousel";
   const isScroll = variant === "carousel" || variant === "tickets";
@@ -306,10 +307,10 @@ export const ObjectSection = ({
       {isScroll && (
         <div className="absolute right-6 top-10 z-10 hidden items-center gap-2 md:flex md:right-10">
           <button type="button" onClick={() => scroll(sectionId, -1)}
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-white/10 transition-all hover:bg-white/20" aria-label="Назад">
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-white/10 transition-all hover:bg-white/20" aria-label={t("prev")}>
             <ChevronLeft className="h-4 w-4 text-[#fff2e8]" /></button>
           <button type="button" onClick={() => scroll(sectionId, 1)}
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-white/10 transition-all hover:bg-white/20" aria-label="Вперед">
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-white/10 transition-all hover:bg-white/20" aria-label={t("next")}>
             <ChevronRight className="h-4 w-4 text-[#fff2e8]" /></button>
         </div>
       )}

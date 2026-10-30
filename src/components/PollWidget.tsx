@@ -21,7 +21,7 @@ const stagger = {
 };
 const rise = {
   hidden: { opacity: 0, y: 16 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.45, ease: [0.22, 1, 0.36, 1] } },
+  show: { opacity: 1, y: 0, transition: { duration: 0.45, ease: [0.22, 1, 0.36, 1] as const } },
 };
 
 // Праворуч по центру, але нижче за стрілки прокрутки на головній
@@ -299,7 +299,7 @@ export function PollWidget() {
                       className="h-full rounded-full"
                       style={{ background: `linear-gradient(90deg, ${GOLD}, #f4c878)` }}
                       animate={{ width: `${((step + 1) / poll.questions.length) * 100}%` }}
-                      transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                      transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] as const }}
                     />
                   </div>
                   <span className="shrink-0 text-[12px] text-[#fff2e8]/55 font-odesa-medium">
@@ -314,7 +314,7 @@ export function PollWidget() {
                       initial={{ opacity: 0, x: 30 }}
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: -24 }}
-                      transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+                      transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] as const }}
                       className="mt-5"
                     >
                       <h3 className="break-words text-[22px] leading-[1.15] font-odesa-bold md:text-[26px]">{question.text}</h3>

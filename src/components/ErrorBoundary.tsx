@@ -77,22 +77,32 @@ export class ErrorBoundary extends Component<Props, State> {
       }
     }
 
+    // Це класовий компонент — хуки (useLang) тут недоступні. Мову беремо з
+    // <html lang>, який виставляє useSeo на кожній сторінці: так екран помилки
+    // лишається українським для українців і англійським для англомовних.
+    const isEn = typeof document !== "undefined" && document.documentElement.lang === "en";
+    const L = (uk: string, en: string) => (isEn ? en : uk);
+
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-5 bg-[#fff2e8] px-6 text-center text-[#002f5e]">
         <h1 className="font-odesa-semi text-2xl">
-          {isChunkError ? "Оновлено нову версію" : "Щось пішло не так"}
+          {isChunkError
+            ? L("Оновлено нову версію", "A new version was deployed")
+            : L("Щось пішло не так", "Something went wrong")}
         </h1>
         <p className="max-w-md text-sm text-[#002f5e]/70">
           {isChunkError
-            ? "Сторінку було оновлено. Перезавантажте, щоб отримати актуальну версію."
-            : "Сталася помилка під час завантаження сторінки. Спробуйте перезавантажити."}
+            ? L("Сторінку було оновлено. Перезавантажте, щоб отримати актуальну версію.",
+                "The page has been updated. Reload to get the current version.")
+            : L("Сталася помилка під час завантаження сторінки. Спробуйте перезавантажити.",
+                "An error occurred while loading the page. Please try reloading.")}
         </p>
         <button
           type="button"
           onClick={() => window.location.reload()}
           className="tap rounded-full bg-[#002f5e] px-6 py-2.5 font-odesa-medium text-[#fff2e8] transition hover:opacity-90"
         >
-          Перезавантажити
+          {L("Перезавантажити", "Reload")}
         </button>
         {import.meta.env.DEV && (
           <pre className="mt-4 max-w-2xl overflow-auto rounded-lg bg-[#002f5e]/5 p-4 text-left text-xs text-[#002f5e]/80">

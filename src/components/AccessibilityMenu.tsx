@@ -124,6 +124,39 @@ export function AccessibilityMenu({ onSearchClick, align = "left" }: Props) {
   const activeCount =
     Object.entries(settings).filter(([k, v]) => k === "fontSize" ? v !== "normal" : v === true).length;
 
+  // Аудит 4.1.4: бедж із цифрою видно очима, але жорстка мітка "Меню
+  // доступності" не змінювалась, тож скринридер про активні опції не
+  // повідомляв. Українська множина: 1 налаштування / 2-4 налаштування /
+  // 5+ налаштувань.
+  const pluralUk = (n: number) => {
+    const mod10 = n % 10;
+    const mod100 = n % 100;
+    if (mod10 === 1 && mod100 !== 11) return "налаштування";
+    if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return "налаштування";
+    return "налаштувань";
+  };
+  const triggerLabel =
+    activeCount > 0
+      ? lang === "en"
+        ? `Accessibility menu, ${activeCount} ${activeCount === 1 ? "setting" : "settings"} selected`
+        : `Меню доступності, обрано ${activeCount} ${pluralUk(activeCount)}`
+      : lang === "en"
+        ? "Accessibility menu"
+        : "Меню доступності";
+
+  // Аудит 4.1.2: мітки "Укр"/"Eng"/"A"/"A+"/"A++" неінформативні для
+  // скринрідера — озвучувалась одна літера без будь-якого контексту.
+  const LANG_LABEL: Record<"uk" | "en", { uk: string; en: string }> = {
+    uk: { uk: "Українська мова", en: "Ukrainian language" },
+    en: { uk: "Англійська мова", en: "English language" },
+  };
+  const FONT_LABEL: Record<string, { uk: string; en: string }> = {
+    normal: { uk: "Стандартний розмір тексту", en: "Standard text size" },
+    large: { uk: "Збільшений розмір тексту", en: "Enlarged text size" },
+    xlarge: { uk: "Максимальний розмір тексту", en: "Maximum text size" },
+  };
+  const L = (o: { uk: string; en: string }) => (lang === "en" ? o.en : o.uk);
+
   return (
     <div ref={ref} className="relative flex items-center gap-2">
       {/* Search icon */}
@@ -132,7 +165,7 @@ export function AccessibilityMenu({ onSearchClick, align = "left" }: Props) {
           type="button"
           onClick={onSearchClick}
           className="flex h-10 w-10 items-center justify-center rounded-full bg-[#fff2e8] text-[#002f5e] border border-[#002f5e]/30 transition-all hover:bg-[#fff2e8]/90"
-          aria-label="Пошук"
+          aria-label={t("search")}
         >
           <Search className="h-5 w-5" />
         </button>
@@ -143,7 +176,7 @@ export function AccessibilityMenu({ onSearchClick, align = "left" }: Props) {
         type="button"
         onClick={() => setOpen((o) => !o)}
         className="flex items-center gap-2 rounded-full bg-[#fff2e8] px-4 py-2.5 text-[#002f5e] border border-[#002f5e]/30 transition-all hover:bg-[#fff2e8]/90 font-odesa-medium"
-        aria-label="Меню доступності"
+        aria-label={triggerLabel}
         aria-expanded={open}
       >
         <Eye className="h-5 w-5" aria-hidden="true" />
@@ -169,10 +202,12 @@ export function AccessibilityMenu({ onSearchClick, align = "left" }: Props) {
 
           {/* Lang switcher */}
           <div className="flex items-center gap-1 px-4 py-3 border-b border-[#002f5e]/10">
-            <Globe className="h-4 w-4 mr-1 opacity-50" />
-            <span className="text-[12px] opacity-50 mr-2 font-odesa-regular">{t("language")}:</span>
+            <Globe className="h-4 w-4 mr-1 opacity-70" aria-hidden="true" />
+            <span className="text-[12px] opacity-70 mr-2 font-odesa-regular">{t("language")}:</span>
             {(["uk", "en"] as const).map((l) => (
               <button key={l} type="button" onClick={() => onLangChange(l)}
+                aria-label={L(LANG_LABEL[l])}
+                aria-pressed={lang === l}
                 className={`rounded-full px-3 py-1 text-[12px] transition-colors font-odesa-medium ${lang === l ? "bg-[#002f5e] text-[#fff2e8]" : "hover:bg-[#002f5e]/10"}`}>
                 {l === "uk" ? "Укр" : "Eng"}
               </button>
@@ -181,10 +216,12 @@ export function AccessibilityMenu({ onSearchClick, align = "left" }: Props) {
 
           {/* Font size */}
           <div className="flex items-center gap-1 px-4 py-3 border-b border-[#002f5e]/10">
-            <Type className="h-4 w-4 mr-1 opacity-50" />
-            <span className="text-[12px] opacity-50 mr-2 font-odesa-regular">{t("fontSize")}:</span>
+            <Type className="h-4 w-4 mr-1 opacity-70" aria-hidden="true" />
+            <span className="text-[12px] opacity-70 mr-2 font-odesa-regular">{t("fontSize")}:</span>
             {([["normal", "A"], ["large", "A+"], ["xlarge", "A++"]] as const).map(([size, label]) => (
               <button key={size} type="button" onClick={() => setSettings((s) => ({ ...s, fontSize: size }))}
+                aria-label={L(FONT_LABEL[size])}
+                aria-pressed={settings.fontSize === size}
                 className={`rounded-full px-3 py-1 text-[12px] transition-colors font-odesa-medium ${settings.fontSize === size ? "bg-[#002f5e] text-[#fff2e8]" : "hover:bg-[#002f5e]/10"}`}>
                 {label}
               </button>
@@ -195,12 +232,13 @@ export function AccessibilityMenu({ onSearchClick, align = "left" }: Props) {
           <div className="grid grid-cols-3 gap-2 p-3">
             {TOGGLE_BUTTONS.map(({ key, labelKey, Icon }) => (
               <button key={key} type="button" onClick={() => toggle(key)}
+                aria-pressed={Boolean(settings[key])}
                 className={`flex flex-col items-center gap-1.5 rounded-xl p-2.5 text-center text-[11px] leading-tight transition-all font-odesa-regular border ${
                   settings[key]
                     ? "bg-[#002f5e] text-[#fff2e8] border-[#002f5e]"
-                    : "bg-white/60 text-[#002f5e] border-[#002f5e]/10 hover:bg-[#002f5e]/8"
+                    : "bg-white/60 text-[#002f5e] border-[#002f5e]/30 hover:bg-[#002f5e]/8"
                 }`}>
-                <Icon className="h-5 w-5 shrink-0" />
+                <Icon className="h-5 w-5 shrink-0" aria-hidden="true" />
                 <span>{t(labelKey)}</span>
               </button>
             ))}
