@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLang } from "@/lib/langContext";
 import {
@@ -54,7 +55,12 @@ const TYPE_META: Record<string, { color: string; Icon: LucideIcon }> = {
 export default function TourismTypesPage() {
   const { t, tl, lang } = useLang();
   useSeo({ title: t("typesTitle"), description: t("typesDesc"), lang });
-  const [activeType, setActiveType] = useState<string | null>(null);
+  // ?type=<назва> — відкрити сторінку одразу з обраним видом (посилання з головної).
+  const [searchParams] = useSearchParams();
+  const [activeType, setActiveType] = useState<string | null>(() => {
+    const t = searchParams.get("type");
+    return t && (TOURISM_TYPES as readonly string[]).includes(t) ? t : null;
+  });
   const { data: snapshot } = useHierarchySnapshot();
   const { data: cardsData } = usePageContentCards("tourism-types");
   // Рендеримо сітку лише коли обидві черги готові — щоб картки змонтувались і

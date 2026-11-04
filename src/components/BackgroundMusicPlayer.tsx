@@ -47,22 +47,8 @@ function loadYouTubeApi(): Promise<void> {
   return apiPromise;
 }
 
-/**
- * Фонова музика сайту: стрімиться напряму з YouTube (офіційний embed API —
- * без завантаження/перезаливки аудіофайлу), циклічно, за замовчуванням без
- * звуку (щоб пройти autoplay-політику браузерів і не лякати користувача).
- * Плеєр монтується один раз у App (як MobileNav/AssistantFab) — тому при
- * переході між сторінками не перестворюється і не починає грати заново.
- */
-export function BackgroundMusicPlayer() {
-  const { t } = useLang();
-  const { pathname } = useLocation();
-  // /koshyk і /marshrut мають власну липку CTA-кнопку внизу зліва-направо —
-  // піднімаємо кнопку музики вище неї (той самий приём, що і в AssistantFab).
-  const raised = pathname === "/koshyk" || pathname === "/marshrut";
-  const bottom = raised
-    ? "calc(150px + env(safe-area-inset-bottom))"
-    : "calc(84px + env(safe-area-inset-bottom))";
+/** Логіка фонової музики (YouTube-плеєр без інтерфейсу) — для власних кнопок. */
+export function useBackgroundMusic() {
   const hostRef = useRef<HTMLDivElement | null>(null);
   const playerRef = useRef<YTPlayer | null>(null);
   const fadeRaf = useRef<number | null>(null);
@@ -177,6 +163,83 @@ export function BackgroundMusicPlayer() {
 
   const showQuiet = !unmuted || volume === 0;
 
+  return { hostRef, ready, unmuted, volume, toggle, onSlide, showQuiet };
+}
+
+/** Стилі анімованих «нот» і повзунка гучності. */
+export const MUSIC_CSS = `
+        .bg-note-bar { height: 4px; animation: note-bounce 0.8s ease-in-out infinite; }
+        @keyframes note-bounce { 0%, 100% { height: 3px; } 50% { height: 8px; } }
+        @media (prefers-reduced-motion: reduce) { .bg-note-bar { animation: none; height: 5px; } }
+
+        .volume-slider {
+          -webkit-appearance: none;
+          appearance: none;
+          width: 84px;
+          height: 14px;
+          margin-right: 12px;
+          background: transparent;
+          cursor: pointer;
+        }
+        .volume-slider::-webkit-slider-runnable-track {
+          height: 3px;
+          border-radius: 999px;
+          background: linear-gradient(to right, #df9b3b var(--pct), rgba(0,47,94,0.14) var(--pct));
+        }
+        .volume-slider::-moz-range-track {
+          height: 3px;
+          border-radius: 999px;
+          background: linear-gradient(to right, #df9b3b var(--pct), rgba(0,47,94,0.14) var(--pct));
+        }
+        .volume-slider::-webkit-slider-thumb {
+          -webkit-appearance: none;
+          appearance: none;
+          height: 12px;
+          width: 12px;
+          border-radius: 999px;
+          background: #fff2e8;
+          border: 2px solid #df9b3b;
+          margin-top: -4.5px;
+          box-shadow: 0 2px 6px rgba(0,47,94,0.3);
+          transition: transform 0.15s ease;
+        }
+        .volume-slider::-webkit-slider-thumb:hover,
+        .volume-slider::-webkit-slider-thumb:active {
+          transform: scale(1.25);
+        }
+        .volume-slider::-moz-range-thumb {
+          height: 12px;
+          width: 12px;
+          border-radius: 999px;
+          background: #fff2e8;
+          border: 2px solid #df9b3b;
+          box-shadow: 0 2px 6px rgba(0,47,94,0.3);
+          transition: transform 0.15s ease;
+        }
+        .volume-slider::-moz-range-thumb:hover,
+        .volume-slider::-moz-range-thumb:active {
+          transform: scale(1.25);
+        }
+      `;
+
+/**
+ * Фонова музика сайту: стрімиться напряму з YouTube (офіційний embed API —
+ * без завантаження/перезаливки аудіофайлу), циклічно, за замовчуванням без
+ * звуку (щоб пройти autoplay-політику браузерів і не лякати користувача).
+ * Плеєр монтується один раз у App (як MobileNav/AssistantFab) — тому при
+ * переході між сторінками не перестворюється і не починає грати заново.
+ */
+export function BackgroundMusicPlayer() {
+  const { t } = useLang();
+  const { pathname } = useLocation();
+  // /koshyk і /marshrut мають власну липку CTA-кнопку внизу зліва-направо —
+  // піднімаємо кнопку музики вище неї (той самий приём, що і в AssistantFab).
+  const raised = pathname === "/koshyk" || pathname === "/marshrut";
+  const bottom = raised
+    ? "calc(150px + env(safe-area-inset-bottom))"
+    : "calc(84px + env(safe-area-inset-bottom))";
+  const { hostRef, ready, unmuted, volume, toggle, onSlide, showQuiet } = useBackgroundMusic();
+
   return (
     <>
       {/* YouTube-плеєр без візуального інтерфейсу — керуємо власним віджетом нижче */}
@@ -247,60 +310,7 @@ export function BackgroundMusicPlayer() {
         )}
       </AnimatePresence>
 
-      <style>{`
-        .bg-note-bar { height: 4px; animation: note-bounce 0.8s ease-in-out infinite; }
-        @keyframes note-bounce { 0%, 100% { height: 3px; } 50% { height: 8px; } }
-        @media (prefers-reduced-motion: reduce) { .bg-note-bar { animation: none; height: 5px; } }
-
-        .volume-slider {
-          -webkit-appearance: none;
-          appearance: none;
-          width: 84px;
-          height: 14px;
-          margin-right: 12px;
-          background: transparent;
-          cursor: pointer;
-        }
-        .volume-slider::-webkit-slider-runnable-track {
-          height: 3px;
-          border-radius: 999px;
-          background: linear-gradient(to right, #df9b3b var(--pct), rgba(0,47,94,0.14) var(--pct));
-        }
-        .volume-slider::-moz-range-track {
-          height: 3px;
-          border-radius: 999px;
-          background: linear-gradient(to right, #df9b3b var(--pct), rgba(0,47,94,0.14) var(--pct));
-        }
-        .volume-slider::-webkit-slider-thumb {
-          -webkit-appearance: none;
-          appearance: none;
-          height: 12px;
-          width: 12px;
-          border-radius: 999px;
-          background: #fff2e8;
-          border: 2px solid #df9b3b;
-          margin-top: -4.5px;
-          box-shadow: 0 2px 6px rgba(0,47,94,0.3);
-          transition: transform 0.15s ease;
-        }
-        .volume-slider::-webkit-slider-thumb:hover,
-        .volume-slider::-webkit-slider-thumb:active {
-          transform: scale(1.25);
-        }
-        .volume-slider::-moz-range-thumb {
-          height: 12px;
-          width: 12px;
-          border-radius: 999px;
-          background: #fff2e8;
-          border: 2px solid #df9b3b;
-          box-shadow: 0 2px 6px rgba(0,47,94,0.3);
-          transition: transform 0.15s ease;
-        }
-        .volume-slider::-moz-range-thumb:hover,
-        .volume-slider::-moz-range-thumb:active {
-          transform: scale(1.25);
-        }
-      `}</style>
+      <style>{MUSIC_CSS}</style>
     </>
   );
 }

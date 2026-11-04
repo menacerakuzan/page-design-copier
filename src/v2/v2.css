@@ -1,0 +1,142 @@
+/* Новий дизайн (src/v2). Усе прив'язано до кореня .v2, щоб не зачіпати старі сторінки. */
+
+.v2 {
+  --sand: #fff2e8;
+  --sea: #002f5e;
+  --sun: #df9b3b;
+  --wine: #9f1f47;
+  background: var(--sand);
+  color: var(--sea);
+  font-family: "Odesa Region Type", system-ui, sans-serif;
+  font-feature-settings: "kern";
+  -webkit-font-smoothing: antialiased;
+  overflow-x: clip;
+}
+
+.v2 ::selection { background: #df9b3b; color: #001a35; }
+
+.v2 :focus-visible {
+  outline: 2.5px solid #df9b3b;
+  outline-offset: 3px;
+  /* Глобальний стиль сайту додає світлий ореол box-shadow — тут він зайвий. */
+  box-shadow: none;
+}
+
+/* Поле пошуку підсвічує всю форму (focus-within), тож власна рамка зайва. */
+.v2 input[role="combobox"]:focus-visible { outline: none; }
+
+/* Акцент у заголовках («Відкрий море»): той самий шрифт області, варіант ss02. */
+.v2 .ital {
+  font-family: "Odesa Region Type", system-ui, sans-serif;
+  font-feature-settings: "ss02" 1;
+  font-style: normal;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+/* Логотип-слово «ОДЕЩИНА»: фірмовий шрифт області, стилістичний набір ss02. */
+.v2 .wordmark {
+  font-family: "Odesa Region Type", system-ui, sans-serif;
+  font-feature-settings: "ss02" 1;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* Фото-відбиток: світла рамка-«поля», легкий нахил, вирівнюється при наведенні. */
+.v2 .print-photo {
+  background: #fffaf5;
+  padding: 8px 8px 10px;
+  border-radius: 6px;
+  transform: rotate(-2.5deg);
+  box-shadow: 0 24px 40px -22px rgba(0, 10, 30, 0.7);
+  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.v2 .print-photo img { border-radius: 3px; }
+.v2 .print-photo:hover { transform: rotate(0deg) scale(1.02); }
+
+/* Квиток: корінець під фото з перфорацією і вирізами по краях. */
+.v2 .ticket-stub { border-top: 2px dashed rgba(159, 31, 71, 0.35); }
+.v2 .ticket-stub::before,
+.v2 .ticket-stub::after {
+  content: "";
+  position: absolute;
+  top: -11px;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: #6e1131;
+}
+.v2 .ticket-stub::before { left: -10px; }
+.v2 .ticket-stub::after { right: -10px; }
+
+/* Горизонтальний квиток: перфорація зліва, вирізи зверху й знизу. */
+.v2 .ticket-v { border-left: 2px dashed rgba(159, 31, 71, 0.35); }
+.v2 .ticket-v::before,
+.v2 .ticket-v::after {
+  content: "";
+  position: absolute;
+  left: -9px;
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  background: #6e1131;
+}
+.v2 .ticket-v::before { top: -8px; }
+.v2 .ticket-v::after { bottom: -8px; }
+
+/* Хвилі над підвалом: ряди пливуть праворуч (у бік, куди загнуті козирки). */
+@keyframes v2-wave { from { transform: translateX(-50%); } to { transform: translateX(0); } }
+.v2 .wave { animation: v2-wave linear infinite; will-change: transform; }
+
+/* Легке «зерно» поверх кольорових секцій — щоб не виглядали пласко. */
+.v2 .grain { position: relative; isolation: isolate; }
+.v2 .grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.07;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+.v2 .grain > :not(.absolute):not(.fixed) { position: relative; z-index: 1; }
+
+.v2 .no-scrollbar { scrollbar-width: none; }
+.v2 .no-scrollbar::-webkit-scrollbar { display: none; }
+
+/* Бігучий рядок. */
+
+@keyframes v2-spin { to { transform: rotate(360deg); } }
+.v2 .spin-slow { animation: v2-spin 40s linear infinite; }
+
+@keyframes v2-fill { from { width: 0%; } to { width: 100%; } }
+.v2 .scene-fill { width: 0; animation: v2-fill linear forwards; }
+
+@keyframes v2-ping { 0% { transform: scale(0.6); opacity: 0.7; } 100% { transform: scale(2.6); opacity: 0; } }
+.v2 .ping-soft { animation: v2-ping 2.6s cubic-bezier(0.2, 0.6, 0.3, 1) infinite; }
+
+@keyframes v2-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+.v2 .float-soft { animation: v2-float 5.5s ease-in-out infinite; }
+
+@keyframes v2-blink { 0%, 80%, 100% { opacity: 0.25; } 40% { opacity: 1; } }
+.v2 .typing span { animation: v2-blink 1.3s infinite; }
+.v2 .typing span:nth-child(2) { animation-delay: 0.18s; }
+.v2 .typing span:nth-child(3) { animation-delay: 0.36s; }
+
+/* Фон «Варто побачити» — «Рябь»: ряди хвиль повільно пливуть. */
+@keyframes v2-ripple { to { transform: translateX(-240px); } }
+.v2 .ripple-row { animation: v2-ripple linear infinite; }
+/* Фон «Готових маршрутів»: пунктирні дороги повільно «їдуть». */
+@keyframes v2-road { to { stroke-dashoffset: -240; } }
+.v2 .road-move { animation: v2-road linear infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .v2 .wave, .v2 .float-soft, .v2 .spin-slow, .v2 .ping-soft, .v2 .typing span, .v2 .ripple-row, .v2 .road-move { animation: none !important; }
+  .v2 * { scroll-behavior: auto !important; }
+}
+
+/* Місце під плаваючий мобільний док. */
+.v2 .pb-dock { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
+@media (min-width: 1024px) { .v2 .pb-dock { padding-bottom: 0; } }

@@ -1,6 +1,6 @@
 import { Suspense, lazy, useEffect, useLayoutEffect, useRef } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { loadHierarchySnapshot, loadPublishedContentCards } from "@/lib/adminRepository";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -13,9 +13,10 @@ import MobileNav from "./components/MobileNav";
 import { AssistantFab } from "./components/assistant/AssistantFab";
 import { BackgroundMusicPlayer } from "./components/BackgroundMusicPlayer";
 import { KonamiEasterEgg } from "./components/KonamiEasterEgg";
-import Index from "./pages/Index";
+// Головна (новий дизайн, src/v2) — у головному бандлі, щоб перша сторінка малювалась одразу.
+import V2Home from "./v2/home/HomePage";
 
-// Home (Index) stays eager so the landing page paints from the main bundle.
+// Home stays eager so the landing page paints from the main bundle.
 // Everything else is code-split — notably Admin (TipTap) and NearbyPage
 // (MapLibre), which are heavy and rarely needed on first load.
 const CityPage = lazy(() => import("./pages/CityPage"));
@@ -34,6 +35,14 @@ const BasketPage = lazy(() => import("./pages/BasketPage"));
 const RouteMapPage = lazy(() => import("./pages/RouteMapPage"));
 const AssistantPage = lazy(() => import("./pages/AssistantPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+/** Головна в новому дизайні має власну навігацію, музику й колір тла. */
+const isNewHome = (pathname: string) => pathname === "/" || pathname.startsWith("/v2");
+
+/** Старе прев'ю /v2 → головна (з тими самими параметрами). */
+const V2Redirect = () => {
+  const { search } = useLocation();
+  return <Navigate to={`/${search}`} replace />;
+};
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -102,7 +111,8 @@ const PanelColor = () => {
   const { pathname } = useLocation();
 
   useLayoutEffect(() => {
-    const color = pathname === "/" ? "#001a3d" : "#fff2e8";
+    if (isNewHome(pathname)) return; // нова головна виставляє колір сама
+    const color = "#fff2e8";
     document.documentElement.style.backgroundColor = color;
     document.body.style.backgroundColor = color;
   }, [pathname]);
@@ -129,6 +139,8 @@ const WinterLayer = lazy(() => import("./components/winter/WinterLayer"));
 const GlobalChrome = () => {
   const { pathname } = useLocation();
   const { active: winter } = useWinterTheme();
+  // Новий дизайн має власну навігацію — старий «хром» там не показуємо.
+  if (isNewHome(pathname)) return null;
   return (
     <>
       <ErrorBoundary fallback={null} resetKeys={[pathname]}><MobileNav /></ErrorBoundary>
@@ -174,7 +186,7 @@ const App = () => {
             <ErrorBoundary>
               <Suspense fallback={<RouteFallback />}>
                 <Routes>
-                  <Route path="/" element={<Index />} />
+                  <Route path="/" element={<V2Home />} />
                   <Route path="/types" element={<TourismTypesPage />} />
                   <Route path="/districts" element={<DistrictsPage />} />
                   <Route path="/info" element={<InfoPage />} />
@@ -193,6 +205,7 @@ const App = () => {
                   <Route path="/marshrut" element={<RouteMapPage />} />
                   <Route path="/asystent" element={<AssistantPage />} />
                   <Route path="/admin" element={<Admin />} />
+                  <Route path="/v2" element={<V2Redirect />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </Suspense>

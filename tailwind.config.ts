@@ -16,7 +16,24 @@ export default {
       screens: {
         xs: "480px",
       },
+      fontFamily: {
+        // Новий дизайн (src/v2): фірмовий шрифт Одеської області.
+        brand: ['"Odesa Region Type"', "system-ui", "sans-serif"],
+      },
       colors: {
+        // Палітра нового дизайну (src/v2). Основа — пісочний #fff2e8.
+        o: {
+          sand: "#fff2e8",
+          sand2: "#f8e6d6",
+          shell: "#fffaf5",
+          sea: "#002f5e",
+          deep: "#001a35",
+          sun: "#df9b3b",
+          sunsoft: "#f3cf95",
+          wine: "#9f1f47",
+          winedeep: "#6e1131",
+          ink: "#0c2744",
+        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",

@@ -35,3 +35,8 @@ postgrest-v12.2.3-linux-static-x64.tar.xz
 # Local deploy leftovers
 dist-new
 dist.bak-*
+
+# Local sample data / env backups
+tourism-local-sample.zip
+.env.local.bak
+/useful

@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ChevronLeft, Sparkles, Plus, History, Send, Square, Trash2, MessageSquareText } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -82,6 +82,27 @@ export default function AssistantPage() {
     if (taRef.current) taRef.current.style.height = "auto";
     void sendMessage(value, lang);
   };
+
+  // Запит із пошуку на головній (/asystent?q=...): відкриваємо новий чат і
+  // одразу надсилаємо питання. Спершу newChat(), а надсилання — на наступному
+  // рендері, коли активної розмови вже немає (інакше питання дописалось би
+  // в попередній чат).
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [pendingQuery, setPendingQuery] = useState<string | null>(null);
+  useEffect(() => {
+    const q = searchParams.get("q")?.trim();
+    if (!q) return;
+    setSearchParams({}, { replace: true });
+    newChat();
+    setPendingQuery(q);
+  }, [searchParams, setSearchParams, newChat]);
+  useEffect(() => {
+    if (pendingQuery && !active) {
+      setPendingQuery(null);
+      submit(pendingQuery);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingQuery, active]);
 
   // iOS: при фокусі на полі Safari прокручує всю сторінку вгору, щоб підняти
   // поле над клавіатурою, і після закриття клавіатури часто НЕ повертає
