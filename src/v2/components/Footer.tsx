@@ -1,7 +1,6 @@
-import { useId } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { Facebook, Instagram, Mail } from "lucide-react";
-import { AccessibilityMenu } from "@/components/AccessibilityMenu";
 import { useV2 } from "@/v2/i18n";
 import { Shield } from "./ui";
 
@@ -28,13 +27,20 @@ const WAVE_TILE =
   "L242 100 L242 130 L-2 130 L-2 100 Z";
 const TILE_W = 240;
 const TILE_H = 130;
-const TILES = 30; // половина (15 плиток) ширша за найбільший екран — анімація -50% безшовна
 
-function WaveLayer({ h, color, duration, bottom, shift = 0 }: {
-  h: number; color: string; duration: number; bottom: number; shift?: number;
+/**
+ * Ряд хвиль. Стрічка лише трохи ширша за вікно (vw) і зсувається рівно на одну
+ * плитку за цикл — повтор непомітний. (Раніше стрічка була ~9000px, на
+ * ретина-екрані ~18000px — більше за текстуру GPU, через що хвилі блимали.)
+ * duration — секунд на 15 плиток, як і раніше: швидкість не змінилась.
+ */
+function WaveLayer({ h, color, duration, bottom, shift = 0, vw }: {
+  h: number; color: string; duration: number; bottom: number; shift?: number; vw: number;
 }) {
   const uid = useId().replace(/:/g, "");
   const tileW = (h * TILE_W) / TILE_H;
+  // Перекриваємо вікно + зсув анімації + зсув ряду, із запасом.
+  const TILES = Math.ceil(vw / tileW) + 3;
   return (
     <>
     {/* Заливка під рядом — щоб між рядами не просвічував фон сторінки. */}
@@ -44,7 +50,7 @@ function WaveLayer({ h, color, duration, bottom, shift = 0 }: {
       width={TILES * tileW}
       height={h}
       className="wave absolute left-0 max-w-none"
-      style={{ bottom, marginLeft: -shift * tileW, animationDuration: `${duration}s` }}
+      style={{ bottom, marginLeft: -shift * tileW, animationDuration: `${duration / 15}s`, ["--tile" as string]: `${tileW}px` }}
     >
       <defs>
         <path id={`w${uid}`} d={WAVE_TILE} fill={color} />
@@ -59,12 +65,31 @@ function WaveLayer({ h, color, duration, bottom, shift = 0 }: {
   );
 }
 
-/** Два ряди простих хвиль з козирками: дальній золотий і ближній винний. */
+/**
+ * Два ряди простих хвиль з козирками: дальній золотий і ближній винний.
+ * Рухаються лише тоді, коли підвал на екрані (поза екраном — пауза).
+ */
 function Waves() {
+  const ref = useRef<HTMLDivElement>(null);
+  const [run, setRun] = useState(false);
+  // Ширина вікна (з урахуванням масштабу сторінки) — під неї будуємо стрічку.
+  const [vw, setVw] = useState(() => (typeof window === "undefined" ? 1920 : window.innerWidth));
+  useEffect(() => {
+    const on = () => setVw(window.innerWidth);
+    window.addEventListener("resize", on);
+    return () => window.removeEventListener("resize", on);
+  }, []);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const io = new IntersectionObserver(([e]) => setRun(e.isIntersecting), { rootMargin: "80px 0px" });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
   return (
-    <div className="relative h-[60px] overflow-hidden sm:h-[72px]" aria-hidden="true">
-      <WaveLayer h={50} color="#df9b3b" duration={40} bottom={16} shift={0.5} />
-      <WaveLayer h={62} color="#9f1f47" duration={26} bottom={-2} />
+    <div ref={ref} data-run={run ? "1" : undefined} className="relative h-[60px] overflow-hidden sm:h-[72px]" aria-hidden="true">
+      <WaveLayer h={50} color="#df9b3b" duration={40} bottom={16} shift={0.5} vw={vw} />
+      <WaveLayer h={62} color="#9f1f47" duration={26} bottom={-2} vw={vw} />
     </div>
   );
 }
@@ -127,7 +152,9 @@ export function Footer() {
               <a href="mailto:tourism@od.gov.ua" className="mt-3 inline-flex items-center gap-2 text-[14px] text-o-sand/85 hover:text-o-sun">
                 <Mail className="h-4 w-4" aria-hidden="true" /> tourism@od.gov.ua
               </a>
-              <div className="mt-4 text-o-sea"><AccessibilityMenu align="left" /></div>
+              <p className="mt-4 max-w-[300px] text-[13px] leading-relaxed text-o-sand/70">
+                {t("footerDept")}
+              </p>
             </div>
           </div>
 

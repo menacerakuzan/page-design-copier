@@ -8,6 +8,7 @@ import { loadGuides } from "@/lib/guidesRepository";
 import { useV2 } from "@/v2/i18n";
 import { Reveal, SectionHead } from "@/v2/components/ui";
 import { ScatterBackdrop } from "./toolkit/ScatterBackdrop";
+import { usePauseOffscreen } from "@/v2/lib/usePauseOffscreen";
 
 /** Міні-діалог: питання → «друкує…» → відповідь (програється при появі). */
 function ChatDemo() {
@@ -54,10 +55,11 @@ const Corner = () => (
 export function Toolkit() {
   const { t } = useV2();
   const { count } = useBasket();
+  const pauseRef = usePauseOffscreen<HTMLElement>();
   const { data: guides } = useQuery({ queryKey: ["guides-published"], queryFn: () => loadGuides(true) });
 
   return (
-    <section aria-labelledby="tools-title" className="relative isolate overflow-hidden py-16 sm:py-20">
+    <section ref={pauseRef} aria-labelledby="tools-title" className="relative isolate overflow-hidden py-16 sm:py-20">
       <ScatterBackdrop />
       <div className="mx-auto max-w-[1280px] px-5 sm:px-10">
         <SectionHead id="tools-title" inline kicker={t("toolsKicker")} line1={t("toolsTitle1")} line2={t("toolsTitle2")} />

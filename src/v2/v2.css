@@ -86,8 +86,10 @@
 .v2 .ticket-v::after { bottom: -8px; }
 
 /* Хвилі над підвалом: ряди пливуть праворуч (у бік, куди загнуті козирки). */
-@keyframes v2-wave { from { transform: translateX(-50%); } to { transform: translateX(0); } }
-.v2 .wave { animation: v2-wave linear infinite; will-change: transform; }
+/* Зсув рівно на одну плитку (--tile) — безшовний повтор; поза екраном — пауза. */
+@keyframes v2-wave { from { transform: translateX(calc(var(--tile) * -1)); } to { transform: translateX(0); } }
+.v2 .wave { animation: v2-wave linear infinite; animation-play-state: paused; }
+.v2 [data-run="1"] .wave { animation-play-state: running; will-change: transform; }
 
 /* Легке «зерно» поверх кольорових секцій — щоб не виглядали пласко. */
 .v2 .grain { position: relative; isolation: isolate; }
@@ -131,6 +133,9 @@
 /* Фон «Готових маршрутів»: пунктирні дороги повільно «їдуть». */
 @keyframes v2-road { to { stroke-dashoffset: -240; } }
 .v2 .road-move { animation: v2-road linear infinite; }
+
+/* Блок поза екраном — його CSS-анімації на паузі (usePauseOffscreen). */
+.v2 .anim-off, .v2 .anim-off * { animation-play-state: paused !important; }
 
 @media (prefers-reduced-motion: reduce) {
   .v2 .wave, .v2 .float-soft, .v2 .spin-slow, .v2 .ping-soft, .v2 .typing span, .v2 .ripple-row, .v2 .road-move { animation: none !important; }

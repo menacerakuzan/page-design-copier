@@ -8,6 +8,7 @@ import { plain, useV2 } from "@/v2/i18n";
 import { EASE, PillLink, SectionHead } from "@/v2/components/ui";
 import { DISTRICT_SHAPES, MAP_H, MAP_W, projectLonLat } from "./districtShapes";
 import { PrintPhoto } from "./districts/photos";
+import { usePauseOffscreen } from "@/v2/lib/usePauseOffscreen";
 
 const ODESA = projectLonLat(30.7233, 46.4825);
 
@@ -31,6 +32,7 @@ export function DistrictsMap() {
   const reduce = useReducedMotion();
   const { data: snap } = useHierarchySnapshot();
   const { data: cards } = usePageContentCards("index");
+  const pauseRef = usePauseOffscreen<HTMLElement>();
   // Наведення одразу обирає район і він лишається обраним (раніше після
   // відведення миші виділення поверталось на Одеський — виглядало, ніби той «залип»).
   const [active, setActive] = useState("odeskyy-rayon");
@@ -65,7 +67,7 @@ export function DistrictsMap() {
   const st = d ? stats.get(d.id) : undefined;
 
   return (
-    <section aria-labelledby="map-title" className="grain relative overflow-hidden bg-o-sand px-5 py-10 text-o-sea sm:px-10 sm:py-12">
+    <section ref={pauseRef} aria-labelledby="map-title" className="grain relative overflow-hidden bg-o-sand px-5 py-10 text-o-sea sm:px-10 sm:py-12">
       {/* Блок виділено як «аркуш карти»: пунктирні межі згори й знизу та сітка,
           що розчиняється до країв. */}
       <div className="pointer-events-none absolute inset-x-0 top-0 border-t-[1.5px] border-dashed border-o-sea/25" aria-hidden="true" />

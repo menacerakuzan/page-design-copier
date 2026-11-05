@@ -7,6 +7,7 @@ import { useRoutesData } from "./routes/useRoutesData";
 import { FoldedMap, RouteList, TagChips } from "./routes/parts";
 import { StopsChain } from "./routes/StopsChain";
 import { RoadsBackdrop } from "./routes/RoadsBackdrop";
+import { usePauseOffscreen } from "@/v2/lib/usePauseOffscreen";
 
 const LIST = 5;
 
@@ -19,6 +20,7 @@ export function RoutesShowcase() {
   const d = useRoutesData();
   const [tag, setTag] = useState<string | null>(null);
   const [sel, setSel] = useState<string | null>(null);
+  const pauseRef = usePauseOffscreen<HTMLElement>();
 
   const tags = useMemo(() => {
     const present = new Set(d.routes.flatMap((r) => r.tags ?? []));
@@ -30,7 +32,7 @@ export function RoutesShowcase() {
   if (!d.ready || !d.routes.length) return null;
 
   return (
-    <section aria-labelledby="routes-title" className="relative isolate overflow-hidden py-16 sm:py-20">
+    <section ref={pauseRef} aria-labelledby="routes-title" className="relative isolate overflow-hidden py-16 sm:py-20">
       <RoadsBackdrop />
       <div className="relative mx-auto max-w-[1280px] px-5 sm:px-10">
         <FoldedMap />
