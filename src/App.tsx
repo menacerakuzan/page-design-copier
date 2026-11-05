@@ -9,10 +9,9 @@ import { WinterThemeProvider, useWinterTheme } from "@/lib/winterTheme";
 import { BasketProvider } from "@/lib/basketContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { SkipLink } from "@/components/SkipLink";
-import MobileNav from "./components/MobileNav";
-import { AssistantFab } from "./components/assistant/AssistantFab";
-import { BackgroundMusicPlayer } from "./components/BackgroundMusicPlayer";
 import { KonamiEasterEgg } from "./components/KonamiEasterEgg";
+import { MobileDock } from "./v2/components/Header";
+import { MusicProvider } from "./v2/lib/music";
 // Головна (новий дизайн, src/v2) — у головному бандлі, щоб перша сторінка малювалась одразу.
 import V2Home from "./v2/home/HomePage";
 
@@ -24,7 +23,8 @@ const DistrictPage = lazy(() => import("./pages/DistrictPage"));
 const EntityDetail = lazy(() => import("./pages/EntityDetail"));
 const TourismTypesPage = lazy(() => import("./pages/TourismTypesPage"));
 const InfoPage = lazy(() => import("./pages/InfoPage"));
-const DistrictsPage = lazy(() => import("./pages/DistrictsPage"));
+// Нова сторінка районів (src/v2); стара src/pages/DistrictsPage лишається до кінця редизайну.
+const DistrictsPage = lazy(() => import("./v2/districts/DistrictsPage"));
 const Admin = lazy(() => import("./pages/Admin"));
 const RoutesPage = lazy(() => import("./pages/RoutesPage"));
 const RouteDetailPage = lazy(() => import("./pages/RouteDetailPage"));
@@ -35,7 +35,7 @@ const BasketPage = lazy(() => import("./pages/BasketPage"));
 const RouteMapPage = lazy(() => import("./pages/RouteMapPage"));
 const AssistantPage = lazy(() => import("./pages/AssistantPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
-/** Головна в новому дизайні має власну навігацію, музику й колір тла. */
+/** Головна сама керує кольором тла (темне хіро) і не показує старих прикрас. */
 const isNewHome = (pathname: string) => pathname === "/" || pathname.startsWith("/v2");
 
 /** Старе прев'ю /v2 → головна (з тими самими параметрами). */
@@ -127,11 +127,11 @@ const RouteFallback = () => (
 );
 
 /**
- * Кожен глобальний "хром"-компонент — у своєму ErrorBoundary: падіння одного
- * (напр. MobileNav) інакше знімало б усе дерево до голого синього body, бо ці
- * компоненти рендеряться поза основним ErrorBoundary нижче (не належать
- * жодному роуту). resetKeys=[pathname] — щоб зловлена один раз помилка не
- * ховала компонент назавжди (без цього так зникала кнопка асистента).
+ * Спільне для всіх сторінок: нижній док нового дизайну (телефон і планшет).
+ * Шапка й підвал — на самих сторінках, музика — у MusicProvider.
+ * Кожен компонент — у своєму ErrorBoundary: падіння одного інакше знімало б
+ * усе дерево, бо вони рендеряться поза основним ErrorBoundary нижче.
+ * resetKeys=[pathname] — щоб зловлена один раз помилка не ховала компонент назавжди.
  */
 // Зимові прикраси — окремим чанком, лише коли тема активна.
 const WinterLayer = lazy(() => import("./components/winter/WinterLayer"));
@@ -139,15 +139,14 @@ const WinterLayer = lazy(() => import("./components/winter/WinterLayer"));
 const GlobalChrome = () => {
   const { pathname } = useLocation();
   const { active: winter } = useWinterTheme();
-  // Новий дизайн має власну навігацію — старий «хром» там не показуємо.
-  if (isNewHome(pathname)) return null;
+  const home = isNewHome(pathname);
   return (
     <>
-      <ErrorBoundary fallback={null} resetKeys={[pathname]}><MobileNav /></ErrorBoundary>
-      <ErrorBoundary fallback={null} resetKeys={[pathname]}><AssistantFab /></ErrorBoundary>
-      <ErrorBoundary fallback={null} resetKeys={[pathname]}><BackgroundMusicPlayer /></ErrorBoundary>
-      <ErrorBoundary fallback={null} resetKeys={[pathname]}><KonamiEasterEgg /></ErrorBoundary>
-      {winter && (
+      {!pathname.startsWith("/admin") && (
+        <ErrorBoundary fallback={null} resetKeys={[pathname]}><MobileDock /></ErrorBoundary>
+      )}
+      {!home && <ErrorBoundary fallback={null} resetKeys={[pathname]}><KonamiEasterEgg /></ErrorBoundary>}
+      {!home && winter && (
         <ErrorBoundary fallback={null}><Suspense fallback={null}><WinterLayer /></Suspense></ErrorBoundary>
       )}
     </>
@@ -176,6 +175,7 @@ const App = () => {
         <BasketProvider>
         <TooltipProvider>
           <BrowserRouter>
+          <MusicProvider>
             <RouteCleanup />
             <PanelColor />
             {/* Перший фокусабельний елемент документа — саме тут, ДО будь-якої
@@ -210,6 +210,7 @@ const App = () => {
                 </Routes>
               </Suspense>
             </ErrorBoundary>
+          </MusicProvider>
           </BrowserRouter>
         </TooltipProvider>
         </BasketProvider>

@@ -2,8 +2,8 @@ import React, { useState, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Calendar, ArrowRight, Newspaper } from "lucide-react";
 import { Img } from "@/components/Img";
-import SiteFooter from "@/components/SiteFooter";
-import PageBrow from "@/components/PageBrow";
+import { Footer } from "@/v2/components/Footer";
+import { Header } from "@/v2/components/Header";
 import { useLang } from "@/lib/langContext";
 import { useSeo } from "@/hooks/useSeo";
 import { usePageContentCards } from "@/hooks/usePageContentCards";
@@ -201,7 +201,7 @@ export default function InfoPage() {
         style={{ backgroundImage: "url(/districtspattern.svg)", backgroundSize: "200px 200px", backgroundRepeat: "repeat", opacity: 0.1 }}
       />
 
-      <PageBrow />
+      <Header />
 
       {/* ── Заголовок сторінки ──────────────────────────────────────────── */}
       <div className="container-edge relative z-10 pb-6 pt-8 md:pb-8 md:pt-12">
@@ -304,7 +304,7 @@ export default function InfoPage() {
         )}
       </AnimatePresence>
 
-      <SiteFooter />
+      <Footer />
     </div>
   );
 }

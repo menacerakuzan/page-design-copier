@@ -56,11 +56,11 @@ function Fun() {
     <>
       <circle cx={cx} cy={cy} r={r} />
       <circle cx={cx} cy={cy} r="4" />
-      {pts.map(([x, y]) => (
-        <path key={`s${x}`} d={`M${cx} ${cy}L${x.toFixed(1)} ${y.toFixed(1)}`} strokeOpacity=".6" />
+      {pts.map(([x, y], i) => (
+        <path key={`s${i}`} d={`M${cx} ${cy}L${x.toFixed(1)} ${y.toFixed(1)}`} strokeOpacity=".6" />
       ))}
-      {pts.map(([x, y]) => (
-        <rect key={`c${x}`} x={(x - 3).toFixed(1)} y={(y + 1).toFixed(1)} width="6" height="5" rx="1.5" />
+      {pts.map(([x, y], i) => (
+        <rect key={`c${i}`} x={(x - 3).toFixed(1)} y={(y + 1).toFixed(1)} width="6" height="5" rx="1.5" />
       ))}
       <path d="M50 44 36 82M50 44l14 38M26 82h48" />
     </>

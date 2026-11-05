@@ -7,8 +7,8 @@ import { Clock, Navigation, MapPin, ArrowRight, Route as RouteIcon } from "lucid
 import { Img } from "@/components/Img";
 import { loadRoutes, type Route, ROUTE_TAG_OPTIONS, loadRouteTagOrder } from "@/lib/routesRepository";
 import { useLang } from "@/lib/langContext";
-import SiteFooter from "@/components/SiteFooter";
-import PageBrow from "@/components/PageBrow";
+import { Footer } from "@/v2/components/Footer";
+import { Header } from "@/v2/components/Header";
 import { useSeo } from "@/hooks/useSeo";
 
 const GOLD = "#df9b3b";
@@ -181,7 +181,7 @@ const RoutesPage = () => {
       />
 
       {/* ── Шапка-«бровь»: мобільно — назад, на md+ — повна навігація ──────── */}
-      <PageBrow />
+      <Header />
 
       {/* ── Заголовок сторінки ──────────────────────────────────────────── */}
       <div className="container-edge relative z-10 pb-6 pt-8 md:pb-8 md:pt-12">
@@ -280,7 +280,7 @@ const RoutesPage = () => {
         )}
       </main>
 
-      <SiteFooter />
+      <Footer />
     </div>
   );
 };

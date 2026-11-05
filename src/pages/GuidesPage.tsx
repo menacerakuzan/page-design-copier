@@ -3,8 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { BadgeCheck, ExternalLink, Globe, UserRound } from "lucide-react";
 import { useLang } from "@/lib/langContext";
-import SiteFooter from "@/components/SiteFooter";
-import PageBrow from "@/components/PageBrow";
+import { Footer } from "@/v2/components/Footer";
+import { Header } from "@/v2/components/Header";
 import { loadGuides, type Guide } from "@/lib/guidesRepository";
 import { useSeo } from "@/hooks/useSeo";
 
@@ -96,7 +96,7 @@ export default function GuidesPage() {
         style={{ backgroundImage: "url(/districtspattern.svg)", backgroundSize: "200px 200px", backgroundRepeat: "repeat", opacity: 0.1 }}
       />
 
-      <PageBrow />
+      <Header />
 
       {/* ── Заголовок сторінки ──────────────────────────────────────────── */}
       <div className="container-edge relative z-10 pb-6 pt-8 md:pb-8 md:pt-12">
@@ -156,7 +156,7 @@ export default function GuidesPage() {
         )}
       </main>
 
-      <SiteFooter />
+      <Footer />
     </div>
   );
 }

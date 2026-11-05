@@ -4,8 +4,8 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import { motion, AnimatePresence } from "framer-motion";
 import { Compass, LocateFixed, Search, MapPin, X, Loader2, Navigation } from "lucide-react";
 import { useLang } from "@/lib/langContext";
-import SiteFooter from "@/components/SiteFooter";
-import PageBrow from "@/components/PageBrow";
+import { Footer } from "@/v2/components/Footer";
+import { Header } from "@/v2/components/Header";
 import { haversineKm, type LatLng } from "@/lib/geo";
 import { useSeo } from "@/hooks/useSeo";
 
@@ -293,7 +293,7 @@ export default function NearbyPage() {
         style={{ backgroundImage: "url(/districtspattern.svg)", backgroundSize: "200px 200px", backgroundRepeat: "repeat", opacity: 0.1 }}
       />
 
-      <PageBrow />
+      <Header />
 
       {/* ── Заголовок сторінки ──────────────────────────────────────────── */}
       <div className="container-edge relative z-10 pb-6 pt-8 md:pb-8 md:pt-12">
@@ -513,7 +513,7 @@ export default function NearbyPage() {
         </div>
       </main>
 
-      <SiteFooter />
+      <Footer />
     </div>
   );
 }

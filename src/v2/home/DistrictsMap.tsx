@@ -6,7 +6,7 @@ import { useHierarchySnapshot } from "@/hooks/useHierarchySnapshot";
 import { usePageContentCards } from "@/hooks/usePageContentCards";
 import { plain, useV2 } from "@/v2/i18n";
 import { EASE, PillLink, SectionHead } from "@/v2/components/ui";
-import { DISTRICT_SHAPES, MAP_H, MAP_W, projectLonLat } from "./districtShapes";
+import { DISTRICT_SHAPES, MAP_H, MAP_W, projectLonLat } from "@/v2/lib/districtShapes";
 import { PrintPhoto } from "./districts/photos";
 import { usePauseOffscreen } from "@/v2/lib/usePauseOffscreen";
 

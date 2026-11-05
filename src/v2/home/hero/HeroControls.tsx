@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Search, Volume2, VolumeX } from "lucide-react";
-import { MUSIC_CSS, useBackgroundMusic } from "@/components/BackgroundMusicPlayer";
+import { useMusic } from "@/v2/lib/music";
 import { useLang } from "@/lib/langContext";
 import { useV2 } from "@/v2/i18n";
 import { EASE } from "@/v2/components/ui";
@@ -12,7 +12,7 @@ const ROUND =
   "flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-o-sand text-o-sea shadow-[0_10px_24px_-8px_rgba(0,10,30,0.5)] transition-colors hover:bg-o-sun";
 
 /**
- * Фонова музика (та сама пісня, що на старому сайті). Кнопка — рівне коло;
+ * Фонова музика (та сама пісня, що на старому сайті; плеєр — спільний, див. v2/lib/music). Кнопка — рівне коло;
  * повзунок гучності виїжджає праворуч окремою «пігулкою», не деформуючи її.
  */
 export function MusicButton({ slider = true }: {
@@ -20,11 +20,9 @@ export function MusicButton({ slider = true }: {
   slider?: boolean;
 }) {
   const { t } = useLang();
-  const { hostRef, ready, unmuted, volume, toggle, onSlide, showQuiet } = useBackgroundMusic();
+  const { ready, unmuted, volume, toggle, onSlide, showQuiet } = useMusic();
   return (
     <div className="relative flex items-center">
-      <div ref={hostRef} className="pointer-events-none fixed h-0 w-0 overflow-hidden opacity-0" aria-hidden="true" />
-      <style>{MUSIC_CSS}</style>
       <motion.button
         type="button"
         onClick={toggle}

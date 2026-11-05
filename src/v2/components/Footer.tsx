@@ -1,4 +1,5 @@
-import { useEffect, useId, useRef, useState } from "react";
+import "@/v2/v2.css";
+import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowUp, Facebook, Instagram, Mail } from "lucide-react";
 import { useReducedMotion } from "framer-motion";
@@ -95,9 +96,37 @@ function Waves() {
   );
 }
 
+/**
+ * Колір за межами сторінки (overscroll) і системних панелей Safari: угорі —
+ * кремовий, у нижній половині — винний, як підвал, щоб при «перетягуванні»
+ * нижче підвалу не було бежевої смуги. Діє на кожній сторінці з цим підвалом.
+ */
+function useOverscrollColor() {
+  useLayoutEffect(() => {
+    const root = document.documentElement;
+    const body = document.body;
+    const paint = () => {
+      const bottom = window.scrollY > (root.scrollHeight - window.innerHeight) / 2;
+      const c = bottom ? "#9f1f47" : "#fff2e8";
+      if (root.style.backgroundColor !== c) {
+        root.style.backgroundColor = c;
+        body.style.backgroundColor = c;
+      }
+    };
+    paint();
+    window.addEventListener("scroll", paint, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", paint);
+      root.style.backgroundColor = "";
+      body.style.backgroundColor = "";
+    };
+  }, []);
+}
+
 export function Footer() {
   const { t } = useV2();
   const reduce = useReducedMotion();
+  useOverscrollColor();
   const cols = [
     {
       title: t("footerTravel"),
@@ -120,6 +149,8 @@ export function Footer() {
   ];
 
   return (
+    // .v2 — стилі нового дизайну й на старих сторінках (там кореня .v2 ще немає).
+    <div className="v2">
     <footer className="bg-o-sand pt-2">
       <Waves />
       <div className="bg-o-wine text-o-sand">
@@ -192,5 +223,6 @@ export function Footer() {
         </div>
       </div>
     </footer>
+    </div>
   );
 }

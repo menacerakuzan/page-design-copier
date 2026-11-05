@@ -1,3 +1,4 @@
+import "@/v2/v2.css";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
@@ -9,9 +10,13 @@ import {
   Route as RouteIcon,
   Search,
   Sparkles,
+  Volume2,
+  VolumeX,
   X,
 } from "lucide-react";
 import { useBasket } from "@/lib/basketContext";
+import { useLang } from "@/lib/langContext";
+import { useMusic } from "@/v2/lib/music";
 import { useDialogA11y } from "@/hooks/useDialogA11y";
 import { useV2 } from "@/v2/i18n";
 import { EASE, Logo, Shield } from "./ui";
@@ -49,16 +54,55 @@ export function LangSwitch({ dark }: { dark: boolean }) {
   );
 }
 
+/** Висота шапки разом із верхнім відступом — стільки місця лишаємо під нею на сторінці. */
+export const HEADER_SPACE = "h-[76px] sm:h-[84px]";
+
+/** Кнопка фонової музики в шапці: та сама пісня, що й у хіро головної (спільний плеєр). */
+function MusicToggle({ dark }: { dark: boolean }) {
+  const { t } = useLang();
+  const { ready, unmuted, toggle, showQuiet } = useMusic();
+  return (
+    <button
+      type="button"
+      onClick={toggle}
+      disabled={!ready}
+      aria-label={unmuted ? t("musicOff") : t("musicOn")}
+      aria-pressed={unmuted}
+      className={`flex h-10 w-10 items-center justify-center rounded-full transition-colors disabled:opacity-50 ${dark ? "hover:bg-o-sand/15" : "hover:bg-o-sea/[0.07]"}`}
+    >
+      {showQuiet ? (
+        <VolumeX className="h-[19px] w-[19px]" aria-hidden="true" />
+      ) : (
+        <span className="relative flex items-center justify-center">
+          <Volume2 className="h-[19px] w-[19px]" aria-hidden="true" />
+          <span className="absolute -right-1 -top-1 flex items-end gap-[1.5px]" aria-hidden="true">
+            {[0, 1, 2].map((i) => (
+              <span key={i} className="bg-note-bar w-[2px] rounded-full bg-o-sun" style={{ animationDelay: `${i * 0.15}s` }} />
+            ))}
+          </span>
+        </span>
+      )}
+    </button>
+  );
+}
+
 /**
- * Шапка: над відео — прозора зі світлим текстом, після прокрутки стає
- * пісочною «пігулкою» з розмиттям фону. На мобільному — лого + пошук + меню
+ * Шапка: після прокрутки стає пісочною «пігулкою» з розмиттям фону.
+ * Угорі сторінки — прозора: над відео/фото світлий текст (overHero), на
+ * кремових сторінках — темний. На мобільному — лого + музика + пошук + меню
  * (основна навігація — у плаваючому доку знизу).
+ *
+ * Шапка фіксована, тож на звичайних сторінках під нею лишаємо порожнє місце
+ * (HEADER_SPACE); над хіро на весь екран — ні, вона лягає поверх нього.
  */
 export function Header({
   revealAfterHero = false,
+  overHero = false,
 }: {
   /** Над першим екраном є власна шапка-«бровь» — ця з'являється лише після нього. */
   revealAfterHero?: boolean;
+  /** Сторінка починається з темного хіро на весь екран — шапка лягає поверх нього. */
+  overHero?: boolean;
 }) {
   const { t } = useV2();
   const { count } = useBasket();
@@ -95,13 +139,16 @@ export function Header({
     return () => window.removeEventListener("scroll", onScroll);
   }, [revealAfterHero]);
 
-  const dark = !scrolled;
+  // Світлий текст — лише поки шапка прозора над темним першим екраном.
+  const dark = !scrolled && (overHero || revealAfterHero);
   // Стабільні колбеки: useDialogA11y перезапускає ефект при зміні onClose.
   const closeMenu = useCallback(() => setMenu(false), []);
   const closeSearch = useCallback(() => setSearch(false), []);
 
   return (
-    <>
+    // display:contents — обгортка не впливає на розкладку, але дає стилі нового
+    // дизайну (.v2) і на старих сторінках, де кореня .v2 ще немає.
+    <div className="v2 contents">
       <header
         ref={headerRef}
         className={`fixed inset-x-0 top-0 z-50 px-3 pt-3 transition-[transform,opacity] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] sm:px-5 sm:pt-4 ${past ? (tucked ? "-translate-y-[140%]" : "") : "pointer-events-none -translate-y-[140%] opacity-0"}`}
@@ -111,7 +158,9 @@ export function Header({
           className={`mx-auto flex max-w-[1280px] items-center justify-between gap-4 rounded-full py-2 pl-5 pr-2 transition-all duration-500 ${
             scrolled
               ? "bg-o-sand/85 text-o-sea shadow-[0_12px_40px_-18px_rgba(0,30,70,0.45)] ring-1 ring-o-sea/[0.06] backdrop-blur-xl"
-              : "bg-transparent text-o-sand"
+              : dark
+                ? "bg-transparent text-o-sand"
+                : "bg-transparent text-o-sea"
           }`}
         >
           <Logo />
@@ -122,16 +171,25 @@ export function Header({
                 <li key={n.to}>
                   <NavLink
                     to={n.to}
-                    className={`relative rounded-full px-3.5 py-2 text-[15px] font-medium transition-colors ${dark ? "hover:bg-o-sand/15" : "hover:bg-o-sea/[0.07]"}`}
+                    className={`relative flex flex-col items-center rounded-full px-3.5 py-2 text-[15px] font-medium transition-colors ${dark ? "hover:bg-o-sand/15" : "hover:bg-o-sea/[0.07]"}`}
                   >
-                    {t(n.key)}
+                    {({ isActive }) => (
+                      <>
+                        {t(n.key)}
+                        {/* Поточний розділ — крапка під назвою */}
+                        {isActive && (
+                          <span className={`absolute bottom-0.5 h-1 w-1 rounded-full ${dark ? "bg-o-sun" : "bg-o-wine"}`} aria-hidden="true" />
+                        )}
+                      </>
+                    )}
                   </NavLink>
                 </li>
               ))}
             </ul>
           </nav>
 
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1 sm:gap-1.5">
+            <MusicToggle dark={dark} />
             <button
               type="button"
               onClick={() => setSearch(true)}
@@ -178,7 +236,8 @@ export function Header({
       <AnimatePresence>
         {search && <SearchOverlay onClose={closeSearch} />}
       </AnimatePresence>
-    </>
+      {!revealAfterHero && !overHero && <div className={HEADER_SPACE} aria-hidden="true" />}
+    </div>
   );
 }
 
@@ -297,6 +356,7 @@ export function MobileDock() {
     { to: "/koshyk", key: "myTrip", Icon: Heart, badge: count },
   ] as const;
   return (
+    <div className="v2 contents">
     <nav
       aria-label={t("menu")}
       className="fixed inset-x-0 bottom-0 z-40 px-3 pb-[calc(10px+env(safe-area-inset-bottom))] lg:hidden"
@@ -347,5 +407,6 @@ export function MobileDock() {
         ))}
       </ul>
     </nav>
+    </div>
   );
 }

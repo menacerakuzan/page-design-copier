@@ -2,8 +2,8 @@ import { useMemo } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Archive, CalendarDays } from "lucide-react";
 import { useLang } from "@/lib/langContext";
-import PageBrow from "@/components/PageBrow";
-import SiteFooter from "@/components/SiteFooter";
+import { Header } from "@/v2/components/Header";
+import { Footer } from "@/v2/components/Footer";
 import { ObjectCard } from "@/components/ObjectCard";
 import { useHierarchySnapshot } from "@/hooks/useHierarchySnapshot";
 import { useSeo } from "@/hooks/useSeo";
@@ -53,7 +53,7 @@ export default function EventsPage() {
         style={{ backgroundImage: "url(/districtspattern.svg)", backgroundSize: "200px 200px", backgroundRepeat: "repeat", opacity: 0.1 }}
       />
 
-      <PageBrow />
+      <Header />
 
       <div className="container-edge relative z-10 pb-6 pt-8 md:pb-8 md:pt-12">
         <div className="flex items-center gap-3">
@@ -111,7 +111,7 @@ export default function EventsPage() {
         )}
       </main>
 
-      <SiteFooter />
+      <Footer />
     </div>
   );
 }

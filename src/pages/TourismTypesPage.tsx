@@ -7,8 +7,8 @@ import {
   UtensilsCrossed, Landmark, HeartPulse, Waves, Church, PartyPopper, Leaf, Mountain,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import SiteFooter from "@/components/SiteFooter";
-import PageBrow from "@/components/PageBrow";
+import { Footer } from "@/v2/components/Footer";
+import { Header } from "@/v2/components/Header";
 import { useSeo } from "@/hooks/useSeo";
 import { useHierarchySnapshot } from "@/hooks/useHierarchySnapshot";
 import { usePageContentCards } from "@/hooks/usePageContentCards";
@@ -94,7 +94,7 @@ export default function TourismTypesPage() {
       />
 
       {/* ── Шапка-«бровь»: мобільно — назад, на md+ — повна навігація ──────── */}
-      <PageBrow />
+      <Header />
 
       {/* ── Заголовок сторінки ──────────────────────────────────────────── */}
       <div className="container-edge relative z-10 pb-6 pt-8 md:pb-8 md:pt-12">
@@ -214,7 +214,7 @@ export default function TourismTypesPage() {
         </AnimatePresence>
       </main>
 
-      <SiteFooter />
+      <Footer />
     </div>
   );
 }

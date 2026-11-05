@@ -294,7 +294,7 @@ export default function AssistantPage() {
 
       {/* ── Поле вводу ────────────────────────────────────────── */}
       <div
-        className="relative z-10 shrink-0 border-t border-[#002f5e]/10 bg-[#fff2e8]/90 px-3 pt-2.5 backdrop-blur-md pb-[calc(84px+env(safe-area-inset-bottom))] md:pb-[calc(16px+env(safe-area-inset-bottom))]"
+        className="relative z-10 shrink-0 border-t border-[#002f5e]/10 bg-[#fff2e8]/90 px-3 pt-2.5 backdrop-blur-md pb-[calc(96px+env(safe-area-inset-bottom))] lg:pb-[calc(16px+env(safe-area-inset-bottom))]"
       >
         <div className="mx-auto flex max-w-[640px] items-end gap-2 rounded-[24px] border border-[#002f5e]/12 bg-white p-1.5 pl-4 shadow-[0_10px_26px_-20px_rgba(0,47,94,0.4)] md:max-w-[760px]">
           {/* Мітка є в дереві доступності, але візуально прихована: у полі
