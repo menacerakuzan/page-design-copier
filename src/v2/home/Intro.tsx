@@ -29,7 +29,7 @@ export function Intro() {
   const list = words(PHRASE[lang]);
 
   return (
-    <section aria-label={lang === "en" ? "About the region" : "Про край"} className="relative pb-16 pt-11 sm:pb-20 sm:pt-16">
+    <section aria-label={lang === "en" ? "About the region" : "Про край"} className="relative pb-9 pt-11 sm:pb-20 sm:pt-16">
       <div className="mx-auto max-w-[1280px] px-5 sm:px-10">
         <motion.p
           initial={{ opacity: 0 }}

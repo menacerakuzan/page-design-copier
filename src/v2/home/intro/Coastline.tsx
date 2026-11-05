@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion, useInView, useReducedMotion } from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
 import { useV2 } from "@/v2/i18n";
 import { EASE } from "@/v2/components/ui";
@@ -11,6 +11,7 @@ const BASE = 214; // лінія берега
 const ICON = 100; // іконка малюється в коробці 100×100, низ — на лінії
 const VB_Y = 28; // верх видимої області (над сонцем порожньо)
 const VB_H = 242;
+const SUN_X = 735; // сонце над морем — центр панорами на телефоні
 
 type Mark = {
   key: string;
@@ -214,20 +215,37 @@ const MARKS: Mark[] = [
   },
 ];
 
-/** Лінія берега: легкі хвилі, а під кожною пам'яткою — рівно. */
+/** Висота лінії берега в точці x: легкі хвилі, а під кожною пам'яткою — рівно. */
+function coastY(x: number) {
+  const near = MARKS.some((m) => Math.abs(m.x - x) < 54);
+  return near ? BASE : BASE + 4.5 * Math.sin(x / 19) + 2 * Math.sin(x / 7);
+}
+
+/** Лінія берега зліва направо. */
 function coastPath() {
   let d = `M -20 ${BASE}`;
-  for (let x = 0; x <= W + 20; x += 8) {
-    const near = MARKS.some((m) => Math.abs(m.x - x) < 54);
-    const y = near ? BASE : BASE + 4.5 * Math.sin(x / 19) + 2 * Math.sin(x / 7);
-    d += ` L ${x} ${y.toFixed(1)}`;
-  }
+  for (let x = 0; x <= W + 20; x += 8) d += ` L ${x} ${coastY(x).toFixed(1)}`;
   return d;
 }
 
+/** Та сама лінія, але двома половинами від сонця: ліворуч і праворуч (для телефона). */
+function coastHalves() {
+  const pt = (x: number) => `${x} ${coastY(x).toFixed(1)}`;
+  let left = `M ${pt(SUN_X)}`;
+  for (let x = Math.floor(SUN_X / 8) * 8; x >= 0; x -= 8) left += ` L ${pt(x)}`;
+  left += ` L -20 ${BASE}`;
+  let right = `M ${pt(SUN_X)}`;
+  for (let x = Math.ceil(SUN_X / 8) * 8; x <= W + 20; x += 8) right += ` L ${pt(x)}`;
+  return [left, right];
+}
+
+/** Тонка хвиля моря під берегом; dir = -1 — від x0 ліворуч. */
+const seaPath = (x0: number, len: number, dir: 1 | -1 = 1) =>
+  `M ${x0} ${BASE + 22} ` + Array.from({ length: Math.ceil(len / 40) }, () => `q ${20 * dir} -7 ${40 * dir} 0`).join(" ");
+
 /**
- * Варіант 1 «Берег Одещини»: одна лінія малюється зліва направо, на ній —
- * силуети від дельти Дунаю до Одеси. Наведення — підпис і відстань, клік —
+ * Варіант 1 «Берег Одещини»: одна лінія малюється зліва направо (на телефоні —
+ * від сонця в обидва боки), на ній — силуети від дельти Дунаю до Одеси. Наведення — підпис і відстань, клік —
  * сторінка місця.
  */
 export function Coastline() {
@@ -236,32 +254,77 @@ export function Coastline() {
   const navigate = useNavigate();
   const [active, setActive] = useState<string | null>(null);
   const d = useMemo(coastPath, []);
+  const halves = useMemo(coastHalves, []);
+  // На телефоні панорама відкривається з сонця — тож і малюється від нього в обидва боки.
+  const [fromCenter] = useState(() => typeof window !== "undefined" && window.matchMedia("(max-width: 639px)").matches);
+
+  // Телефон: панорама ширша за екран — одразу ставимо сонце по центру,
+  // далі людина сама гортає ліворуч (Дунай) чи праворуч (Одеса).
+  // При зміні ширини (поворот екрана) — центруємо знову, якщо ще не гортали.
+  const scrollRef = useRef<HTMLDivElement>(null);
+  // Уся панорама малюється разом, щойно блок з'явився на екрані — навіть ті
+  // частини, що на телефоні поки за краєм (інакше вони чекали б, доки їх догорнуть).
+  const inView = useInView(scrollRef, { once: true, margin: "-80px" });
+  const shown = inView || !!reduce;
+  useLayoutEffect(() => {
+    const el = scrollRef.current;
+    const inner = el?.firstElementChild as HTMLElement | null;
+    if (!el || !inner) return;
+    let touched = false;
+    const center = () => {
+      if (touched || el.scrollWidth <= el.clientWidth) return;
+      el.scrollLeft = inner.offsetLeft + (inner.offsetWidth * SUN_X) / W - el.clientWidth / 2;
+    };
+    const touch = () => { touched = true; };
+    center();
+    el.addEventListener("pointerdown", touch, { passive: true });
+    el.addEventListener("wheel", touch, { passive: true });
+    window.addEventListener("resize", center);
+    return () => {
+      el.removeEventListener("pointerdown", touch);
+      el.removeEventListener("wheel", touch);
+      window.removeEventListener("resize", center);
+    };
+  }, []);
   const act = MARKS.find((m) => m.key === active);
 
   const draw = (delay: number, duration = 0.9) => ({
     initial: reduce ? false : { pathLength: 0, opacity: 0 },
-    whileInView: { pathLength: 1, opacity: 1 },
-    viewport: { once: true, margin: "-80px" },
+    animate: shown ? { pathLength: 1, opacity: 1 } : undefined,
     transition: { pathLength: { duration, delay, ease: EASE }, opacity: { duration: 0.2, delay } },
   });
 
   // Прокрутка вбік потрібна лише на телефоні — і вона обрізала б підказку
   // зверху, тому там є запас місця над панорамою (pt/-mt); з sm — без обрізання.
   return (
-    <div className="no-scrollbar -mx-5 -mt-28 overflow-x-auto px-5 pt-28 sm:-mx-6 sm:mt-0 sm:overflow-visible sm:px-0 sm:pt-0 lg:-mx-10">
+    <div ref={scrollRef} className="no-scrollbar -mx-5 -mt-28 overflow-x-auto px-5 pt-28 sm:-mx-6 sm:mt-0 sm:overflow-visible sm:px-0 sm:pt-0 lg:-mx-10">
       <div className="relative mx-auto min-w-[980px] max-w-[1280px]">
         <svg viewBox={`0 ${VB_Y} ${W} ${VB_H}`} className="block w-full overflow-visible" role="group" aria-label={lang === "en" ? "Coast of Odesa Region" : "Берег Одещини"}>
           {/* Сонце над морем */}
-          <motion.circle cx={735} cy={70} r={26} fill="none" stroke="#df9b3b" strokeWidth={2} {...draw(0.6, 1.2)} />
-          <motion.path d="M735 30 V20 M735 120 V110 M695 70 H685 M785 70 H775 M707 42 L700 35 M770 105 L763 98 M763 42 L770 35 M700 105 L707 98" stroke="#df9b3b" strokeWidth={2} strokeLinecap="round" fill="none" {...draw(1.4, 0.8)} />
+          <motion.circle cx={SUN_X} cy={70} r={26} fill="none" stroke="#df9b3b" strokeWidth={2} {...draw(fromCenter ? 0 : 0.6, 1.2)} />
+          <motion.path d="M735 30 V20 M735 120 V110 M695 70 H685 M785 70 H775 M707 42 L700 35 M770 105 L763 98 M763 42 L770 35 M700 105 L707 98" stroke="#df9b3b" strokeWidth={2} strokeLinecap="round" fill="none" {...draw(fromCenter ? 0.7 : 1.4, 0.8)} />
 
-          <motion.path d={d} fill="none" stroke="#002f5e" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" {...draw(0, 2.4)} />
-          {/* Друга, тонша хвиля — море під берегом */}
-          <motion.path d={`M -20 ${BASE + 22} ` + Array.from({ length: Math.ceil((W + 40) / 40) }, () => "q 20 -7 40 0").join(" ")} fill="none" stroke="#002f5e" strokeOpacity={0.25} strokeWidth={1.5} {...draw(0.4, 2.4)} />
+          {fromCenter ? (
+            // Телефон: берег і море розходяться від сонця ліворуч і праворуч.
+            <>
+              {halves.map((h, i) => (
+                <motion.path key={i} d={h} fill="none" stroke="#002f5e" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" {...draw(0.3, 1.8)} />
+              ))}
+              <motion.path d={seaPath(SUN_X, SUN_X + 20, -1)} fill="none" stroke="#002f5e" strokeOpacity={0.25} strokeWidth={1.5} {...draw(0.5, 1.8)} />
+              <motion.path d={seaPath(SUN_X, W - SUN_X + 20)} fill="none" stroke="#002f5e" strokeOpacity={0.25} strokeWidth={1.5} {...draw(0.5, 1.8)} />
+            </>
+          ) : (
+            <>
+              <motion.path d={d} fill="none" stroke="#002f5e" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" {...draw(0, 2.4)} />
+              {/* Друга, тонша хвиля — море під берегом */}
+              <motion.path d={seaPath(-20, W + 40)} fill="none" stroke="#002f5e" strokeOpacity={0.25} strokeWidth={1.5} {...draw(0.4, 2.4)} />
+            </>
+          )}
 
           {MARKS.map((m) => {
             const on = active === m.key;
-            const delay = 0.3 + (m.x / W) * 2;
+            // Малюнок з'являється, коли до нього «доходить» лінія берега.
+            const delay = fromCenter ? 0.4 + (Math.abs(m.x - SUN_X) / (W - SUN_X)) * 1.6 : 0.3 + (m.x / W) * 2;
             const label = lang === "en" ? m.en : m.uk;
             return (
               <g
@@ -310,8 +373,7 @@ export function Coastline() {
                   fill={on ? "#9f1f47" : "#002f5e"}
                   fillOpacity={on ? 1 : 0.6}
                   initial={reduce ? false : { opacity: 0 }}
-                  whileInView={{ opacity: 1 }}
-                  viewport={{ once: true }}
+                  animate={shown ? { opacity: 1 } : undefined}
                   transition={{ delay: delay + 0.5 }}
                 >
                   {label}

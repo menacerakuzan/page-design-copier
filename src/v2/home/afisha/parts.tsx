@@ -1,5 +1,7 @@
+import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, Ticket } from "lucide-react";
+import { Img } from "@/components/Img";
 import type { Show } from "@/v2/lib/afisha";
 import type { AfishaData } from "./useAfisha";
 
@@ -41,6 +43,40 @@ export function ShowRow({ a, s, withDate, onHover }: { a: AfishaData; s: Show; w
         </span>
         <span className="flex h-9 w-9 items-center justify-center rounded-full ring-1 ring-o-sand/25 transition-all duration-300 group-hover:rotate-45 group-hover:bg-o-sun group-hover:text-o-winedeep group-hover:ring-o-sun">
           <ArrowUpRight className="h-5 w-5" aria-hidden="true" />
+        </span>
+      </Link>
+    </li>
+  );
+}
+
+/**
+ * Телефон і планшет: вистава як маленький горизонтальний квиток —
+ * фото ліворуч, перфорація з вирізами, світлий корінець з днем і часом,
+ * назвою й театром. Той самий стиль, що й постер-квиток на десктопі.
+ */
+export function ShowTicket({ a, s, withDate }: { a: AfishaData; s: Show; withDate: boolean }) {
+  return (
+    // Без тіні: вона затікала б у вирізи, а світлий квиток і так добре видно на темній панелі.
+    <li>
+      <Link
+        to={s.href}
+        className="ticket-cut group flex min-h-[96px] rounded-[16px] transition-transform duration-300 active:scale-[0.98]"
+        style={{ "--cut-x": "93px" } as CSSProperties}
+      >
+        <span className="relative w-[92px] shrink-0 overflow-hidden rounded-l-[16px] bg-o-wine">
+          {s.image ? (
+            <Img src={s.image} w={240} alt="" className="absolute inset-0 h-full w-full object-cover" />
+          ) : (
+            <Ticket className="absolute left-1/2 top-1/2 h-7 w-7 -translate-x-1/2 -translate-y-1/2 text-o-sand/40" aria-hidden="true" />
+          )}
+        </span>
+        <span className="flex min-w-0 flex-1 flex-col justify-center rounded-r-[16px] border-l-2 border-dashed border-o-wine/35 bg-o-sand py-3 pl-4 pr-3 text-o-winedeep">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-o-wine">
+            {withDate && <>{a.dateLabel(s.iso)} · </>}
+            <span className="text-[13px] font-extrabold tracking-normal tabular-nums">{s.time || "—"}</span>
+          </span>
+          <span className="mt-1 line-clamp-2 text-[15px] font-bold leading-snug">{s.title}</span>
+          <span className="mt-0.5 line-clamp-1 text-[12.5px] text-o-winedeep/60">{a.tl(s.venue, s.venueEn)}</span>
         </span>
       </Link>
     </li>

@@ -24,6 +24,12 @@ const LABEL_POS: Record<string, [number, number]> = {
   "bolhradskyy-rayon": [184, 650],
 };
 
+const OsmCredit = ({ text }: { text: string }) => (
+  <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer" className="text-o-sea/40 transition-colors hover:text-o-wine">
+    {text}
+  </a>
+);
+
 /** Коротка назва без слова «район» — для підписів на карті. */
 const short = (name: string) => name.replace(/\s*(район|district)\s*$/i, "");
 
@@ -68,6 +74,10 @@ export function DistrictsMap() {
 
   return (
     <section ref={pauseRef} aria-labelledby="map-title" className="grain relative overflow-hidden bg-o-sand px-5 py-10 text-o-sea sm:px-10 sm:py-12">
+      {/* ПК: підпис OpenStreetMap — у нижньому правому куті, подалі від підписів на карті */}
+      <p className="absolute bottom-3 right-10 z-[1] hidden text-[11px] leading-none lg:block">
+        <OsmCredit text={t("mapCredit")} />
+      </p>
       {/* Блок виділено як «аркуш карти»: пунктирні межі згори й знизу та сітка,
           що розчиняється до країв. */}
       <div className="pointer-events-none absolute inset-x-0 top-0 border-t-[1.5px] border-dashed border-o-sea/25" aria-hidden="true" />
@@ -104,10 +114,10 @@ export function DistrictsMap() {
           ))}
         </div>
 
-        <div className="mt-6 grid items-center gap-10 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:gap-16">
+        <div className="mt-5 grid items-center gap-6 sm:mt-6 sm:gap-10 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:gap-16">
           {/* Карта */}
           {/* Висота карти підлаштовується під екран, щоб увесь блок вміщався. */}
-          <div className="relative mx-auto w-full" style={{ maxWidth: "min(400px, calc((100svh - 300px) * 0.7))" }}>
+          <div className="relative mx-auto w-full" style={{ maxWidth: "min(400px, calc((100svh - 300px) * 0.7), 88vw)" }}>
             <svg viewBox={`-10 -10 ${MAP_W + 20} ${MAP_H + 20}`} className="w-full overflow-visible" role="img" aria-label={lang === "en" ? "Map of Odesa Region districts" : "Карта районів Одеської області"}>
               <defs>
                 <filter id="map-glow" x="-20%" y="-20%" width="140%" height="140%">
@@ -221,6 +231,11 @@ export function DistrictsMap() {
                 <text x={ODESA[0] + 12} y={ODESA[1] + 5} fontSize="16" fontWeight={700} fill="#002f5e" stroke="#fff2e8" strokeWidth={4} paintOrder="stroke" strokeLinejoin="round">{lang === "en" ? "Odesa" : "Одеса"}</text>
               </g>
             </svg>
+            {/* Межі районів — з OpenStreetMap; ліцензія ODbL вимагає підпису біля карти.
+                Телефон — тут, під картою; ПК — у нижньому правому куті блоку (див. нижче). */}
+            <p className="mt-1 text-right text-[11px] leading-none lg:hidden">
+              <OsmCredit text={t("mapCredit")} />
+            </p>
           </div>
 
           {/* Опис активного району */}
@@ -233,32 +248,45 @@ export function DistrictsMap() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -12 }}
                   transition={{ duration: 0.45, ease: EASE }}
-                  className="grid gap-8 sm:grid-cols-[240px_1fr] sm:items-start"
+                  // Телефон: маленьке фото поруч із назвою й цифрами, нижче — опис, міста стрічкою, кнопка.
+                  // З sm — як раніше: велике фото ліворуч, усе інше праворуч.
+                  className="grid grid-cols-[96px_minmax(0,1fr)] items-center gap-x-5 gap-y-5 sm:grid-cols-[240px_minmax(0,1fr)] sm:items-start sm:gap-x-8 sm:gap-y-4"
                 >
-                  <PrintPhoto image={image} name={short(tl(d.name, d.nameEn))} lang={lang} />
+                  <div className="sm:row-span-2">
+                    <PrintPhoto image={image} name={short(tl(d.name, d.nameEn))} lang={lang} />
+                  </div>
                   <div>
-                    <p className="text-[13px] font-semibold uppercase tracking-[0.18em] text-o-wine">
+                    <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-o-wine sm:text-[13px]">
                       {String(districts.findIndex((x) => x.slug === d.slug) + 1).padStart(2, "0")} / {String(districts.length).padStart(2, "0")}
                     </p>
-                    <h3 className="mt-2 text-[28px] font-bold leading-[1.05] tracking-[-0.02em] sm:text-[32px]">{tl(d.name, d.nameEn)}</h3>
-                    <p className="mt-4 line-clamp-4 text-[15px] leading-relaxed text-o-sea/70">{plain(tl(d.description, d.descriptionEn))}</p>
-                    <div className="mt-5 flex gap-8">
+                    <h3 className="mt-1.5 text-[23px] font-bold leading-[1.05] tracking-[-0.02em] sm:mt-2 sm:text-[32px]">{tl(d.name, d.nameEn)}</h3>
+                    {/* Цифри на телефоні — одним рядком під назвою */}
+                    <p className="mt-2.5 text-[13.5px] leading-snug text-o-sea/60 sm:hidden">
+                      <span className="text-[16px] font-extrabold text-o-wine">{st?.places ?? 0}</span> {t("places")}
+                      <span className="mx-1.5 text-o-sea/30" aria-hidden="true">·</span>
+                      <span className="text-[16px] font-extrabold text-o-wine">{st?.cities ?? 0}</span> {t("settlements")}
+                    </p>
+                  </div>
+                  <div className="col-span-2 min-w-0 sm:col-span-1 sm:col-start-2">
+                    <p className="line-clamp-3 text-[14.5px] leading-relaxed text-o-sea/70 sm:line-clamp-4 sm:text-[15px]">{plain(tl(d.description, d.descriptionEn))}</p>
+                    <div className="mt-5 hidden gap-8 sm:flex">
                       <div><span className="block text-[26px] font-extrabold leading-none text-o-wine">{st?.places ?? 0}</span><span className="text-[14px] text-o-sea/60">{t("places")}</span></div>
                       <div><span className="block text-[26px] font-extrabold leading-none text-o-wine">{st?.cities ?? 0}</span><span className="text-[14px] text-o-sea/60">{t("settlements")}</span></div>
                     </div>
 
-                      {dCities.length > 0 && (
-                        <ul className="mt-6 flex flex-wrap gap-2">
-                          {dCities.slice(0, 6).map((c) => (
-                            <li key={c.id}>
-                              <Link to={`/napryamky/${c.slug}`} className="inline-flex items-center gap-1.5 rounded-full border border-o-sea/20 px-3 py-1.5 text-[13px] transition-colors hover:border-o-wine hover:text-o-wine">
-                                <MapPin className="h-3.5 w-3.5" aria-hidden="true" />{tl(c.name, c.nameEn)}
-                              </Link>
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    <PillLink to={`/raion/${d.slug}`} tone="wine" className="mt-6">{t("openDistrict")}</PillLink>
+                    {/* Міста — лише з sm; на телефоні їх немає (вони є на сторінці району) */}
+                    {dCities.length > 0 && (
+                      <ul className="mt-6 hidden flex-wrap gap-2 sm:flex">
+                        {dCities.slice(0, 6).map((c) => (
+                          <li key={c.id}>
+                            <Link to={`/napryamky/${c.slug}`} className="inline-flex items-center gap-1.5 rounded-full border border-o-sea/20 px-3 py-1.5 text-[13px] transition-colors hover:border-o-wine hover:text-o-wine">
+                              <MapPin className="h-3.5 w-3.5" aria-hidden="true" />{tl(c.name, c.nameEn)}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    <PillLink to={`/raion/${d.slug}`} tone="wine" className="mt-5 sm:mt-6">{t("openDistrict")}</PillLink>
                   </div>
                 </motion.div>
               )}

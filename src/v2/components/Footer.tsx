@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { Facebook, Instagram, Mail } from "lucide-react";
+import { ArrowUp, Facebook, Instagram, Mail } from "lucide-react";
+import { useReducedMotion } from "framer-motion";
 import { useV2 } from "@/v2/i18n";
 import { Shield } from "./ui";
 
@@ -96,6 +97,7 @@ function Waves() {
 
 export function Footer() {
   const { t } = useV2();
+  const reduce = useReducedMotion();
   const cols = [
     {
       title: t("footerTravel"),
@@ -121,14 +123,18 @@ export function Footer() {
     <footer className="bg-o-sand pt-2">
       <Waves />
       <div className="bg-o-wine text-o-sand">
-        <div className="mx-auto max-w-[1280px] px-5 pb-5 pt-5 sm:px-10 sm:pt-6">
+        {/* Знизу на телефоні — місце під плаваючий док: винне тло йде під нього,
+            а останні рядки не ховаються за ним. */}
+        <div className="mx-auto max-w-[1280px] px-5 pb-[calc(104px+env(safe-area-inset-bottom))] pt-5 sm:px-10 sm:pt-6 lg:pb-5">
           <div className="grid grid-cols-2 gap-x-6 gap-y-6 lg:grid-cols-[1.4fr_1fr_1fr_1.1fr] lg:gap-10">
             <div className="col-span-2 lg:col-span-1">
               <div className="flex items-center gap-3">
                 <Shield className="h-9 w-7 text-o-sun" />
-                <span className="wordmark text-[20px] leading-none">Одещина</span>
+                <span className="wordmark hidden text-[20px] leading-none lg:inline">Одещина</span>
+                {/* Телефон і планшет: замість слова-логотипа (воно є великим контуром нижче) — підпис поруч із гербом */}
+                <p className="max-w-[260px] text-[13.5px] leading-snug text-o-sand/75 lg:hidden">{t("footerLead")}</p>
               </div>
-              <p className="mt-3 max-w-[300px] text-[13.5px] leading-relaxed text-o-sand/75">{t("footerLead")}</p>
+              <p className="mt-3 hidden max-w-[300px] text-[13.5px] leading-relaxed text-o-sand/75 lg:block">{t("footerLead")}</p>
               <div className="mt-4 flex gap-2">
                 {SOCIALS.map(({ label, href, Icon }) => (
                   <a key={label} href={href} target="_blank" rel="noreferrer" aria-label={label} className="flex h-9 w-9 items-center justify-center rounded-full ring-1 ring-o-sand/30 transition-colors hover:bg-o-sand hover:text-o-wine hover:ring-o-sand">
@@ -152,7 +158,7 @@ export function Footer() {
               <a href="mailto:tourism@od.gov.ua" className="mt-3 inline-flex items-center gap-2 text-[14px] text-o-sand/85 hover:text-o-sun">
                 <Mail className="h-4 w-4" aria-hidden="true" /> tourism@od.gov.ua
               </a>
-              <p className="mt-4 max-w-[300px] text-[13px] leading-relaxed text-o-sand/70">
+              <p className="mt-4 hidden max-w-[300px] text-[13px] leading-relaxed text-o-sand/70 lg:block">
                 {t("footerDept")}
               </p>
             </div>
@@ -171,8 +177,18 @@ export function Footer() {
 
           <div className="mt-3 flex flex-col gap-1.5 border-t border-o-sand/15 pt-4 text-[12px] text-o-sand/60 sm:flex-row sm:justify-between">
             <span>© {new Date().getFullYear()} Одеська область</span>
-            <span>{t("footerMap")}</span>
+            {/* ПК: праворуч — «Нагору» (на телефоні є док, а рядок там у стовпчик) */}
+            <button
+              type="button"
+              onClick={() => window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" })}
+              className="group hidden items-center gap-1.5 transition-colors hover:text-o-sun lg:inline-flex"
+            >
+              {t("toTop")}
+              <ArrowUp className="h-3.5 w-3.5 transition-transform duration-300 group-hover:-translate-y-0.5" aria-hidden="true" />
+            </button>
           </div>
+          {/* Телефон і планшет: офіційний підпис — дрібно, разом із © */}
+          <p className="mt-3 max-w-[420px] text-[11.5px] leading-relaxed text-o-sand/50 lg:hidden">{t("footerDept")}</p>
         </div>
       </div>
     </footer>

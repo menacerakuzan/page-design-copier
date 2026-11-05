@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { AnimatePresence, motion, useInView, useReducedMotion } from "framer-motion";
-import { ArrowUpRight, BadgeCheck, Heart, Navigation, Sparkles } from "lucide-react";
+import { ArrowUpRight, BadgeCheck, Heart, Navigation, Sparkles, type LucideIcon } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useBasket } from "@/lib/basketContext";
 import { loadGuides } from "@/lib/guidesRepository";
@@ -46,49 +46,129 @@ function ChatDemo() {
   );
 }
 
-const Corner = () => (
-  <span className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full border border-current transition-all duration-300 group-hover:rotate-45 group-hover:border-o-sand group-hover:bg-o-sand group-hover:text-o-sea" aria-hidden="true">
+/** Кругла стрілка в куті картки. light — для світлих карток (при наведенні стає винною). */
+const Corner = ({ light = false }: { light?: boolean }) => (
+  <span
+    className={`absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full border border-current transition-all duration-300 group-hover:rotate-45 ${
+      light ? "group-hover:border-o-wine group-hover:bg-o-wine group-hover:text-o-sand" : "group-hover:border-o-sand group-hover:bg-o-sand group-hover:text-o-sea"
+    }`}
+    aria-hidden="true"
+  >
     <ArrowUpRight className="h-[18px] w-[18px]" />
   </span>
 );
 
+/** 1 гід · 2 гіди · 5 гідів (англ. guide/guides). */
+const guidesWord = (n: number, en: boolean) => {
+  if (en) return n === 1 ? "guide" : "guides";
+  const m10 = n % 10;
+  const m100 = n % 100;
+  if (m10 === 1 && m100 !== 11) return "гід";
+  if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return "гіди";
+  return "гідів";
+};
+
+/** Рядок сервісу на телефоні: значок · назва й опис · стрілка. */
+function ServiceRow({ to, Icon, title, desc, iconCls, extra }: { to: string; Icon: LucideIcon; title: string; desc: string; iconCls: string; extra?: ReactNode }) {
+  return (
+    <li>
+      <Link to={to} className="group flex items-center gap-4 px-4 py-3.5 transition-colors active:bg-o-sand2/60">
+        <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${iconCls}`}>
+          <Icon className="h-5 w-5" aria-hidden="true" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="flex items-center gap-2 text-[15.5px] font-bold leading-tight">
+            {title}
+            {extra}
+          </span>
+          <span className="mt-0.5 block truncate text-[13px] text-o-sea/60">{desc}</span>
+        </span>
+        <ArrowUpRight className="h-5 w-5 shrink-0 text-o-wine/70 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden="true" />
+      </Link>
+    </li>
+  );
+}
+
 export function Toolkit() {
-  const { t } = useV2();
+  const { t, list, lang } = useV2();
   const { count } = useBasket();
   const pauseRef = usePauseOffscreen<HTMLElement>();
   const { data: guides } = useQuery({ queryKey: ["guides-published"], queryFn: () => loadGuides(true) });
+  const en = lang === "en";
+  const prompts = list("chips").slice(0, 4);
+  const guidesLine = guides?.length ? `${guides.length} ${guidesWord(guides.length, en)} ${en ? "in the registry" : "у реєстрі"}` : "";
 
   return (
-    <section ref={pauseRef} aria-labelledby="tools-title" className="relative isolate overflow-hidden py-16 sm:py-20">
+    <section ref={pauseRef} aria-labelledby="tools-title" className="relative isolate overflow-hidden py-12 sm:py-20">
       <ScatterBackdrop />
       <div className="mx-auto max-w-[1280px] px-5 sm:px-10">
         <SectionHead id="tools-title" inline kicker={t("toolsKicker")} line1={t("toolsTitle1")} line2={t("toolsTitle2")} />
 
-        <div className="mt-8 grid gap-3.5 md:grid-cols-2 lg:grid-cols-4 lg:grid-rows-[188px_188px]">
-          {/* AI-гід */}
+        <div className="mt-6 grid grid-cols-[minmax(0,1fr)] gap-3.5 sm:mt-8 md:grid-cols-2 lg:grid-cols-4 lg:grid-rows-[212px_212px]">
+          {/* AI-гід. Уся картка веде в чат, а підказки-питання — у чат одразу з цим питанням. */}
           <Reveal className="md:col-span-2 lg:row-span-2">
-            <Link to="/asystent" className="grain group relative flex h-full min-h-[330px] flex-col overflow-hidden rounded-[18px] bg-o-wine p-5 text-o-sand sm:p-6">
+            <div className="grain group relative flex h-full flex-col overflow-hidden rounded-[18px] bg-o-wine p-5 text-o-sand sm:p-6 lg:min-h-[330px]">
               <Corner />
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-o-sun text-o-winedeep"><Sparkles className="h-[18px] w-[18px]" aria-hidden="true" /></span>
+              {/* Невидиме посилання на всю картку; підказки-питання лежать над ним (!z-10 — бо .grain
+                  ставить усім дітям z-index: 1 сильнішим селектором) */}
+              <Link to="/asystent" aria-label={t("aiTitle")} className="absolute inset-0 z-[2] rounded-[18px]" />
               <h3 className="mt-4 max-w-[380px] text-[23px] font-bold leading-[1.05] tracking-[-0.02em] sm:text-[26px]">{t("aiTitle")}</h3>
               <p className="mt-2 max-w-[380px] text-[14px] text-o-sand/75">{t("aiDesc")}</p>
+
+              <p className="mt-4 text-[12px] font-semibold uppercase tracking-[0.12em] text-o-sun">{t("aiAsk")}</p>
+              <ul className="no-scrollbar relative !z-10 -mx-5 mt-2 flex shrink-0 gap-2 overflow-x-auto px-5 sm:mx-0 sm:flex-wrap sm:px-0">
+                {prompts.map((q) => (
+                  <li key={q} className="shrink-0">
+                    <Link to={`/asystent?q=${encodeURIComponent(q)}`} className="inline-flex rounded-full bg-o-sand/[0.12] px-3.5 py-1.5 text-[13px] font-medium ring-1 ring-o-sand/20 transition-colors hover:bg-o-sand hover:text-o-winedeep">
+                      {q}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+
               <div className="mt-auto pt-4"><ChatDemo /></div>
               <span className="mt-3 inline-flex shrink-0 items-center gap-2 self-start rounded-full bg-o-sand px-4 py-2 text-[13.5px] font-semibold text-o-winedeep transition-colors group-hover:bg-o-sun">{t("aiCta")}</span>
-            </Link>
+            </div>
+          </Reveal>
+
+          {/* Телефон: решта сервісів — одним світлим списком замість трьох великих карток */}
+          <Reveal delay={0.08} className="md:hidden">
+            <ul className="divide-y divide-o-sea/[0.08] overflow-hidden rounded-[18px] bg-o-shell ring-1 ring-o-sea/10">
+              <ServiceRow
+                to="/koshyk"
+                Icon={Heart}
+                iconCls="bg-o-sun/25 text-o-wine [&>svg]:fill-o-wine"
+                title={t("tripTitle")}
+                desc={t("tripDesc")}
+                extra={count > 0 ? <span className="rounded-full bg-o-wine px-2 py-0.5 text-[11px] font-bold text-o-sand">{count}</span> : undefined}
+              />
+              <ServiceRow to="/poblizu" Icon={Navigation} iconCls="bg-o-wine/10 text-o-wine" title={t("nearbyTitle")} desc={t("nearbyDesc")} />
+              <ServiceRow to="/hidy" Icon={BadgeCheck} iconCls="bg-o-wine/10 text-o-wine" title={t("guidesTitle")} desc={guidesLine || t("guidesDesc")} />
+            </ul>
           </Reveal>
 
           {/* Мій маршрут */}
-          <Reveal delay={0.08} className="lg:col-span-2">
+          <Reveal delay={0.08} className="hidden md:block lg:col-span-2">
             <Link to="/koshyk" className="group relative flex h-full min-h-[170px] overflow-hidden rounded-[18px] bg-o-sun p-5 text-o-deep">
               <Corner />
               <div className="relative z-10 flex flex-col">
                 <Heart className="h-6 w-6 fill-o-wine text-o-wine" aria-hidden="true" />
                 <h3 className="mt-3 text-[19px] font-bold leading-none tracking-[-0.015em]">{t("tripTitle")}</h3>
                 <p className="mt-2 max-w-[300px] text-[14px] text-o-deep/70">{t("tripDesc")}</p>
-                <p className="mt-auto pt-4 text-[15px] font-semibold"><span className="text-[26px] font-extrabold leading-none">{count}</span> {t("tripCount")}</p>
+                {/* Поки маршрут порожній — запрошення, а не «0» */}
+                <p className="mt-auto pt-4 text-[15px] font-semibold">
+                  {count > 0 ? (
+                    <>
+                      <span className="text-[26px] font-extrabold leading-none">{count}</span> {t("tripCount")}
+                    </>
+                  ) : (
+                    t("tripFirst")
+                  )}
+                </p>
               </div>
               {/* Пунктирний маршрут з трьома зупинками */}
-              <svg viewBox="0 0 220 160" className="pointer-events-none absolute bottom-2 right-3 hidden w-[180px] sm:block text-o-deep/70 transition-transform duration-700 group-hover:-translate-y-1" aria-hidden="true">
+              <svg viewBox="0 0 220 160" className="pointer-events-none absolute bottom-2 right-3 hidden w-[180px] text-o-deep/70 transition-transform duration-700 group-hover:-translate-y-1 sm:block" aria-hidden="true">
                 <path d="M20 140 C 60 60, 120 150, 150 80 S 200 30, 205 20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeDasharray="1 9" strokeLinecap="round" />
                 <circle cx="20" cy="140" r="8" fill="#fff2e8" stroke="currentColor" strokeWidth="2.5" />
                 <circle cx="150" cy="80" r="8" fill="#fff2e8" stroke="currentColor" strokeWidth="2.5" />
@@ -97,29 +177,29 @@ export function Toolkit() {
             </Link>
           </Reveal>
 
-          {/* Поблизу */}
-          <Reveal delay={0.14}>
-            <Link to="/poblizu" className="group relative flex h-full min-h-[170px] flex-col overflow-hidden rounded-[18px] bg-o-sea p-5 text-o-sand">
-              <Corner />
+          {/* Поблизу — світла картка з винним «радаром» (замість важкої темно-синьої) */}
+          <Reveal delay={0.14} className="hidden md:block">
+            <Link to="/poblizu" className="group relative flex h-full min-h-[170px] flex-col overflow-hidden rounded-[18px] bg-o-shell p-5 ring-1 ring-o-sea/10">
+              <Corner light />
               <div className="absolute -bottom-10 -right-10 h-36 w-36" aria-hidden="true">
-                <span className="ping-soft absolute inset-0 rounded-full border border-o-sun/60" />
-                <span className="ping-soft absolute inset-0 rounded-full border border-o-sun/60 [animation-delay:1.3s]" />
-                <span className="absolute left-1/2 top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-o-sun shadow-[0_0_0_6px_rgba(223,155,59,0.25)]" />
+                <span className="ping-soft absolute inset-0 rounded-full border border-o-wine/40" />
+                <span className="ping-soft absolute inset-0 rounded-full border border-o-wine/40 [animation-delay:1.3s]" />
+                <span className="absolute left-1/2 top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-o-wine shadow-[0_0_0_6px_rgba(159,31,71,0.15)]" />
               </div>
-              <Navigation className="h-6 w-6 text-o-sun" aria-hidden="true" />
+              <Navigation className="h-6 w-6 text-o-wine" aria-hidden="true" />
               <h3 className="mt-3 text-[19px] font-bold leading-none">{t("nearbyTitle")}</h3>
-              <p className="mt-2 max-w-[200px] text-[14px] text-o-sand/70">{t("nearbyDesc")}</p>
+              <p className="mt-2 max-w-[200px] text-[14px] text-o-sea/65">{t("nearbyDesc")}</p>
             </Link>
           </Reveal>
 
           {/* Гіди */}
-          <Reveal delay={0.2}>
+          <Reveal delay={0.2} className="hidden md:block">
             <Link to="/hidy" className="group relative flex h-full min-h-[170px] flex-col overflow-hidden rounded-[18px] bg-o-shell p-5 ring-1 ring-o-sea/10">
-              <Corner />
+              <Corner light />
               <BadgeCheck className="h-6 w-6 text-o-wine" aria-hidden="true" />
               <h3 className="mt-3 text-[19px] font-bold leading-none">{t("guidesTitle")}</h3>
               <p className="mt-2 text-[14px] text-o-sea/65">{t("guidesDesc")}</p>
-              <p className="mt-auto text-[28px] font-extrabold leading-none text-o-wine">{guides?.length ?? "—"}</p>
+              {guidesLine && <p className="mt-auto pt-3 text-[14px] font-semibold text-o-wine">{guidesLine}</p>}
             </Link>
           </Reveal>
         </div>

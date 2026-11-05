@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Img } from "@/components/Img";
 import { EASE, SectionHead } from "@/v2/components/ui";
 import type { AfishaData } from "./useAfisha";
-import { DayPills, ShowRow } from "./parts";
+import { DayPills, ShowRow, ShowTicket } from "./parts";
 
 const ROWS = 5;
 
@@ -31,19 +31,27 @@ export function AfPanel({ a }: { a: AfishaData }) {
             <div className="min-w-0">
               <DayPills a={a} value={day} onChange={(v) => { setDay(v); setHover(0); }} />
               <AnimatePresence mode="wait">
-                <motion.ul
+                <motion.div
                   key={day}
                   role="tabpanel"
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -6 }}
                   transition={{ duration: 0.3, ease: EASE }}
-                  className="mt-5 border-t border-o-sand/15"
                 >
-                  {shows.slice(0, ROWS).map((s, i) => (
-                    <ShowRow key={s.key} a={a} s={s} withDate={day < 0} onHover={() => setHover(i)} />
-                  ))}
-                </motion.ul>
+                  {/* Телефон і планшет: кожна вистава — квиток із фото */}
+                  <ul className="mt-5 grid gap-3 sm:grid-cols-2 lg:hidden">
+                    {shows.slice(0, ROWS).map((s) => (
+                      <ShowTicket key={s.key} a={a} s={s} withDate={day < 0} />
+                    ))}
+                  </ul>
+                  {/* Десктоп: список рядків, постер праворуч */}
+                  <ul className="mt-5 hidden border-t border-o-sand/15 lg:block">
+                    {shows.slice(0, ROWS).map((s, i) => (
+                      <ShowRow key={s.key} a={a} s={s} withDate={day < 0} onHover={() => setHover(i)} />
+                    ))}
+                  </ul>
+                </motion.div>
               </AnimatePresence>
             </div>
 

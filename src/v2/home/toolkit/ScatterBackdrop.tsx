@@ -20,40 +20,55 @@ const COLORS = ["#9f1f47", "#df9b3b", "#002f5e"];
 // Заливка для сердечок і зірочок, решта — контуром.
 const FILLED: Shape[] = ["sparkle", "heart"];
 
+/**
+ * Значки ставимо лише там, де їх видно: у полях ліворуч і праворуч, смужкою
+ * над заголовком і під картками (усе, що під картками, однаково сховане).
+ * Верх і низ — у пікселях від краю, бо висота блоку різна на телефоні й ПК.
+ */
+type Spot = { x: number; top?: string; bottom?: string };
+function spots(rnd: () => number): Spot[] {
+  const out: Spot[] = [];
+  const side = (x0: number, x1: number, n: number) => {
+    for (let i = 0; i < n; i++) out.push({ x: x0 + rnd() * (x1 - x0), top: `${4 + (i + 0.2 + rnd() * 0.6) * (88 / n)}%` });
+  };
+  const strip = (edge: "top" | "bottom", n: number) => {
+    for (let i = 0; i < n; i++) {
+      const x = 9 + (i + 0.15 + rnd() * 0.7) * (82 / n);
+      const px = `${(edge === "top" ? 12 : 8) + rnd() * (edge === "top" ? 46 : 34)}px`;
+      out.push(edge === "top" ? { x, top: px } : { x, bottom: px });
+    }
+  };
+  side(0.5, 6.5, 9); // поле ліворуч
+  side(93.5, 99.5, 9); // поле праворуч
+  strip("top", 7);
+  strip("bottom", 7);
+  return out;
+}
+
 export function ScatterBackdrop() {
   const items = useMemo(() => {
     let seed = 11;
     const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
     const kinds: Shape[] = ["sparkle", "heart", "pin", "check", "ring", "plus", "sparkle", "heart", "pin"];
-    // Рівномірно по сітці 8×5 з випадковим зсувом — щоб не злипалось.
-    const out = [];
-    for (let row = 0; row < 5; row++) {
-      for (let col = 0; col < 8; col++) {
-        if (rnd() < 0.18) continue;
-        const kind = kinds[Math.floor(rnd() * kinds.length)];
-        out.push({
-          kind,
-          x: (col + 0.15 + rnd() * 0.7) * (100 / 8),
-          y: (row + 0.15 + rnd() * 0.7) * (100 / 5),
-          size: 12 + rnd() * 16,
-          rot: -25 + rnd() * 50,
-          color: COLORS[Math.floor(rnd() * COLORS.length)],
-          op: 0.16 + rnd() * 0.14,
-          dur: 5 + rnd() * 4,
-          delay: -rnd() * 6,
-        });
-      }
-    }
-    return out;
+    return spots(rnd).map((sp) => ({
+      ...sp,
+      kind: kinds[Math.floor(rnd() * kinds.length)],
+      size: 13 + rnd() * 14,
+      rot: -25 + rnd() * 50,
+      color: COLORS[Math.floor(rnd() * COLORS.length)],
+      op: 0.16 + rnd() * 0.14,
+      dur: 5 + rnd() * 4,
+      delay: -rnd() * 6,
+    }));
   }, []);
 
-  const fade = "linear-gradient(to bottom, transparent 0%, #000 10%, #000 90%, transparent 100%)";
+  const fade = "linear-gradient(to bottom, transparent 0%, #000 6%, #000 94%, transparent 100%)";
   return (
     <div className="pointer-events-none absolute inset-0 -z-10" aria-hidden="true" style={{ maskImage: fade, WebkitMaskImage: fade }}>
       {items.map((it, i) => {
         const filled = FILLED.includes(it.kind);
         return (
-          <span key={i} className="float-soft absolute" style={{ left: `${it.x}%`, top: `${it.y}%`, animationDuration: `${it.dur}s`, animationDelay: `${it.delay}s` }}>
+          <span key={i} className="float-soft absolute" style={{ left: `${it.x}%`, top: it.top, bottom: it.bottom, animationDuration: `${it.dur}s`, animationDelay: `${it.delay}s` }}>
             <svg
               viewBox="0 0 24 24"
               width={it.size}

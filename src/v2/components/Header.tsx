@@ -1,7 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { Heart, Home, Map, Menu, Route as RouteIcon, Search, Sparkles, X } from "lucide-react";
+import {
+  Heart,
+  Home,
+  Map,
+  Menu,
+  Route as RouteIcon,
+  Search,
+  Sparkles,
+  X,
+} from "lucide-react";
 import { useBasket } from "@/lib/basketContext";
 import { useDialogA11y } from "@/hooks/useDialogA11y";
 import { useV2 } from "@/v2/i18n";
@@ -20,7 +29,11 @@ export const NAV = [
 export function LangSwitch({ dark }: { dark: boolean }) {
   const { lang, setLang, t } = useV2();
   return (
-    <div role="group" aria-label={t("lang")} className={`flex rounded-full p-1 text-[13px] font-semibold ${dark ? "bg-o-sand/15" : "bg-o-sea/[0.07]"}`}>
+    <div
+      role="group"
+      aria-label={t("lang")}
+      className={`flex rounded-full p-1 text-[13px] font-semibold ${dark ? "bg-o-sand/15" : "bg-o-sea/[0.07]"}`}
+    >
       {(["uk", "en"] as const).map((l) => (
         <button
           key={l}
@@ -41,7 +54,9 @@ export function LangSwitch({ dark }: { dark: boolean }) {
  * пісочною «пігулкою» з розмиттям фону. На мобільному — лого + пошук + меню
  * (основна навігація — у плаваючому доку знизу).
  */
-export function Header({ revealAfterHero = false }: {
+export function Header({
+  revealAfterHero = false,
+}: {
   /** Над першим екраном є власна шапка-«бровь» — ця з'являється лише після нього. */
   revealAfterHero?: boolean;
 }) {
@@ -49,6 +64,8 @@ export function Header({ revealAfterHero = false }: {
   const { count } = useBasket();
   const [scrolled, setScrolled] = useState(false);
   const [past, setPast] = useState(!revealAfterHero);
+  // Телефон: при гортанні вниз шапка ховається (лишається лише док), при гортанні вгору — повертається.
+  const [tucked, setTucked] = useState(false);
   const [menu, setMenu] = useState(false);
   const [search, setSearch] = useState(false);
   const headerRef = useRef<HTMLElement>(null);
@@ -57,13 +74,21 @@ export function Header({ revealAfterHero = false }: {
   useEffect(() => {
     const el = headerRef.current;
     if (!el) return;
-    if (past) el.removeAttribute("inert"); else el.setAttribute("inert", "");
+    if (past) el.removeAttribute("inert");
+    else el.setAttribute("inert", "");
   }, [past]);
 
   useEffect(() => {
+    const phone = window.matchMedia("(max-width: 1023px)");
+    let last = window.scrollY;
     const onScroll = () => {
-      setScrolled(window.scrollY > 40);
-      setPast(!revealAfterHero || window.scrollY > window.innerHeight * 0.8);
+      const y = window.scrollY;
+      setScrolled(y > 40);
+      setPast(!revealAfterHero || y > window.innerHeight * 0.8);
+      // Невеликий поріг, щоб шапка не смикалась від тремтіння пальця.
+      if (Math.abs(y - last) < 8) return;
+      setTucked(phone.matches && y > last && y > window.innerHeight);
+      last = y;
     };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -79,7 +104,8 @@ export function Header({ revealAfterHero = false }: {
     <>
       <header
         ref={headerRef}
-        className={`fixed inset-x-0 top-0 z-50 px-3 pt-3 transition-[transform,opacity] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] sm:px-5 sm:pt-4 ${past ? "" : "pointer-events-none -translate-y-[140%] opacity-0"}`}
+        className={`fixed inset-x-0 top-0 z-50 px-3 pt-3 transition-[transform,opacity] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] sm:px-5 sm:pt-4 ${past ? (tucked ? "-translate-y-[140%]" : "") : "pointer-events-none -translate-y-[140%] opacity-0"}`}
+        onFocusCapture={() => setTucked(false)}
       >
         <div
           className={`mx-auto flex max-w-[1280px] items-center justify-between gap-4 rounded-full py-2 pl-5 pr-2 transition-all duration-500 ${
@@ -114,17 +140,23 @@ export function Header({ revealAfterHero = false }: {
             >
               <Search className="h-[19px] w-[19px]" aria-hidden="true" />
             </button>
-            <div className="hidden sm:block"><LangSwitch dark={dark} /></div>
+            <div className="hidden sm:block">
+              <LangSwitch dark={dark} />
+            </div>
             <Link
               to="/koshyk"
               className={`relative hidden items-center gap-2 rounded-full px-4 py-2.5 text-[14px] font-semibold transition-colors lg:inline-flex ${
-                dark ? "bg-o-sand text-o-sea hover:bg-o-sun" : "bg-o-sea text-o-sand hover:bg-o-wine"
+                dark
+                  ? "bg-o-sand text-o-sea hover:bg-o-sun"
+                  : "bg-o-sea text-o-sand hover:bg-o-wine"
               }`}
             >
               <Heart className="h-4 w-4" aria-hidden="true" />
               {t("myTrip")}
               {count > 0 && (
-                <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-o-wine px-1 text-[11px] text-o-sand">{count}</span>
+                <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-o-wine px-1 text-[11px] text-o-sand">
+                  {count}
+                </span>
               )}
             </Link>
             <button
@@ -140,8 +172,12 @@ export function Header({ revealAfterHero = false }: {
         </div>
       </header>
 
-      <AnimatePresence>{menu && <MobileMenu onClose={closeMenu} />}</AnimatePresence>
-      <AnimatePresence>{search && <SearchOverlay onClose={closeSearch} />}</AnimatePresence>
+      <AnimatePresence>
+        {menu && <MobileMenu onClose={closeMenu} />}
+      </AnimatePresence>
+      <AnimatePresence>
+        {search && <SearchOverlay onClose={closeSearch} />}
+      </AnimatePresence>
     </>
   );
 }
@@ -168,17 +204,35 @@ export function MobileMenu({ onClose }: { onClose: () => void }) {
     >
       <div className="flex items-center justify-between">
         <Logo />
-        <button type="button" onClick={onClose} aria-label={t("close")} className="flex h-11 w-11 items-center justify-center rounded-full bg-o-sand/15">
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label={t("close")}
+          className="flex h-11 w-11 items-center justify-center rounded-full bg-o-sand/15"
+        >
           <X className="h-5 w-5" aria-hidden="true" />
         </button>
       </div>
       <nav aria-label={t("menu")} className="mt-10">
         <ul className="space-y-1">
           {[...NAV, ...extra].map((n, i) => (
-            <motion.li key={n.to} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.15 + i * 0.04, ease: EASE, duration: 0.5 }}>
-              <Link to={n.to} onClick={onClose} className="group flex items-baseline gap-4 border-b border-o-sand/10 py-3 text-[30px] font-bold leading-tight">
-                <span className="w-6 text-[12px] font-medium text-o-sun">{String(i + 1).padStart(2, "0")}</span>
-                <span className="transition-colors group-hover:text-o-sun">{t(n.key)}</span>
+            <motion.li
+              key={n.to}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.15 + i * 0.04, ease: EASE, duration: 0.5 }}
+            >
+              <Link
+                to={n.to}
+                onClick={onClose}
+                className="group flex items-baseline gap-4 border-b border-o-sand/10 py-3 text-[30px] font-bold leading-tight"
+              >
+                <span className="w-6 text-[12px] font-medium text-o-sun">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                <span className="transition-colors group-hover:text-o-sun">
+                  {t(n.key)}
+                </span>
               </Link>
             </motion.li>
           ))}
@@ -216,7 +270,12 @@ export function SearchOverlay({ onClose }: { onClose: () => void }) {
       >
         <div className="mb-4 flex items-center justify-between text-o-sand">
           <p className="text-[14px] opacity-80">{t("searchHint")}</p>
-          <button type="button" onClick={onClose} aria-label={t("close")} className="flex h-10 w-10 items-center justify-center rounded-full bg-o-sand/15">
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label={t("close")}
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-o-sand/15"
+          >
             <X className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
@@ -238,8 +297,11 @@ export function MobileDock() {
     { to: "/koshyk", key: "myTrip", Icon: Heart, badge: count },
   ] as const;
   return (
-    <nav aria-label={t("menu")} className="fixed inset-x-0 bottom-0 z-40 px-3 pb-[calc(10px+env(safe-area-inset-bottom))] lg:hidden">
-      <ul className="mx-auto flex max-w-[440px] items-center justify-between rounded-[26px] bg-o-sea/95 px-2 py-2 text-o-sand shadow-[0_18px_50px_-15px_rgba(0,20,50,0.7)] backdrop-blur-xl">
+    <nav
+      aria-label={t("menu")}
+      className="fixed inset-x-0 bottom-0 z-40 px-3 pb-[calc(10px+env(safe-area-inset-bottom))] lg:hidden"
+    >
+      <ul className="mx-auto flex max-w-[440px] items-center justify-between rounded-[26px] bg-o-sand/95 px-2 py-2 text-o-sea shadow-[0_16px_40px_-14px_rgba(0,30,70,0.45)] ring-1 ring-o-sea/10 backdrop-blur-xl">
         {items.map(({ to, key, Icon, ...rest }) => (
           <li key={to} className="flex-1">
             <NavLink
@@ -247,20 +309,38 @@ export function MobileDock() {
               end={"end" in rest}
               className={({ isActive }) =>
                 `relative mx-auto flex flex-col items-center gap-1 rounded-2xl py-1.5 text-[10.5px] font-medium transition-colors ${
-                  "primary" in rest ? "" : isActive ? "text-o-sun" : "text-o-sand/75"
+                  "primary" in rest
+                    ? ""
+                    : isActive
+                      ? "text-o-wine"
+                      : "text-o-sea/60"
                 }`
               }
             >
-              {"primary" in rest ? (
-                <span className="-mt-1 flex h-11 w-11 items-center justify-center rounded-full bg-o-sun text-o-deep shadow-lg">
-                  <Icon className="h-5 w-5" aria-hidden="true" />
-                </span>
-              ) : (
-                <Icon className="h-[21px] w-[21px]" aria-hidden="true" />
-              )}
-              <span className={"primary" in rest ? "sr-only" : ""}>{t(key)}</span>
-              {"badge" in rest && rest.badge > 0 && (
-                <span className="absolute right-[18%] top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-o-wine px-1 text-[10px] text-o-sand">{rest.badge}</span>
+              {({ isActive }) => (
+                <>
+                  {"primary" in rest ? (
+                    <span className="-mt-1 flex h-11 w-11 items-center justify-center rounded-full bg-o-wine text-o-sand shadow-[0_8px_18px_-8px_rgba(159,31,71,0.9)]">
+                      <Icon className="h-5 w-5" aria-hidden="true" />
+                    </span>
+                  ) : (
+                    <Icon className="h-[21px] w-[21px]" aria-hidden="true" />
+                  )}
+                  <span className={"primary" in rest ? "sr-only" : ""}>
+                    {t(key)}
+                  </span>
+                  {!("primary" in rest) && isActive && (
+                    <span
+                      className="absolute -bottom-1 h-1 w-1 rounded-full bg-current"
+                      aria-hidden="true"
+                    />
+                  )}
+                  {"badge" in rest && rest.badge > 0 && (
+                    <span className="absolute right-[18%] top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-o-sun px-1 text-[10px] font-bold text-o-winedeep">
+                      {rest.badge}
+                    </span>
+                  )}
+                </>
               )}
             </NavLink>
           </li>

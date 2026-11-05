@@ -15,7 +15,10 @@ const ROUND =
  * Фонова музика (та сама пісня, що на старому сайті). Кнопка — рівне коло;
  * повзунок гучності виїжджає праворуч окремою «пігулкою», не деформуючи її.
  */
-export function MusicButton() {
+export function MusicButton({ slider = true }: {
+  /** false — без повзунка гучності (на телефоні гучність — кнопками самого телефона). */
+  slider?: boolean;
+}) {
   const { t } = useLang();
   const { hostRef, ready, unmuted, volume, toggle, onSlide, showQuiet } = useBackgroundMusic();
   return (
@@ -45,7 +48,7 @@ export function MusicButton() {
         )}
       </motion.button>
       <AnimatePresence initial={false}>
-        {unmuted && (
+        {slider && unmuted && (
           <motion.div
             initial={{ opacity: 0, x: -8 }}
             animate={{ opacity: 1, x: 0 }}

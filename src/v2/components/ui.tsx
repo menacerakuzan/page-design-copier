@@ -79,7 +79,8 @@ export function SectionHead({
   line1: string;
   line2: string;
   lead?: string;
-  action?: { to: string; label: string };
+  /** short — коротший підпис для телефона (там посилання стоїть поруч із кікером). */
+  action?: { to: string; label: string; short?: string };
   tone?: "light" | "dark";
   id?: string;
   /** Обидві частини заголовка в один рядок. */
@@ -92,6 +93,16 @@ export function SectionHead({
         <p className={`mb-3 flex items-center gap-3 text-[12px] font-semibold uppercase tracking-[0.18em] ${dark ? "text-o-sun" : "text-o-wine"}`}>
           <span className={`h-px w-8 ${dark ? "bg-o-sun" : "bg-o-wine"}`} aria-hidden="true" />
           {kicker}
+          {/* Телефон: замість великої кнопки під заголовком — коротке посилання праворуч */}
+          {action && (
+            <Link
+              to={action.to}
+              className={`-my-2 ml-auto inline-flex items-center gap-1 py-2 text-[13.5px] normal-case tracking-normal underline decoration-1 underline-offset-4 md:hidden ${dark ? "text-o-sand decoration-o-sun" : "text-o-sea decoration-o-wine/40"}`}
+            >
+              {action.short ?? action.label}
+              <ArrowUpRight className={`h-4 w-4 ${dark ? "text-o-sun" : "text-o-wine"}`} aria-hidden="true" />
+            </Link>
+          )}
         </p>
         <h2 id={id} className="text-[30px] font-bold leading-[1] tracking-[-0.02em] sm:text-[36px] lg:text-[44px]">
           {line1} <span className={`ital leading-[1.05] ${inline ? "" : "block"} ${dark ? "text-o-sun" : "text-o-wine"}`}>{line2}</span>
@@ -99,7 +110,7 @@ export function SectionHead({
         {lead && <p className={`mt-4 max-w-[520px] text-[15px] leading-relaxed ${dark ? "text-o-sand/75" : "text-o-sea/70"}`}>{lead}</p>}
       </Reveal>
       {action && (
-        <Reveal delay={0.1}>
+        <Reveal delay={0.1} className="hidden md:block">
           <PillLink to={action.to} tone={dark ? "sand" : "sea"}>{action.label}</PillLink>
         </Reveal>
       )}

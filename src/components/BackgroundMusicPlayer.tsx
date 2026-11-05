@@ -19,6 +19,7 @@ type YTPlayer = {
   setVolume: (v: number) => void;
   getVolume: () => number;
   seekTo: (s: number, allowSeekAhead: boolean) => void;
+  destroy?: () => void;
 };
 declare global {
   interface Window {
@@ -58,8 +59,17 @@ export function useBackgroundMusic() {
 
   useEffect(() => {
     let cancelled = false;
+    // YouTube-API ЗАМІНЮЄ переданий елемент на <iframe>. Якщо віддати йому
+    // div, яким керує React, то при знятті компонента (перехід на головну,
+    // де старий плеєр не показується) React не знаходить свій вузол і
+    // падає з removeChild — і зникає ВЕСЬ застосунок. Тому плеєр отримує
+    // окремий вкладений елемент, створений вручну, а не вузол React.
+    // Вузол-контейнер беремо одразу: під час прибирання React уже обнулить ref.
+    const host = hostRef.current;
     loadYouTubeApi().then(() => {
-      if (cancelled || !hostRef.current || !window.YT) return;
+      if (cancelled || !host || !window.YT) return;
+      const mount = document.createElement("div");
+      host.appendChild(mount);
       // НЕ відновлюємо "звук був увімкнений" автоматично — iOS Safari (і інші
       // мобільні браузери) блокують програмне unMute()/play() без ПРЯМОГО
       // кліку користувача в цьому конкретному завантаженні сторінки. При
@@ -70,7 +80,7 @@ export function useBackgroundMusic() {
       const savedVolume = Number(sessionStorage.getItem(STORAGE_VOLUME));
       const initialVolume = savedVolume > 0 && savedVolume <= 100 ? savedVolume : DEFAULT_VOLUME;
       sessionStorage.setItem(STORAGE_UNMUTED, "0");
-      playerRef.current = new window.YT.Player(hostRef.current, {
+      playerRef.current = new window.YT.Player(mount, {
         videoId: VIDEO_ID,
         playerVars: {
           autoplay: 1,
@@ -118,6 +128,14 @@ export function useBackgroundMusic() {
     return () => {
       cancelled = true;
       if (fadeRaf.current) cancelAnimationFrame(fadeRaf.current);
+      try {
+        playerRef.current?.destroy?.();
+      } catch {
+        /* плеєр міг ще не ініціалізуватись */
+      }
+      playerRef.current = null;
+      // Прибираємо все, що YouTube додав усередину (iframe замість mount).
+      host?.replaceChildren();
     };
   }, []);
 

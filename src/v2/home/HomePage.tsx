@@ -53,7 +53,7 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className="v2 pb-dock min-h-screen">
+    <div className="v2 min-h-screen">
       <a href="#v2-main" className="sr-only z-[70] rounded-full bg-o-sun px-5 py-3 font-semibold text-o-deep focus:not-sr-only focus:fixed focus:left-4 focus:top-4">
         {t("skip")}
       </a>

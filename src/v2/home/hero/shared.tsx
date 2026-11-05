@@ -60,9 +60,9 @@ export function PlayToggle({ playing, onToggle, className = "", labels }: {
 /**
  * Шапка-«бровь» зі старої головної: пісочна смуга, що звисає згори із
  * заокругленим низом, «ОДЕЩИНА» по центру й навігація з обох боків.
+ * На телефоні — лише «✦ ОДЕЩИНА ✦» (навігація там у доку знизу).
  */
 export function Brow() {
-  const { t } = useV2();
   const { t: old } = useLang();
   const { count } = useBasket();
   const reduce = useReducedMotion();
@@ -91,23 +91,11 @@ export function Brow() {
       className="relative z-20 mx-auto w-full max-w-[1400px] px-4 sm:px-6 lg:px-10"
     >
       <div className="rounded-b-[36px] bg-o-sand px-4 pb-2.5 pt-2.5 text-[#00376c] shadow-[0_8px_24px_-18px_rgba(0,47,94,0.35)] md:rounded-b-[48px] md:px-5 md:pb-3.5 md:pt-3.5 lg:px-8">
-        {/* Мобільний */}
-        <div className="md:hidden">
-          <div className="flex items-center justify-center">
-            <Link to="/" className="wordmark px-2 text-center text-[30px] leading-[0.95]">Одещина</Link>
-          </div>
-          <nav aria-label={old("mainNav")} className="mt-2 flex items-center justify-center gap-3 text-[13px] font-semibold leading-none">
-            {[
-              { to: "/districts", label: old("districts") },
-              { to: "/types", label: old("types") },
-              { to: "/hidy", label: old("guides") },
-            ].map((n) => (
-              <span key={n.to} className="flex items-center gap-3">
-                <span className="text-[13px]" aria-hidden="true">✦</span>
-                <Link to={n.to} className="transition-opacity hover:opacity-75">{n.label}</Link>
-              </span>
-            ))}
-          </nav>
+        {/* Мобільний: лише слово-логотип між зірочками — навігація є в доку знизу */}
+        <div className="flex items-center justify-center gap-3 md:hidden">
+          <span className="text-[14px] leading-none" aria-hidden="true">✦</span>
+          <Link to="/" className="wordmark text-center text-[30px] leading-[0.95]">Одещина</Link>
+          <span className="text-[14px] leading-none" aria-hidden="true">✦</span>
         </div>
 
         {/* Десктоп: три колонки */}

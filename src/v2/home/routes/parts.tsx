@@ -1,18 +1,16 @@
 import { motion, useReducedMotion } from "framer-motion";
-import { Clock, Footprints, MapPin, Route as RouteIcon } from "lucide-react";
+import { MapPin, Route as RouteIcon } from "lucide-react";
 import { TAG_ICON } from "./tagIcons";
-import { Img } from "@/components/Img";
-import type { Route } from "@/lib/routesRepository";
 import type { RoutesData } from "./useRoutesData";
 
 /**
- * Прикраса біля заголовка: складена паперова мапа-гармошка, по якій
- * малюється маршрут від старту до мітки, що підстрибує на фініші.
+ * Складена паперова мапа-гармошка біля кнопки «Відкрити маршрут»: по ній
+ * один раз малюється шлях від старту до мітки, що підстрибує на фініші.
  */
-export function FoldedMap() {
+export function FoldedMap({ className = "" }: { className?: string }) {
   const reduce = useReducedMotion();
   return (
-    <svg viewBox="0 0 260 170" className="pointer-events-none absolute right-[110px] top-[46px] hidden w-[190px] -rotate-3 lg:block" aria-hidden="true">
+    <svg viewBox="0 0 260 170" className={className} aria-hidden="true">
       {/* Три панелі гармошки */}
       <g stroke="#002f5e" strokeOpacity=".22" strokeWidth="1.2" strokeLinejoin="round">
         <path d="M10 34 90 14v130l-80 20z" fill="#fbebdc" />
@@ -50,10 +48,12 @@ export function FoldedMap() {
 
 
 
-/** Фільтри — компактні «таблетки» з маленькою іконкою; обрана — винна. */
+/** Фільтри — компактні «таблетки» з маленькою іконкою; обрана — винна.
+ *  Рядок гортається вбік, а прокрутка обрізає все за рамкою — тому знизу
+ *  є запас (pb-5 / -mb-4), щоб тінь обраної таблетки не зрізалась. */
 export function TagChips({ d, tags, value, onChange }: { d: RoutesData; tags: string[]; value: string | null; onChange: (v: string | null) => void }) {
   return (
-    <div className="no-scrollbar -mx-5 flex gap-1.5 overflow-x-auto px-5 py-1 sm:mx-0 sm:flex-wrap sm:px-0" role="group" aria-label={d.t("routesKicker")}>
+    <div className="no-scrollbar -mx-5 -mb-4 flex gap-1.5 overflow-x-auto px-5 pb-5 pt-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0" role="group" aria-label={d.t("routesKicker")}>
       {[null, ...tags].map((id) => {
         const Icon = id ? TAG_ICON[id] ?? MapPin : RouteIcon;
         const on = value === id;
@@ -73,52 +73,5 @@ export function TagChips({ d, tags, value, onChange }: { d: RoutesData; tags: st
         );
       })}
     </div>
-  );
-}
-
-/** Час · відстань · кількість зупинок — що є. */
-export function RouteMeta({ d, r, light = false }: { d: RoutesData; r: Route; light?: boolean }) {
-  const n = d.stopsOf(r).length;
-  const tone = light ? "text-o-sand/80" : "text-o-sea/60";
-  const icon = light ? "text-o-sun" : "text-o-wine";
-  return (
-    <span className={`flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] ${tone}`}>
-      {r.duration && <span className="inline-flex items-center gap-1.5"><Clock className={`h-3.5 w-3.5 ${icon}`} aria-hidden="true" />{r.duration}</span>}
-      {r.distance && <span className="inline-flex items-center gap-1.5"><Footprints className={`h-3.5 w-3.5 ${icon}`} aria-hidden="true" />{r.distance}</span>}
-      {n > 0 && <span className="inline-flex items-center gap-1.5"><MapPin className={`h-3.5 w-3.5 ${icon}`} aria-hidden="true" />{n} {d.stopsWord(n)}</span>}
-    </span>
-  );
-}
-
-/** Список маршрутів праворуч: більші фото, назва, час/відстань/зупинки. */
-export function RouteList({ d, list, current, onPick }: { d: RoutesData; list: Route[]; current?: Route; onPick: (id: string) => void }) {
-  return (
-    <ol className="flex flex-col gap-1.5">
-      {list.map((r) => {
-        const on = r.id === current?.id;
-        return (
-          <li key={r.id}>
-            <button
-              type="button"
-              onClick={() => onPick(r.id)}
-              aria-pressed={on}
-              className={`group relative flex w-full items-center gap-4 rounded-[18px] p-2 pr-4 text-left transition-colors ${on ? "bg-o-sand2" : "hover:bg-o-sand2/60"}`}
-            >
-              {/* Винна позначка обраного */}
-              <span className={`absolute -left-3 top-1/2 h-10 w-1 -translate-y-1/2 rounded-full bg-o-wine transition-all duration-300 ${on ? "opacity-100" : "scale-y-0 opacity-0"}`} aria-hidden="true" />
-              <span className={`relative h-[84px] w-[112px] shrink-0 overflow-hidden rounded-[14px] bg-o-sand2 transition-shadow ${on ? "shadow-[0_12px_24px_-14px_rgba(0,30,70,0.6)]" : ""}`}>
-                <Img src={r.imageUrl} w={300} alt="" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.06]" />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className={`line-clamp-2 text-[15.5px] font-bold leading-snug transition-colors ${on ? "text-o-wine" : "group-hover:text-o-wine"}`}>{d.tl(r.name, r.nameEn)}</span>
-                <span className="mt-1.5 block">
-                  <RouteMeta d={d} r={r} />
-                </span>
-              </span>
-            </button>
-          </li>
-        );
-      })}
-    </ol>
   );
 }

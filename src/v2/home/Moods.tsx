@@ -11,7 +11,7 @@ import { COLOR_STYLE, MOOD_COLOR, PHOTO_BRIGHTNESS } from "./moods/colors";
 import { DoodlesBackdrop } from "./moods/DoodlesBackdrop";
 
 /**
- * Види туризму: 8 квадратних фото — 2 ряди по 4 (на телефоні 4 ряди по 2).
+ * Види туризму: 8 квадратних фото — 2 ряди по 4 (на телефоні 4 ряди по 2, плитки 4:3 — нижчі).
  * Кожна плитка — колір палітри, фото лише тлом і лінійний малюнок виду.
  * Колонки трохи зсунуті «хвилею». Кожна плитка веде на свій вид туризму.
  */
@@ -41,7 +41,7 @@ export function Moods() {
   return (
     <section
       aria-labelledby="mood-title"
-      className="relative isolate overflow-hidden bg-o-sand py-16 sm:py-20"
+      className="relative isolate overflow-hidden bg-o-sand py-12 sm:py-20"
     >
       <DoodlesBackdrop />
       <div className="mx-auto max-w-[1280px] px-5 sm:px-10">
@@ -51,10 +51,10 @@ export function Moods() {
           line1={t("moodTitle1")}
           line2={t("moodTitle2")}
           inline
-          action={{ to: "/types", label: t("navTypes") }}
+          action={{ to: "/types", label: t("navTypes"), short: lang === "en" ? "All types" : "Усі види" }}
         />
 
-        <ul className="mx-auto mt-8 grid max-w-[1040px] grid-cols-2 gap-3 sm:mt-10 sm:gap-5 lg:grid-cols-4 lg:pb-5">
+        <ul className="mx-auto mt-6 grid max-w-[1040px] grid-cols-2 gap-3 sm:mt-10 sm:gap-5 lg:grid-cols-4 lg:pb-5">
           {items.map((it, i) => {
             const c = COLOR_STYLE[MOOD_COLOR[it.type] ?? "wine"];
             return (
@@ -62,14 +62,14 @@ export function Moods() {
                 {/* Легка «хвиля»: парні колонки трохи нижче. */}
                 <div
                   className={
-                    i % 2 === 1 ? "translate-y-3 lg:translate-y-5" : ""
+                    i % 2 === 1 ? "translate-y-2 sm:translate-y-3 lg:translate-y-5" : ""
                   }
                 >
                   {/* Зовнішній шар — підйом і тінь; внутрішній — обрізає фото по заокругленню
                       (clip-path тримає кути навіть під час руху й зі змішуванням фото). */}
                   <Link
                     to={`/types?type=${encodeURIComponent(it.type)}`}
-                    className="group relative block aspect-square rounded-[22px] shadow-[0_22px_40px_-26px_rgba(0,30,70,0.55)] transition-[transform,box-shadow] duration-500 ease-out hover:-translate-y-2 hover:shadow-[0_34px_50px_-26px_rgba(0,30,70,0.6)] focus-visible:-translate-y-2 sm:rounded-[24px]"
+                    className="group relative block aspect-[4/3] rounded-[22px] sm:aspect-square shadow-[0_22px_40px_-26px_rgba(0,30,70,0.55)] transition-[transform,box-shadow] duration-500 ease-out hover:-translate-y-2 hover:shadow-[0_34px_50px_-26px_rgba(0,30,70,0.6)] focus-visible:-translate-y-2 sm:rounded-[24px]"
                     style={{ color: c.ink }}
                   >
                     <span
@@ -91,16 +91,16 @@ export function Moods() {
                       {/* Малюнок виду туризму */}
                       <MoodArt
                         type={it.type}
-                        className="absolute left-1/2 top-[44%] h-[58%] w-[58%] -translate-x-1/2 -translate-y-1/2 transition-transform duration-700 ease-out group-hover:scale-[1.06]"
+                        className="absolute left-1/2 top-[41%] h-[54%] w-[54%] -translate-x-1/2 -translate-y-1/2 sm:top-[44%] sm:h-[58%] sm:w-[58%] transition-transform duration-700 ease-out group-hover:scale-[1.06]"
                       />
 
-                      {/* Стрілка — з'являється при наведенні */}
+                      {/* Стрілка — з'являється при наведенні (у кружечку); на сенсорних екранах видна завжди, без кружечка */}
                       <span
-                        className="absolute right-3 top-3 flex h-9 w-9 scale-75 items-center justify-center rounded-full opacity-0 transition-all duration-300 group-hover:scale-100 group-hover:opacity-100 group-focus-visible:scale-100 group-focus-visible:opacity-100 sm:right-4 sm:top-4"
+                        className="absolute right-2.5 top-2.5 flex h-7 w-7 scale-75 items-center justify-center rounded-full opacity-0 transition-all duration-300 group-hover:scale-100 group-hover:opacity-100 group-focus-visible:scale-100 group-focus-visible:opacity-100 sm:right-4 sm:top-4 sm:h-9 sm:w-9 [@media(hover:none)]:scale-100 [@media(hover:none)]:!bg-transparent [@media(hover:none)]:opacity-90 [@media(hover:none)]:![color:inherit]"
                         style={{ backgroundColor: c.ink, color: c.bg }}
                         aria-hidden="true"
                       >
-                        <ArrowUpRight className="h-5 w-5" />
+                        <ArrowUpRight className="h-5 w-5" strokeWidth={2.2} />
                       </span>
 
                       {/* Підпис */}

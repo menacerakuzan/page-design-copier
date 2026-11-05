@@ -70,20 +70,18 @@
 .v2 .ticket-stub::before { left: -10px; }
 .v2 .ticket-stub::after { right: -10px; }
 
-/* Горизонтальний квиток: перфорація зліва, вирізи зверху й знизу. */
-.v2 .ticket-v { border-left: 2px dashed rgba(159, 31, 71, 0.35); }
-.v2 .ticket-v::before,
-.v2 .ticket-v::after {
-  content: "";
-  position: absolute;
-  left: -9px;
-  width: 16px;
-  height: 16px;
-  border-radius: 999px;
-  background: #6e1131;
+/* Квиток зі справжніми (прозорими) вирізами зверху й знизу лінії перфорації:
+   крізь них видно будь-яке тло, навіть градієнт. --cut-x — де перфорація.
+   Два шари маски: верхня половина з верхнім вирізом, нижня — з нижнім. */
+.v2 .ticket-cut {
+  --r: 8px;
+  -webkit-mask:
+    radial-gradient(circle var(--r) at var(--cut-x) 0, #0000 97%, #000) top / 100% 51% no-repeat,
+    radial-gradient(circle var(--r) at var(--cut-x) 100%, #0000 97%, #000) bottom / 100% 51% no-repeat;
+  mask:
+    radial-gradient(circle var(--r) at var(--cut-x) 0, #0000 97%, #000) top / 100% 51% no-repeat,
+    radial-gradient(circle var(--r) at var(--cut-x) 100%, #0000 97%, #000) bottom / 100% 51% no-repeat;
 }
-.v2 .ticket-v::before { top: -8px; }
-.v2 .ticket-v::after { bottom: -8px; }
 
 /* Хвилі над підвалом: ряди пливуть праворуч (у бік, куди загнуті козирки). */
 /* Зсув рівно на одну плитку (--tile) — безшовний повтор; поза екраном — пауза. */
@@ -142,6 +140,3 @@
   .v2 * { scroll-behavior: auto !important; }
 }
 
-/* Місце під плаваючий мобільний док. */
-.v2 .pb-dock { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
-@media (min-width: 1024px) { .v2 .pb-dock { padding-bottom: 0; } }
