@@ -19,7 +19,8 @@ import V2Home from "./v2/home/HomePage";
 // Everything else is code-split — notably Admin (TipTap) and NearbyPage
 // (MapLibre), which are heavy and rarely needed on first load.
 const CityPage = lazy(() => import("./pages/CityPage"));
-const DistrictPage = lazy(() => import("./pages/DistrictPage"));
+// Нова сторінка району (src/v2); стара src/pages/DistrictPage лишається до кінця редизайну.
+const DistrictPage = lazy(() => import("./v2/district/DistrictPage"));
 const EntityDetail = lazy(() => import("./pages/EntityDetail"));
 const TourismTypesPage = lazy(() => import("./pages/TourismTypesPage"));
 const InfoPage = lazy(() => import("./pages/InfoPage"));

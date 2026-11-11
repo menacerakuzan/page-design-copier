@@ -115,11 +115,12 @@ export function PageHead({ items, hot, onHover }: {
 /* ── Фони сторінки (замість старих патернів) ───────────────────────────── */
 
 /** «Сітка» — тонка сітка аркуша карти, рівна по всій сторінці (лише в самому низу м'яко сходить нанівець). */
-export function GridBackdrop() {
+export function GridBackdrop({ opacity = 0.08 }: { opacity?: number }) {
   return (
     <div
-      className="pointer-events-none absolute inset-0 opacity-[0.08]"
+      className="pointer-events-none absolute inset-0"
       style={{
+        opacity,
         backgroundImage: "linear-gradient(#002f5e 1px, transparent 1px), linear-gradient(90deg, #002f5e 1px, transparent 1px)",
         backgroundSize: "56px 56px",
         backgroundPosition: "center top",
