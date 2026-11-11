@@ -292,19 +292,19 @@ function StopChain({ names }: { names: string[] }) {
  * що й у місць, — щоб блок не випадав зі сторінки. Унизу картки — перша й
  * остання зупинки, з'єднані пунктиром.
  */
-export function RoutesCompact({ data }: { data: DistrictPageData }) {
+export function RoutesCompact({ data, title, id = "routes" }: { data: Pick<DistrictPageData, "routes" | "routesData">; title?: string; id?: string }) {
   const { t, tl } = useV2();
   const d = data.routesData;
   const more = useMore(data.routes, 3);
   const list = more.shown;
   if (!list.length) return null;
   return (
-    <section id="routes" aria-labelledby="routes-through" className="mx-auto max-w-[1280px] scroll-mt-24 px-5 py-10 sm:px-10 sm:py-14">
+    <section id={id} aria-labelledby="routes-through" className="mx-auto max-w-[1280px] scroll-mt-24 px-5 py-10 sm:px-10 sm:py-14">
       <BlockHead
         className="[&_h2]:!text-[24px] sm:[&_h2]:!text-[30px]"
         id="routes-through"
         kicker={t("navRoutes")}
-        title={t("routesThrough")}
+        title={title ?? t("routesThrough")}
         count={data.routes.length}
         aside={
           <Link to="/marshruty" className="inline-flex items-center gap-1 text-[14px] font-semibold text-o-wine underline decoration-o-wine/30 underline-offset-4 hover:decoration-o-wine">
@@ -337,7 +337,7 @@ export function RoutesCompact({ data }: { data: DistrictPageData }) {
           );
         })}
       </ul>
-      <MoreButton more={more} anchor="routes" />
+      <MoreButton more={more} anchor={id} />
     </section>
   );
 }
@@ -399,7 +399,7 @@ export function SilhouetteThumb({ it, className = "" }: { it: DistrictItem; clas
  * Рідкісні блоки конструктора (факти, цитата, вільний текст, відео, вбудована
  * карта, галерея, розділювач) — простим оформленням нового дизайну.
  */
-export function ExtraSection({ s, data, title }: { s: PageSection; data: DistrictPageData; title: string }) {
+export function ExtraSection({ s, data, title }: { s: PageSection; data: Pick<DistrictPageData, "cards">; title: string }) {
   const reduce = useReducedMotion();
   const wrap = (children: React.ReactNode) => (
     <section className="mx-auto max-w-[1280px] px-5 py-12 sm:px-10 sm:py-16">

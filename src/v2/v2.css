@@ -69,6 +69,13 @@
 }
 .v2 .ticket-stub::before { left: -10px; }
 .v2 .ticket-stub::after { right: -10px; }
+/* .to-side: від 640px корінець стоїть праворуч від фото (горизонтальний квиток) —
+   перфорація вертикальна, вирізи зверху й знизу. На телефоні — як звичайний. */
+@media (min-width: 640px) {
+  .v2 .ticket-stub.to-side { border-top: 0; border-left: 2px dashed rgba(159, 31, 71, 0.35); }
+  .v2 .ticket-stub.to-side::before { left: -11px; right: auto; top: -10px; }
+  .v2 .ticket-stub.to-side::after { left: -11px; right: auto; top: auto; bottom: -10px; }
+}
 
 /* Квиток зі справжніми (прозорими) вирізами зверху й знизу лінії перфорації:
    крізь них видно будь-яке тло, навіть градієнт. --cut-x — де перфорація.

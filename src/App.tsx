@@ -18,7 +18,8 @@ import V2Home from "./v2/home/HomePage";
 // Home stays eager so the landing page paints from the main bundle.
 // Everything else is code-split — notably Admin (TipTap) and NearbyPage
 // (MapLibre), which are heavy and rarely needed on first load.
-const CityPage = lazy(() => import("./pages/CityPage"));
+// Нова сторінка населеного пункту (src/v2); стара src/pages/CityPage лишається до кінця редизайну.
+const CityPage = lazy(() => import("./v2/town/TownPage"));
 // Нова сторінка району (src/v2); стара src/pages/DistrictPage лишається до кінця редизайну.
 const DistrictPage = lazy(() => import("./v2/district/DistrictPage"));
 const EntityDetail = lazy(() => import("./pages/EntityDetail"));

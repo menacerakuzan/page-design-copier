@@ -82,7 +82,7 @@ function PlainLi({ className, children }: { as?: "li"; delay?: number; className
 /* ── Більше п'яти: той самий ряд + стрілки по боках ──────────────────── */
 
 /** true на планшеті й ПК (≥640px) — там ряд гортається стрілками; на телефоні — стрічка. */
-function useWide() {
+export function useWide() {
   const q = "(min-width: 640px)";
   const [wide, setWide] = useState(() => typeof window !== "undefined" && window.matchMedia(q).matches);
   useEffect(() => {
@@ -95,7 +95,7 @@ function useWide() {
 }
 
 /** Кругла кремова стрілка на краю ряду — наполовину заходить на фото. */
-function SideArrow({ dir, onClick, label }: { dir: -1 | 1; onClick: () => void; label: string }) {
+export function SideArrow({ dir, onClick, label }: { dir: -1 | 1; onClick: () => void; label: string }) {
   const Icon = dir < 0 ? ArrowLeft : ArrowRight;
   return (
     <motion.button
