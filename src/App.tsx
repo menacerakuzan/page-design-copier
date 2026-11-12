@@ -22,7 +22,8 @@ import V2Home from "./v2/home/HomePage";
 const CityPage = lazy(() => import("./v2/town/TownPage"));
 // Нова сторінка району (src/v2); стара src/pages/DistrictPage лишається до кінця редизайну.
 const DistrictPage = lazy(() => import("./v2/district/DistrictPage"));
-const EntityDetail = lazy(() => import("./pages/EntityDetail"));
+// Нова сторінка туристичного об'єкта (src/v2); стара src/pages/EntityDetail лишається до кінця редизайну.
+const EntityDetail = lazy(() => import("./v2/place/PlacePage"));
 // Нова сторінка «Види туризму» (src/v2); стара src/pages/TourismTypesPage лишається до кінця редизайну.
 const TourismTypesPage = lazy(() => import("./v2/types/TypesPage"));
 const InfoPage = lazy(() => import("./pages/InfoPage"));
