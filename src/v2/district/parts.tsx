@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { RouteCard } from "@/v2/components/routeCards";
 import { Link } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowLeft, ArrowRight, ArrowUpRight, ChevronRight, ChevronUp, Heart } from "lucide-react";
@@ -10,7 +11,6 @@ import { sectionTitle, tourismTypeLabel } from "@/lib/sectionTitles";
 import { useV2 } from "@/v2/i18n";
 import { EASE, Reveal } from "@/v2/components/ui";
 import { DISTRICT_SHAPES, shapeBox } from "@/v2/lib/districtShapes";
-import { metaLine } from "@/v2/home/routes/shared";
 import type { DistrictItem } from "@/v2/districts/useDistricts";
 import type { DistrictPageData, Place } from "./useDistrictPage";
 
@@ -267,35 +267,15 @@ export function MoreButton({ more, anchor }: { more: { rest: number; expanded: b
 
 /* ── Маршрути (компактно), сусіди, інші блоки ───────────────────────────── */
 
-/** Зупинки маршруту одним рядком: перша ─ ─ ─ остання (як пунктир маршрутів на головній). */
-function StopChain({ names }: { names: string[] }) {
-  if (!names.length) return null;
-  const first = names[0];
-  const last = names.length > 1 ? names[names.length - 1] : undefined;
-  return (
-    <span className="flex items-center gap-2 text-[11.5px] font-medium text-o-sea/65">
-      <span className="h-2 w-2 shrink-0 rounded-full bg-o-wine" aria-hidden="true" />
-      <span className="max-w-[42%] truncate">{first}</span>
-      {last && (
-        <>
-          <span className="min-w-[20px] flex-1 border-t-[1.5px] border-dashed border-o-wine/40" aria-hidden="true" />
-          <span className="max-w-[42%] truncate">{last}</span>
-          <span className="h-2 w-2 shrink-0 rounded-full border-[1.5px] border-o-wine" aria-hidden="true" />
-        </>
-      )}
-    </span>
-  );
-}
-
 /**
- * Маршрути, що проходять районом. Той самий заголовок і ті самі кремові рамки,
- * що й у місць, — щоб блок не випадав зі сторінки. Унизу картки — перша й
- * остання зупинки, з'єднані пунктиром.
+ * Маршрути, що проходять районом (пунктом, місцем, видом туризму): невеликі
+ * картки на світлій підкладці — чисте фото, під ним «час · км · зупинки»,
+ * назва й зупинки. По 4 в ряд на ПК, на телефоні — стрічка вбік.
  */
 export function RoutesCompact({ data, title, id = "routes" }: { data: Pick<DistrictPageData, "routes" | "routesData">; title?: string; id?: string }) {
-  const { t, tl } = useV2();
+  const { t } = useV2();
   const d = data.routesData;
-  const more = useMore(data.routes, 3);
+  const more = useMore(data.routes, 4);
   const list = more.shown;
   if (!list.length) return null;
   return (
@@ -313,29 +293,12 @@ export function RoutesCompact({ data, title, id = "routes" }: { data: Pick<Distr
           </Link>
         }
       />
-      <ul className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {list.map((r, i) => {
-          const stops = d.stopsOf(r);
-          return (
-            <Reveal as="li" key={r.id} delay={(i % 3) * 0.05} y={14}>
-              <Link
-                to={`/marshruty/${r.id}`}
-                className="group flex h-full gap-3 rounded-[14px] bg-[#fffaf5]/80 p-1.5 pr-3 ring-1 ring-o-sea/[0.07] transition-colors hover:bg-[#fffaf5] hover:ring-o-wine/25"
-              >
-                <span className="block w-[84px] shrink-0 overflow-hidden rounded-[10px] bg-o-sea/10">
-                  <Img src={r.imageUrl || stops[0]?.image} w={220} alt="" className="h-full min-h-[84px] w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.06]" />
-                </span>
-                <span className="flex min-w-0 flex-1 flex-col py-1">
-                  <span className="line-clamp-2 text-[14px] font-bold leading-snug transition-colors group-hover:text-o-wine">{tl(r.name, r.nameEn)}</span>
-                  <span className="mt-0.5 block truncate text-[12px] text-o-sea/55">{metaLine(d, r)}</span>
-                  <span className="mt-auto block pt-2">
-                    <StopChain names={stops.map((st) => st.name)} />
-                  </span>
-                </span>
-              </Link>
-            </Reveal>
-          );
-        })}
+      <ul className="no-scrollbar -mx-5 mt-6 flex snap-x snap-mandatory scroll-px-5 gap-3 overflow-x-auto px-5 pb-2 sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-4 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-4">
+        {list.map((r, i) => (
+          <Reveal as="li" key={r.id} delay={(i % 4) * 0.05} y={14} className="w-[72vw] max-w-[300px] shrink-0 snap-start sm:w-auto sm:max-w-none">
+            <RouteCard r={r} d={d} />
+          </Reveal>
+        ))}
       </ul>
       <MoreButton more={more} anchor={id} />
     </section>

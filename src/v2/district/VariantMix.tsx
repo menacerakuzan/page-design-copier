@@ -1,17 +1,18 @@
 import { useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
-import { ArrowDown } from "lucide-react";
+import { ArrowDown, MapPin } from "lucide-react";
+import { PlaceTile } from "@/v2/components/PlaceTile";
+import { GridToggle, gridColsClass, useGridCols } from "@/v2/components/GridToggle";
 import type { PageSection } from "@/types/pages";
 import { Img } from "@/components/Img";
-import { objectDetailPath } from "@/lib/entityLinks";
 import { useV2 } from "@/v2/i18n";
 import { EASE, Reveal } from "@/v2/components/ui";
 import { DISTRICT_SHAPES, MAP_H, MAP_W, projectLonLat } from "@/v2/lib/districtShapes";
 import { useDistricts } from "@/v2/districts/useDistricts";
 import { plural } from "@/v2/districts/parts";
 import {
-  AboutText, BlockHead, Crumbs, DistrictTitle, ExtraSection, MoreButton, TripButton, TypeChips,
+  AboutText, BlockHead, Crumbs, DistrictTitle, ExtraSection, MoreButton, TypeChips,
   placesFor, typeName, useMore, useSectionTitle, useTypeFilter,
 } from "./parts";
 import { PLACE_KIND, type DistrictPageData, type Place } from "./useDistrictPage";
@@ -192,29 +193,13 @@ function MixAbout({ data, title }: { data: DistrictPageData; title: string }) {
 /* ── Місця ─────────────────────────────────────────────────────────────── */
 
 /**
- * Картка місця: кремова рамка, як у відбитка, але рівна — назву легко читати.
- * Фото 4:3 (нижче, ніж було), назва — до двох рядків, підпис — один рядок,
- * тож картки в ряду однакової висоти.
+ * Картка місця — спільна «Картка» (src/v2/components/PlaceTile.tsx): під назвою
+ * — пункт і вид туризму.
  */
 function PlaceCard({ p }: { p: Place }) {
   const { lang } = useV2();
   const kind = p.o.tourismTypes?.[0];
-  return (
-    <article className="group relative flex h-full flex-col rounded-[14px] bg-[#fffaf5] p-1.5 shadow-[0_14px_30px_-22px_rgba(0,10,30,0.55)] transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-[0_22px_38px_-22px_rgba(0,10,30,0.6)] sm:p-2">
-      <div className="relative overflow-hidden rounded-[10px] bg-o-sea/10">
-        <Img src={p.o.imageUrl} w={560} alt="" className="aspect-[4/3] w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.05]" />
-        <TripButton id={p.o.id} size="sm" className="absolute right-2 top-2" />
-      </div>
-      <h3 className="mt-2.5 line-clamp-2 px-1 text-[13.5px] font-bold leading-snug sm:text-[15px]">
-        <Link to={objectDetailPath(p.o.type, p.o.slug)} className="transition-colors after:absolute after:inset-0 after:content-[''] group-hover:text-o-wine">
-          {p.name}
-        </Link>
-      </h3>
-      <p className="mt-auto truncate px-1 pb-1 pt-1 text-[12px] text-o-sea/55">
-        {[p.town, kind && typeName(kind, lang)].filter(Boolean).join(" · ")}
-      </p>
-    </article>
-  );
+  return <PlaceTile o={p.o} name={p.name} meta={[p.town, kind && typeName(kind, lang)].filter(Boolean).join(" · ")} icon={MapPin} />;
 }
 
 function MixPlaces({ data, s, title }: { data: DistrictPageData; s: PageSection; title: string }) {
@@ -222,18 +207,23 @@ function MixPlaces({ data, s, title }: { data: DistrictPageData; s: PageSection;
   const kind = PLACE_KIND[s.kind];
   const places = placesFor(data, kind, s);
   const { type, setType, types, list } = useTypeFilter(places);
-  const more = useMore(list, 8);
+  // По 4 чи по 3 в ряд — перемикач праворуч від фільтрів (як на «Видах туризму»); при 3 — 9 карток, щоб ряди були повні.
+  const [cols, setCols] = useGridCols();
+  const more = useMore(list, cols === 3 ? 9 : 8);
   const shown = more.shown;
   if (!places.length) return null;
   return (
     <section id={`see-${kind}`} aria-labelledby={`see-${kind}-t`} className="mx-auto max-w-[1280px] scroll-mt-24 px-5 py-10 sm:px-10 sm:py-14">
       <BlockHead id={`see-${kind}-t`} kicker={kind === "attraction" ? t("seeTitle") : data.it!.short} title={title} count={places.length} />
-      <div className="mt-6">
-        <TypeChips types={types} value={type} onChange={setType} total={places.length} />
+      <div className="mt-6 flex items-start gap-4">
+        <div className="min-w-0 flex-1">
+          <TypeChips types={types} value={type} onChange={setType} total={places.length} />
+        </div>
+        <GridToggle cols={cols} onChange={setCols} />
       </div>
-      <ul className="mt-8 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
+      <ul className={`mt-8 grid ${gridColsClass(cols)}`}>
         {shown.map((p, i) => (
-          <Reveal as="li" key={p.o.id} delay={(i % 4) * 0.05} y={18}>
+          <Reveal as="li" key={p.o.id} delay={(i % cols) * 0.05} y={18}>
             <PlaceCard p={p} />
           </Reveal>
         ))}

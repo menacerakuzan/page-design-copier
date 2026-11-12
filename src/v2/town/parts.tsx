@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { ArrowRight, ChevronRight, Cloud, CloudDrizzle, CloudFog, CloudLightning, CloudMoon, CloudRain, CloudSun, Moon, Snowflake, Sun } from "lucide-react";
+import { ArrowRight, Calendar, ChevronRight, Sparkles, Cloud, CloudDrizzle, CloudFog, CloudLightning, CloudMoon, CloudRain, CloudSun, Moon, Snowflake, Sun } from "lucide-react";
 import type { TourismObjectType } from "@/types/hierarchy";
 import type { PageSection } from "@/types/pages";
 import { Img } from "@/components/Img";
+import { PlaceTile } from "@/v2/components/PlaceTile";
+import { GridToggle, gridColsClass, useGridCols } from "@/v2/components/GridToggle";
 import { AudioGuidePlayer } from "@/components/AudioGuidePlayer";
 import { ReelVideo } from "@/components/ReelVideo";
 import { objectDetailPath } from "@/lib/entityLinks";
@@ -14,7 +16,7 @@ import { EASE, Reveal } from "@/v2/components/ui";
 import { DISTRICT_SHAPES, shapeBox } from "@/v2/lib/districtShapes";
 import { plural } from "@/v2/districts/parts";
 import {
-  BlockHead, ExtraSection, MoreButton, RichText, RoutesCompact, SilhouetteThumb, TripButton, TypeChips,
+  BlockHead, ExtraSection, MoreButton, RichText, RoutesCompact, SilhouetteThumb, TypeChips,
   typeName, useMore, usePlacesWord, useSectionTitle, useTypeFilter,
 } from "@/v2/district/parts";
 import { PLACE_KIND, type Place } from "@/v2/district/useDistrictPage";
@@ -303,39 +305,30 @@ export function usePlaceText() {
   return (p: Place) => plain(tl(p.o.description, p.o.descriptionEn));
 }
 
-/** Компактна картка місця (для довгих списків): фото 4:3 у кремовій рамці. */
+/** Картка місця — спільна «Картка» (src/v2/components/PlaceTile.tsx): під назвою — дати події або вид туризму. */
 export function PlaceCard({ p }: { p: Place }) {
   const { lang } = useV2();
-  return (
-    <article className="group relative flex h-full flex-col rounded-[14px] bg-[#fffaf5] p-1.5 shadow-[0_14px_30px_-22px_rgba(0,10,30,0.55)] transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-[0_22px_38px_-22px_rgba(0,10,30,0.6)] sm:p-2">
-      <div className="relative overflow-hidden rounded-[10px] bg-o-sea/10">
-        <Img src={p.o.imageUrl} w={560} alt="" className="aspect-[4/3] w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.05]" />
-        <TripButton id={p.o.id} size="sm" className="absolute right-2 top-2" />
-      </div>
-      <h3 className="mt-2.5 line-clamp-2 px-1 text-[13.5px] font-bold leading-snug sm:text-[15px]">
-        <Link to={objectDetailPath(p.o.type, p.o.slug)} className="transition-colors after:absolute after:inset-0 after:content-[''] group-hover:text-o-wine">
-          {p.name}
-        </Link>
-      </h3>
-      <p className="mt-auto truncate px-1 pb-1 pt-1 text-[12px] text-o-sea/55">{placeKicker(p, lang)}</p>
-    </article>
-  );
+  const kicker = placeKicker(p, lang);
+  return <PlaceTile o={p.o} name={p.name} meta={kicker} icon={p.o.type === "event" && p.o.eventDates ? Calendar : Sparkles} />;
 }
 
 /** Сітка карток з фільтром за видами і «Показати ще» — для довгих списків. */
 export function PlacesGrid({ list: places, limit = 8 }: { list: Place[]; limit?: number }) {
   const { type, setType, types, list } = useTypeFilter(places);
-  const more = useMore(list, limit);
+  // По 4 чи по 3 в ряд — перемикач праворуч від фільтрів; при 3 — на одну картку більше (8 → 9), щоб ряди були повні.
+  const [cols, setCols] = useGridCols();
+  const more = useMore(list, cols === 3 && limit % 3 ? limit + (3 - (limit % 3)) : limit);
   return (
     <>
-      {places.length > limit && (
-        <div className="mt-6">
-          <TypeChips types={types} value={type} onChange={setType} total={places.length} />
+      <div className="mt-6 flex items-start gap-4">
+        <div className="min-w-0 flex-1">
+          {places.length > limit && <TypeChips types={types} value={type} onChange={setType} total={places.length} />}
         </div>
-      )}
-      <ul className="mt-8 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
+        <GridToggle cols={cols} onChange={setCols} />
+      </div>
+      <ul className={`mt-8 grid ${gridColsClass(cols)}`}>
         {more.shown.map((p, i) => (
-          <Reveal as="li" key={p.o.id} delay={(i % 4) * 0.05} y={18}>
+          <Reveal as="li" key={p.o.id} delay={(i % cols) * 0.05} y={18}>
             <PlaceCard p={p} />
           </Reveal>
         ))}

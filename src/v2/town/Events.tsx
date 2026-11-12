@@ -139,10 +139,10 @@ function Photo({ it, className }: { it: Item; className: string }) {
 function PosterTicket({ it, photo = "aspect-[4/5]" }: { it: Item; photo?: string }) {
   return (
     <Link to={it.href} className="group block h-full transition-transform duration-500 ease-out hover:-translate-y-1.5">
-      <Photo it={it} className={`rounded-t-[18px] ${photo}`} />
-      <div className="ticket-stub relative flex min-h-[132px] flex-col rounded-b-[18px] bg-o-sand px-5 pb-4 pt-4 text-o-winedeep">
+      <Photo it={it} className={`rounded-t-[16px] ${photo}`} />
+      <div className="ticket-stub relative flex min-h-[118px] flex-col rounded-b-[16px] bg-o-sand px-4 pb-3.5 pt-3.5 text-o-winedeep">
         <When it={it} />
-        <p className="mt-1 line-clamp-2 text-[16px] font-bold leading-snug transition-colors group-hover:text-o-wine">{it.title}</p>
+        <p className="mt-1 line-clamp-2 text-[15px] font-bold leading-snug transition-colors group-hover:text-o-wine">{it.title}</p>
         {it.venue && <p className="mt-0.5 line-clamp-1 text-[12.5px] text-o-winedeep/60">{it.venue}</p>}
         <div className="mt-auto pt-3">
           <More n={it.more} />
@@ -155,8 +155,8 @@ function PosterTicket({ it, photo = "aspect-[4/5]" }: { it: Item; photo?: string
 /** Одна подія — широкий горизонтальний квиток (на телефоні — постер). */
 function WideTicket({ it }: { it: Item }) {
   return (
-    <Link to={it.href} className="group mx-auto grid max-w-[920px] transition-transform duration-500 ease-out hover:-translate-y-1 sm:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
-      <Photo it={it} className="aspect-[4/3] rounded-t-[20px] sm:aspect-auto sm:min-h-[300px] sm:rounded-l-[20px] sm:rounded-tr-none" />
+    <Link to={it.href} className="group mx-auto grid max-w-[840px] transition-transform duration-500 ease-out hover:-translate-y-1 sm:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
+      <Photo it={it} className="aspect-[4/3] rounded-t-[20px] sm:aspect-auto sm:min-h-[270px] sm:rounded-l-[20px] sm:rounded-tr-none" />
       <div className="ticket-stub to-side relative flex flex-col justify-center rounded-b-[20px] bg-o-sand px-6 py-6 text-o-winedeep sm:rounded-r-[20px] sm:rounded-bl-none sm:px-9">
         <When it={it} />
         <p className="mt-2 text-[24px] font-bold leading-[1.1] tracking-[-0.01em] transition-colors group-hover:text-o-wine sm:text-[30px]">{it.title}</p>
@@ -181,6 +181,8 @@ function Strip({ items }: { items: Item[] }) {
     if (el) el.scrollBy({ left: d * el.clientWidth * 0.8, behavior: "smooth" });
   };
   const arrow = "flex h-11 w-11 items-center justify-center rounded-full bg-o-sand/10 text-o-sand ring-1 ring-o-sand/25 transition-colors hover:bg-o-sun hover:text-o-winedeep hover:ring-o-sun";
+  // Стрічка гортається вбік, тож усе поза її межами обрізається: запас згори (pt-3)
+  // і знизу (pb-5) — щоб квиток при наведенні піднімався й тінь не зрізалась.
   return (
     <>
       <div className="absolute right-0 top-0 hidden gap-2 sm:flex">
@@ -191,9 +193,9 @@ function Strip({ items }: { items: Item[] }) {
           <ArrowRight className="h-5 w-5" aria-hidden="true" />
         </button>
       </div>
-      <ul ref={ref} className="no-scrollbar -mx-5 mt-8 flex snap-x snap-mandatory scroll-px-5 gap-4 overflow-x-auto px-5 pb-2 sm:-mx-10 sm:scroll-px-10 sm:gap-5 sm:px-10 lg:-mx-14 lg:scroll-px-14 lg:px-14">
+      <ul ref={ref} className="no-scrollbar -mx-5 mt-5 flex snap-x snap-mandatory scroll-px-5 gap-5 overflow-x-auto px-5 pb-5 pt-3 sm:-mx-10 sm:scroll-px-10 sm:gap-7 sm:px-10 lg:-mx-14 lg:scroll-px-14 lg:px-14">
         {items.map((it) => (
-          <li key={it.key} className="w-[72vw] max-w-[290px] shrink-0 snap-start sm:w-[270px]">
+          <li key={it.key} className="w-[64vw] max-w-[260px] shrink-0 snap-start sm:w-[240px]">
             <PosterTicket it={it} />
           </li>
         ))}
@@ -251,9 +253,9 @@ export function TownEvents({ data }: { data: TownPageData }) {
           {n > 1 && n < 4 && (
             <>
               {/* Телефон: стрічка; ширше — постери в ряд по центру */}
-              <ul className="no-scrollbar -mx-5 mt-8 flex snap-x snap-mandatory scroll-px-5 gap-4 overflow-x-auto px-5 pb-2 sm:mx-0 sm:justify-center sm:gap-6 sm:overflow-visible sm:px-0">
+              <ul className="no-scrollbar -mx-5 mt-5 flex snap-x snap-mandatory scroll-px-5 gap-5 overflow-x-auto px-5 pb-5 pt-3 sm:mx-0 sm:justify-center sm:gap-8 sm:overflow-visible sm:px-0">
                 {items.map((it, i) => (
-                  <Reveal as="li" key={it.key} delay={i * 0.08} y={20} className="w-[72vw] max-w-[300px] shrink-0 snap-start sm:w-[calc((100%-48px)/3)] sm:max-w-[340px]">
+                  <Reveal as="li" key={it.key} delay={i * 0.08} y={20} className="w-[64vw] max-w-[270px] shrink-0 snap-start sm:w-[calc((100%-64px)/3)] sm:max-w-[300px]">
                     <PosterTicket it={it} />
                   </Reveal>
                 ))}
