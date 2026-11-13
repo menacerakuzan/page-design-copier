@@ -24,7 +24,7 @@ function Title({ r, d, light = false, className = "" }: { r: Route; d: RoutesDat
 }
 
 /** «6 годин · 20 км · 3 зупинки» під фото — тихий винний рядок з маленькими іконками. */
-function RouteFacts({ r, d, n }: { r: Route; d: RoutesData; n: number }) {
+export function RouteFacts({ r, d, n }: { r: Route; d: RoutesData; n: number }) {
   const items = [
     r.duration ? { Icon: Clock, text: r.duration } : null,
     r.distance ? { Icon: RouteIcon, text: r.distance } : null,

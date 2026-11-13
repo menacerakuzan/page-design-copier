@@ -30,7 +30,7 @@ const InfoPage = lazy(() => import("./pages/InfoPage"));
 // Нова сторінка районів (src/v2); стара src/pages/DistrictsPage лишається до кінця редизайну.
 const DistrictsPage = lazy(() => import("./v2/districts/DistrictsPage"));
 const Admin = lazy(() => import("./pages/Admin"));
-const RoutesPage = lazy(() => import("./pages/RoutesPage"));
+const RoutesPage = lazy(() => import("./v2/routes/RoutesPage"));
 const RouteDetailPage = lazy(() => import("./pages/RouteDetailPage"));
 const NearbyPage = lazy(() => import("./pages/NearbyPage"));
 const GuidesPage = lazy(() => import("./pages/GuidesPage"));

@@ -47,3 +47,13 @@ export function shapeBox(slug: string): ShapeBox | undefined {
   boxCache.set(slug, box);
   return box;
 }
+
+/** Де підписувати район (одиниці карти): там, де центр контуру випадає за межі, — підібрано вручну (як на головній). */
+const DISTRICT_LABEL: Record<string, [number, number]> = {
+  "odeskyy-rayon": [428, 486],
+  "izmayilskyy-rayon": [180, 778],
+  "bilhorod-dnistrovskyy-rayon": [338, 632],
+  "podilskyy-rayon": [288, 132],
+  "bolhradskyy-rayon": [184, 650],
+};
+export const labelPos = (slug: string): [number, number] => DISTRICT_LABEL[slug] ?? [DISTRICT_SHAPES[slug].cx, DISTRICT_SHAPES[slug].cy];
