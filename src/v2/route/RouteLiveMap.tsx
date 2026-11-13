@@ -6,11 +6,12 @@ import { useV2 } from "@/v2/i18n";
 import type { RouteStop } from "./useRoutePage";
 
 /*
- * Карта маршруту для сторінки маршруту. Підкладка — та сама, що на старій
- * сторінці (CARTO Voyager, векторна, без ключа), трохи приглушена під палітру
- * сайту; шлях — по дорогах (OSRM), поки будується — пунктир по прямій.
- * Маркери — фото-кружки з номером; обрана зупинка (active) більшає, і карта
- * плавно перелітає до неї; без обраної — показує весь маршрут.
+ * Жива карта маршруту (сторінка маршруту й «Маршрут по місцях»). Підкладка —
+ * CARTO Voyager (векторна, без ключа), трохи приглушена, підписи українською;
+ * шлях — по дорогах (OSRM), поки будується — пунктир по прямій. Маркери —
+ * фото-кружки з номером; обрана зупинка (active) більшає, і карта плавно
+ * перелітає до неї; без обраної — весь маршрут (або focus — частина, напр. день).
+ * Зміна зупинок / лінії не перебудовує карту — лише оновлює шар і маркери.
  * ТИМЧАСОВО: правильну карту для сайту ще оберемо (див. пам'ять проєкту).
  */
 
@@ -31,42 +32,56 @@ async function roadRoute(coords: [number, number][]): Promise<[number, number][]
   }
 }
 
-export function RouteLiveMap({ stops, line, active, onPick, roads = true, className = "" }: {
+export function RouteLiveMap({ stops, line, active, onPick, roads = true, geometry, focus, padLeft = 0, className = "" }: {
   stops: RouteStop[];
   line: [number, number][];
   active: number | null;
   onPick?: (i: number) => void;
-  /** Будувати шлях по дорогах (для водних і пішохідних маршрутів — ні). */
+  /** Будувати шлях по дорогах самостійно (для водних і пішохідних маршрутів — ні). */
   roads?: boolean;
+  /** Готова лінія по дорогах (тоді карта сама її не запитує); null — ще будується. */
+  geometry?: [number, number][] | null;
+  /** Показати лише ці точки (напр. зупинки одного дня), коли нічого не обрано. */
+  focus?: [number, number][] | null;
+  /** Ліворуч карту закриває панель (повна карта) — стільки пікселів не враховуємо при показі маршруту. */
+  padLeft?: number;
   className?: string;
 }) {
   const { lang } = useV2();
   const box = useRef<HTMLDivElement>(null);
   const wrap = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
-  const markers = useRef<HTMLElement[]>([]);
-  const all = useRef<maplibregl.LngLatBounds | null>(null);
+  const markers = useRef<{ el: HTMLElement; m: maplibregl.Marker; n: number }[]>([]);
+  const [ready, setReady] = useState(false);
   const [routing, setRouting] = useState(false);
   const [failed, setFailed] = useState(false);
   const [full, setFull] = useState(false);
-  // Карта готова (стиль і маркери є). Не m.loaded(): під час перельоту карта
-  // довантажує тайли й loaded() = false — і новий переліт ігнорувався.
-  const ready = useRef(false);
   const pick = useRef(onPick);
   pick.current = onPick;
 
   const placed = stops.filter((s) => s.lng != null && s.lat != null);
+  const lineKey = line.map((c) => c.join(",")).join(";");
+  const stopsKey = placed.map((s) => `${s.o.id}@${s.n}`).join("|");
+  const focusKey = focus?.map((c) => c.join(",")).join(";") ?? "";
 
+  const bounds = (pts: [number, number][]) => {
+    const b = new maplibregl.LngLatBounds();
+    pts.forEach((c) => b.extend(c));
+    return b;
+  };
+  const allPts = () => [...line, ...placed.map((s) => [s.lng!, s.lat!] as [number, number])];
+  const pad = () => (padLeft && window.innerWidth >= 1024 ? { top: 70, bottom: 70, right: 70, left: padLeft + 50 } : 70);
+
+  // Створення карти (один раз; заново — лише при зміні мови підписів)
   useEffect(() => {
-    if (!box.current || !line.length) return;
-    let cancelled = false;
+    if (!box.current) return;
     let m: maplibregl.Map;
     try {
       m = new maplibregl.Map({
         container: box.current,
         style: "https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json",
-        center: line[0],
-        zoom: 8,
+        center: [30.7, 46.5],
+        zoom: 7,
         attributionControl: { compact: true },
         // ПК: колесо миші над картою одразу наближає (без Ctrl). Телефон: карту
         // рухають двома пальцями, щоб одним можна було гортати сторінку.
@@ -77,12 +92,7 @@ export function RouteLiveMap({ stops, line, active, onPick, roads = true, classN
       return;
     }
     map.current = m;
-    const bounds = new maplibregl.LngLatBounds();
-    line.forEach((c) => bounds.extend(c));
-    placed.forEach((s) => bounds.extend([s.lng!, s.lat!]));
-    all.current = bounds;
-
-    m.on("load", async () => {
+    m.on("load", () => {
       // Підписи — українською (у стилі CARTO першою йде англійська назва)
       const nameExpr = lang === "en" ? ["coalesce", ["get", "name:en"], ["get", "name"]] : ["coalesce", ["get", "name:uk"], ["get", "name"]];
       for (const l of m.getStyle().layers ?? []) {
@@ -94,68 +104,93 @@ export function RouteLiveMap({ stops, line, active, onPick, roads = true, classN
           }
         }
       }
-      m.addSource("route", { type: "geojson", data: feature(line) });
+      m.addSource("route", { type: "geojson", data: feature([]) });
       m.addLayer({ id: "route-casing", type: "line", source: "route", layout: { "line-join": "round", "line-cap": "round" }, paint: { "line-color": SAND, "line-width": 8, "line-opacity": 0.95 } });
-      m.addLayer({
-        id: "route-line",
-        type: "line",
-        source: "route",
-        layout: { "line-join": "round", "line-cap": "round" },
-        paint: { "line-color": WINE, "line-width": 3.5, "line-dasharray": [0.1, 2.2] },
-      });
-
-      markers.current = placed.map((s) => {
-        const el = document.createElement("button");
-        el.type = "button";
-        el.className = "rlm-marker";
-        el.setAttribute("aria-label", `${s.n}. ${s.name}`);
-        el.innerHTML = `<span class="rlm-wrap"><span class="rlm-photo">${s.o.imageUrl ? `<img src="${s.o.imageUrl}" alt="" loading="lazy" decoding="async"/>` : ""}</span><span class="rlm-num">${s.n}</span></span>`;
-        el.addEventListener("click", (e) => {
-          e.stopPropagation();
-          pick.current?.(s.n - 1);
-        });
-        new maplibregl.Marker({ element: el, anchor: "center" }).setLngLat([s.lng!, s.lat!]).addTo(m);
-        return el;
-      });
-
-      m.fitBounds(bounds, { padding: 70, maxZoom: 12, duration: 0 });
-      ready.current = true;
-
-      if (roads && line.length > 1) {
-        setRouting(true);
-        const road = await roadRoute(line);
-        if (cancelled) return;
-        setRouting(false);
-        const src = m.getSource("route") as maplibregl.GeoJSONSource | undefined;
-        if (road && src) {
-          src.setData(feature(road));
-          m.setPaintProperty("route-line", "line-dasharray", [1, 0]);
-        }
-      }
+      m.addLayer({ id: "route-line", type: "line", source: "route", layout: { "line-join": "round", "line-cap": "round" }, paint: { "line-color": WINE, "line-width": 3.5, "line-dasharray": [0.1, 2.2] } });
+      setReady(true);
     });
     m.on("error", () => {});
-
     return () => {
-      cancelled = true;
-      ready.current = false;
+      setReady(false);
+      markers.current = [];
       m.remove();
       map.current = null;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [line, roads, lang]);
+  }, [lang]);
 
-  // Обрана зупинка: маркер більшає, карта перелітає до неї; без обраної — весь маршрут
+  // Маркери зупинок — заново, коли змінився склад чи порядок
   useEffect(() => {
     const m = map.current;
-    markers.current.forEach((el, i) => el.classList.toggle("is-active", placed[i] && active === placed[i].n - 1));
-    if (!m || !ready.current) return;
+    if (!m || !ready) return;
+    markers.current.forEach((x) => x.m.remove());
+    markers.current = placed.map((s) => {
+      const el = document.createElement("button");
+      el.type = "button";
+      el.className = "rlm-marker";
+      el.setAttribute("aria-label", `${s.n}. ${s.name}`);
+      el.innerHTML = `<span class="rlm-wrap"><span class="rlm-photo">${s.o.imageUrl ? `<img src="${s.o.imageUrl}" alt="" loading="lazy" decoding="async"/>` : ""}</span><span class="rlm-num">${s.n}</span></span>`;
+      el.addEventListener("click", (e) => {
+        e.stopPropagation();
+        pick.current?.(s.n - 1);
+      });
+      const mk = new maplibregl.Marker({ element: el, anchor: "center" }).setLngLat([s.lng!, s.lat!]).addTo(m);
+      return { el, m: mk, n: s.n };
+    });
+    const pts = allPts();
+    if (pts.length) m.fitBounds(bounds(focus?.length ? focus : pts), { padding: pad(), maxZoom: 12, duration: 600 });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready, stopsKey]);
+
+  // Лінія: готова (geometry) або власний запит по дорогах; поки немає — пунктир по прямій
+  useEffect(() => {
+    const m = map.current;
+    if (!m || !ready) return;
+    const src = m.getSource("route") as maplibregl.GeoJSONSource | undefined;
+    if (!src) return;
+    const straight = () => {
+      src.setData(feature(line));
+      m.setPaintProperty("route-line", "line-dasharray", [0.1, 2.2]);
+    };
+    const road = (g: [number, number][]) => {
+      src.setData(feature(g));
+      m.setPaintProperty("route-line", "line-dasharray", [1, 0]);
+    };
+    if (geometry !== undefined) {
+      if (geometry && geometry.length > 1) road(geometry);
+      else straight();
+      return;
+    }
+    straight();
+    if (!roads || line.length < 2) return;
+    let cancelled = false;
+    setRouting(true);
+    roadRoute(line).then((g) => {
+      if (cancelled) return;
+      setRouting(false);
+      if (g) road(g);
+    });
+    return () => {
+      cancelled = true;
+      setRouting(false);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready, lineKey, roads, geometry]);
+
+  // Обрана зупинка: маркер більшає, карта перелітає до неї; без обраної — весь маршрут чи focus
+  useEffect(() => {
+    const m = map.current;
+    markers.current.forEach((x) => x.el.classList.toggle("is-active", active === x.n - 1));
+    if (!m || !ready) return;
     m.stop(); // попередній переліт — зупинити, новий починається звідси
     const s = active != null ? stops[active] : null;
     // Не надто близько — щоб навколо зупинки було видно місцевість і сусідні міста
-    if (s?.lng != null && s.lat != null) m.flyTo({ center: [s.lng, s.lat], zoom: 10.5, speed: 0.9, curve: 1.3, essential: true });
-    else if (active == null && all.current) m.fitBounds(all.current, { padding: 70, maxZoom: 12, duration: 900 });
+    if (s?.lng != null && s.lat != null) m.flyTo({ center: [s.lng, s.lat], zoom: 10.5, speed: 0.9, curve: 1.3, essential: true, ...(padLeft && window.innerWidth >= 1024 ? { offset: [padLeft / 2, 0] as [number, number] } : {}) });
+    else {
+      const pts = focus?.length ? focus : allPts();
+      if (pts.length) m.fitBounds(bounds(pts), { padding: pad(), maxZoom: 12, duration: 900 });
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [active]);
+  }, [active, ready, focusKey]);
 
   const toggleFull = () => {
     const el = wrap.current;
@@ -180,7 +215,7 @@ export function RouteLiveMap({ stops, line, active, onPick, roads = true, classN
           {lang === "en" ? "The map could not load in this browser." : "Карта не завантажилась у цьому браузері."}
         </div>
       )}
-      {routing && (
+      {(routing || geometry === null) && line.length > 1 && (
         <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-o-sand/95 px-3 py-1.5 text-[12px] font-semibold text-o-sea shadow-sm">
           <Loader2 className="h-3.5 w-3.5 animate-spin text-o-wine" aria-hidden="true" />
           {lang === "en" ? "Building the route…" : "Будуємо маршрут…"}

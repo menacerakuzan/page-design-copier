@@ -32,12 +32,12 @@ function trailsTile() {
 
 const TILE = trailsTile();
 
-export function TrailsBackdrop() {
+export function TrailsBackdrop({ opacity = 0.1 }: { opacity?: number }) {
   return (
     <div
       className="pointer-events-none absolute inset-0"
       style={{
-        opacity: 0.1,
+        opacity,
         backgroundImage: `url("data:image/svg+xml,${encodeURIComponent(TILE.svg)}")`,
         backgroundSize: `${TILE.size}px ${TILE.size}px`,
         backgroundPosition: "center top",

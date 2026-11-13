@@ -29,6 +29,8 @@ type BasketContextValue = {
   toggle: (id: string) => void;
   has: (id: string) => boolean;
   clear: () => void;
+  /** Новий порядок (перетягування на сторінці «Мій маршрут»). */
+  reorder: (ids: string[]) => void;
   count: number;
 };
 
@@ -39,6 +41,7 @@ const BasketContext = createContext<BasketContextValue>({
   toggle: () => {},
   has: () => false,
   clear: () => {},
+  reorder: () => {},
   count: 0,
 });
 
@@ -69,8 +72,10 @@ export function BasketProvider({ children }: { children: ReactNode }) {
 
   const clear = useCallback(() => setIds([]), []);
 
+  const reorder = useCallback((next: string[]) => setIds(next), []);
+
   return (
-    <BasketContext.Provider value={{ ids, add, remove, toggle, has, clear, count: ids.length }}>
+    <BasketContext.Provider value={{ ids, add, remove, toggle, has, clear, reorder, count: ids.length }}>
       {children}
     </BasketContext.Provider>
   );

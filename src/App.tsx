@@ -36,8 +36,8 @@ const RouteDetailPage = lazy(() => import("./v2/route/RoutePage"));
 const NearbyPage = lazy(() => import("./pages/NearbyPage"));
 const GuidesPage = lazy(() => import("./v2/guides/GuidesPage"));
 const EventsPage = lazy(() => import("./v2/afisha/AfishaPage"));
-const BasketPage = lazy(() => import("./pages/BasketPage"));
-const RouteMapPage = lazy(() => import("./pages/RouteMapPage"));
+const BasketPage = lazy(() => import("./v2/trip/TripPage"));
+const RouteMapPage = lazy(() => import("./v2/tripmap/TripRoutePage"));
 const AssistantPage = lazy(() => import("./pages/AssistantPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 /** Головна сама керує кольором тла (темне хіро) і не показує старих прикрас. */
