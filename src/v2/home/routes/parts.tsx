@@ -7,15 +7,16 @@ import type { RoutesData } from "./useRoutesData";
  * Складена паперова мапа-гармошка біля кнопки «Відкрити маршрут»: по ній
  * один раз малюється шлях від старту до мітки, що підстрибує на фініші.
  */
-export function FoldedMap({ className = "" }: { className?: string }) {
+export function FoldedMap({ className = "", tone = "warm" }: { className?: string; /** cream — світліший папір у тон карток сторінки маршруту */ tone?: "warm" | "cream" }) {
   const reduce = useReducedMotion();
+  const [paper, fold, mid] = tone === "cream" ? ["#fff6ec", "#f6e1cd", "#df9b3b"] : ["#fbebdc", "#f1d9c3", "#df9b3b"];
   return (
     <svg viewBox="0 0 260 170" className={className} aria-hidden="true">
       {/* Три панелі гармошки */}
       <g stroke="#002f5e" strokeOpacity=".22" strokeWidth="1.2" strokeLinejoin="round">
-        <path d="M10 34 90 14v130l-80 20z" fill="#fbebdc" />
-        <path d="M90 14l80 20v130l-80-20z" fill="#f1d9c3" />
-        <path d="M170 34l80-20v130l-80 20z" fill="#fbebdc" />
+        <path d="M10 34 90 14v130l-80 20z" fill={paper} />
+        <path d="M90 14l80 20v130l-80-20z" fill={fold} />
+        <path d="M170 34l80-20v130l-80 20z" fill={paper} />
       </g>
       {/* Річка й берег — ледь помітно */}
       <path d="M10 128q30-14 50-6t30 2 40 6 40-6 40 2 40-8" fill="none" stroke="#002f5e" strokeOpacity=".16" strokeWidth="1.4" />
@@ -36,7 +37,7 @@ export function FoldedMap({ className = "" }: { className?: string }) {
       {/* Старт */}
       <circle cx="32" cy="132" r="6" fill="#fff2e8" stroke="#9f1f47" strokeWidth="2.4" />
       {/* Проміжна зупинка */}
-      <circle cx="132" cy="88" r="4.5" fill="#df9b3b" />
+      <circle cx="132" cy="88" r="4.5" fill={mid} />
       {/* Мітка на фініші */}
       <g className="float-soft" style={{ transformBox: "fill-box", transformOrigin: "center" }}>
         <path d="M222 30c-8 0-13 6-13 13 0 10 13 23 13 23s13-13 13-23c0-7-5-13-13-13z" fill="#9f1f47" />

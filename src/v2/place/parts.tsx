@@ -111,7 +111,7 @@ export function TripPill({ id, light = false, className = "" }: { id: string; li
 }
 
 /** Поділитися: системне меню (телефон) або копіювання посилання. */
-function useShare(title: string) {
+export function useShare(title: string) {
   const [copied, setCopied] = useState(false);
   const share = async () => {
     const url = window.location.href;

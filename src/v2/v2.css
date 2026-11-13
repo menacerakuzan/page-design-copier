@@ -147,3 +147,27 @@
   .v2 * { scroll-behavior: auto !important; }
 }
 
+
+/* ── Карта сторінки маршруту: маркери-зупинки (фото + номер) ───────────── */
+/* Корінь маркера НЕ чіпаємо (ні position, ні transform): maplibre ставить
+   йому position:absolute і transform для координат — інакше маркери
+   з'їжджають зі своїх точок. Розміри й позиціонування — у внутрішнього .rlm-wrap. */
+.rlm-marker { width: 44px; height: 44px; padding: 0; border: 0; background: none; cursor: pointer; }
+.rlm-marker.is-active { z-index: 3; }
+.rlm-wrap { position: relative; display: block; width: 44px; height: 44px; }
+.rlm-photo {
+  display: block; width: 44px; height: 44px; border-radius: 9999px; overflow: hidden;
+  border: 3px solid #fff2e8; background: #9f1f47;
+  box-shadow: 0 8px 18px -8px rgba(0, 20, 50, 0.7);
+  transition: transform .35s cubic-bezier(.22,1,.36,1), box-shadow .35s;
+}
+.rlm-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.rlm-num {
+  position: absolute; top: -6px; right: -6px; min-width: 21px; height: 21px; padding: 0 5px;
+  border-radius: 11px; background: #9f1f47; color: #fff2e8; border: 2px solid #fff2e8;
+  font: 700 11px/17px "Odesa Region Type", system-ui, sans-serif; text-align: center;
+  transition: transform .35s cubic-bezier(.22,1,.36,1);
+}
+.rlm-marker:hover .rlm-photo { transform: scale(1.1); }
+.rlm-marker.is-active .rlm-photo { transform: scale(1.3); box-shadow: 0 0 0 4px rgba(159, 31, 71, 0.35), 0 12px 24px -8px rgba(0, 20, 50, 0.7); }
+.rlm-marker.is-active .rlm-num { transform: translate(5px, -5px) scale(1.1); }

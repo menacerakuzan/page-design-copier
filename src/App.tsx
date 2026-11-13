@@ -31,7 +31,7 @@ const InfoPage = lazy(() => import("./pages/InfoPage"));
 const DistrictsPage = lazy(() => import("./v2/districts/DistrictsPage"));
 const Admin = lazy(() => import("./pages/Admin"));
 const RoutesPage = lazy(() => import("./v2/routes/RoutesPage"));
-const RouteDetailPage = lazy(() => import("./pages/RouteDetailPage"));
+const RouteDetailPage = lazy(() => import("./v2/route/RoutePage"));
 const NearbyPage = lazy(() => import("./pages/NearbyPage"));
 const GuidesPage = lazy(() => import("./pages/GuidesPage"));
 const EventsPage = lazy(() => import("./pages/EventsPage"));

@@ -28,13 +28,16 @@ export default function RoutesPage() {
       <main id={MAIN_CONTENT_ID} tabIndex={-1} className="relative isolate outline-none">
         <TrailsBackdrop />
         <RoadsBackdrop />
-        {data.loading ? (
-          <div className="flex justify-center py-40">
-            <span className="h-8 w-8 animate-spin rounded-full border-2 border-o-sea/20 border-t-o-sea" />
-          </div>
-        ) : (
-          <RoutesCatalog data={data} />
-        )}
+        {/* relative — щоб вміст лежав над фоном (позиціонований фон інакше малюється поверх) */}
+        <div className="relative">
+          {data.loading ? (
+            <div className="flex justify-center py-40">
+              <span className="h-8 w-8 animate-spin rounded-full border-2 border-o-sea/20 border-t-o-sea" />
+            </div>
+          ) : (
+            <RoutesCatalog data={data} />
+          )}
+        </div>
       </main>
       <Footer />
     </div>
