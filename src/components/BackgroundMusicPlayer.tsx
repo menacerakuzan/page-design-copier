@@ -244,10 +244,10 @@ export const MUSIC_CSS = `
  * Фонова музика сайту: стрімиться напряму з YouTube (офіційний embed API —
  * без завантаження/перезаливки аудіофайлу), циклічно, за замовчуванням без
  * звуку (щоб пройти autoplay-політику браузерів і не лякати користувача).
- * Плеєр монтується один раз у App (як MobileNav/AssistantFab) — тому при
- * переході між сторінками не перестворюється і не починає грати заново.
+ * Сам плеєр — один на весь сайт (MusicProvider у App); цей віджет старого
+ * дизайну лише керує ним, тож при перемиканні дизайнів музика не дублюється.
  */
-export function BackgroundMusicPlayer() {
+export function BackgroundMusicPlayer({ music }: { music: ReturnType<typeof useBackgroundMusic> }) {
   const { t } = useLang();
   const { pathname } = useLocation();
   // /koshyk і /marshrut мають власну липку CTA-кнопку внизу зліва-направо —
@@ -256,13 +256,10 @@ export function BackgroundMusicPlayer() {
   const bottom = raised
     ? "calc(150px + env(safe-area-inset-bottom))"
     : "calc(84px + env(safe-area-inset-bottom))";
-  const { hostRef, ready, unmuted, volume, toggle, onSlide, showQuiet } = useBackgroundMusic();
+  const { ready, unmuted, volume, toggle, onSlide, showQuiet } = music;
 
   return (
     <>
-      {/* YouTube-плеєр без візуального інтерфейсу — керуємо власним віджетом нижче */}
-      <div ref={hostRef} className="pointer-events-none fixed h-0 w-0 overflow-hidden opacity-0" aria-hidden="true" />
-
       <AnimatePresence>
         {ready && (
           <motion.div
@@ -327,8 +324,7 @@ export function BackgroundMusicPlayer() {
           </motion.div>
         )}
       </AnimatePresence>
-
-      <style>{MUSIC_CSS}</style>
+      {/* Стилі (MUSIC_CSS) підключає MusicProvider. */}
     </>
   );
 }

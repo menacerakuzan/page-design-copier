@@ -4,8 +4,11 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import { motion, AnimatePresence } from "framer-motion";
 import { Compass, LocateFixed, Search, MapPin, X, Loader2, Navigation } from "lucide-react";
 import { useLang } from "@/lib/langContext";
+import SiteFooter from "@/components/SiteFooter";
+import PageBrow from "@/components/PageBrow";
 import { Footer } from "@/v2/components/Footer";
 import { Header } from "@/v2/components/Header";
+import { useDesignV2 } from "@/lib/designMode";
 import { haversineKm, type LatLng } from "@/lib/geo";
 import { useSeo } from "@/hooks/useSeo";
 
@@ -65,6 +68,7 @@ const RADII = [0.5, 1, 2, 5];
 
 export default function NearbyPage() {
   const { lang } = useLang();
+  const v2 = useDesignV2();
   const L = (uk: string, en: string) => (lang === "en" ? en : uk);
   useSeo({
     title: L("Поблизу", "Nearby"),
@@ -293,7 +297,7 @@ export default function NearbyPage() {
         style={{ backgroundImage: "url(/districtspattern.svg)", backgroundSize: "200px 200px", backgroundRepeat: "repeat", opacity: 0.1 }}
       />
 
-      <Header />
+      {v2 ? <Header /> : <PageBrow />}
 
       {/* ── Заголовок сторінки ──────────────────────────────────────────── */}
       <div className="container-edge relative z-10 pb-6 pt-8 md:pb-8 md:pt-12">
@@ -513,7 +517,7 @@ export default function NearbyPage() {
         </div>
       </main>
 
-      <Footer />
+      {v2 ? <Footer /> : <SiteFooter />}
     </div>
   );
 }

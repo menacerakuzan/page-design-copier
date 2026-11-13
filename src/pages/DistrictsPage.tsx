@@ -4,8 +4,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useLang } from "@/lib/langContext";
 import { Link, useNavigate } from "react-router-dom";
 import { ChevronLeft, ArrowRight, MapPin, MapPinned, Landmark } from "lucide-react";
-import { Footer } from "@/v2/components/Footer";
-import { Header } from "@/v2/components/Header";
+import SiteFooter from "@/components/SiteFooter";
+import PageBrow from "@/components/PageBrow";
 import { DragScrollRow } from "@/components/DragScrollRow";
 import { useHierarchySnapshot } from "@/hooks/useHierarchySnapshot";
 import { useSeo } from "@/hooks/useSeo";
@@ -168,7 +168,7 @@ export default function DistrictsPage() {
       />
 
       {/* ── Шапка-«бровь»: мобільно — назад, на md+ — повна навігація ──────── */}
-      <Header />
+      <PageBrow />
 
       {/* ── Заголовок сторінки (змінюється залежно від рівня) ──────────────── */}
       <div className="container-edge relative z-10 pb-6 pt-8 md:pb-8 md:pt-12">
@@ -420,7 +420,7 @@ export default function DistrictsPage() {
         </AnimatePresence>
       </main>
 
-      <Footer />
+      <SiteFooter />
     </div>
   );
 }

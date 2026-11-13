@@ -16,8 +16,8 @@ import { useLang } from "@/lib/langContext";
 import { useHierarchySnapshot } from "@/hooks/useHierarchySnapshot";
 import { objectDetailPath, objectTypeLabel, objectTypeColor } from "@/lib/entityLinks";
 import type { TourismObject } from "@/types/hierarchy";
-import { Footer } from "@/v2/components/Footer";
-import { Header } from "@/v2/components/Header";
+import SiteFooter from "@/components/SiteFooter";
+import PageBrow from "@/components/PageBrow";
 import { useSeo } from "@/hooks/useSeo";
 import { routeGeometry } from "@/lib/routeGeometry";
 
@@ -62,7 +62,8 @@ const StopRow = ({ obj, index, lang, tl }: {
   </Link>
 );
 
-const PageShell = ({ children }: { children: React.ReactNode }) => {
+const PageShell = ({ backTo, children }: { backTo: string; children: React.ReactNode }) => {
+  const { t } = useLang();
   return (
     <div className="relative min-h-screen bg-[#fff2e8]">
       <div
@@ -70,9 +71,9 @@ const PageShell = ({ children }: { children: React.ReactNode }) => {
         className="pointer-events-none absolute inset-0 z-0"
         style={{ backgroundImage: "url(/routespattern.svg)", backgroundSize: "200px 200px", backgroundRepeat: "repeat", opacity: 0.1 }}
       />
-      <Header />
+      <PageBrow backTo={backTo} backLabel={t("backToRoutes")} />
       {children}
-      <Footer />
+      <SiteFooter />
     </div>
   );
 };
@@ -106,7 +107,7 @@ const RouteDetailPage = () => {
 
   if (isLoading) {
     return (
-      <PageShell>
+      <PageShell backTo="/marshruty">
         <div className="relative z-10 flex justify-center py-24">
           <span className="h-10 w-10 animate-spin rounded-full border-4 border-[#002f5e]/15 border-t-[#002f5e]" />
         </div>
@@ -116,7 +117,7 @@ const RouteDetailPage = () => {
 
   if (!route) {
     return (
-      <PageShell>
+      <PageShell backTo="/marshruty">
         <div className="container-edge relative z-10 py-24 text-center">
           <p className="text-[18px] text-[#002f5e]/70 font-odesa-semi">{t("routeNotFound")}</p>
           <Link
@@ -146,7 +147,7 @@ const RouteDetailPage = () => {
     });
 
   return (
-    <PageShell>
+    <PageShell backTo="/marshruty">
       {/* ── Hero-фото ───────────────────────────────────────────────────── */}
       <div className="relative z-10 mt-4 h-[260px] w-full overflow-hidden xs:h-[320px] md:h-[440px]">
         {route.imageUrl ? (

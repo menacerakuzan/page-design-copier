@@ -6,7 +6,6 @@ import { ShoppingCart, Navigation, GripVertical, Sparkles, MapPinOff, ArrowRight
 import RouteMap from "@/components/RouteMap";
 import { Img } from "@/components/Img";
 import { useLang } from "@/lib/langContext";
-import { Header } from "@/v2/components/Header";
 import { useBasket } from "@/lib/basketContext";
 import { useHierarchySnapshot } from "@/hooks/useHierarchySnapshot";
 import { getObjectCoords, haversineKm, type LatLng } from "@/lib/geo";
@@ -217,8 +216,7 @@ const RouteMapPage = () => {
         className="pointer-events-none absolute inset-0 z-0"
         style={{ backgroundImage: "url(/beigepattern.svg)", backgroundSize: "cover", backgroundPosition: "center", opacity: 0.1 }}
       />
-      <Header />
-      <header className="container-edge relative z-10">
+      <header className="container-edge pt-safe relative z-10">
         <div className="flex items-center justify-between pb-5 pt-6">
           <Link
             to="/koshyk"
@@ -307,7 +305,8 @@ const RouteMapPage = () => {
       {enoughStops && googleMapsUrl && (
         <div className="pointer-events-none fixed inset-x-0 bottom-0 z-20">
           <div
-            className="pointer-events-auto absolute inset-x-4 mx-auto max-w-[560px] bottom-[calc(96px+env(safe-area-inset-bottom))] lg:bottom-[calc(24px+env(safe-area-inset-bottom))]"
+            className="pointer-events-auto absolute inset-x-4 mx-auto max-w-[560px]"
+            style={{ bottom: "calc(72px + env(safe-area-inset-bottom))" }}
           >
             <a
               href={googleMapsUrl}

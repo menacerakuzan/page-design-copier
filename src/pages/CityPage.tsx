@@ -5,8 +5,7 @@ import { motion } from "framer-motion";
 import { useLang } from "@/lib/langContext";
 import { ChevronLeft, Droplets, Wind } from "lucide-react";
 import { Link, useLocation, useParams } from "react-router-dom";
-import { Footer } from "@/v2/components/Footer";
-import { Header } from "@/v2/components/Header";
+import SiteFooter from "@/components/SiteFooter";
 import { useHierarchySnapshot } from "@/hooks/useHierarchySnapshot";
 import { useWeather } from "@/hooks/useWeather";
 import { usePageConfig } from "@/hooks/usePageConfig";
@@ -396,7 +395,6 @@ const CityPage = () => {
     // key: перехід місто→місто без ремоунта лишає в hero фото попереднього
     // міста, доки вантажиться нове.
     <div key={city.id} className="bg-[#fff2e8] font-odesa-regular text-[#002f5e]">
-     <Header overHero />
      <main id="main-content" tabIndex={-1}>
 
       {/* ══════════════════  HERO  ══════════════════════════════════════ */}
@@ -406,37 +404,43 @@ const CityPage = () => {
         ) : (
           <Img priority w={1600} src={heroImage} alt={city.name} className="absolute inset-0 h-full w-full object-cover" />
         )}
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,12,33,0.5)_0%,rgba(0,12,33,0.0)_38%,rgba(0,12,33,0.9)_100%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,12,33,0.28)_0%,rgba(0,12,33,0.0)_38%,rgba(0,12,33,0.9)_100%)]" />
 
-        {/* Під новою шапкою (вона поверх відео): «назад» і хлібні крихти — світлим рядком. */}
-        <div className="relative z-20 mx-auto w-full max-w-[1280px] px-8 pt-[84px] sm:px-10 sm:pt-[96px] xl:px-5">
-          <div className="flex items-center gap-3 text-[#fff2e8]">
+        {/* ── Єдина шапка-«бровь»: назад + один breadcrumb + головна ─────── */}
+        {/* Аудит 17.2.2: верхня панель (назад + хлібні крихти) — це шапка сторінки,
+            тож має бути landmark <header>, інакше скринридер не пропонує швидкий
+            перехід до неї. Ці сторінки не використовують спільний PageBrow. */}
+        <header className="relative z-20 mx-auto w-full max-w-[1180px] px-4 pt-0 md:px-5">
+          <div className="rounded-b-[36px] bg-[#fff2e8] px-5 pb-3 pt-3 text-[#002f5e] md:rounded-b-[48px] md:px-6 md:pb-4 md:pt-4">
+            <div className="flex items-center gap-3">
               {backOverride?.backTo ? (
-                <Link to={backOverride.backTo} className="flex shrink-0 items-center gap-1.5 text-[14px] font-odesa-medium text-[#fff2e8]/80 transition-colors hover:text-[#fff2e8]">
-                  <ChevronLeft className="h-4 w-4" aria-hidden="true" /> <span className="hidden sm:inline">{backOverride.backLabel ?? t("back")}</span>
+                <Link to={backOverride.backTo} className="flex shrink-0 items-center gap-1.5 text-[14px] font-odesa-medium transition-opacity hover:opacity-70">
+                  <ChevronLeft className="h-4 w-4" /> <span className="hidden sm:inline">{backOverride.backLabel ?? t("back")}</span>
                 </Link>
               ) : district ? (
-                <Link to={`/raion/${district.slug}`} className="flex shrink-0 items-center gap-1.5 text-[14px] font-odesa-medium text-[#fff2e8]/80 transition-colors hover:text-[#fff2e8]">
-                  <ChevronLeft className="h-4 w-4" aria-hidden="true" /> <span className="hidden sm:inline">{district.name}</span>
+                <Link to={`/raion/${district.slug}`} className="flex shrink-0 items-center gap-1.5 text-[14px] font-odesa-medium transition-opacity hover:opacity-70">
+                  <ChevronLeft className="h-4 w-4" /> <span className="hidden sm:inline">{district.name}</span>
                 </Link>
               ) : (
-                <Link to="/" className="flex shrink-0 items-center gap-1.5 text-[14px] font-odesa-medium text-[#fff2e8]/80 transition-colors hover:text-[#fff2e8]">
-                  <ChevronLeft className="h-4 w-4" aria-hidden="true" /> <span className="hidden sm:inline">{t("backHome")}</span>
+                <Link to="/" className="flex shrink-0 items-center gap-1.5 text-[14px] font-odesa-medium transition-opacity hover:opacity-70">
+                  <ChevronLeft className="h-4 w-4" /> <span className="hidden sm:inline">{t("backHome")}</span>
                 </Link>
               )}
-            <div className="h-4 w-px shrink-0 bg-[#fff2e8]/25" aria-hidden="true" />
-            <div className="min-w-0 flex-1">
-              <Breadcrumbs light crumbs={[
-                { label: "Одещина", href: "/" },
-                { label: t("districts"), href: "/districts" },
-                ...(district ? [{ label: district.name, href: `/raion/${district.slug}` }] : []),
-                { label: city.name },
-              ]} />
+              <div className="h-4 w-px shrink-0 bg-[#002f5e]/15" />
+              <div className="min-w-0 flex-1">
+                <Breadcrumbs crumbs={[
+                  { label: "Одещина", href: "/" },
+                  { label: t("districts"), href: "/districts" },
+                  ...(district ? [{ label: district.name, href: `/raion/${district.slug}` }] : []),
+                  { label: city.name },
+                ]} />
+              </div>
+              <Link to="/" className="hidden shrink-0 text-[14px] font-odesa-medium transition-opacity hover:opacity-70 sm:inline">{t("home")}</Link>
             </div>
           </div>
-        </div>
+        </header>
 
-        <div className="relative z-10 flex min-h-[calc(100vh-108px)] sm:min-h-[calc(100vh-120px)] flex-col justify-end px-6 pb-24 text-[#fff2e8] md:px-14 md:pb-14">
+        <div className="relative z-10 flex min-h-[calc(100vh-80px)] flex-col justify-end px-6 pb-24 text-[#fff2e8] md:px-14 md:pb-14">
           {/* weather widget — above the title */}
           {weather && (
             <motion.div
@@ -495,7 +499,7 @@ const CityPage = () => {
       </div>
      </main>
 
-      <Footer />
+      <SiteFooter />
 
       <GalleryLightbox
         images={galleryLightbox?.images ?? []}

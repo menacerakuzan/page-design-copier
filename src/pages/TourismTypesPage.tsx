@@ -1,5 +1,4 @@
 import { useState, useMemo } from "react";
-import { useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLang } from "@/lib/langContext";
 import {
@@ -7,8 +6,8 @@ import {
   UtensilsCrossed, Landmark, HeartPulse, Waves, Church, PartyPopper, Leaf, Mountain,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { Footer } from "@/v2/components/Footer";
-import { Header } from "@/v2/components/Header";
+import SiteFooter from "@/components/SiteFooter";
+import PageBrow from "@/components/PageBrow";
 import { useSeo } from "@/hooks/useSeo";
 import { useHierarchySnapshot } from "@/hooks/useHierarchySnapshot";
 import { usePageContentCards } from "@/hooks/usePageContentCards";
@@ -55,12 +54,7 @@ const TYPE_META: Record<string, { color: string; Icon: LucideIcon }> = {
 export default function TourismTypesPage() {
   const { t, tl, lang } = useLang();
   useSeo({ title: t("typesTitle"), description: t("typesDesc"), lang });
-  // ?type=<назва> — відкрити сторінку одразу з обраним видом (посилання з головної).
-  const [searchParams] = useSearchParams();
-  const [activeType, setActiveType] = useState<string | null>(() => {
-    const t = searchParams.get("type");
-    return t && (TOURISM_TYPES as readonly string[]).includes(t) ? t : null;
-  });
+  const [activeType, setActiveType] = useState<string | null>(null);
   const { data: snapshot } = useHierarchySnapshot();
   const { data: cardsData } = usePageContentCards("tourism-types");
   // Рендеримо сітку лише коли обидві черги готові — щоб картки змонтувались і
@@ -94,7 +88,7 @@ export default function TourismTypesPage() {
       />
 
       {/* ── Шапка-«бровь»: мобільно — назад, на md+ — повна навігація ──────── */}
-      <Header />
+      <PageBrow />
 
       {/* ── Заголовок сторінки ──────────────────────────────────────────── */}
       <div className="container-edge relative z-10 pb-6 pt-8 md:pb-8 md:pt-12">
@@ -214,7 +208,7 @@ export default function TourismTypesPage() {
         </AnimatePresence>
       </main>
 
-      <Footer />
+      <SiteFooter />
     </div>
   );
 }

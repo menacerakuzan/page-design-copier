@@ -1,6 +1,6 @@
 import { Suspense, lazy, useEffect, useLayoutEffect, useRef } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
 import { loadHierarchySnapshot, loadPublishedContentCards } from "@/lib/adminRepository";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -10,44 +10,56 @@ import { BasketProvider } from "@/lib/basketContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { SkipLink } from "@/components/SkipLink";
 import { KonamiEasterEgg } from "./components/KonamiEasterEgg";
+import MobileNav from "./components/MobileNav";
+import { AssistantFab } from "./components/assistant/AssistantFab";
+import { BackgroundMusicPlayer } from "./components/BackgroundMusicPlayer";
 import { MobileDock } from "./v2/components/Header";
-import { MusicProvider } from "./v2/lib/music";
-// Головна (новий дизайн, src/v2) — у головному бандлі, щоб перша сторінка малювалась одразу.
+import { MusicProvider, useMusic } from "./v2/lib/music";
+import { ByDesign, DesignModeProvider, DesignUrlCleanup, useDesignV2 } from "@/lib/designMode";
+// Обидві головні — у головному бандлі, щоб перша сторінка малювалась одразу.
+import Index from "./pages/Index";
 import V2Home from "./v2/home/HomePage";
 
-// Home stays eager so the landing page paints from the main bundle.
-// Everything else is code-split — notably Admin (TipTap) and NearbyPage
-// (MapLibre), which are heavy and rarely needed on first load.
-// Нова сторінка населеного пункту (src/v2); стара src/pages/CityPage лишається до кінця редизайну.
-const CityPage = lazy(() => import("./v2/town/TownPage"));
-// Нова сторінка району (src/v2); стара src/pages/DistrictPage лишається до кінця редизайну.
-const DistrictPage = lazy(() => import("./v2/district/DistrictPage"));
-// Нова сторінка туристичного об'єкта (src/v2); стара src/pages/EntityDetail лишається до кінця редизайну.
-const EntityDetail = lazy(() => import("./v2/place/PlacePage"));
-// Нова сторінка «Види туризму» (src/v2); стара src/pages/TourismTypesPage лишається до кінця редизайну.
-const TourismTypesPage = lazy(() => import("./v2/types/TypesPage"));
-const InfoPage = lazy(() => import("./v2/info/InfoPage"));
-const ArticlePage = lazy(() => import("./v2/info/ArticlePage"));
-// Нова сторінка районів (src/v2); стара src/pages/DistrictsPage лишається до кінця редизайну.
-const DistrictsPage = lazy(() => import("./v2/districts/DistrictsPage"));
+/*
+ * Два дизайни на тих самих адресах (див. src/lib/designMode.tsx):
+ * старий — для всіх, новий (src/v2) — у вкладці, відкритій через /v2 або ?v2.
+ * Усе, крім головних, — окремими чанками.
+ */
+const V2Town = lazy(() => import("./v2/town/TownPage"));
+const V2District = lazy(() => import("./v2/district/DistrictPage"));
+const V2Place = lazy(() => import("./v2/place/PlacePage"));
+const V2Types = lazy(() => import("./v2/types/TypesPage"));
+const V2Info = lazy(() => import("./v2/info/InfoPage"));
+const V2Article = lazy(() => import("./v2/info/ArticlePage"));
+const V2Districts = lazy(() => import("./v2/districts/DistrictsPage"));
+const V2Routes = lazy(() => import("./v2/routes/RoutesPage"));
+const V2Route = lazy(() => import("./v2/route/RoutePage"));
+const V2Guides = lazy(() => import("./v2/guides/GuidesPage"));
+const V2Afisha = lazy(() => import("./v2/afisha/AfishaPage"));
+const V2Trip = lazy(() => import("./v2/trip/TripPage"));
+const V2TripMap = lazy(() => import("./v2/tripmap/TripRoutePage"));
+
+const CityPage = lazy(() => import("./pages/CityPage"));
+const DistrictPage = lazy(() => import("./pages/DistrictPage"));
+const EntityDetail = lazy(() => import("./pages/EntityDetail"));
+const TourismTypesPage = lazy(() => import("./pages/TourismTypesPage"));
+const InfoPage = lazy(() => import("./pages/InfoPage"));
+const DistrictsPage = lazy(() => import("./pages/DistrictsPage"));
+const RoutesPage = lazy(() => import("./pages/RoutesPage"));
+const RouteDetailPage = lazy(() => import("./pages/RouteDetailPage"));
+const GuidesPage = lazy(() => import("./pages/GuidesPage"));
+const EventsPage = lazy(() => import("./pages/EventsPage"));
+const BasketPage = lazy(() => import("./pages/BasketPage"));
+const RouteMapPage = lazy(() => import("./pages/RouteMapPage"));
+
+// Спільні для обох дизайнів (ще не перероблені).
 const Admin = lazy(() => import("./pages/Admin"));
-const RoutesPage = lazy(() => import("./v2/routes/RoutesPage"));
-const RouteDetailPage = lazy(() => import("./v2/route/RoutePage"));
 const NearbyPage = lazy(() => import("./pages/NearbyPage"));
-const GuidesPage = lazy(() => import("./v2/guides/GuidesPage"));
-const EventsPage = lazy(() => import("./v2/afisha/AfishaPage"));
-const BasketPage = lazy(() => import("./v2/trip/TripPage"));
-const RouteMapPage = lazy(() => import("./v2/tripmap/TripRoutePage"));
 const AssistantPage = lazy(() => import("./pages/AssistantPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
-/** Головна сама керує кольором тла (темне хіро) і не показує старих прикрас. */
-const isNewHome = (pathname: string) => pathname === "/" || pathname.startsWith("/v2");
 
-/** Старе прев'ю /v2 → головна (з тими самими параметрами). */
-const V2Redirect = () => {
-  const { search } = useLocation();
-  return <Navigate to={`/${search}`} replace />;
-};
+/** Віджет музики старого дизайну — керує тим самим плеєром, що й новий. */
+const OldMusic = () => <BackgroundMusicPlayer music={useMusic()} />;
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -114,13 +126,14 @@ const RouteCleanup = () => {
  */
 const PanelColor = () => {
   const { pathname } = useLocation();
+  const v2 = useDesignV2();
 
   useLayoutEffect(() => {
-    if (isNewHome(pathname)) return; // нова головна виставляє колір сама
-    const color = "#fff2e8";
+    if (v2 && pathname === "/") return; // нова головна виставляє колір сама
+    const color = !v2 && pathname === "/" ? "#001a3d" : "#fff2e8";
     document.documentElement.style.backgroundColor = color;
     document.body.style.backgroundColor = color;
-  }, [pathname]);
+  }, [pathname, v2]);
 
   return null;
 };
@@ -132,8 +145,10 @@ const RouteFallback = () => (
 );
 
 /**
- * Спільне для всіх сторінок: нижній док нового дизайну (телефон і планшет).
- * Шапка й підвал — на самих сторінках, музика — у MusicProvider.
+ * Спільне для всіх сторінок поза самими роутами.
+ * Новий дизайн: нижній док (телефон і планшет); шапка й підвал — на сторінках.
+ * Старий дизайн: нижнє меню, кнопка асистента, віджет музики, пасхалка, зимова тема.
+ * Сам музичний плеєр — один, у MusicProvider.
  * Кожен компонент — у своєму ErrorBoundary: падіння одного інакше знімало б
  * усе дерево, бо вони рендеряться поза основним ErrorBoundary нижче.
  * resetKeys=[pathname] — щоб зловлена один раз помилка не ховала компонент назавжди.
@@ -144,14 +159,28 @@ const WinterLayer = lazy(() => import("./components/winter/WinterLayer"));
 const GlobalChrome = () => {
   const { pathname } = useLocation();
   const { active: winter } = useWinterTheme();
-  const home = isNewHome(pathname);
+  const v2 = useDesignV2();
+  if (v2) {
+    const home = pathname === "/";
+    return (
+      <>
+        {!pathname.startsWith("/admin") && (
+          <ErrorBoundary fallback={null} resetKeys={[pathname]}><MobileDock /></ErrorBoundary>
+        )}
+        {!home && <ErrorBoundary fallback={null} resetKeys={[pathname]}><KonamiEasterEgg /></ErrorBoundary>}
+        {!home && winter && (
+          <ErrorBoundary fallback={null}><Suspense fallback={null}><WinterLayer /></Suspense></ErrorBoundary>
+        )}
+      </>
+    );
+  }
   return (
     <>
-      {!pathname.startsWith("/admin") && (
-        <ErrorBoundary fallback={null} resetKeys={[pathname]}><MobileDock /></ErrorBoundary>
-      )}
-      {!home && <ErrorBoundary fallback={null} resetKeys={[pathname]}><KonamiEasterEgg /></ErrorBoundary>}
-      {!home && winter && (
+      <ErrorBoundary fallback={null} resetKeys={[pathname]}><MobileNav /></ErrorBoundary>
+      <ErrorBoundary fallback={null} resetKeys={[pathname]}><AssistantFab /></ErrorBoundary>
+      <ErrorBoundary fallback={null} resetKeys={[pathname]}><OldMusic /></ErrorBoundary>
+      <ErrorBoundary fallback={null} resetKeys={[pathname]}><KonamiEasterEgg /></ErrorBoundary>
+      {winter && (
         <ErrorBoundary fallback={null}><Suspense fallback={null}><WinterLayer /></Suspense></ErrorBoundary>
       )}
     </>
@@ -180,7 +209,9 @@ const App = () => {
         <BasketProvider>
         <TooltipProvider>
           <BrowserRouter>
+          <DesignModeProvider>
           <MusicProvider>
+            <DesignUrlCleanup />
             <RouteCleanup />
             <PanelColor />
             {/* Перший фокусабельний елемент документа — саме тут, ДО будь-якої
@@ -191,32 +222,35 @@ const App = () => {
             <ErrorBoundary>
               <Suspense fallback={<RouteFallback />}>
                 <Routes>
-                  <Route path="/" element={<V2Home />} />
-                  <Route path="/types" element={<TourismTypesPage />} />
-                  <Route path="/districts" element={<DistrictsPage />} />
-                  <Route path="/info" element={<InfoPage />} />
-                  <Route path="/info/:id" element={<ArticlePage />} />
-                  <Route path="/napryamky/:citySlug" element={<CityPage />} />
-                  <Route path="/raion/:districtSlug" element={<DistrictPage />} />
-                  <Route path="/mistse/:slug" element={<EntityDetail type="attraction" />} />
-                  <Route path="/podiyi" element={<EventsPage />} />
-                  <Route path="/podiyi/:slug" element={<EntityDetail type="event" />} />
-                  <Route path="/restorany/:slug" element={<EntityDetail type="restaurant" />} />
-                  <Route path="/hoteli/:slug" element={<EntityDetail type="hotel" />} />
-                  <Route path="/marshruty" element={<RoutesPage />} />
-                  <Route path="/marshruty/:id" element={<RouteDetailPage />} />
+                  <Route path="/" element={<ByDesign v2={<V2Home />} old={<Index />} />} />
+                  <Route path="/types" element={<ByDesign v2={<V2Types />} old={<TourismTypesPage />} />} />
+                  <Route path="/districts" element={<ByDesign v2={<V2Districts />} old={<DistrictsPage />} />} />
+                  <Route path="/info" element={<ByDesign v2={<V2Info />} old={<InfoPage />} />} />
+                  {/* Окремих сторінок статей у старому дизайні не було. */}
+                  <Route path="/info/:id" element={<ByDesign v2={<V2Article />} old={<NotFound />} />} />
+                  <Route path="/napryamky/:citySlug" element={<ByDesign v2={<V2Town />} old={<CityPage />} />} />
+                  <Route path="/raion/:districtSlug" element={<ByDesign v2={<V2District />} old={<DistrictPage />} />} />
+                  <Route path="/mistse/:slug" element={<ByDesign v2={<V2Place type="attraction" />} old={<EntityDetail type="attraction" />} />} />
+                  <Route path="/podiyi" element={<ByDesign v2={<V2Afisha />} old={<EventsPage />} />} />
+                  <Route path="/podiyi/:slug" element={<ByDesign v2={<V2Place type="event" />} old={<EntityDetail type="event" />} />} />
+                  <Route path="/restorany/:slug" element={<ByDesign v2={<V2Place type="restaurant" />} old={<EntityDetail type="restaurant" />} />} />
+                  <Route path="/hoteli/:slug" element={<ByDesign v2={<V2Place type="hotel" />} old={<EntityDetail type="hotel" />} />} />
+                  <Route path="/marshruty" element={<ByDesign v2={<V2Routes />} old={<RoutesPage />} />} />
+                  <Route path="/marshruty/:id" element={<ByDesign v2={<V2Route />} old={<RouteDetailPage />} />} />
                   <Route path="/poblizu" element={<NearbyPage />} />
-                  <Route path="/hidy" element={<GuidesPage />} />
-                  <Route path="/koshyk" element={<BasketPage />} />
-                  <Route path="/marshrut" element={<RouteMapPage />} />
+                  <Route path="/hidy" element={<ByDesign v2={<V2Guides />} old={<GuidesPage />} />} />
+                  <Route path="/koshyk" element={<ByDesign v2={<V2Trip />} old={<BasketPage />} />} />
+                  <Route path="/marshrut" element={<ByDesign v2={<V2TripMap />} old={<RouteMapPage />} />} />
                   <Route path="/asystent" element={<AssistantPage />} />
                   <Route path="/admin" element={<Admin />} />
-                  <Route path="/v2" element={<V2Redirect />} />
+                  {/* /v2/... — «вхідні двері» в новий дизайн; адресу виправляє DesignUrlCleanup. */}
+                  <Route path="/v2/*" element={null} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </Suspense>
             </ErrorBoundary>
           </MusicProvider>
+          </DesignModeProvider>
           </BrowserRouter>
         </TooltipProvider>
         </BasketProvider>

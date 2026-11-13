@@ -5,7 +5,7 @@ import { ShoppingCart, Trash2, ArrowRight, MapPin, MapPinOff } from "lucide-reac
 import { Img } from "@/components/Img";
 import { useLang } from "@/lib/langContext";
 import { useBasket } from "@/lib/basketContext";
-import { Header } from "@/v2/components/Header";
+import PageBrow from "@/components/PageBrow";
 import { useHierarchySnapshot } from "@/hooks/useHierarchySnapshot";
 import { getObjectCoords } from "@/lib/geo";
 import { objectDetailPath, objectTypeLabel, objectTypeColor } from "@/lib/entityLinks";
@@ -43,11 +43,20 @@ const BasketPage = () => {
         className="pointer-events-none absolute inset-0 z-0"
         style={{ backgroundImage: "url(/basketpattern.svg)", backgroundSize: "200px 200px", backgroundRepeat: "repeat", opacity: 0.1 }}
       />
-      <Header />
+      {/* ── Десктопна навігація (мобільно її роль виконує таб-бар) ── */}
+      <div className="hidden md:block">
+        <PageBrow />
+      </div>
 
       {/* ── Шапка ─────────────────────────────────────────────── */}
       <header className="container-edge pt-safe relative z-10">
         <div className="flex items-center justify-between pb-6 pt-6 md:pt-8">
+          <Link
+            to="/"
+            className="w-fit rounded-full bg-[#002f5e] px-5 py-2 text-[14px] leading-none text-[#fff2e8] font-odesa-medium transition-colors hover:bg-[#0f3f74] md:hidden"
+          >
+            ← {t("home")}
+          </Link>
           {count > 0 && (
             <button
               type="button"
@@ -78,7 +87,7 @@ const BasketPage = () => {
       </header>
 
       {/* ── Список / порожній стан ────────────────────────────── */}
-      <main id="main-content" tabIndex={-1} className="container-edge relative z-10 pb-[calc(184px+env(safe-area-inset-bottom))] lg:pb-[calc(120px+env(safe-area-inset-bottom))]">
+      <main id="main-content" tabIndex={-1} className="container-edge relative z-10 pb-[calc(184px+env(safe-area-inset-bottom))] md:pb-[calc(120px+env(safe-area-inset-bottom))]">
         {count === 0 ? (
           <div className="flex flex-col items-center justify-center rounded-[26px] border border-[#002f5e]/10 bg-white px-6 py-16 text-center shadow-[0_18px_40px_-30px_rgba(0,47,94,0.4)]">
             <span className="flex h-16 w-16 items-center justify-center rounded-full bg-[#002f5e]/5 text-[#002f5e]/70">
@@ -172,7 +181,7 @@ const BasketPage = () => {
       {count > 0 && (
         <div className="pointer-events-none fixed inset-x-0 bottom-0 z-20">
           <div
-            className="pointer-events-auto absolute inset-x-4 mx-auto max-w-[560px] bottom-[calc(96px+env(safe-area-inset-bottom))] lg:bottom-[calc(24px+env(safe-area-inset-bottom))]"
+            className="pointer-events-auto absolute inset-x-4 mx-auto max-w-[560px] bottom-[calc(72px+env(safe-area-inset-bottom))] md:bottom-[calc(24px+env(safe-area-inset-bottom))]"
           >
             <button
               type="button"
