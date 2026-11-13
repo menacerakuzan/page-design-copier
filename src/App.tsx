@@ -26,7 +26,8 @@ const DistrictPage = lazy(() => import("./v2/district/DistrictPage"));
 const EntityDetail = lazy(() => import("./v2/place/PlacePage"));
 // Нова сторінка «Види туризму» (src/v2); стара src/pages/TourismTypesPage лишається до кінця редизайну.
 const TourismTypesPage = lazy(() => import("./v2/types/TypesPage"));
-const InfoPage = lazy(() => import("./pages/InfoPage"));
+const InfoPage = lazy(() => import("./v2/info/InfoPage"));
+const ArticlePage = lazy(() => import("./v2/info/ArticlePage"));
 // Нова сторінка районів (src/v2); стара src/pages/DistrictsPage лишається до кінця редизайну.
 const DistrictsPage = lazy(() => import("./v2/districts/DistrictsPage"));
 const Admin = lazy(() => import("./pages/Admin"));
@@ -194,6 +195,7 @@ const App = () => {
                   <Route path="/types" element={<TourismTypesPage />} />
                   <Route path="/districts" element={<DistrictsPage />} />
                   <Route path="/info" element={<InfoPage />} />
+                  <Route path="/info/:id" element={<ArticlePage />} />
                   <Route path="/napryamky/:citySlug" element={<CityPage />} />
                   <Route path="/raion/:districtSlug" element={<DistrictPage />} />
                   <Route path="/mistse/:slug" element={<EntityDetail type="attraction" />} />
