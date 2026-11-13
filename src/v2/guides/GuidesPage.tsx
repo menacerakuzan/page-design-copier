@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
-import { ArrowUpRight, BadgeCheck, ExternalLink, Search, X } from "lucide-react";
+import { ArrowUpRight, BadgeCheck, ChevronDown, ExternalLink, Search, X } from "lucide-react";
 import { useSeo } from "@/hooks/useSeo";
 import { MAIN_CONTENT_ID } from "@/components/SkipLink";
 import { loadGuides, type Guide } from "@/lib/guidesRepository";
@@ -26,7 +26,35 @@ const LANGS: Record<string, { code: string; name: string }> = {
   español: { code: "ES", name: "Español" },
   italiano: { code: "IT", name: "Italiano" },
   türkçe: { code: "TR", name: "Türkçe" },
+  română: { code: "RO", name: "Română" },
+  romana: { code: "RO", name: "Română" },
+  български: { code: "BG", name: "Български" },
+  ελληνικά: { code: "EL", name: "Ελληνικά" },
+  nederlands: { code: "NL", name: "Nederlands" },
+  português: { code: "PT", name: "Português" },
+  portugues: { code: "PT", name: "Português" },
+  čeština: { code: "CS", name: "Čeština" },
+  slovenčina: { code: "SK", name: "Slovenčina" },
+  magyar: { code: "HU", name: "Magyar" },
+  svenska: { code: "SV", name: "Svenska" },
+  norsk: { code: "NO", name: "Norsk" },
+  dansk: { code: "DA", name: "Dansk" },
+  suomi: { code: "FI", name: "Suomi" },
+  lietuvių: { code: "LT", name: "Lietuvių" },
+  latviešu: { code: "LV", name: "Latviešu" },
+  eesti: { code: "ET", name: "Eesti" },
+  hrvatski: { code: "HR", name: "Hrvatski" },
+  српски: { code: "SR", name: "Српски" },
+  ქართული: { code: "KA", name: "ქართული" },
+  azərbaycan: { code: "AZ", name: "Azərbaycan" },
+  עברית: { code: "HE", name: "עברית" },
+  العربية: { code: "AR", name: "العربية" },
+  中文: { code: "ZH", name: "中文" },
+  日本語: { code: "JA", name: "日本語" },
+  한국어: { code: "KO", name: "한국어" },
 };
+/** Скільки мов показувати у фільтрі на ПК, поки його не розгорнули (решта — під «Ще N»). */
+const LANGS_SHOWN = 6;
 const lang = (raw: string) => LANGS[raw.trim().toLowerCase()] ?? { code: raw.slice(0, 2).toUpperCase(), name: raw };
 
 /**
@@ -42,6 +70,7 @@ export default function GuidesPage() {
   const { data: guides = [], isLoading } = useQuery({ queryKey: ["guides-published"], queryFn: () => loadGuides(true) });
   const [params, setParams] = useSearchParams();
   const [q, setQ] = useState("");
+  const [allLangs, setAllLangs] = useState(false);
   const reduce = useReducedMotion();
   const code = params.get("lang");
   const dstu = params.get("dstu") === "1";
@@ -74,6 +103,8 @@ export default function GuidesPage() {
   }, [guides, code, dstu, q]);
 
   const dstuCount = guides.filter((g) => g.dstu).length;
+  /** Скільки мов сховано під «Ще N» (вибрана мова завжди на виду). */
+  const foldedCount = langs.filter((l, i) => i >= LANGS_SHOWN && l.code !== code).length;
   const registry = guides.find((g) => g.personalUrl)?.personalUrl?.match(/^https?:\/\/[^/]+\/[^/]+\//)?.[0];
   const chip = (on: boolean) =>
     `inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full px-4 text-[13.5px] font-semibold transition-colors ${
@@ -105,48 +136,68 @@ export default function GuidesPage() {
             </Reveal>
           </div>
 
-          {/* Пошук і фільтри */}
+          {/* Пошук і «лише ДСТУ» — одним рядком; мови — окремим рядком під ними.
+              На ПК спершу видно LANGS_SHOWN найпоширеніших мов (і вибрану), решта —
+              під «Ще N»; на телефоні мови гортаються вбік усі одразу. */}
           {guides.length > 0 && (
-            <div className="mt-10 flex flex-col gap-3 sm:mt-12 lg:flex-row lg:items-center">
-              <label className="relative block lg:w-[300px] lg:shrink-0">
-                <span className="sr-only">{t("gdSearch")}</span>
-                <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-o-sea/45" aria-hidden="true" />
-                <input
-                  type="search"
-                  value={q}
-                  onChange={(e) => setQ(e.target.value)}
-                  placeholder={t("gdSearch")}
-                  className="h-11 w-full rounded-full bg-[#fffaf5] pl-11 pr-10 text-[14.5px] text-o-sea outline-none ring-1 ring-o-sea/10 transition-shadow placeholder:text-o-sea/40 focus:ring-2 focus:ring-o-wine/40"
-                />
-                {q && (
-                  <button type="button" onClick={() => setQ("")} aria-label={t("gdReset")} className="absolute right-2.5 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full text-o-sea/50 hover:bg-o-sea/[0.06] hover:text-o-wine">
-                    <X className="h-4 w-4" aria-hidden="true" />
-                  </button>
-                )}
-              </label>
-              <div role="group" aria-label={t("gdLangs")} className="no-scrollbar -mx-5 flex gap-2 overflow-x-auto px-5 pb-1 pt-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
-                <button type="button" onClick={() => set("lang", null)} aria-pressed={!code} className={chip(!code)}>
-                  {t("gdAllLangs")}
-                </button>
-                {langs.map((l) => (
-                  <button key={l.code} type="button" onClick={() => set("lang", code === l.code ? null : l.code)} aria-pressed={code === l.code} className={chip(code === l.code)}>
-                    <span className={`text-[11px] font-bold tracking-wider ${code === l.code ? "text-o-sunsoft" : "text-o-wine"}`}>{l.code}</span>
-                    {l.name}
-                    <span className={`text-[11.5px] ${code === l.code ? "text-o-sand/60" : "text-o-sea/40"}`}>{l.n}</span>
-                  </button>
-                ))}
+            <div className="mt-10 flex flex-col gap-3 sm:mt-12">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                <label className="relative block sm:w-[300px] sm:shrink-0">
+                  <span className="sr-only">{t("gdSearch")}</span>
+                  <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-o-sea/45" aria-hidden="true" />
+                  <input
+                    type="search"
+                    value={q}
+                    onChange={(e) => setQ(e.target.value)}
+                    placeholder={t("gdSearch")}
+                    className="h-11 w-full rounded-full bg-[#fffaf5] pl-11 pr-10 text-[14.5px] text-o-sea outline-none ring-1 ring-o-sea/10 transition-shadow placeholder:text-o-sea/40 focus:ring-2 focus:ring-o-wine/40"
+                  />
+                  {q && (
+                    <button type="button" onClick={() => setQ("")} aria-label={t("gdReset")} className="absolute right-2.5 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full text-o-sea/50 hover:bg-o-sea/[0.06] hover:text-o-wine">
+                      <X className="h-4 w-4" aria-hidden="true" />
+                    </button>
+                  )}
+                </label>
                 {dstuCount > 0 && (
                   <button
                     type="button"
                     onClick={() => set("dstu", dstu ? null : "1")}
                     aria-pressed={dstu}
-                    className={`inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full px-4 text-[13.5px] font-semibold transition-colors lg:ml-auto ${
+                    className={`inline-flex h-10 shrink-0 items-center gap-1.5 self-start rounded-full px-4 text-[13.5px] font-semibold transition-colors sm:self-auto ${
                       dstu ? "bg-o-sun text-o-winedeep shadow-[0_8px_18px_-10px_rgba(223,155,59,0.9)]" : "bg-o-sun/15 text-o-winedeep/80 hover:bg-o-sun/25"
                     }`}
                   >
                     <BadgeCheck className="h-4 w-4" aria-hidden="true" />
                     {t("gdOnlyDstu")}
                     <span className="text-[11.5px] opacity-60">{dstuCount}</span>
+                  </button>
+                )}
+              </div>
+              <div role="group" aria-label={t("gdLangs")} className="no-scrollbar -mx-5 flex gap-2 overflow-x-auto px-5 pb-1 pt-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
+                <button type="button" onClick={() => set("lang", null)} aria-pressed={!code} className={chip(!code)}>
+                  {t("gdAllLangs")}
+                </button>
+                {langs.map((l, i) => {
+                  const on = code === l.code;
+                  // Згорнуті мови ховаємо лише на ПК (sm+); вибрану показуємо завжди.
+                  const folded = !allLangs && i >= LANGS_SHOWN && !on;
+                  return (
+                    <button key={l.code} type="button" onClick={() => set("lang", on ? null : l.code)} aria-pressed={on} className={`${chip(on)} ${folded ? "sm:hidden" : ""}`}>
+                      <span className={`text-[11px] font-bold tracking-wider ${on ? "text-o-sunsoft" : "text-o-wine"}`}>{l.code}</span>
+                      {l.name}
+                      <span className={`text-[11.5px] ${on ? "text-o-sand/60" : "text-o-sea/40"}`}>{l.n}</span>
+                    </button>
+                  );
+                })}
+                {(allLangs || foldedCount > 0) && langs.length > LANGS_SHOWN && (
+                  <button
+                    type="button"
+                    onClick={() => setAllLangs((v) => !v)}
+                    aria-expanded={allLangs}
+                    className="hidden h-10 shrink-0 items-center gap-1 rounded-full px-4 text-[13.5px] font-semibold text-o-wine ring-1 ring-inset ring-o-wine/25 transition-colors hover:bg-o-wine/[0.06] hover:ring-o-wine/50 sm:inline-flex"
+                  >
+                    {allLangs ? t("gdLessLangs") : `${t("gdMoreLangs")} ${foldedCount}`}
+                    <ChevronDown className={`h-4 w-4 transition-transform duration-300 ${allLangs ? "rotate-180" : ""}`} aria-hidden="true" />
                   </button>
                 )}
               </div>
