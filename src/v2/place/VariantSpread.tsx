@@ -1,11 +1,13 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { Images } from "lucide-react";
+import { Calendar, Globe, Images, MapPin } from "lucide-react";
 import { Img } from "@/components/Img";
 import { HeroBackgroundVideo } from "@/components/HeroBackgroundVideo";
 import { useV2 } from "@/v2/i18n";
 import { EASE, Reveal } from "@/v2/components/ui";
 import { BlockHead, RichText, useSectionTitle } from "@/v2/district/parts";
+import { plural } from "@/v2/districts/parts";
+import { upcomingShows } from "@/v2/lib/afisha";
 import {
   Actions, DistrictPin, EventStrip, VenueCard, useEventParts, MapBlock, Nearby, PassportList, PlaceAudio, PlaceCrumbs, PlaceExtras, PlaceReel, PlaceRoutes, PlaceText,
   Repertoire, TypePills, VenueLine, useKicker, useLightbox, usePassport, useShown,
@@ -173,7 +175,7 @@ function SpreadAbout({ data }: { data: PlacePageData }) {
  */
 function EventAbout({ data }: { data: PlacePageData }) {
   const titleOf = useSectionTitle();
-  const { text } = useEventParts(data);
+  const { text, tickets } = useEventParts(data);
   const s = data.sections.find((x) => x.kind === "description");
   const title = s ? titleOf(s) : "";
   const what = (data.subtitle || data.name).replace(/\s+року$/, "").replace(/\s+/g, " ");
@@ -199,20 +201,17 @@ function EventAbout({ data }: { data: PlacePageData }) {
             {head}
             <RichText html={text} className="mt-7 text-[17px] leading-[1.7] text-o-sea/85 sm:text-[18.5px]" />
           </Reveal>
-          {data.venue && (
-            <Reveal delay={0.06} y={20}>
-              <VenueCard data={data} vertical />
-            </Reveal>
-          )}
+          <Reveal delay={0.06} y={20}>
+            {data.venue ? <VenueCard data={data} vertical /> : <EventInfo data={data} tickets={tickets} vertical />}
+          </Reveal>
         </div>
       ) : (
         <>
           <Reveal>{head}</Reveal>
-          {data.venue && (
-            <Reveal className="mt-8" y={20}>
-              <VenueCard data={data} />
-            </Reveal>
-          )}
+          <Reveal className="mt-8" y={20}>
+            {/* Немає місця проведення в базі — замість картки закладу коротка довідка */}
+            {data.venue ? <VenueCard data={data} /> : <EventInfo data={data} tickets={tickets} />}
+          </Reveal>
         </>
       )}
     </section>
@@ -265,7 +264,7 @@ export function PlaceSpread({ data }: { data: PlacePageData }) {
   return (
     <>
       <SpreadHero data={data} />
-      {data.type === "event" && data.venue ? <EventAbout data={data} /> : <SpreadAbout data={data} />}
+      {data.type === "event" ? <EventAbout data={data} /> : <SpreadAbout data={data} />}
       {shown("gallery") && <GalleryStrip data={data} open={lb.open} />}
       <Repertoire data={data} />
       {/* Район із точкою вже є в паспорті — тут лише карта */}
@@ -275,5 +274,49 @@ export function PlaceSpread({ data }: { data: PlacePageData }) {
       {(shown("related_attractions") || shown("related_restaurants") || shown("related_hotels") || shown("related_events")) && <Nearby data={data} />}
       {lb.node}
     </>
+  );
+}
+
+/**
+ * Довідка про подію без прив'язаного закладу: силует району з точкою, місто,
+ * скільки найближчих вистав (веде до репертуару нижче) і сайт із квитками
+ * (посилання з опису — сам рядок «Придбати квитки» з тексту прибрано).
+ */
+function EventInfo({ data, tickets, vertical = false }: { data: PlacePageData; tickets: string; vertical?: boolean }) {
+  const { t, lang } = useV2();
+  const o = data.o!;
+  const shows = useMemo(() => (o.repertoire ? upcomingShows([o], 62).flatMap((d) => d.shows) : []), [o]);
+  let host = "";
+  try {
+    host = tickets ? new URL(tickets).hostname.replace(/^www\./, "") : "";
+  } catch {
+    host = "";
+  }
+  // Район уже видно в силуеті поруч — тут лише місто
+  const where = data.cityName;
+  const rows = [
+    where ? { Icon: MapPin, text: where } : null,
+    shows.length ? { Icon: Calendar, text: `${shows.length} ${plural(shows.length, t("showForms"))} ${lang === "en" ? "ahead" : "попереду"}`, href: "#repertoire" } : null,
+    host ? { Icon: Globe, text: host, href: tickets, ext: true } : null,
+  ].filter(Boolean) as { Icon: typeof MapPin; text: string; href?: string; ext?: boolean }[];
+  if (!rows.length && !data.district) return null;
+  return (
+    <div className={`rounded-[22px] bg-[#fffaf5] p-5 shadow-[0_20px_40px_-30px_rgba(0,10,30,0.5)] ring-1 ring-o-sea/[0.06] sm:p-6 ${vertical ? "" : "max-w-[760px] sm:flex sm:items-center sm:gap-8"}`}>
+      {data.district && <DistrictPin data={data} compact className={vertical ? "" : "shrink-0"} />}
+      <ul className={`grid gap-2.5 ${data.district ? (vertical ? "mt-5 border-t border-o-sea/10 pt-5" : "mt-5 border-t border-o-sea/10 pt-5 sm:mt-0 sm:border-l sm:border-t-0 sm:pl-8 sm:pt-0") : ""}`}>
+        {rows.map(({ Icon, text, href, ext }) => (
+          <li key={text} className="flex items-center gap-2.5 text-[14.5px]">
+            <Icon className="h-4 w-4 shrink-0 text-o-wine" aria-hidden="true" />
+            {href ? (
+              <a href={href} {...(ext ? { target: "_blank", rel: "noreferrer" } : {})} className="font-semibold underline decoration-o-wine/30 underline-offset-4 transition-colors hover:text-o-wine hover:decoration-o-wine">
+                {text}
+              </a>
+            ) : (
+              <span className="font-semibold">{text}</span>
+            )}
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }

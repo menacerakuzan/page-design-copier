@@ -565,7 +565,7 @@ export function Repertoire({ data }: { data: PlacePageData }) {
           </h2>
           <ul className={`mt-7 grid gap-x-12 border-t border-o-sand/15 md:grid-cols-2 ${past ? "opacity-60" : ""}`}>
             {rows.map((r) => (
-              <li key={r.key} className="grid grid-cols-[76px_1fr_auto] items-center gap-4 border-b border-o-sand/15 py-3.5">
+              <li key={r.key} className="grid grid-cols-[96px_1fr_auto] items-center gap-4 border-b border-o-sand/15 py-3.5">
                 <span className="flex flex-col leading-tight">
                   <span className="text-[24px] font-extrabold leading-none tabular-nums text-o-sun">{r.day}</span>
                   {r.wd && <span className="mt-1 whitespace-nowrap text-[11px] font-semibold uppercase tracking-[0.08em] text-o-sand/55">{r.wd}</span>}
