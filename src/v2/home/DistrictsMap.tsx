@@ -252,9 +252,10 @@ export function DistrictsMap() {
                   // З sm — як раніше: велике фото ліворуч, усе інше праворуч.
                   className="grid grid-cols-[96px_minmax(0,1fr)] items-center gap-x-5 gap-y-5 sm:grid-cols-[240px_minmax(0,1fr)] sm:items-start sm:gap-x-8 sm:gap-y-4"
                 >
-                  <div className="sm:row-span-2">
+                  {/* Фото — теж посилання на сторінку району */}
+                  <Link to={`/raion/${d.slug}`} aria-label={tl(d.name, d.nameEn)} className="block rounded-[6px] outline-none focus-visible:ring-2 focus-visible:ring-o-wine sm:row-span-2">
                     <PrintPhoto image={image} name={short(tl(d.name, d.nameEn))} lang={lang} />
-                  </div>
+                  </Link>
                   <div>
                     <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-o-wine sm:text-[13px]">
                       {String(districts.findIndex((x) => x.slug === d.slug) + 1).padStart(2, "0")} / {String(districts.length).padStart(2, "0")}
