@@ -36,14 +36,30 @@
     <link rel="preload" href="/assets/fonts/OdesaRegionType-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous" />
     <link rel="preload" href="/assets/fonts/OdesaRegionType-Medium.woff2" as="font" type="font/woff2" crossorigin="anonymous" />
 
-    <!-- Safari 26+ фарбує верхню/нижню системні панелі кольором background-color
-         кореня (html). Виставляємо його ще ДО першого кадру, щоб на прямій
-         загрузці кремових сторінок не блимала синя смуга: головна лишається
-         темною (брендовий хіро), решта — кремові. Далі при SPA-навігації колір
-         підтримує компонент PanelColor у App.tsx. -->
+    <!-- Safari 26+ фарбує системні панелі (область «чубчика», адресний рядок і
+         їхню «тінь») і фон при «перетягуванні» кольором фону body (запасний —
+         html). Виставляємо його ще ДО першого кадру; далі його тримає PanelColor
+         (App.tsx). Новий дизайн — завжди кремовий, решту робить сам Safari.
+         Старий — темний на головній (брендовий хіро), кремовий на решті.
+         body ще не існує, тож для нього — правило за міткою html[data-design]
+         (index.css фарбує body темним для старого дизайну).
+         Дизайн вкладки — як у src/lib/designMode.tsx: /v2, ?v2 (?v2=0 — вимкнути)
+         або збережений у sessionStorage режим. -->
+    <style>
+      body { margin: 0; }
+      html[data-design="v2"] body { background-color: #fff2e8; }
+    </style>
     <script>
-      document.documentElement.style.backgroundColor =
-        location.pathname === "/" ? "#001a3d" : "#fff2e8";
+      (function () {
+        var p = location.pathname, q = location.search, v2 = false;
+        var param = q.match(/[?&]v2(=([^&]*))?(&|$)/);
+        if (param) v2 = param[2] !== "0";
+        else if (p === "/v2" || p.indexOf("/v2/") === 0) v2 = true;
+        else { try { v2 = sessionStorage.getItem("design-v2") === "1"; } catch (e) {} }
+        var root = document.documentElement;
+        if (v2) root.dataset.design = "v2";
+        root.style.backgroundColor = !v2 && p === "/" ? "#001a3d" : "#fff2e8";
+      })();
     </script>
 
     <!-- Google бере назву сайту в результатах пошуку (жирний текст перед URL)
@@ -78,7 +94,10 @@
   </head>
 
   <body>
-    <div id="root"></div>
+    <!-- Кремова заглушка, поки вантажиться застосунок (React замінить її при
+         першому рендері): фон кореня може бути темним під «чубчиком», але
+         сама сторінка під час завантаження — кремова, а не синя. -->
+    <div id="root"><div style="min-height: 100vh; background: #fff2e8"></div></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

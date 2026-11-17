@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion, useInView, useReducedMotion } from "framer-motion";
 import { MapPin } from "lucide-react";
 import { useHierarchySnapshot } from "@/hooks/useHierarchySnapshot";
 import { usePageContentCards } from "@/hooks/usePageContentCards";
@@ -39,6 +39,11 @@ export function DistrictsMap() {
   const { data: snap } = useHierarchySnapshot();
   const { data: cards } = usePageContentCards("index");
   const pauseRef = usePauseOffscreen<HTMLElement>();
+  // Появу карти запускаємо за видимістю звичайного блоку-обгортки, а не самих
+  // елементів SVG: Safari на iPhone ненадійно відстежує видимість <g>/<path>,
+  // і райони лишались прозорими (видно було лише розмите світіння).
+  const mapRef = useRef<HTMLDivElement>(null);
+  const mapIn = useInView(mapRef, { once: true, margin: "-80px" });
   // Наведення одразу обирає район і він лишається обраним (раніше після
   // відведення миші виділення поверталось на Одеський — виглядало, ніби той «залип»).
   const [active, setActive] = useState("odeskyy-rayon");
@@ -117,7 +122,7 @@ export function DistrictsMap() {
         <div className="mt-5 grid items-center gap-6 sm:mt-6 sm:gap-10 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:gap-16">
           {/* Карта */}
           {/* Висота карти підлаштовується під екран, щоб увесь блок вміщався. */}
-          <div className="relative mx-auto w-full" style={{ maxWidth: "min(400px, calc((100svh - 300px) * 0.7), 88vw)" }}>
+          <div ref={mapRef} className="relative mx-auto w-full" style={{ maxWidth: "min(400px, calc((100svh - 300px) * 0.7), 88vw)" }}>
             <svg viewBox={`-10 -10 ${MAP_W + 20} ${MAP_H + 20}`} className="w-full overflow-visible" role="img" aria-label={lang === "en" ? "Map of Odesa Region districts" : "Карта районів Одеської області"}>
               <defs>
                 <filter id="map-glow" x="-20%" y="-20%" width="140%" height="140%">
@@ -152,8 +157,7 @@ export function DistrictsMap() {
                   червону заливку, і Одеський лишався виділеним після зміни вибору). */}
               <motion.g
                 initial={reduce ? false : { opacity: 0 }}
-                whileInView={{ opacity: 1 }}
-                viewport={{ once: true, margin: "-80px" }}
+                animate={reduce || mapIn ? { opacity: 1 } : { opacity: 0 }}
                 transition={{ duration: 0.6, delay: 1 }}
               >
                 {districts.map((x) => {
@@ -193,8 +197,7 @@ export function DistrictsMap() {
                       strokeWidth={1.2}
                       strokeLinejoin="round"
                       initial={{ pathLength: 0, opacity: 1 }}
-                      whileInView={{ pathLength: 1, opacity: 0 }}
-                      viewport={{ once: true, margin: "-80px" }}
+                      animate={mapIn ? { pathLength: 1, opacity: 0 } : { pathLength: 0, opacity: 1 }}
                       transition={{ pathLength: { duration: 1.6, delay: i * 0.12, ease: "easeInOut" }, opacity: { duration: 0.5, delay: 1.8 + i * 0.12 } }}
                     />
                   ))}

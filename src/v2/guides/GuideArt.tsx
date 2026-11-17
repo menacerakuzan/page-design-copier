@@ -14,7 +14,9 @@ export function GuideArt({ className = "" }: { className?: string }) {
     { x: 140, y: 122, w: 70, text: "Hallo!", bg: "#df9b3b", fg: "#4a0f22" },
   ];
   return (
-    <svg viewBox="0 0 300 210" className={className} aria-hidden="true">
+    // Видимість відстежуємо на самому <svg>, а не на його <path>/<g>: Safari на
+    // iPhone/iPad ненадійно бачить видимість внутрішніх елементів SVG.
+    <motion.svg viewBox="0 0 300 210" className={className} aria-hidden="true" initial={reduce ? false : "hidden"} whileInView="shown" viewport={{ once: true }}>
       {/* Пунктир маршруту з мітками */}
       <motion.path
         d="M14 188C60 168 92 196 132 182S214 160 286 174"
@@ -23,10 +25,7 @@ export function GuideArt({ className = "" }: { className?: string }) {
         strokeWidth="2.4"
         strokeLinecap="round"
         strokeDasharray="2 7"
-        initial={reduce ? false : { pathLength: 0 }}
-        whileInView={{ pathLength: 1 }}
-        viewport={{ once: true }}
-        transition={{ duration: 1.6, ease: "easeInOut" }}
+        variants={{ hidden: { pathLength: 0 }, shown: { pathLength: 1, transition: { duration: 1.6, ease: "easeInOut" } } }}
       />
       <circle cx="14" cy="188" r="5" fill="#fff2e8" stroke="#9f1f47" strokeWidth="2.2" />
       <g transform="translate(286 174)">
@@ -51,10 +50,10 @@ export function GuideArt({ className = "" }: { className?: string }) {
       {bubbles.map((b, i) => (
         <motion.g
           key={b.text}
-          initial={reduce ? false : { opacity: 0, y: 10, scale: 0.85 }}
-          whileInView={{ opacity: 1, y: 0, scale: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5, delay: 0.5 + i * 0.35, ease: [0.22, 1, 0.36, 1] }}
+          variants={{
+            hidden: { opacity: 0, y: 10, scale: 0.85 },
+            shown: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.5, delay: 0.5 + i * 0.35, ease: [0.22, 1, 0.36, 1] } },
+          }}
           style={{ transformOrigin: `${b.x}px ${b.y + 14}px`, transformBox: "view-box" }}
         >
           <g className="float-soft" style={{ animationDelay: `${i * 0.8}s` }}>
@@ -66,6 +65,6 @@ export function GuideArt({ className = "" }: { className?: string }) {
           </g>
         </motion.g>
       ))}
-    </svg>
+    </motion.svg>
   );
 }

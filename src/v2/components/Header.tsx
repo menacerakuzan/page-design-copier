@@ -127,12 +127,24 @@ export function Header({
     let last = window.scrollY;
     const onScroll = () => {
       const y = window.scrollY;
+      const vh = window.innerHeight;
+      // З якого місця шапка ховається при гортанні вниз. На головній — з того ж
+      // місця, де вона з'являється (кінець відео), інакше між цими порогами вона
+      // на мить виїжджала, хоч користувач гортав униз.
+      const hideFrom = revealAfterHero ? vh * 0.8 : vh;
       setScrolled(y > 40);
-      setPast(!revealAfterHero || y > window.innerHeight * 0.8);
-      // Невеликий поріг, щоб шапка не смикалась від тремтіння пальця.
-      if (Math.abs(y - last) < 8) return;
-      setTucked(phone.matches && y > last && y > window.innerHeight);
-      last = y;
+      if (!phone.matches || y <= hideFrom) {
+        setTucked(false);
+        last = y;
+      } else if (y > last) {
+        setTucked(true);
+        last = y;
+      } else if (last - y >= 8) {
+        // Невеликий поріг угору, щоб шапка не смикалась від тремтіння пальця.
+        setTucked(false);
+        last = y;
+      }
+      setPast(!revealAfterHero || y > vh * 0.8);
     };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -149,11 +161,21 @@ export function Header({
     // display:contents — обгортка не впливає на розкладку, але дає стилі нового
     // дизайну (.v2) і на старих сторінках, де кореня .v2 ще немає.
     <div className="v2 contents">
-      <header
-        ref={headerRef}
-        className={`fixed inset-x-0 top-0 z-50 px-3 pt-3 transition-[transform,opacity] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] sm:px-5 sm:pt-4 ${past ? (tucked ? "-translate-y-[140%]" : "") : "pointer-events-none -translate-y-[140%] opacity-0"}`}
-        onFocusCapture={() => setTucked(false)}
-      >
+      {/* Safari 26 фарбує системні панелі кольором fixed-елемента біля краю
+          екрана (якщо він займає майже всю ширину). Тому сам <header> лишаємо
+          порожнім і нульової висоти, а видиму «пігулку» кладемо в absolute-дитину:
+          такі діти Safari не семплить, і панелі лишаються «прозорими»
+          (див. так само MobileNav старого дизайну, github.com/andesco/safari-color-tinting). */}
+      <header ref={headerRef} className="fixed inset-x-0 top-0 z-50" onFocusCapture={() => setTucked(false)}>
+        <div
+          // Схована (до кінця відео або підібрана при гортанні вниз) — повністю
+          // невидима: інакше її тінь звисала з-за краю екрана смужкою в «тіні» Safari.
+          // visibility у transition — щоб при ховання вона зникала після анімації.
+          // Відомо: після першої появи пігулки Safari 26 на iPhone заливає верхню
+          // панель суцільно кремовим і вже не повертає «тінь» — прийнято свідомо,
+          // щоб шапка поверталась при гортанні вгору.
+          className={`absolute inset-x-3 top-3 transition-[transform,opacity,visibility] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] sm:inset-x-5 sm:top-4 ${past && !tucked ? "" : "pointer-events-none invisible -translate-y-[140%] opacity-0"}`}
+        >
         <div
           className={`mx-auto flex max-w-[1280px] items-center justify-between gap-4 rounded-full py-2 pl-5 pr-2 transition-all duration-500 ${
             scrolled
@@ -227,6 +249,7 @@ export function Header({
               <Menu className="h-5 w-5" aria-hidden="true" />
             </button>
           </div>
+        </div>
         </div>
       </header>
 
@@ -357,11 +380,10 @@ export function MobileDock() {
   ] as const;
   return (
     <div className="v2 contents">
-    <nav
-      aria-label={t("menu")}
-      className="fixed inset-x-0 bottom-0 z-40 px-3 pb-[calc(10px+env(safe-area-inset-bottom))] lg:hidden"
-    >
-      <ul className="mx-auto flex max-w-[440px] items-center justify-between rounded-[26px] bg-o-sand/95 px-2 py-2 text-o-sea shadow-[0_16px_40px_-14px_rgba(0,30,70,0.45)] ring-1 ring-o-sea/10 backdrop-blur-xl">
+    {/* Як і в шапці: сам fixed-<nav> порожній, видимий док — absolute-дитина,
+        щоб Safari 26 не заливав нижню панель браузера кольором доку. */}
+    <nav aria-label={t("menu")} className="fixed inset-x-0 bottom-0 z-40 lg:hidden">
+      <ul className="absolute inset-x-3 bottom-[calc(10px+env(safe-area-inset-bottom))] mx-auto flex max-w-[440px] items-center justify-between rounded-[26px] bg-o-sand/95 px-2 py-2 text-o-sea shadow-[0_-6px_24px_-12px_rgba(0,30,70,0.35)] ring-1 ring-o-sea/10 backdrop-blur-xl">
         {items.map(({ to, key, Icon, ...rest }) => (
           <li key={to} className="flex-1">
             <NavLink

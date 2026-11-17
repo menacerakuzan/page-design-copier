@@ -129,7 +129,8 @@ const PanelColor = () => {
   const v2 = useDesignV2();
 
   useLayoutEffect(() => {
-    if (v2 && pathname === "/") return; // нова головна виставляє колір сама
+    // Новий дизайн — завжди кремовий (панелі й тінь Safari робить сам).
+    // Старий — темна головна, решта кремові. Перший кадр — скрипт в index.html.
     const color = !v2 && pathname === "/" ? "#001a3d" : "#fff2e8";
     document.documentElement.style.backgroundColor = color;
     document.body.style.backgroundColor = color;

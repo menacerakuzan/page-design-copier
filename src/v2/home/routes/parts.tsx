@@ -11,7 +11,9 @@ export function FoldedMap({ className = "", tone = "warm" }: { className?: strin
   const reduce = useReducedMotion();
   const [paper, fold, mid] = tone === "cream" ? ["#fff6ec", "#f6e1cd", "#df9b3b"] : ["#fbebdc", "#f1d9c3", "#df9b3b"];
   return (
-    <svg viewBox="0 0 260 170" className={className} aria-hidden="true">
+    // Видимість відстежуємо на самому <svg>: Safari на iPhone ненадійно бачить
+    // видимість внутрішніх елементів SVG, і шлях міг так і не намалюватись.
+    <motion.svg viewBox="0 0 260 170" className={className} aria-hidden="true" initial={reduce ? false : "hidden"} whileInView="shown" viewport={{ once: true }}>
       {/* Три панелі гармошки */}
       <g stroke="#002f5e" strokeOpacity=".22" strokeWidth="1.2" strokeLinejoin="round">
         <path d="M10 34 90 14v130l-80 20z" fill={paper} />
@@ -29,10 +31,7 @@ export function FoldedMap({ className = "", tone = "warm" }: { className?: strin
         strokeWidth="2.6"
         strokeLinecap="round"
         strokeDasharray="3 7"
-        initial={reduce ? false : { pathLength: 0 }}
-        whileInView={{ pathLength: 1 }}
-        viewport={{ once: true }}
-        transition={{ duration: 1.8, ease: "easeInOut" }}
+        variants={{ hidden: { pathLength: 0 }, shown: { pathLength: 1, transition: { duration: 1.8, ease: "easeInOut" } } }}
       />
       {/* Старт */}
       <circle cx="32" cy="132" r="6" fill="#fff2e8" stroke="#9f1f47" strokeWidth="2.4" />
@@ -43,7 +42,7 @@ export function FoldedMap({ className = "", tone = "warm" }: { className?: strin
         <path d="M222 30c-8 0-13 6-13 13 0 10 13 23 13 23s13-13 13-23c0-7-5-13-13-13z" fill="#9f1f47" />
         <circle cx="222" cy="43" r="4.6" fill="#fff2e8" />
       </g>
-    </svg>
+    </motion.svg>
   );
 }
 
