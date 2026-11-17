@@ -1,12 +1,18 @@
 import { ArrowUpRight, Clock, MapPin, Route as RouteIcon } from "lucide-react";
-import { Img } from "@/components/Img";
 import type { Route } from "@/lib/routesRepository";
-import type { RoutesData, Stop } from "@/v2/home/routes/useRoutesData";
+import type { RoutesData } from "@/v2/home/routes/useRoutesData";
 import { ClampTitle } from "./ClampTitle";
+import { PreviewMedia } from "@/v2/routes/PreviewMedia";
+import { hasPreview } from "@/v2/routes/RoutePreviewMap";
+import { useDistrictNames, useRouteItem, type RouteItem } from "@/v2/routes/routeItem";
+import { usePreviewHover } from "@/v2/routes/usePreviewHover";
 
 /*
- * Картка маршруту «Картка» (обрана власником 2026-11-12) — для блоків
- * «Маршрути через …» на сторінках району, пункту, місця й видів туризму.
+ * Картка маршруту «Картка» (обрана власником 2026-11-12) — одна на весь сайт:
+ * сторінка «Маршрути» і блоки «Маршрути через …» на сторінках району, пункту,
+ * місця, видів туризму й маршруту. При наведенні — міні-карта маршруту
+ * (src/v2/routes/PreviewMedia.tsx). Прибрати її з якоїсь сторінки — додати
+ * картці проп-перемикач.
  * Інші варіанти («Журнал», «Зупинки», «Шлях») і стара горизонтальна картка —
  * у useful/v2/components/routeCards-variants.tsx.
  */
@@ -46,14 +52,30 @@ export function RouteFacts({ r, d, n }: { r: Route; d: RoutesData; n: number }) 
 /**
  * 4 «Картка»: невеликий прямокутник на світлій підкладці — фото згори
  * (чисте — без затемнення й плашок), під ним на підкладці «час · км ·
- * зупинки» з іконками, назва і зупинки через стрілки. По 4 в ряд на ПК, на телефоні — стрічка вбік.
+ * зупинки» з іконками, назва і зупинки через стрілки. При наведенні замість
+ * фото — міні-карта маршруту; на телефоні — кнопка-іконка в куті фото.
  */
-function RouteTile({ r, d, stops }: { r: Route; d: RoutesData; stops: Stop[] }) {
+export function RouteCard({ r, d, item }: { r: Route; d: RoutesData; item?: RouteItem }) {
+  const stops = d.stopsOf(r);
+  // Міні-карта при наведенні: сторінка «Маршрути» передає вже пораховану
+  // (item), решта сторінок — рахує тут.
+  const own = useRouteItem(item ? null : r);
+  const x = item ?? own;
+  const names = useDistrictNames();
+  const can = !!x && hasPreview(x);
+  const hover = usePreviewHover(can);
   return (
-    <article className="group relative flex h-full flex-col overflow-hidden rounded-[18px] bg-[#fffaf5] shadow-[0_16px_30px_-24px_rgba(0,10,30,0.55)] ring-1 ring-o-sea/[0.06] transition-[transform,box-shadow] duration-500 ease-out hover:-translate-y-1 hover:shadow-[0_24px_40px_-24px_rgba(0,10,30,0.6)]">
-      <div className="relative overflow-hidden bg-o-sea/10">
-        {/* Фото чисте — без затемнення й плашок (власник) */}
-        <Img src={r.imageUrl || stops[0]?.image} w={560} alt="" className="aspect-[16/10] w-full object-cover transition-transform duration-[900ms] ease-out group-hover:scale-[1.05]" />
+    <article {...hover.handlers} className="group relative flex h-full flex-col overflow-hidden rounded-[18px] bg-[#fffaf5] shadow-[0_16px_30px_-24px_rgba(0,10,30,0.55)] ring-1 ring-o-sea/[0.06] transition-[transform,box-shadow] duration-500 ease-out hover:-translate-y-1 hover:shadow-[0_24px_40px_-24px_rgba(0,10,30,0.6)]">
+      <div className="relative aspect-[16/10] overflow-hidden bg-o-sea/10">
+        {/* Фото чисте — без затемнення й плашок (власник). Наведення — міні-карта;
+            без неї (немає координат) — як і раніше, фото трохи наближається. */}
+        <PreviewMedia
+          x={x}
+          names={names}
+          image={r.imageUrl || stops[0]?.image}
+          hover={hover}
+          imgClass={`h-full w-full object-cover ${can ? "" : "transition-transform duration-[900ms] ease-out group-hover:scale-[1.05]"}`}
+        />
       </div>
       <div className="flex flex-1 flex-col px-3.5 pb-3.5 pt-3">
         <RouteFacts r={r} d={d} n={stops.length} />
@@ -71,9 +93,4 @@ function RouteTile({ r, d, stops }: { r: Route; d: RoutesData; stops: Stop[] }) 
       </div>
     </article>
   );
-}
-
-/** Картка маршруту. */
-export function RouteCard({ r, d }: { r: Route; d: RoutesData }) {
-  return <RouteTile r={r} d={d} stops={d.stopsOf(r)} />;
 }

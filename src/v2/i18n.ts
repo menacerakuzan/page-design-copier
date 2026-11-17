@@ -186,6 +186,8 @@ const dict = {
     aiAsk: "Спитайте, наприклад:",
     nearbyTitle: "Що поблизу",
     nearbyDesc: "Місця навколо вас — на живій карті.",
+    usefulTitle: "Корисно знати",
+    usefulDesc: "Статті й поради для мандрівників.",
     guidesTitle: "Сертифіковані гіди",
     guidesDesc: "Реєстр гідів Одеси з мовами та контактами.",
 
@@ -469,6 +471,8 @@ const dict = {
     aiAsk: "Ask, for example:",
     nearbyTitle: "Nearby",
     nearbyDesc: "Places around you on a live map.",
+    usefulTitle: "Good to know",
+    usefulDesc: "Articles and tips for travellers.",
     guidesTitle: "Certified guides",
     guidesDesc: "Registry of Odesa guides with languages and contacts.",
 

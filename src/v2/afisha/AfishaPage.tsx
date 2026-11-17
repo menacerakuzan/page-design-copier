@@ -68,7 +68,8 @@ function Head({ data }: { data: AfishaPageData }) {
         </h1>
         <p className="mt-4 max-w-[600px] text-[15.5px] leading-relaxed text-o-sea/70 sm:text-[16.5px]">{t("afPageLead")}</p>
       </Reveal>
-      <nav aria-label={t("afPageKicker")} className="inline-flex self-start rounded-full bg-o-sea/[0.05] p-1 lg:self-end">
+      <Reveal delay={0.1} y={16} className="self-start lg:self-end">
+      <nav aria-label={t("afPageKicker")} className="inline-flex rounded-full bg-o-sea/[0.05] p-1">
         <Link to="/podiyi" className={tab(!data.archiveOn)} aria-current={!data.archiveOn ? "page" : undefined}>
           {t("afUpcoming")}
           <span className="text-[12px] opacity-60">{data.shows.length}</span>
@@ -78,6 +79,7 @@ function Head({ data }: { data: AfishaPageData }) {
           {t("afArchive")}
         </Link>
       </nav>
+      </Reveal>
     </div>
   );
 }
@@ -104,7 +106,7 @@ function Schedule({ data }: { data: AfishaPageData }) {
   return (
     <>
       {data.shows.length > 0 && (
-        <div className="mt-10 grid gap-4 sm:mt-12">
+        <Reveal delay={0.15} y={16} className="mt-10 grid gap-4 sm:mt-12">
           <DateStrip data={data} />
           {data.cities.length > 1 && (
             <div className="flex flex-wrap gap-2">
@@ -121,7 +123,7 @@ function Schedule({ data }: { data: AfishaPageData }) {
               ))}
             </div>
           )}
-        </div>
+        </Reveal>
       )}
 
       <motion.div key={key} initial={reduce ? false : { opacity: 0.3 }} animate={{ opacity: 1 }} transition={{ duration: 0.35 }}>

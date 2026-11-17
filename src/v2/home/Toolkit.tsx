@@ -1,16 +1,22 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { AnimatePresence, motion, useInView, useReducedMotion } from "framer-motion";
-import { ArrowUpRight, BadgeCheck, Heart, Navigation, Sparkles, type LucideIcon } from "lucide-react";
+import { motion, useInView, useReducedMotion } from "framer-motion";
+import { ArrowUpRight, BadgeCheck, BookOpen, Heart, Sparkles, type LucideIcon } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useBasket } from "@/lib/basketContext";
 import { loadGuides } from "@/lib/guidesRepository";
 import { useV2 } from "@/v2/i18n";
+import { useArticles } from "@/v2/info/useArticles";
 import { Reveal, SectionHead } from "@/v2/components/ui";
 import { ScatterBackdrop } from "./toolkit/ScatterBackdrop";
 import { usePauseOffscreen } from "@/v2/lib/usePauseOffscreen";
 
-/** Міні-діалог: питання → «друкує…» → відповідь (програється при появі). */
+/**
+ * Міні-діалог: питання → «друкує…» → відповідь (програється при появі).
+ * Місце під увесь діалог зайняте одразу (бульбашки лише проявляються), а
+ * «друкує…» стоїть на місці майбутньої відповіді — тож нічого не смикається
+ * й не зсуває картку (раніше на мить були видні і «друкує…», і відповідь).
+ */
 function ChatDemo() {
   const { t } = useV2();
   const ref = useRef<HTMLDivElement>(null);
@@ -23,25 +29,30 @@ function ChatDemo() {
     return () => ids.forEach(clearTimeout);
   }, [inView, reduce]);
 
+  const bubble = (on: boolean) => ({
+    initial: false as const,
+    animate: on ? { opacity: 1, y: 0, scale: 1 } : { opacity: 0, y: 10, scale: 0.96 },
+    transition: { duration: reduce ? 0 : 0.4, ease: [0.22, 1, 0.36, 1] as const },
+  });
+
   return (
-    <div ref={ref} className="flex min-h-[118px] flex-col gap-2" aria-hidden="true">
-      <AnimatePresence>
-        {step >= 1 && (
-          <motion.div initial={{ opacity: 0, y: 10, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} className="max-w-[85%] self-end rounded-[18px] rounded-br-md bg-o-sand px-3.5 py-2 text-[13.5px] text-o-winedeep">
-            {t("aiQ")}
-          </motion.div>
-        )}
-        {step === 2 && (
-          <motion.div key="typing" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="typing flex gap-1.5 self-start rounded-[18px] rounded-bl-md bg-o-sand/15 px-3.5 py-3.5">
-            <span className="h-2 w-2 rounded-full bg-o-sand" /><span className="h-2 w-2 rounded-full bg-o-sand" /><span className="h-2 w-2 rounded-full bg-o-sand" />
-          </motion.div>
-        )}
-        {step >= 3 && (
-          <motion.div key="answer" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="max-w-[90%] self-start rounded-[18px] rounded-bl-md bg-o-sand/15 px-3.5 py-2 text-[13.5px] leading-relaxed">
-            {t("aiA")}
-          </motion.div>
-        )}
-      </AnimatePresence>
+    <div ref={ref} className="flex flex-col gap-2" aria-hidden="true">
+      <motion.div {...bubble(step >= 1)} className="max-w-[85%] self-end rounded-[18px] rounded-br-md bg-o-sand px-3.5 py-2 text-[13.5px] text-o-winedeep">
+        {t("aiQ")}
+      </motion.div>
+      <div className="relative max-w-[90%] self-start">
+        <motion.div {...bubble(step >= 3)} className="rounded-[18px] rounded-bl-md bg-o-sand/15 px-3.5 py-2 text-[13.5px] leading-relaxed">
+          {t("aiA")}
+        </motion.div>
+        <motion.div
+          initial={false}
+          animate={{ opacity: step === 2 ? 1 : 0 }}
+          transition={{ duration: reduce ? 0 : 0.25 }}
+          className="typing absolute left-0 top-0 flex gap-1.5 rounded-[18px] rounded-bl-md bg-o-sand/15 px-3.5 py-3.5"
+        >
+          <span className="h-2 w-2 rounded-full bg-o-sand" /><span className="h-2 w-2 rounded-full bg-o-sand" /><span className="h-2 w-2 rounded-full bg-o-sand" />
+        </motion.div>
+      </div>
     </div>
   );
 }
@@ -66,6 +77,16 @@ const guidesWord = (n: number, en: boolean) => {
   if (m10 === 1 && m100 !== 11) return "гід";
   if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return "гіди";
   return "гідів";
+};
+
+/** 1 стаття · 2 статті · 5 статей (англ. article/articles). */
+const articlesWord = (n: number, en: boolean) => {
+  if (en) return n === 1 ? "article" : "articles";
+  const m10 = n % 10;
+  const m100 = n % 100;
+  if (m10 === 1 && m100 !== 11) return "стаття";
+  if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return "статті";
+  return "статей";
 };
 
 /** Рядок сервісу на телефоні: значок · назва й опис · стрілка. */
@@ -97,6 +118,8 @@ export function Toolkit() {
   const en = lang === "en";
   const prompts = list("chips").slice(0, 4);
   const guidesLine = guides?.length ? `${guides.length} ${guidesWord(guides.length, en)} ${en ? "in the registry" : "у реєстрі"}` : "";
+  const { list: articles } = useArticles();
+  const articlesLine = articles.length ? `${articles.length} ${articlesWord(articles.length, en)}` : "";
 
   return (
     <section ref={pauseRef} aria-labelledby="tools-title" className="relative isolate overflow-hidden py-12 sm:py-20">
@@ -143,7 +166,7 @@ export function Toolkit() {
                 desc={t("tripDesc")}
                 extra={count > 0 ? <span className="rounded-full bg-o-wine px-2 py-0.5 text-[11px] font-bold text-o-sand">{count}</span> : undefined}
               />
-              <ServiceRow to="/poblizu" Icon={Navigation} iconCls="bg-o-wine/10 text-o-wine" title={t("nearbyTitle")} desc={t("nearbyDesc")} />
+              <ServiceRow to="/info" Icon={BookOpen} iconCls="bg-o-wine/10 text-o-wine" title={t("usefulTitle")} desc={t("usefulDesc")} />
               <ServiceRow to="/hidy" Icon={BadgeCheck} iconCls="bg-o-wine/10 text-o-wine" title={t("guidesTitle")} desc={guidesLine || t("guidesDesc")} />
             </ul>
           </Reveal>
@@ -177,18 +200,22 @@ export function Toolkit() {
             </Link>
           </Reveal>
 
-          {/* Поблизу — світла картка з винним «радаром» (замість важкої темно-синьої) */}
+          {/* Корисне — світла картка зі стосиком нахилених «сторінок» у куті */}
           <Reveal delay={0.14} className="hidden md:block">
-            <Link to="/poblizu" className="group relative flex h-full min-h-[170px] flex-col overflow-hidden rounded-[18px] bg-o-shell p-5 ring-1 ring-o-sea/10">
+            <Link to="/info" className="group relative flex h-full min-h-[170px] flex-col overflow-hidden rounded-[18px] bg-o-shell p-5 ring-1 ring-o-sea/10">
               <Corner light />
-              <div className="absolute -bottom-10 -right-10 h-36 w-36" aria-hidden="true">
-                <span className="ping-soft absolute inset-0 rounded-full border border-o-wine/40" />
-                <span className="ping-soft absolute inset-0 rounded-full border border-o-wine/40 [animation-delay:1.3s]" />
-                <span className="absolute left-1/2 top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-o-wine shadow-[0_0_0_6px_rgba(159,31,71,0.15)]" />
-              </div>
-              <Navigation className="h-6 w-6 text-o-wine" aria-hidden="true" />
-              <h3 className="mt-3 text-[19px] font-bold leading-none">{t("nearbyTitle")}</h3>
-              <p className="mt-2 max-w-[200px] text-[14px] text-o-sea/65">{t("nearbyDesc")}</p>
+              <svg viewBox="0 0 120 110" className="pointer-events-none absolute -bottom-3 -right-2 w-[84px] opacity-80 transition-[transform,opacity] duration-700 group-hover:-translate-y-1 group-hover:rotate-[-2deg] group-hover:opacity-100" aria-hidden="true">
+                <rect x="30" y="14" width="74" height="92" rx="7" fill="#f8e6d6" stroke="#9f1f47" strokeOpacity=".25" transform="rotate(10 67 60)" />
+                <g transform="rotate(-5 60 60)">
+                  <rect x="18" y="12" width="74" height="92" rx="7" fill="#fffaf5" stroke="#9f1f47" strokeOpacity=".35" />
+                  <rect x="28" y="24" width="30" height="5" rx="2.5" fill="#9f1f47" fillOpacity=".55" />
+                  <path d="M28 40H82M28 50H82M28 60H70M28 70H82M28 80H62" stroke="#002f5e" strokeOpacity=".18" strokeWidth="3" strokeLinecap="round" />
+                </g>
+              </svg>
+              <BookOpen className="h-6 w-6 text-o-wine" aria-hidden="true" />
+              <h3 className="mt-3 text-[19px] font-bold leading-none">{t("usefulTitle")}</h3>
+              <p className="relative mt-2 max-w-[170px] text-[14px] text-o-sea/65">{t("usefulDesc")}</p>
+              {articlesLine && <p className="mt-auto pt-3 text-[14px] font-semibold text-o-wine">{articlesLine}</p>}
             </Link>
           </Reveal>
 

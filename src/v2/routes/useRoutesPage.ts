@@ -1,24 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useHierarchySnapshot } from "@/hooks/useHierarchySnapshot";
-import { loadRouteTagOrder, ROUTE_TAG_OPTIONS, type Route } from "@/lib/routesRepository";
-import { routeGeometry } from "@/lib/routeGeometry";
-import { getObjectCoords } from "@/lib/geo";
-import { DISTRICT_SHAPES, MAP_H, MAP_W, projectLonLat } from "@/v2/lib/districtShapes";
+import { loadRouteTagOrder, ROUTE_TAG_OPTIONS } from "@/lib/routesRepository";
+import { DISTRICT_SHAPES } from "@/v2/lib/districtShapes";
 import { useRoutesData } from "@/v2/home/routes/useRoutesData";
-import { shortName } from "@/v2/districts/useDistricts";
 import { useV2 } from "@/v2/i18n";
+import { toRouteItem, useDistrictNames, type RouteItem } from "./routeItem";
 
-/** Маршрут для сторінки: сам маршрут + лінія на карті області (в одиницях SVG-карти районів). */
-export type RouteItem = {
-  r: Route;
-  /** Точки лінії [x, y] на карті; одна точка — маршрут в одному місці. */
-  line: [number, number][];
-  /** Зупинки з координатами — пронумеровані мітки на міні-карті. */
-  marks: { x: number; y: number; name: string }[];
-  /** Райони, якими проходить маршрут (slug). */
-  districts: string[];
-};
+export type { RouteItem } from "./routeItem";
 
 /**
  * Дані сторінки «Маршрути»: опубліковані маршрути з їхніми зупинками, лінії на
@@ -38,41 +27,10 @@ export function useRoutesPage() {
       .catch(() => {});
   }, []);
 
-  const items = useMemo<RouteItem[]>(() => {
-    if (!snap) return [];
-    const districtOf = new Map(snap.districts.map((x) => [x.id, x.slug]));
-    return d.routes.map((r) => {
-      const g = routeGeometry(r, snap.objects);
-      // Точки поза картою області (помилкові координати) не малюємо.
-      const inMap = ([x, y]: [number, number]) => x > -20 && x < MAP_W + 20 && y > -20 && y < MAP_H + 20;
-      const geoLine = g.coords.filter(([lng, lat]) => inMap(projectLonLat(lng, lat)));
-      const line = geoLine.map(([lng, lat]) => projectLonLat(lng, lat));
-      // Координати зупинки: з самого об'єкта, а якщо їх там немає — з точки
-      // посилання Google Maps, до якої цей об'єкт прив'язаний в адмінці.
-      const fromLink = new Map(g.waypoints.map((w) => [w.object.id, g.coords[w.coordIndex]]));
-      const geoMarks = g.stops.flatMap((o) => {
-        const c = getObjectCoords(o);
-        const p = c ? ([c.lng, c.lat] as [number, number]) : fromLink.get(o.id);
-        return p && inMap(projectLonLat(p[0], p[1])) ? [{ lng: p[0], lat: p[1], name: tl(o.name, o.nameEn) }] : [];
-      });
-      const marks = geoMarks.map((m) => {
-        const [x, y] = projectLonLat(m.lng, m.lat);
-        return { x, y, name: m.name };
-      });
-      const districts = [...new Set(g.stops.map((o) => districtOf.get(o.districtId)).filter(Boolean) as string[])];
-      return { r, line, marks, districts };
-    });
-  }, [d.routes, snap, tl]);
+  const items = useMemo<RouteItem[]>(() => (snap ? d.routes.map((r) => toRouteItem(r, snap, tl)) : []), [d.routes, snap, tl]);
 
   /** Назва району: повна («Білгород-Дністровський район») і коротка — для карток. */
-  const districtNames = useMemo(() => {
-    const m = new Map<string, { name: string; short: string }>();
-    for (const x of snap?.districts ?? []) {
-      const name = tl(x.name, x.nameEn);
-      m.set(x.slug, { name, short: shortName(name) });
-    }
-    return m;
-  }, [snap, tl]);
+  const districtNames = useDistrictNames();
 
   // Фільтри в адресі: ?tag=wine&district=odeskyy-rayon,izmayilskyy-rayon (районів — скільки завгодно)
   const rawDistricts = params.get("district");

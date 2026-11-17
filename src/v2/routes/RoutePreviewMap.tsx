@@ -2,7 +2,7 @@ import { useId, useMemo } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { useV2 } from "@/v2/i18n";
 import { DISTRICT_SHAPES, labelPos, projectLonLat } from "@/v2/lib/districtShapes";
-import type { RouteItem } from "./useRoutesPage";
+import type { RouteItem } from "./routeItem";
 
 /*
  * Міні-карта маршруту для картки — та сама проста карта районів, що й

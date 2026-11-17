@@ -140,7 +140,7 @@ export default function GuidesPage() {
               На ПК спершу видно LANGS_SHOWN найпоширеніших мов (і вибрану), решта —
               під «Ще N»; на телефоні мови гортаються вбік усі одразу. */}
           {guides.length > 0 && (
-            <div className="mt-10 flex flex-col gap-3 sm:mt-12">
+            <Reveal delay={0.1} y={16} className="mt-10 flex flex-col gap-3 sm:mt-12">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                 <label className="relative block sm:w-[300px] sm:shrink-0">
                   <span className="sr-only">{t("gdSearch")}</span>
@@ -201,7 +201,7 @@ export default function GuidesPage() {
                   </button>
                 )}
               </div>
-            </div>
+            </Reveal>
           )}
 
           {/* Картки */}

@@ -1,5 +1,5 @@
 import "@/v2/v2.css";
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowUp, Facebook, Instagram, Mail } from "lucide-react";
 import { useReducedMotion } from "framer-motion";
@@ -96,9 +96,49 @@ function Waves() {
   );
 }
 
+/**
+ * Винне тло «за краєм» сторінки, коли її перетягують нижче підвалу (overscroll).
+ * Цей фон браузер бере з html/body, тож поки підвал на екрані — фарбуємо їх винним.
+ *
+ * ЛИШЕ НА ПК (миша / тачпад): на iPhone Safari 26 з кольору body фарбує системні
+ * панелі й після зміни вже не повертає (верх ставав винним назавжди), а інших
+ * способів задати колір «за краєм» там немає — тож на телефонах body завжди
+ * кремовий (див. PanelColor в App.tsx).
+ */
+const DESKTOP = "(hover: hover) and (pointer: fine)";
+
+function useOverscrollColor(footer: React.RefObject<HTMLElement>) {
+  useLayoutEffect(() => {
+    const root = document.documentElement;
+    const body = document.body;
+    const mq = window.matchMedia(DESKTOP);
+    const paint = () => {
+      const top = footer.current?.getBoundingClientRect().top ?? Infinity;
+      const c = mq.matches && top < window.innerHeight ? "#9f1f47" : "#fff2e8";
+      if (body.style.backgroundColor !== c) {
+        root.style.backgroundColor = c;
+        body.style.backgroundColor = c;
+      }
+    };
+    paint();
+    window.addEventListener("scroll", paint, { passive: true });
+    window.addEventListener("resize", paint);
+    mq.addEventListener("change", paint);
+    return () => {
+      window.removeEventListener("scroll", paint);
+      window.removeEventListener("resize", paint);
+      mq.removeEventListener("change", paint);
+      root.style.backgroundColor = "#fff2e8";
+      body.style.backgroundColor = "#fff2e8";
+    };
+  }, [footer]);
+}
+
 export function Footer() {
   const { t } = useV2();
   const reduce = useReducedMotion();
+  const footerRef = useRef<HTMLElement>(null);
+  useOverscrollColor(footerRef);
   const cols = [
     {
       title: t("footerTravel"),
@@ -123,7 +163,7 @@ export function Footer() {
   return (
     // .v2 — стилі нового дизайну й на старих сторінках (там кореня .v2 ще немає).
     <div className="v2">
-    <footer className="bg-o-sand pt-2">
+    <footer ref={footerRef} className="bg-o-sand pt-2">
       <Waves />
       <div className="bg-o-wine text-o-sand">
         {/* Знизу на телефоні — місце під плаваючий док: винне тло йде під нього,

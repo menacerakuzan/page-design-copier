@@ -4,7 +4,7 @@ import { GridToggle, gridColsClass, useGridCols } from "@/v2/components/GridTogg
 import { MoreButton, useMore } from "@/v2/district/parts";
 import { RouteTagChips, RoutesEmpty, RoutesHead } from "./parts";
 import { DistrictPicker } from "./DistrictPicker";
-import { PreviewRouteCard } from "./PreviewCard";
+import { RouteCard } from "@/v2/components/routeCards";
 import type { RoutesPageData } from "./useRoutesPage";
 
 /**
@@ -23,9 +23,12 @@ export function RoutesCatalog({ data }: { data: RoutesPageData }) {
     <div className="mx-auto max-w-[1280px] px-5 pb-16 pt-4 sm:px-10 sm:pb-24 sm:pt-6">
       <RoutesHead data={data} aside={data.items.length > 0 && <Reveal delay={0.1}><DistrictPicker data={data} /></Reveal>} />
       {/* Типи й перемикач сітки — в одному рядку */}
-      <div id="all-routes" className="mt-8 flex scroll-mt-28 items-start gap-6">
-        <RouteTagChips data={data} className="min-w-0 flex-1" />
-        <GridToggle cols={cols} onChange={setCols} className="mt-1" />
+      <div id="all-routes" className="mt-8 scroll-mt-28">
+        {/* Плавна поява — як і заголовок, трохи слідом за ним */}
+        <Reveal delay={0.1} y={16} className="flex items-start gap-6">
+          <RouteTagChips data={data} className="min-w-0 flex-1" />
+          <GridToggle cols={cols} onChange={setCols} className="mt-1" />
+        </Reveal>
       </div>
 
       {n === 0 ? (
@@ -35,7 +38,7 @@ export function RoutesCatalog({ data }: { data: RoutesPageData }) {
           <ul className={`mt-8 grid ${gridColsClass(cols)}`}>
             {more.shown.map((x, i) => (
               <Reveal as="li" key={x.r.id} delay={(i % cols) * 0.05} y={18}>
-                <PreviewRouteCard x={x} data={data} />
+                <RouteCard r={x.r} d={data.d} item={x} />
               </Reveal>
             ))}
           </ul>
