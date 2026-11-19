@@ -8,7 +8,7 @@ import { WinterThemeProvider, useWinterTheme } from "@/lib/winterTheme";
 import { BasketProvider } from "@/lib/basketContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { SkipLink } from "@/components/SkipLink";
-import { KonamiEasterEgg } from "./components/KonamiEasterEgg";
+import { EasterEgg } from "./v2/easter/EasterEgg";
 import { MobileDock } from "./v2/components/Header";
 import { MusicProvider } from "./v2/lib/music";
 import { LegacyV2Redirect } from "@/lib/legacyV2Redirect";
@@ -33,7 +33,7 @@ const TripRoutePage = lazy(() => import("./v2/tripmap/TripRoutePage"));
 // Ще без власного нового дизайну (з новою шапкою/підвалом або як є).
 const Admin = lazy(() => import("./pages/Admin"));
 const NearbyPage = lazy(() => import("./pages/NearbyPage"));
-const AssistantPage = lazy(() => import("./pages/AssistantPage"));
+const AssistantPage = lazy(() => import("./v2/assistant/AssistantPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient({
@@ -132,7 +132,7 @@ const GlobalChrome = () => {
       {!pathname.startsWith("/admin") && (
         <ErrorBoundary fallback={null} resetKeys={[pathname]}><MobileDock /></ErrorBoundary>
       )}
-      {!home && <ErrorBoundary fallback={null} resetKeys={[pathname]}><KonamiEasterEgg /></ErrorBoundary>}
+      <ErrorBoundary fallback={null} resetKeys={[pathname]}><EasterEgg /></ErrorBoundary>
       {!home && winter && (
         <ErrorBoundary fallback={null}><Suspense fallback={null}><WinterLayer /></Suspense></ErrorBoundary>
       )}
