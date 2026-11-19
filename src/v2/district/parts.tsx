@@ -293,7 +293,10 @@ export function RoutesCompact({ data, title, id = "routes" }: { data: Pick<Distr
           </Link>
         }
       />
-      <ul className="no-scrollbar -mx-5 mt-6 flex snap-x snap-mandatory scroll-px-5 gap-3 overflow-x-auto px-5 pb-2 sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-4 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-4">
+      {/* Телефон: стрічка лише вбік (overflow-y-hidden — інакше картки, що ще
+          не з'явились, давали тягнути її вгору-вниз); запас згори/знизу (pt/pb з
+          від'ємними відступами), щоб тіні карток і підйом на дотик не обрізало. */}
+      <ul className="no-scrollbar -mx-5 -mb-5 mt-4 flex snap-x snap-mandatory scroll-px-5 gap-3 overflow-x-auto overflow-y-hidden px-5 pb-7 pt-2 sm:mx-0 sm:mb-0 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-4 sm:overflow-visible sm:p-0 lg:grid-cols-4">
         {list.map((r, i) => (
           <Reveal as="li" key={r.id} delay={(i % 4) * 0.05} y={14} className="w-[72vw] max-w-[300px] shrink-0 snap-start sm:w-auto sm:max-w-none">
             <RouteCard r={r} d={d} />

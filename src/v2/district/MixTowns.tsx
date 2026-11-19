@@ -56,7 +56,10 @@ function PanelRow({ towns, reveal = true }: { towns: Town[]; reveal?: boolean })
   const [active, setActive] = useState(0);
   const Item = reveal ? Reveal : PlainLi;
   return (
-    <ul className="no-scrollbar -mx-5 flex gap-3 overflow-x-auto px-5 sm:mx-0 sm:h-[400px] sm:overflow-visible sm:px-0">
+    // Телефон: стрічка гортається лише вбік. Фото, що ще не з'явились (Reveal
+    // зсуває їх на 28px униз), інакше робили стрічку вищою за неї саму — і її
+    // можна було тягнути вгору-вниз. Запас знизу (pb/-mb) + overflow-y-hidden.
+    <ul className="no-scrollbar -mx-5 -mb-8 flex gap-3 overflow-x-auto overflow-y-hidden px-5 pb-8 sm:m-0 sm:h-[400px] sm:overflow-visible sm:p-0">
       {towns.map((tw, i) => {
         const on = i === active;
         return (
