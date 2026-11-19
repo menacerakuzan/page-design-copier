@@ -85,6 +85,9 @@ export function Moods() {
                         className="absolute inset-0 h-full w-full object-cover opacity-[0.75] mix-blend-soft-light transition-[opacity,transform] duration-700 ease-out group-hover:scale-[1.05] group-hover:opacity-100"
                         style={{
                           filter: `grayscale(1) contrast(${c.photo.contrast}) brightness(${c.photo.brightness * (PHOTO_BRIGHTNESS[it.type] ?? 1)})`,
+                          // Фото завжди на власному шарі: інакше Safari після анімації наведення
+                          // знімав шар — змішування (soft-light) мінялось, і фото «стрибало» темніше→світліше.
+                          willChange: "transform, opacity",
                         }}
                       />
 

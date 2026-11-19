@@ -88,7 +88,8 @@ export function TypeTile({ tp, active = false, dim = false, onClick, compact = f
             w={360}
             alt=""
             className="absolute inset-0 h-full w-full object-cover opacity-[0.75] mix-blend-soft-light transition-[opacity,transform] duration-700 ease-out group-hover:scale-[1.05] group-hover:opacity-100"
-            style={{ filter: tp.photoFilter }}
+            // Фото завжди на власному шарі — без «стрибка» яскравості в кінці анімації наведення (Safari), як на головній
+            style={{ filter: tp.photoFilter, willChange: "transform, opacity" }}
           />
         )}
         <MoodArt
