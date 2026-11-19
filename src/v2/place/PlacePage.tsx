@@ -91,8 +91,7 @@ function PlaceBody({ type, slug }: { type: TourismObjectType; slug: string | und
 
 /**
  * Нова сторінка туристичного об'єкта (/mistse/:slug, /podiyi/:slug,
- * /restorany/:slug, /hoteli/:slug). Стара src/pages/EntityDetail лишається до
- * кінця редизайну.
+ * /restorany/:slug, /hoteli/:slug).
  */
 export default function PlacePage({ type }: { type: TourismObjectType }) {
   const { slug } = useParams();

@@ -21,7 +21,7 @@ const TICKETS = "grid-cols-2 gap-x-3 gap-y-7 sm:grid-cols-3 sm:gap-x-5 sm:gap-y-
 /**
  * Нова сторінка «Афіша» (/podiyi): розклад вистав на ~2 місяці у вигляді
  * квитків, згрупованих за днями. Фільтр — стрічка днів-«календариків»; події без розкладу (фестивалі) — окремо; архів — ?arkhiv.
- * Стара src/pages/EventsPage лишається до кінця редизайну.
+ *
  */
 export default function AfishaPage() {
   const { t, lang } = useV2();

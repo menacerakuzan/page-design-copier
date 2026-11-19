@@ -14,7 +14,7 @@ import { RouteNavigator } from "./RouteNavigator";
  * місцями з «Мого маршруту» (або з посилання ?m=…, яким поділилися).
  * Вигляд «Навігатор» (обраний власником): велика карта, під нею легка
  * стрічка порядку зупинок. «Повна карта» й «По днях» — у useful/v2/tripmap/.
- * Стара src/pages/RouteMapPage лишається до кінця редизайну.
+ *
  */
 export default function TripRoutePage() {
   const { t, lang } = useV2();

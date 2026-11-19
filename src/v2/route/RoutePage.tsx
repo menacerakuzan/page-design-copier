@@ -14,7 +14,6 @@ import { RouteSpread } from "./VariantSpread";
 /**
  * Нова сторінка маршруту (/marshruty/:id), вигляд «Розворот» (обраний
  * власником). «Стрічка» й «Путівник» — у useful/v2/route/. Стара
- * src/pages/RouteDetailPage лишається до кінця редизайну.
  */
 export default function RoutePage() {
   const { id } = useParams();

@@ -3,10 +3,10 @@ import { screen, within } from "@testing-library/react";
 import { renderRoute } from "@/test/render";
 import { tableData } from "@/test/msw/handlers";
 import { regionRow, districtRow, cityRow, objectRow, contentCardRow } from "@/test/fixtures";
-import DistrictPage from "./DistrictPage";
-import CityPage from "./CityPage";
-import EntityDetail from "./EntityDetail";
-import DistrictsPage from "./DistrictsPage";
+import DistrictPage from "@/v2/district/DistrictPage";
+import TownPage from "@/v2/town/TownPage";
+import PlacePage from "@/v2/place/PlacePage";
+import DistrictsPage from "@/v2/districts/DistrictsPage";
 
 /**
  * Регресійні тести на конкретні пункти аудиту вебдоступності Мінцифри
@@ -72,7 +72,7 @@ describe("аудит вебдоступності — структура сто�
 
 describe("аудит вебдоступності — кнопки й посилання", () => {
   it("§4: жодної кнопки без доступної назви", async () => {
-    const { container } = renderRoute("/mistse/:slug", "/mistse/muzei", <EntityDetail type="attraction" />);
+    const { container } = renderRoute("/mistse/:slug", "/mistse/muzei", <PlacePage type="attraction" />);
     await screen.findAllByText(/Музей/, undefined, opts);
     const unnamed: string[] = [];
     container.querySelectorAll("button").forEach((b) => {
@@ -85,7 +85,7 @@ describe("аудит вебдоступності — кнопки й посил
 
   it("§3.2.1: картка не є одним гігантським <a> з купою вкладеного тексту", async () => {
     const { container } = renderRoute("/districts", "/districts", <DistrictsPage />);
-    await screen.findAllByText(/Одеський район/, undefined, opts);
+    await screen.findAllByText(/Одеський/, undefined, opts); // плитки — коротка назва, без «район»
     // Ім'я посилання не має злипатися з усього вмісту картки. Беремо найдовше
     // доступне ім'я серед посилань і вимагаємо розумної межі.
     const tooLong: string[] = [];
@@ -97,7 +97,7 @@ describe("аудит вебдоступності — кнопки й посил
   });
 
   it("§4.1.6 / 4.1.3: кнопки-розгорталки мають aria-expanded, перемикачі — aria-pressed", async () => {
-    const { container } = renderRoute("/mistse/:slug", "/mistse/muzei", <EntityDetail type="attraction" />);
+    const { container } = renderRoute("/mistse/:slug", "/mistse/muzei", <PlacePage type="attraction" />);
     await screen.findAllByText(/Музей/, undefined, opts);
     // Значення мають бути валідними булевими рядками, а не порожніми.
     container.querySelectorAll("[aria-expanded]").forEach((el) => {
@@ -111,7 +111,7 @@ describe("аудит вебдоступності — кнопки й посил
 
 describe("аудит вебдоступності — зображення та медіа", () => {
   it("§2.1.1: у кожного <img> є атрибут alt (порожній = декоративне)", async () => {
-    const { container } = renderRoute("/napryamky/:citySlug", "/napryamky/bilyaivka", <CityPage />);
+    const { container } = renderRoute("/napryamky/:citySlug", "/napryamky/bilyaivka", <TownPage />);
     await screen.findAllByText(/Біляївка/, undefined, opts);
     const missing: string[] = [];
     container.querySelectorAll("img").forEach((img) => {
@@ -121,7 +121,7 @@ describe("аудит вебдоступності — зображення та 
   });
 
   it("§2.1.1: alt не дублює видимий заголовок поруч", async () => {
-    const { container } = renderRoute("/napryamky/:citySlug", "/napryamky/bilyaivka", <CityPage />);
+    const { container } = renderRoute("/napryamky/:citySlug", "/napryamky/bilyaivka", <TownPage />);
     await screen.findAllByText(/Біляївка/, undefined, opts);
     // Дублювання (alt === сусідній заголовок) змушувало незрячого чути назву двічі.
     const dupes: string[] = [];

@@ -165,7 +165,7 @@ export function Header({
           екрана (якщо він займає майже всю ширину). Тому сам <header> лишаємо
           порожнім і нульової висоти, а видиму «пігулку» кладемо в absolute-дитину:
           такі діти Safari не семплить, і панелі лишаються «прозорими»
-          (див. так само MobileNav старого дизайну, github.com/andesco/safari-color-tinting). */}
+          (див. github.com/andesco/safari-color-tinting). */}
       <header ref={headerRef} className="fixed inset-x-0 top-0 z-50" onFocusCapture={() => setTucked(false)}>
         <div
           // Схована (до кінця відео або підібрана при гортанні вниз) — повністю

@@ -102,17 +102,16 @@
     @apply border-border;
   }
 
-  /* Safari 26+ бере колір верхньої/нижньої панелі з background-color кореня
-     сторінки (не з реального відео/градієнта) — тому саме тут задаємо темний
-     колір бренду, щоб панелі були темними, а не світлими. */
+  /* Safari 26+ бере колір системних панелей з background-color кореня
+     сторінки — сайт кремовий, тож і корінь кремовий (див. також index.html). */
   html {
-    background-color: #001a3d;
+    background-color: #fff2e8;
   }
 
   body {
     margin: 0;
     font-family: "Odesa Region Type", sans-serif;
-    background-color: #001a3d;
+    background-color: #fff2e8;
     color: #fff2e8;
     /* WCAG 1.4.12: комфортний міжрядковий інтервал за замовчуванням.
        Явні leading-* класи в компонентах це перекривають там, де потрібно
@@ -334,15 +333,6 @@
   .animate-progress-grow {
     animation: none;
   }
-}
-
-/* Підвал: бліки піни пливуть уздовж хвилі (SiteFooter → Swell). */
-@keyframes footer-foam {
-  to { stroke-dashoffset: -480; }
-}
-.footer-foam { animation: footer-foam 11s linear infinite; }
-@media (prefers-reduced-motion: reduce) {
-  .footer-foam { animation: none; }
 }
 
 /* ── Зимова тема (src/lib/winterTheme.tsx, src/components/winter/*) ──────

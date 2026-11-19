@@ -60,9 +60,8 @@ export function TownBody({ slug, children }: { slug: string | undefined; childre
 }
 
 /**
- * Нова сторінка населеного пункту (/napryamky/:citySlug), вигляд «Розворот».
- * Стара src/pages/CityPage лишається до кінця редизайну. Невибрані варіанти
- * («Буклет», «Прогулянка») — у useful/v2/town/.
+ * Сторінка населеного пункту (/napryamky/:citySlug), вигляд «Розворот».
+ * Невибрані варіанти («Буклет», «Прогулянка») — у useful/v2/town/.
  */
 export default function TownPage() {
   const { citySlug } = useParams();

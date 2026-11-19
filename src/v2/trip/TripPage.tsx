@@ -14,7 +14,7 @@ import { TripList } from "./TripList";
  * мапа» (обраний власником): збережені ♡ місця списком із номерами (порядок —
  * перетягуванням), поруч — мапа районів із точками, підсумок і «Скласти
  * маршрут» (карта — /marshrut). «Картки» й «Квиток» — у useful/v2/trip/.
- * Стара src/pages/BasketPage лишається до кінця редизайну.
+ *
  */
 export default function TripPage() {
   const { t, lang } = useV2();

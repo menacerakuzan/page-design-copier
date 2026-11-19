@@ -13,7 +13,7 @@ import { ArticleCard, FeaturedArticle, NotebookBackdrop } from "./parts";
  * Перша — великим розворотом, решта — картками (чисте фото, дата й час
  * читання, назва, уривок, позначка «з відео»). Кожна стаття відкривається
  * окремою сторінкою /info/:id (раніше — у вікні поверх сторінки).
- * Стара src/pages/InfoPage лишається до кінця редизайну.
+ *
  */
 export default function InfoPage() {
   const { t, lang } = useV2();

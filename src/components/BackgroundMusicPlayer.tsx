@@ -1,8 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { useLocation } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
-import { Volume2, VolumeX } from "lucide-react";
-import { useLang } from "@/lib/langContext";
 
 const VIDEO_ID = "2OAj2Z1BkAM"; // «Одеса» — Євген Філатов
 const DEFAULT_VOLUME = 35; // 0–100, комфортний рівень для фонової музики
@@ -48,7 +44,12 @@ function loadYouTubeApi(): Promise<void> {
   return apiPromise;
 }
 
-/** Логіка фонової музики (YouTube-плеєр без інтерфейсу) — для власних кнопок. */
+/**
+ * Логіка фонової музики сайту — для власних кнопок (див. v2/lib/music).
+ * Стрімиться напряму з YouTube (офіційний embed API — без завантаження чи
+ * перезаливки аудіофайлу), циклічно, за замовчуванням без звуку (щоб пройти
+ * autoplay-політику браузерів і не лякати користувача).
+ */
 export function useBackgroundMusic() {
   const hostRef = useRef<HTMLDivElement | null>(null);
   const playerRef = useRef<YTPlayer | null>(null);
@@ -239,94 +240,3 @@ export const MUSIC_CSS = `
           transform: scale(1.25);
         }
       `;
-
-/**
- * Фонова музика сайту: стрімиться напряму з YouTube (офіційний embed API —
- * без завантаження/перезаливки аудіофайлу), циклічно, за замовчуванням без
- * звуку (щоб пройти autoplay-політику браузерів і не лякати користувача).
- * Сам плеєр — один на весь сайт (MusicProvider у App); цей віджет старого
- * дизайну лише керує ним, тож при перемиканні дизайнів музика не дублюється.
- */
-export function BackgroundMusicPlayer({ music }: { music: ReturnType<typeof useBackgroundMusic> }) {
-  const { t } = useLang();
-  const { pathname } = useLocation();
-  // /koshyk і /marshrut мають власну липку CTA-кнопку внизу зліва-направо —
-  // піднімаємо кнопку музики вище неї (той самий приём, що і в AssistantFab).
-  const raised = pathname === "/koshyk" || pathname === "/marshrut";
-  const bottom = raised
-    ? "calc(150px + env(safe-area-inset-bottom))"
-    : "calc(84px + env(safe-area-inset-bottom))";
-  const { ready, unmuted, volume, toggle, onSlide, showQuiet } = music;
-
-  return (
-    <>
-      <AnimatePresence>
-        {ready && (
-          <motion.div
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0, opacity: 0 }}
-            transition={{ type: "spring", stiffness: 500, damping: 24 }}
-            className="fixed left-4 z-30 flex items-center rounded-full border border-[#002f5e]/12 bg-[#fff2e8] text-[#002f5e] shadow-[0_10px_24px_-8px_rgba(0,47,94,0.4)]"
-            style={{ bottom }}
-          >
-            <motion.button
-              type="button"
-              onClick={toggle}
-              whileTap={{ scale: 0.9 }}
-              aria-label={unmuted ? t("musicOff") : t("musicOn")}
-              aria-pressed={unmuted}
-              className="tap flex h-11 w-11 shrink-0 items-center justify-center rounded-full"
-            >
-              {showQuiet ? (
-                <VolumeX className="h-5 w-5" strokeWidth={2} />
-              ) : (
-                <span className="relative flex items-center justify-center">
-                  <Volume2 className="h-5 w-5" strokeWidth={2} />
-                  <span className="absolute -right-1 -top-1 flex items-end gap-[1.5px]" aria-hidden="true">
-                    {[0, 1, 2].map((i) => (
-                      <span
-                        key={i}
-                        className="bg-note-bar w-[2px] rounded-full bg-[#df9b3b]"
-                        style={{ animationDelay: `${i * 0.15}s` }}
-                      />
-                    ))}
-                  </span>
-                </span>
-              )}
-            </motion.button>
-
-            {/* ── Ніжний повзунок гучності: з'являється, поки звук увімкнено ── */}
-            <AnimatePresence initial={false}>
-              {unmuted && (
-                <motion.div
-                  initial={{ width: 0, opacity: 0 }}
-                  animate={{ width: 96, opacity: 1 }}
-                  exit={{ width: 0, opacity: 0 }}
-                  transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-                  className="overflow-hidden"
-                >
-                  <input
-                    type="range"
-                    min={0}
-                    max={100}
-                    value={volume}
-                    onChange={(e) => onSlide(Number(e.target.value))}
-                    aria-label={t("musicVolume")}
-                    className="volume-slider"
-                    style={{ ["--pct" as any]: `${volume}%` }}
-                  />
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            <div className="w-1" />
-          </motion.div>
-        )}
-      </AnimatePresence>
-      {/* Стилі (MUSIC_CSS) підключає MusicProvider. */}
-    </>
-  );
-}
-
-export default BackgroundMusicPlayer;
