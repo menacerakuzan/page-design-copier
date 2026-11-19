@@ -130,10 +130,10 @@ export function Toolkit() {
         <div className="mt-6 grid grid-cols-[minmax(0,1fr)] gap-3.5 sm:mt-8 md:grid-cols-2 lg:grid-cols-4 lg:grid-rows-[212px_212px]">
           {/* AI-гід. Уся картка веде в чат, а підказки-питання — у чат одразу з цим питанням. */}
           <Reveal className="md:col-span-2 lg:row-span-2">
-            <div className="grain group relative flex h-full flex-col overflow-hidden rounded-[18px] bg-o-wine p-5 text-o-sand sm:p-6 lg:min-h-[330px]">
+            <div className="layers group relative flex h-full flex-col overflow-hidden rounded-[18px] bg-o-wine p-5 text-o-sand sm:p-6 lg:min-h-[330px]">
               <Corner />
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-o-sun text-o-winedeep"><Sparkles className="h-[18px] w-[18px]" aria-hidden="true" /></span>
-              {/* Невидиме посилання на всю картку; підказки-питання лежать над ним (!z-10 — бо .grain
+              {/* Невидиме посилання на всю картку; підказки-питання лежать над ним (!z-10 — бо .layers
                   ставить усім дітям z-index: 1 сильнішим селектором) */}
               <Link to="/asystent" aria-label={t("aiTitle")} className="absolute inset-0 z-[2] rounded-[18px]" />
               <h3 className="mt-4 max-w-[380px] text-[23px] font-bold leading-[1.05] tracking-[-0.02em] sm:text-[26px]">{t("aiTitle")}</h3>

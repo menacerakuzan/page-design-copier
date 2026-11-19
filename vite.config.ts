@@ -62,7 +62,9 @@ export default defineConfig({
           if (!id.includes("node_modules")) return;
           // maplibre: force into its own chunk so it isn't hoisted into the entry
           // (it's shared by two lazy routes — Nearby and the routes overlay).
-          if (id.includes("maplibre")) return "maplibre";
+          // CSS — не в ручний чанк: інакше Vite підтягує його стилі в головний
+          // index.html (render-blocking на кожній сторінці), а не разом із картою.
+          if (id.includes("maplibre")) return id.endsWith(".css") ? undefined : "maplibre";
           if (id.includes("framer-motion")) return "framer";
           if (/[\\/]node_modules[\\/](react|react-dom|react-router|react-router-dom|scheduler)[\\/]/.test(id)) return "react";
           if (id.includes("@tanstack")) return "react-query";

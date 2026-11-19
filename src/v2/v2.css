@@ -96,19 +96,10 @@
 .v2 .wave { animation: v2-wave linear infinite; animation-play-state: paused; }
 .v2 [data-run="1"] .wave { animation-play-state: running; will-change: transform; }
 
-/* Легке «зерно» поверх кольорових секцій — щоб не виглядали пласко. */
-.v2 .grain { position: relative; isolation: isolate; }
-.v2 .grain::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  opacity: 0.07;
-  mix-blend-mode: overlay;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
-}
-.v2 .grain > :not(.absolute):not(.fixed) { position: relative; z-index: 1; }
+/* Шари в кольорових блоках: вміст — над абсолютними декоративними фонами
+   (раніше тут же було «зерно»-шум, прибрано — його не було видно). */
+.v2 .layers { position: relative; isolation: isolate; }
+.v2 .layers > :not(.absolute):not(.fixed) { position: relative; z-index: 1; }
 
 .v2 .no-scrollbar { scrollbar-width: none; }
 .v2 .no-scrollbar::-webkit-scrollbar { display: none; }

@@ -78,7 +78,7 @@ export function DistrictsMap() {
   const st = d ? stats.get(d.id) : undefined;
 
   return (
-    <section ref={pauseRef} aria-labelledby="map-title" className="grain relative overflow-hidden bg-o-sand px-5 py-10 text-o-sea sm:px-10 sm:py-12">
+    <section ref={pauseRef} aria-labelledby="map-title" className="layers relative overflow-hidden bg-o-sand px-5 py-10 text-o-sea sm:px-10 sm:py-12">
       {/* ПК: підпис OpenStreetMap — у нижньому правому куті, подалі від підписів на карті */}
       <p className="absolute bottom-3 right-10 z-[1] hidden text-[11px] leading-none lg:block">
         <OsmCredit text={t("mapCredit")} />

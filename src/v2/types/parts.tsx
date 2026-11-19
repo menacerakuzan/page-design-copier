@@ -123,7 +123,7 @@ export function TypeBand({ tp, size = "lg", children, id }: { tp: TourismType; s
   const c = tp.style;
   const lg = size === "lg";
   return (
-    <div className="grain relative isolate overflow-hidden" style={{ backgroundColor: c.bg, color: c.ink }}>
+    <div className="layers relative isolate overflow-hidden" style={{ backgroundColor: c.bg, color: c.ink }}>
       {tp.image && (
         <Img src={tp.image} w={1800} alt="" className="absolute inset-0 -z-10 h-full w-full object-cover opacity-60 mix-blend-soft-light" style={{ filter: tp.photoFilter }} />
       )}

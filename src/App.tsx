@@ -2,7 +2,6 @@ import { Suspense, lazy, useEffect, useLayoutEffect, useRef } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
 import { loadHierarchySnapshot, loadPublishedContentCards } from "@/lib/adminRepository";
-import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { LangProvider } from "@/lib/langContext";
 import { WinterThemeProvider, useWinterTheme } from "@/lib/winterTheme";
@@ -218,7 +217,6 @@ const App = () => {
             {/* Перший фокусабельний елемент документа — саме тут, ДО будь-якої
                 навігації, інакше "пропустити шапку" не має сенсу. */}
             <SkipLink />
-            <Toaster />
             <GlobalChrome />
             <ErrorBoundary>
               <Suspense fallback={<RouteFallback />}>

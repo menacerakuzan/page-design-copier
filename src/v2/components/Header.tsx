@@ -179,7 +179,9 @@ export function Header({
         <div
           className={`mx-auto flex max-w-[1280px] items-center justify-between gap-4 rounded-full py-2 pl-5 pr-2 transition-all duration-500 ${
             scrolled
-              ? "bg-o-sand/85 text-o-sea shadow-[0_12px_40px_-18px_rgba(0,30,70,0.45)] ring-1 ring-o-sea/[0.06] backdrop-blur-xl"
+              ? // Розмиття під шапкою — лише на ПК: на телефоні воно дороге для GPU при
+                // гортанні, тож там пігулка майже непрозора (на око майже без різниці).
+                "bg-o-sand/[0.96] text-o-sea shadow-[0_12px_40px_-18px_rgba(0,30,70,0.45)] ring-1 ring-o-sea/[0.06] lg:bg-o-sand/85 lg:backdrop-blur-xl"
               : dark
                 ? "bg-transparent text-o-sand"
                 : "bg-transparent text-o-sea"
@@ -383,7 +385,7 @@ export function MobileDock() {
     {/* Як і в шапці: сам fixed-<nav> порожній, видимий док — absolute-дитина,
         щоб Safari 26 не заливав нижню панель браузера кольором доку. */}
     <nav aria-label={t("menu")} className="fixed inset-x-0 bottom-0 z-40 lg:hidden">
-      <ul className="absolute inset-x-3 bottom-[calc(10px+env(safe-area-inset-bottom))] mx-auto flex max-w-[440px] items-center justify-between rounded-[26px] bg-o-sand/95 px-2 py-2 text-o-sea shadow-[0_-6px_24px_-12px_rgba(0,30,70,0.35)] ring-1 ring-o-sea/10 backdrop-blur-xl">
+      <ul className="absolute inset-x-3 bottom-[calc(10px+env(safe-area-inset-bottom))] mx-auto flex max-w-[440px] items-center justify-between rounded-[26px] bg-o-sand/[0.97] px-2 py-2 text-o-sea shadow-[0_-6px_24px_-12px_rgba(0,30,70,0.35)] ring-1 ring-o-sea/10">
         {items.map(({ to, key, Icon, ...rest }) => (
           <li key={to} className="flex-1">
             <NavLink

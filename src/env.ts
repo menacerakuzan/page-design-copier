@@ -1,27 +1,35 @@
-import { z } from "zod";
-
 /**
  * Single, validated source of truth for runtime configuration. Parsing at module
  * load means a misconfigured deploy fails fast and loudly instead of producing
  * confusing 404s deep in the data layer.
+ * (Перевірка вручну, без zod — щоб не тягнути ~50 КБ бібліотеки в головний бандл.)
  */
-const schema = z.object({
-  VITE_API_URL: z.string().url(),
-  VITE_API_ANON_KEY: z.string().min(1),
-  VITE_OPENWEATHER_KEY: z.string().optional().default(""),
-  VITE_ADMIN_EMAIL: z.string().default("admin@tourism.od.gov.ua"),
-  // NB: no admin password here — auth is server-side (see src/lib/adminAuth.ts).
-  // A VITE_-prefixed secret would be inlined into the client bundle.
-});
+// NB: no admin password here — auth is server-side (see src/lib/adminAuth.ts).
+// A VITE_-prefixed secret would be inlined into the client bundle.
+const raw = import.meta.env as Record<string, string | undefined>;
 
-const parsed = schema.safeParse(import.meta.env);
-if (!parsed.success) {
-  // eslint-disable-next-line no-console
-  console.error("Invalid environment configuration:", parsed.error.flatten().fieldErrors);
+const isUrl = (v: string | undefined) => {
+  try {
+    return !!v && !!new URL(v);
+  } catch {
+    return false;
+  }
+};
+
+const errors: Record<string, string> = {};
+if (!isUrl(raw.VITE_API_URL)) errors.VITE_API_URL = "must be a valid URL";
+if (!raw.VITE_API_ANON_KEY) errors.VITE_API_ANON_KEY = "required";
+if (Object.keys(errors).length) {
+  console.error("Invalid environment configuration:", errors);
   throw new Error("Invalid environment configuration — check your .env.local (VITE_API_URL, VITE_API_ANON_KEY).");
 }
 
-export const env = parsed.data;
+export const env = {
+  VITE_API_URL: raw.VITE_API_URL as string,
+  VITE_API_ANON_KEY: raw.VITE_API_ANON_KEY as string,
+  VITE_OPENWEATHER_KEY: raw.VITE_OPENWEATHER_KEY ?? "",
+  VITE_ADMIN_EMAIL: raw.VITE_ADMIN_EMAIL ?? "admin@tourism.od.gov.ua",
+};
 
 /**
  * REST/storage origin. Same-origin by design (see vite.config.ts proxy / prod

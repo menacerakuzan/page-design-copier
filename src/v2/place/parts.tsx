@@ -552,7 +552,7 @@ export function Repertoire({ data }: { data: PlacePageData }) {
       }));
   return (
     <section id="repertoire" aria-labelledby="repertoire-t" className="scroll-mt-24 px-3 py-8 sm:px-6 sm:py-12">
-      <div className="grain relative mx-auto max-w-[1400px] overflow-hidden rounded-[28px] bg-o-winedeep px-5 py-10 text-o-sand sm:rounded-[36px] sm:px-10 sm:py-12 lg:px-14">
+      <div className="layers relative mx-auto max-w-[1400px] overflow-hidden rounded-[28px] bg-o-winedeep px-5 py-10 text-o-sand sm:rounded-[36px] sm:px-10 sm:py-12 lg:px-14">
         <div className="pointer-events-none absolute -top-48 left-1/2 h-[540px] w-[1120px] -translate-x-1/2 bg-[radial-gradient(closest-side,rgba(223,155,59,0.26),rgba(223,155,59,0.08)_55%,transparent)]" aria-hidden="true" />
         <div className="relative mx-auto max-w-[1280px]">
           <p className="mb-2.5 flex items-center gap-3 text-[12px] font-semibold uppercase tracking-[0.18em] text-o-sun">

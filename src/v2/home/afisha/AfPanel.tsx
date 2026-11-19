@@ -21,7 +21,7 @@ export function AfPanel({ a }: { a: AfishaData }) {
 
   return (
     <section aria-labelledby="afisha-title" className="bg-o-sand px-3 py-8 sm:px-6 sm:py-12">
-      <div className="grain relative mx-auto max-w-[1400px] overflow-hidden rounded-[28px] bg-o-winedeep px-5 py-10 text-o-sand sm:rounded-[36px] sm:px-10 sm:py-12 lg:px-14">
+      <div className="layers relative mx-auto max-w-[1400px] overflow-hidden rounded-[28px] bg-o-winedeep px-5 py-10 text-o-sand sm:rounded-[36px] sm:px-10 sm:py-12 lg:px-14">
         {/* М'яке світло «рампи» згори. */}
         <div className="pointer-events-none absolute -top-48 left-1/2 h-[540px] w-[1120px] -translate-x-1/2 bg-[radial-gradient(closest-side,rgba(223,155,59,0.28),rgba(223,155,59,0.1)_55%,transparent)]" aria-hidden="true" />
         <div className="relative">

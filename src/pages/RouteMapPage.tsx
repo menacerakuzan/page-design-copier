@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Reorder, useDragControls } from "framer-motion";
-import { toast } from "sonner";
+import { Toaster, toast } from "@/components/ui/sonner";
 import { ShoppingCart, Navigation, GripVertical, Sparkles, MapPinOff, ArrowRight } from "lucide-react";
 import RouteMap from "@/components/RouteMap";
 import { Img } from "@/components/Img";
@@ -208,6 +208,8 @@ const RouteMapPage = () => {
 
   return (
     <div className="relative min-h-screen bg-[#fff2e8]">
+      {/* Сповіщення є лише тут — тож і sonner вантажиться лише з цією сторінкою. */}
+      <Toaster />
       {/* Легкий фоновий патерн. absolute (у потоці сторінки), а не fixed —
           інакше при overscroll на iOS патерн «відклеюється» і крізь нього видно
           синій html/body. Так само на робочих сторінках. */}
