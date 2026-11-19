@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import type { City, District } from "@/types/hierarchy";
+import type { Details, PublicCity, PublicDistrict } from "@/types/hierarchy";
 import { useHierarchySnapshot } from "@/hooks/useHierarchySnapshot";
 import { plain, useV2 } from "@/v2/i18n";
 import { DISTRICT_SHAPES } from "@/v2/lib/districtShapes";
@@ -36,7 +36,8 @@ const taglineFrom = (text: string) => {
 };
 
 export type DistrictItem = {
-  d: District;
+  /** Район зі знімка; повний опис (detailedInfo) є лише на сторінці району — її хук довантажує його. */
+  d: PublicDistrict & Details;
   slug: string;
   name: string;
   /** Назва без слова «район» — для підписів на карті й плиток. */
@@ -45,7 +46,7 @@ export type DistrictItem = {
   /** Короткий «характер» району одним рядком. */
   tagline: string;
   image?: string;
-  cities: City[];
+  cities: PublicCity[];
   /** Опубліковані туристичні об'єкти (як «місць» на головній). */
   places: number;
 };

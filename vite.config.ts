@@ -59,6 +59,10 @@ export default defineConfig({
         // it's only used by the map routes (Nearby / RouteMap), so isolating it
         // keeps it out of the main bundle and loads it on demand.
         manualChunks: (id) => {
+          // Службові хелпери CommonJS потрібні всім — кладемо їх у завжди завантажений
+          // чанк react. Інакше Rollup затягує їх у перший ручний чанк, що їх використав
+          // (maplibre), і тоді react імпортує maplibre — карта (~1 МБ) вантажилась на КОЖНІЙ сторінці.
+          if (id.includes("commonjsHelpers")) return "react";
           if (!id.includes("node_modules")) return;
           // maplibre: force into its own chunk so it isn't hoisted into the entry
           // (it's shared by two lazy routes — Nearby and the routes overlay).

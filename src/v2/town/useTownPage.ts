@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import type { TourismObject, TourismObjectType } from "@/types/hierarchy";
 import { makeDefaultConfig, type PageSection } from "@/types/pages";
 import { useHierarchySnapshot } from "@/hooks/useHierarchySnapshot";
+import { useWithDetails } from "@/hooks/useDetails";
 import { usePageConfig } from "@/hooks/usePageConfig";
 import { usePageContentCards } from "@/hooks/usePageContentCards";
 import { useWeather } from "@/hooks/useWeather";
@@ -45,7 +46,8 @@ export function useTownPage(slug: string | undefined) {
   const { data: snap } = useHierarchySnapshot();
   const routesData = useRoutesData();
 
-  const c = snap?.cities.find((x) => x.slug === slug);
+  // Повний опис міста — окремим запитом (у публічному знімку його немає).
+  const c = useWithDetails(snap?.cities.find((x) => x.slug === slug), "city", slug);
   const district = items.find((d) => d.d.id === c?.districtId);
 
   const { config } = usePageConfig("city", c?.id ?? null);

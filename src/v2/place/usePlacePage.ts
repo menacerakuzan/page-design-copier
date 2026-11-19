@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import type { TourismObjectType } from "@/types/hierarchy";
 import { makeDefaultConfig, type PageSection } from "@/types/pages";
 import { useHierarchySnapshot } from "@/hooks/useHierarchySnapshot";
+import { useWithDetails } from "@/hooks/useDetails";
 import { usePageConfig } from "@/hooks/usePageConfig";
 import { usePageContentCards } from "@/hooks/usePageContentCards";
 import { withoutArchivedEvents } from "@/lib/eventArchive";
@@ -35,7 +36,8 @@ export function usePlacePage(type: TourismObjectType, slug: string | undefined) 
   const { data: snap, isLoading } = useHierarchySnapshot();
   const routesData = useRoutesData();
 
-  const o = snap?.objects.find((x) => x.slug === slug && x.type === type && x.published);
+  // Повний опис — окремим запитом (у публічному знімку його немає); іде паралельно.
+  const o = useWithDetails(snap?.objects.find((x) => x.slug === slug && x.type === type && x.published), "object", slug, type);
   const city = snap?.cities.find((c) => c.id === o?.cityId);
   const district = items.find((d) => d.d.id === o?.districtId);
 

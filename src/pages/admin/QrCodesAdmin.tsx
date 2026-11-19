@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Download, Eye, FileArchive, FileText, Loader2, QrCode, Search, X } from "lucide-react";
-import { useHierarchySnapshot } from "@/hooks/useHierarchySnapshot";
+import { useFullHierarchySnapshot } from "@/hooks/useHierarchySnapshot";
 import { objectTypeLabel } from "@/lib/entityLinks";
 import { posterItemFromObject, type PosterItem } from "@/lib/qrPoster/item";
 import type { TourismObject, TourismObjectType } from "@/types/hierarchy";
@@ -27,7 +27,7 @@ const infoBadge = (item: PosterItem) => {
 const loadExport = () => import("@/lib/qrPoster/export");
 
 export const QrCodesAdmin = ({ showToast }: { showToast: ShowToast }) => {
-  const { data: snapshot, isLoading } = useHierarchySnapshot();
+  const { data: snapshot, isLoading } = useFullHierarchySnapshot();
   const [query, setQuery] = useState("");
   const [type, setType] = useState<"all" | TourismObjectType>("all");
   const [districtId, setDistrictId] = useState("");

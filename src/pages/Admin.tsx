@@ -7,7 +7,7 @@ import BackButton from "@/components/BackButton";
 import { District, City, Region, TourismObject, TourismObjectType } from "@/types/hierarchy";
 import { ContentCardEntity } from "@/types/cms";
 import { upsertDistrict, upsertCity, upsertTourismObject, deleteDistrict, deleteCity, deleteTourismObject, upsertContentCard, deleteContentCard } from "@/lib/adminRepository";
-import { useHierarchySnapshot } from "@/hooks/useHierarchySnapshot";
+import { useFullHierarchySnapshot } from "@/hooks/useHierarchySnapshot";
 import { useQueryClient } from "@tanstack/react-query";
 import AdminConstructor from "./AdminConstructor";
 import AdminPageEditor from "./AdminPageEditor";
@@ -74,13 +74,18 @@ const Admin = () => {
   const [section, setSection] = useState<AdminSection>("districts");
   const [placePageType, setPlacePageType] = useState<PlacePageType>("attraction");
   const queryClient = useQueryClient();
-  const { data: snapshot, isFetching: loading } = useHierarchySnapshot();
+  const { data: snapshot, isFetching: loading } = useFullHierarchySnapshot();
   const regions = snapshot?.regions ?? [];
   const districts = snapshot?.districts ?? [];
   const cities = snapshot?.cities ?? [];
   const places = snapshot?.objects ?? [];
   const contentCards = snapshot?.contentCards ?? [];
-  const refresh = () => { void queryClient.invalidateQueries({ queryKey: ["hierarchy-snapshot"] }); };
+  // Оновлює і повний (адмінка), і легкий публічний знімок, і довантажені описи —
+  // щоб після збереження публічні сторінки в цій же вкладці показали нове.
+  const refresh = () => {
+    void queryClient.invalidateQueries({ queryKey: ["hierarchy-snapshot"] });
+    void queryClient.invalidateQueries({ queryKey: ["details"] });
+  };
   const [districtQuery, setDistrictQuery] = useState("");
   const [cityQuery, setCityQuery] = useState("");
   const [placeQuery, setPlaceQuery] = useState("");

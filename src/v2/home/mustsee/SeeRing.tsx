@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { AnimatePresence, animate, motion, useMotionValue, useMotionValueEvent, type PanInfo } from "framer-motion";
+import { AnimatePresence, animate, motion, useInView, useMotionValue, useMotionValueEvent, type PanInfo } from "framer-motion";
 import { MapPin } from "lucide-react";
 import { Img } from "@/components/Img";
 import { useV2 } from "@/v2/i18n";
@@ -60,6 +60,9 @@ export function SeeRing({ items }: { items: SeeItem[] }) {
 
   // Тачпад: кільце крутиться за пальцями, після жесту — до найближчого фото.
   const regionRef = useRef<HTMLDivElement>(null);
+  // Фото вантажимо, коли карусель за ~екран від видимої області, — не разом із
+  // відео героя, але й не ліниво по одному (бічні фото кільця не мигали порожніми).
+  const near = useInView(regionRef, { once: true, margin: "900px 0px" });
   useWheelSwipe(
     regionRef,
     (dx) => { rot.stop(); rot.set(rot.get() + dx * (step / (W * 0.9))); },
@@ -113,7 +116,7 @@ export function SeeRing({ items }: { items: SeeItem[] }) {
                   }}
                   className="group block h-full w-full"
                 >
-                  <Img src={c.image} w={1000} quality={85} priority alt="" draggable={false} className={`h-full w-full object-cover transition-transform duration-[1.2s] ease-out ${on ? "group-hover:scale-[1.04]" : ""}`} />
+                  {near && <Img src={c.image} w={1000} quality={85} priority alt="" draggable={false} className={`h-full w-full object-cover transition-transform duration-[1.2s] ease-out ${on ? "group-hover:scale-[1.04]" : ""}`} />}
                 </Link>
               </div>
             );

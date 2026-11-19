@@ -91,3 +91,16 @@ export type TourismObject = {
   audioUrl?: string;
   audioUrlEn?: string;
 };
+
+/*
+ * Публічний (легкий) знімок — без повних описів (detailedInfo*): це найважче в
+ * базі, а потрібне лише на сторінці самого місця / міста / району, де його
+ * довантажує useDetails. Тип без цих полів — щоб компілятор не дав прочитати
+ * їх зі знімка (там їх немає). Див. loadPublicSnapshot в adminRepository.
+ */
+export type PublicTourismObject = Omit<TourismObject, "detailedInfo" | "detailedInfoEn">;
+export type PublicCity = Omit<City, "detailedInfo">;
+export type PublicDistrict = Omit<District, "detailedInfo">;
+
+/** Повний опис, що довантажується окремо (useDetails). */
+export type Details = { detailedInfo?: string; detailedInfoEn?: string };

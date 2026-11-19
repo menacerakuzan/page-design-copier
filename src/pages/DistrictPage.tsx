@@ -20,6 +20,7 @@ import { RoutePath } from "@/components/decor";
 import { Link, useParams } from "react-router-dom";
 import SiteFooter from "@/components/SiteFooter";
 import { useHierarchySnapshot } from "@/hooks/useHierarchySnapshot";
+import { useWithDetails } from "@/hooks/useDetails";
 import { usePageConfig } from "@/hooks/usePageConfig";
 import { usePageContentCards } from "@/hooks/usePageContentCards";
 import { makeDefaultConfig, PageSection } from "@/types/pages";
@@ -48,10 +49,12 @@ const DistrictPage = () => {
   const [reelMuted, setReelMuted] = useState(true);
   const [galleryLightbox, setGalleryLightbox] = useState<{ images: LightboxImage[]; index: number } | null>(null);
 
-  const district = useMemo(
+  const baseDistrict = useMemo(
     () => snapshot?.districts.find((d) => d.slug === districtSlug),
     [snapshot, districtSlug],
   );
+  // Повний опис — окремим запитом (у публічному знімку його немає).
+  const district = useWithDetails(baseDistrict, "district", districtSlug);
 
   const allCities = useMemo(
     () => (snapshot?.cities ?? []).filter((c) => c.districtId === district?.id),

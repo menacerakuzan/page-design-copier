@@ -16,6 +16,7 @@ import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { Link, useParams } from "react-router-dom";
 import SiteFooter from "@/components/SiteFooter";
 import { useHierarchySnapshot } from "@/hooks/useHierarchySnapshot";
+import { useWithDetails } from "@/hooks/useDetails";
 import { usePageContentCards } from "@/hooks/usePageContentCards";
 import { usePageConfig } from "@/hooks/usePageConfig";
 import { makeDefaultConfig, PageSection } from "@/types/pages";
@@ -74,10 +75,12 @@ const EntityDetail = ({ type }: { type: PageType }) => {
   const { data: cardsData } = usePageContentCards(pageKey);
   const m = meta[type];
 
-  const object = useMemo(
+  const baseObject = useMemo(
     () => snapshot?.objects.find(o => o.slug === slug && o.type === type && o.published),
     [snapshot, slug, type],
   );
+  // Повний опис — окремим запитом (у публічному знімку його немає).
+  const object = useWithDetails(baseObject, "object", slug, type);
 
   // Архівні події не пропонуємо в «Поряд»/«Пов'язані», але сама сторінка події відкривається.
   const allObjects = useMemo(() => withoutArchivedEvents((snapshot?.objects ?? []).filter(o => o.published)), [snapshot]);

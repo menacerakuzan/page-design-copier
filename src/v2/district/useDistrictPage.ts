@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import type { City, TourismObject, TourismObjectType } from "@/types/hierarchy";
 import type { PageSection } from "@/types/pages";
 import { useHierarchySnapshot } from "@/hooks/useHierarchySnapshot";
+import { useWithDetails } from "@/hooks/useDetails";
 import { usePageConfig } from "@/hooks/usePageConfig";
 import { usePageContentCards } from "@/hooks/usePageContentCards";
 import { useV2 } from "@/v2/i18n";
@@ -34,7 +35,10 @@ export function useDistrictPage(slug: string | undefined) {
   const routesData = useRoutesData();
 
   const index = items.findIndex((i) => i.slug === slug);
-  const it = index >= 0 ? items[index] : undefined;
+  const base = index >= 0 ? items[index] : undefined;
+  // Повний опис району — окремим запитом (у публічному знімку його немає).
+  const d = useWithDetails(base?.d, "district", slug);
+  const it = useMemo(() => (base && d && d !== base.d ? { ...base, d } : base), [base, d]);
   const prev = index > 0 ? items[index - 1] : items[items.length - 1];
   const next = index >= 0 && index < items.length - 1 ? items[index + 1] : items[0];
 

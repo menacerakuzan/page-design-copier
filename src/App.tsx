@@ -1,7 +1,7 @@
 import { Suspense, lazy, useEffect, useLayoutEffect, useRef } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
-import { loadHierarchySnapshot, loadPublishedContentCards } from "@/lib/adminRepository";
+import { loadPublicSnapshot, loadPublishedContentCards } from "@/lib/adminRepository";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { LangProvider } from "@/lib/langContext";
 import { WinterThemeProvider, useWinterTheme } from "@/lib/winterTheme";
@@ -192,7 +192,7 @@ const App = () => {
   useEffect(() => {
     void queryClient.prefetchQuery({
       queryKey: ["hierarchy-snapshot"],
-      queryFn: () => loadHierarchySnapshot(),
+      queryFn: () => loadPublicSnapshot(),
     });
     for (const pageKey of ["index", "tourism-types"]) {
       void queryClient.prefetchQuery({

@@ -3,6 +3,7 @@ import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { Loader2, Maximize2, Minimize2 } from "lucide-react";
 import { useV2 } from "@/v2/i18n";
+import { resizedImageUrl } from "@/lib/img";
 import type { RouteStop } from "./useRoutePage";
 
 /*
@@ -128,7 +129,11 @@ export function RouteLiveMap({ stops, line, active, onPick, roads = true, geomet
       el.type = "button";
       el.className = "rlm-marker";
       el.setAttribute("aria-label", `${s.n}. ${s.name}`);
-      el.innerHTML = `<span class="rlm-wrap"><span class="rlm-photo">${s.o.imageUrl ? `<img src="${s.o.imageUrl}" alt="" loading="lazy" decoding="async"/>` : ""}</span><span class="rlm-num">${s.n}</span></span>`;
+      // Фото в мітці крихітне (44px, активна ×1.3) — беремо зменшену копію, а не
+      // оригінал (сотні КБ–МБ); якщо копії немає — падаємо на оригінал.
+      el.innerHTML = `<span class="rlm-wrap"><span class="rlm-photo">${s.o.imageUrl ? `<img src="${resizedImageUrl(s.o.imageUrl, 160)}" alt="" loading="lazy" decoding="async"/>` : ""}</span><span class="rlm-num">${s.n}</span></span>`;
+      const img = el.querySelector("img");
+      if (img && s.o.imageUrl) img.addEventListener("error", () => { if (img.src !== s.o.imageUrl) img.src = s.o.imageUrl!; }, { once: true });
       el.addEventListener("click", (e) => {
         e.stopPropagation();
         pick.current?.(s.n - 1);

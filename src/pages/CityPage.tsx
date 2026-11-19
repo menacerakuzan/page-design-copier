@@ -7,6 +7,7 @@ import { ChevronLeft, Droplets, Wind } from "lucide-react";
 import { Link, useLocation, useParams } from "react-router-dom";
 import SiteFooter from "@/components/SiteFooter";
 import { useHierarchySnapshot } from "@/hooks/useHierarchySnapshot";
+import { useWithDetails } from "@/hooks/useDetails";
 import { useWeather } from "@/hooks/useWeather";
 import { usePageConfig } from "@/hooks/usePageConfig";
 import { usePageContentCards } from "@/hooks/usePageContentCards";
@@ -65,10 +66,12 @@ const CityPage = () => {
   const [reelMuted, setReelMuted] = useState(true);
   const [galleryLightbox, setGalleryLightbox] = useState<{ images: LightboxImage[]; index: number } | null>(null);
 
-  const city = useMemo(
+  const baseCity = useMemo(
     () => snapshot?.cities.find((c) => c.slug === citySlug),
     [snapshot, citySlug],
   );
+  // Повний опис — окремим запитом (у публічному знімку його немає).
+  const city = useWithDetails(baseCity, "city", citySlug);
   const allObjects = useMemo(
     () => withoutArchivedEvents((snapshot?.objects ?? []).filter((o) => o.cityId === city?.id && o.published)),
     [snapshot, city],

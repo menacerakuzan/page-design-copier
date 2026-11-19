@@ -1,7 +1,7 @@
 import { db } from "@/lib/apiClient";
 import { env } from "@/env";
 import { AdminChangeLog, ContentCardEntity } from "@/types/cms";
-import { City, District, Region, TourismObject } from "@/types/hierarchy";
+import { City, Details, District, PublicCity, PublicDistrict, PublicTourismObject, Region, TourismObject } from "@/types/hierarchy";
 
 type Snapshot = {
   regions: Region[];
@@ -9,6 +9,14 @@ type Snapshot = {
   cities: City[];
   objects: TourismObject[];
   contentCards: ContentCardEntity[];
+};
+
+/** Знімок для публічних сторінок: без повних описів і без карток (див. loadPublicSnapshot). */
+export type PublicSnapshot = {
+  regions: Region[];
+  districts: PublicDistrict[];
+  cities: PublicCity[];
+  objects: PublicTourismObject[];
 };
 
 const tableNames = {
@@ -252,6 +260,84 @@ export async function loadHierarchySnapshot(): Promise<Snapshot> {
     objects: (objectsRes.data ?? []).map(mapDbObject) as TourismObject[],
     contentCards: (contentCardsRes.data ?? []).map(mapDbCard),
   };
+}
+
+/* ── Публічний (легкий) знімок ─────────────────────────────────────────── */
+
+/** Повні описи — найважче в базі (≈⅔ ваги місць); на публічних сторінках їх довантажує loadDetails. */
+const HEAVY_COLUMNS = ["detailed_info", "detailed_info_en"];
+
+/**
+ * Колонки, які читає маппер, — без важких. Рахуємо з самого маппера (проганяємо
+ * його по «порожньому» рядку й записуємо, які поля він бере), а не списком
+ * вручну: додали поле в маппер — воно саме потрапить і в легкий запит.
+ */
+type RowMapper = typeof mapDbObject | typeof mapDbCity | typeof mapDbDistrict;
+
+const lightColumns = (map: RowMapper) => {
+  const keys = new Set<string>();
+  map(new Proxy({}, { get: (_t, k) => { if (typeof k === "string") keys.add(k); return undefined; } }));
+  return [...keys].filter((k) => !HEAVY_COLUMNS.includes(k)).join(",");
+};
+
+/**
+ * Легкий запит таблиці. Якщо він впав (напр. на базі без свіжої міграції немає
+ * якоїсь колонки зі списку) — повторюємо повним select=*, тобто в найгіршому
+ * випадку все працює як раніше, лише важче.
+ */
+async function selectLight(table: string, map: RowMapper, order: string[]) {
+  const run = (cols: string) => order.reduce((q, col) => q.order(col), db.from(table).select(cols));
+  let res = await run(lightColumns(map));
+  if (res.error) {
+    console.warn(`[snapshot] light select of ${table} failed, falling back to select=*`, res.error);
+    res = await run("*");
+  }
+  if (res.error) throw res.error;
+  return res.data ?? [];
+}
+
+/** Знімок для публічних сторінок: райони, міста й місця без повних описів; без карток. */
+export async function loadPublicSnapshot(): Promise<PublicSnapshot> {
+  const [regionsRes, districts, cities, objects] = await Promise.all([
+    db.from(tableNames.regions).select("*").order("name"),
+    selectLight(tableNames.districts, mapDbDistrict, ["sort_order", "name"]),
+    selectLight(tableNames.cities, mapDbCity, ["sort_order", "name"]),
+    selectLight(tableNames.objects, mapDbObject, ["name"]),
+  ]);
+  if (regionsRes.error) throw regionsRes.error;
+  // Важкі поля прибираємо й з об'єктів (маппер ставить їх як undefined; а при
+  // запасному select=* вони прийшли б повністю) — щоб знімок відповідав типу.
+  const strip = <T extends object>(x: T) => {
+    const o = { ...x } as Record<string, unknown>;
+    delete o.detailedInfo;
+    delete o.detailedInfoEn;
+    return o;
+  };
+  return {
+    regions: ((regionsRes.data ?? []) as Region[]).map(({ id, name, slug }) => ({ id, name, slug })),
+    districts: districts.map((r) => strip(mapDbDistrict(r))) as PublicDistrict[],
+    cities: cities.map((r) => strip(mapDbCity(r))) as PublicCity[],
+    objects: objects.map((r) => strip(mapDbObject(r))) as PublicTourismObject[],
+  };
+}
+
+export type DetailsKind = "object" | "city" | "district";
+const detailsTable: Record<DetailsKind, string> = { object: tableNames.objects, city: tableNames.cities, district: tableNames.districts };
+
+/**
+ * Повний опис одного місця / міста / району — за slug (для місць ще й за типом:
+ * slug унікальний лише в межах типу). За slug, а не id, — щоб на прямому заході
+ * запит ішов паралельно зі знімком, а не після нього.
+ */
+export async function loadDetails(kind: DetailsKind, slug: string, type?: string): Promise<({ id: string } & Details) | null> {
+  const cols = kind === "object" ? "id,detailed_info,detailed_info_en" : "id,detailed_info";
+  let q = db.from(detailsTable[kind]).select(cols).eq("slug", slug);
+  if (type) q = q.eq("type", type);
+  const { data, error } = await q.limit(1);
+  if (error) throw error;
+  const row = (data ?? [])[0] as { id: string; detailed_info?: string | null; detailed_info_en?: string | null } | undefined;
+  if (!row) return null;
+  return { id: row.id, detailedInfo: row.detailed_info ?? undefined, detailedInfoEn: row.detailed_info_en ?? undefined };
 }
 
 export async function loadPublishedContentCards(pageKey: string) {

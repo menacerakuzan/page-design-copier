@@ -1,5 +1,7 @@
-import { describe, it, expect } from "vitest";
-import { loadHierarchySnapshot, loadPublishedContentCards, upsertTourismObject, upsertDistrict } from "@/lib/adminRepository";
+import { describe, it, expect, vi } from "vitest";
+import { http, HttpResponse } from "msw";
+import { loadDetails, loadHierarchySnapshot, loadPublicSnapshot, loadPublishedContentCards, upsertTourismObject, upsertDistrict } from "@/lib/adminRepository";
+import { server } from "@/test/msw/server";
 import { tableData, capturedRequests } from "@/test/msw/handlers";
 import { regionRow, districtRow, cityRow, objectRow, contentCardRow } from "@/test/fixtures";
 import type { TourismObject, District } from "@/types/hierarchy";
@@ -76,6 +78,87 @@ describe("loadHierarchySnapshot", () => {
     );
     const districts = capturedRequests.find((r) => r.table === "districts");
     expect(districts?.search).toContain("order=sort_order");
+  });
+});
+
+describe("loadPublicSnapshot (легкий знімок)", () => {
+  const selectOf = (table: string) =>
+    decodeURIComponent(new URLSearchParams(capturedRequests.find((r) => r.table === table && r.method === "GET")?.search).get("select") ?? "");
+
+  it("не запитує повні описи й картки, але бере всі інші колонки, які читає маппер", async () => {
+    tableData.regions = [regionRow];
+    tableData.districts = [districtRow];
+    tableData.cities = [cityRow];
+    tableData.tourism_objects = [objectRow];
+
+    const snap = await loadPublicSnapshot();
+
+    const tables = capturedRequests.filter((r) => r.method === "GET").map((r) => r.table);
+    expect(tables).not.toContain("content_cards");
+    for (const t of ["districts", "cities", "tourism_objects"]) {
+      const cols = selectOf(t).split(",");
+      expect(cols).not.toContain("detailed_info");
+      expect(cols).not.toContain("detailed_info_en");
+      expect(cols).not.toContain("*");
+    }
+    // Ключові для сторінок поля — на місці
+    expect(selectOf("tourism_objects").split(",")).toEqual(
+      expect.arrayContaining(["id", "slug", "type", "name", "description", "description_en", "image_url", "latitude", "longitude", "map_url", "event_dates", "repertoire", "tourism_types", "venue_id"]),
+    );
+    expect(selectOf("cities").split(",")).toEqual(expect.arrayContaining(["id", "district_id", "slug", "description", "weather_city_name", "settlement_type"]));
+    expect(selectOf("districts").split(",")).toEqual(expect.arrayContaining(["id", "region_id", "slug", "description", "sort_order"]));
+
+    // Мапінг той самий, що й у повного знімка, — мінус повні описи
+    const full = await loadHierarchySnapshot();
+    const { detailedInfo: _o1, detailedInfoEn: _o2, ...objectLight } = full.objects[0];
+    expect(snap.objects[0]).toEqual(objectLight);
+    const { detailedInfo: _c1, ...cityLight } = full.cities[0];
+    expect(snap.cities[0]).toEqual(cityLight);
+    const { detailedInfo: _d1, ...districtLight } = full.districts[0];
+    expect(snap.districts[0]).toEqual(districtLight);
+    expect("detailedInfo" in snap.objects[0]).toBe(false);
+  });
+
+  it("якщо легкий запит падає (немає колонки на старій базі) — повторює select=* і все одно працює", async () => {
+    tableData.regions = [regionRow];
+    tableData.districts = [districtRow];
+    tableData.cities = [cityRow];
+    tableData.tourism_objects = [objectRow];
+    server.use(
+      http.get("*/rest/v1/tourism_objects", ({ request }) => {
+        const sel = new URL(request.url).searchParams.get("select");
+        if (sel !== "*") return HttpResponse.json({ message: "column does not exist" }, { status: 400 });
+        return HttpResponse.json([objectRow]);
+      }),
+    );
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    const snap = await loadPublicSnapshot();
+
+    expect(snap.objects[0]).toMatchObject({ id: "obj-1", name: "Музей" });
+    // навіть із select=* повні описи в легкий знімок не потрапляють
+    expect("detailedInfo" in snap.objects[0]).toBe(false);
+    expect(warn).toHaveBeenCalled();
+    warn.mockRestore();
+  });
+});
+
+describe("loadDetails", () => {
+  it("бере повний опис місця за slug і типом", async () => {
+    tableData.tourism_objects = [objectRow];
+    const d = await loadDetails("object", "muzei", "attraction");
+    expect(d).toEqual({ id: "obj-1", detailedInfo: "детально", detailedInfoEn: "details" });
+    const req = capturedRequests.find((r) => r.table === "tourism_objects");
+    expect(req?.search).toContain("slug=eq.muzei");
+    expect(req?.search).toContain("type=eq.attraction");
+    expect(decodeURIComponent(req?.search ?? "")).toContain("select=id,detailed_info,detailed_info_en");
+  });
+
+  it("місто й район — лише detailed_info; немає запису — null", async () => {
+    tableData.cities = [cityRow];
+    expect(await loadDetails("city", "bilyaivka")).toEqual({ id: "city-1", detailedInfo: "детально про місто", detailedInfoEn: undefined });
+    tableData.districts = [];
+    expect(await loadDetails("district", "nema")).toBeNull();
   });
 });
 
